@@ -1,4 +1,5 @@
 import { LiElement, html, css } from '../../li.js';
+import '../button/button.js'
 
 customElements.define('li-editor-ecard', class LiEditorECard extends LiElement {
     static get properties() {
@@ -44,6 +45,12 @@ customElements.define('li-editor-ecard', class LiEditorECard extends LiElement {
 
     render() {
         return html`
+            <div style="display: flex;align-items: center; padding: 4px">
+                <label>eCard editor</label>
+                <div style="flex: 1"></div>
+                <li-button name="save" width="160px">Load as png</li-button>
+                <li-button name="content-copy" width="160px" @click="${this._copy}">Copy to clipboard</li-button>
+            </div>
             <iframe ref="editor" .srcdoc="${this.srcdoc}" style="border: none; width: 100%; height: 100%;"></iframe>
         `
     }
@@ -78,13 +85,19 @@ customElements.define('li-editor-ecard', class LiEditorECard extends LiElement {
         if (!this.$refs?.editor) return;
         this.editor = this.$refs.editor;
         this.value = this.src || this.item?.value || '';
-        setInterval(() => {
-            if (this.item && this.value !== undefined) {
-                this.item.value = this.value;
-                this.card?.toDataUrl(v => this.item.htmlValue = v);
-                this.$update();
-            }
-        }, 1000);
+        // setInterval(() => {
+        //     if (this.item && this.value !== undefined) {
+        //         this.item.value = this.value;
+        //         this.card?.toDataUrl(v => this.item.htmlValue = v);
+        //         this.$update();
+        //     }
+        // }, 1000);
         this.$update();
+    }
+
+    _copy() {
+        this.card?.toDataUrl(async v => {
+            await navigator.clipboard.writeText(v);
+        });
     }
 })

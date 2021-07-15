@@ -107,7 +107,7 @@ $(function () {
         var cardConfig = environment.cardConfig;
         // If this is a reload try to load card config from local storage
         var hash = window.location.hash;
-        // var restore = (hash == "#edit" || hash == "#save");
+        var restore = (hash == "#edit" || hash == "#save");
         // if (restore && localStorage['card'] != null) {
         //     var localConfig = JSON.parse(localStorage['card']);
         //     if (localConfig.length > 0) {
@@ -120,10 +120,10 @@ $(function () {
 
         card.on('ready', function () {
             // show save dialog
-            // if (hash == "#save") {
-            //     wm.saveCard();                
-            // }
-            // window.location.hash = "#edit";
+            if (hash == "#save") {
+                //wm.saveCard();                
+            }
+            window.location.hash = "#edit";
         });
 
         speedTest(function (speed) {
@@ -140,18 +140,18 @@ $(function () {
     }
 
     function showSaveError(msg) {
-        $('.card-save-form button').removeAttr('disabled');
-        $('.save-progress').hide();
-        $('.status-error').html(msg).show();
+        // $('.card-save-form button').removeAttr('disabled');
+        // $('.save-progress').hide();
+        // $('.status-error').html(msg).show();
     }
 
     $(window).unload(function () {
         // save to local storage for later use
-        // localStorage['card'] = card.getCardConfig();
+        localStorage['card'] = card.getCardConfig();
     });
 
     $(window).resize(function () {
-        card.setWidth($(this).width());
+        // card.setWidth($(this).width());
     });
 
     initilize();
