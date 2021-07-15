@@ -1,0 +1,28 @@
+<script type="module" src="./editor-ecard.js"></script>
+
+<style>
+    html * {
+        color: gray;
+        font-family: Arial;
+    }
+    html,
+    body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        display: flex;
+        /* flex-direction: column; */
+    }
+</style>
+
+<li-editor-ecard id="editor_ecard_1"></li-editor-ecard>
+<li-editor-ecard id="editor_ecard_2"></li-editor-ecard>
+<li-editor-ecard id="editor_ecard_3"></li-editor-ecard>
+
+<script type="module">
+    setTimeout(() => {
+            editor_ecard_1.src = '[{\"src\":\"background/paint.jpg\",\"zindex\":0,\"type\":\"background\",\"properties\":[]},{\"src\":\"clipart/circus_artist.png\",\"x\":400,\"y\":300,\"width\":421,\"height\":504,\"scale\":0.8,\"deg\":0,\"zindex\":1,\"type\":\"clipart\",\"properties\":[]}]';
+            editor_ecard_2.src = '[{\"src\":\"background/blue.jpg\",\"zindex\":0,\"type\":\"background\",\"properties\":[]},{\"src\":\"clipart/heart.png\",\"x\":400,\"y\":300,\"width\":282,\"height\":261,\"scale\":1.604383324903693,\"deg\":13.55912406351134,\"zindex\":1,\"type\":\"clipart\",\"properties\":[]}]';
+            editor_ecard_3.src = '[{\"src\":\"background/leaves.jpg\",\"zindex\":0,\"type\":\"background\",\"properties\":[]},{\"src\":\"clipart/apple.png\",\"x\":520,\"y\":280,\"width\":282,\"height\":261,\"scale\":0.8,\"deg\":13.55912406351134,\"zindex\":1,\"type\":\"clipart\",\"properties\":[]}]';
+    }, 500);
+</script>
