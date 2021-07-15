@@ -17,8 +17,14 @@ customElements.define('li-editor-ecard', class LiEditorECard extends LiElement {
     }
     set value(v) {
         if (!this.card) return;
-        const config = JSON.parse(v || "[{src:'background/notebook.png',type:'background'}]");
+        let config = [{ src: 'background/notebook.png', type: 'background' }];
+        try {
+            config = JSON.parse(v);
+        } catch (error) {}
         this.card.loadCardConfig(config);
+    }
+    get htmlValue() {
+        return this.card?.toDataUrl() || undefined;
     }
 
     static get styles() {
@@ -38,43 +44,47 @@ customElements.define('li-editor-ecard', class LiEditorECard extends LiElement {
 
     render() {
         return html`
-            <iframe ref="editor" .srcdoc="${this.srcdoc}" style="border: none;width: 640px; height: 720px;"></iframe>
+            <iframe ref="editor" .srcdoc="${this.srcdoc}" style="border: none; width: 100%; height: 100%;"></iframe>
         `
     }
 
     async firstUpdated() {
         super.firstUpdated();
 
-        const response = await fetch('./editor.html')
+        const response = await fetch('../../li/editor-ecard/editor.html')
         this.srcdoc = await response.text();
-        this._update();
+        setTimeout(() => {
+            this._update();
+        }, 100);
     }
 
     updated(changedProperties) {
-        //if (this.editor) {
-        if (changedProperties.has('src')) {
-            this.value = this.src;
-            if (this.item)
-                this.item.value = this.value;
-            this.$update();
+        if (this.editor) {
+            if (changedProperties.has('src')) {
+                this.value = this.src;
+                if (this.item)
+                    this.item.value = this.value;
+                this.$update();
+            }
+            if (changedProperties.has('item')) {
+                this.value = this.item?.value || '';
+                this.card?.toDataUrl(v => this.item.htmlValue = v);
+                this.$update();
+            }
         }
-        if (changedProperties.has('item')) {
-            this.value = this.item?.value || '';
-            this.$update();
-        }
-        //}
     }
 
     _update() {
-        //if (!this.$refs?.editor) return;
-        //this.editor = this.$refs.editor;
+        if (!this.$refs?.editor) return;
+        this.editor = this.$refs.editor;
         this.value = this.src || this.item?.value || '';
-        // this.editor.getSession().on('change', () => {
-        //     if (this.item && this.value !== undefined) {
-        //         this.item.value = this.value;
-        //         this.$update();
-        //     }
-        // });
+        setInterval(() => {
+            if (this.item && this.value !== undefined) {
+                this.item.value = this.value;
+                this.card?.toDataUrl(v => this.item.htmlValue = v);
+                this.$update();
+            }
+        }, 1000);
         this.$update();
     }
 })

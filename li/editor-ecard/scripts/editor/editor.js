@@ -120,10 +120,10 @@ $(function () {
 
         card.on('ready', function () {
             // show save dialog
-            if (hash == "#save") {
-                wm.saveCard();                
-            }
-            window.location.hash = "#edit";
+            // if (hash == "#save") {
+            //     wm.saveCard();                
+            // }
+            // window.location.hash = "#edit";
         });
 
         speedTest(function (speed) {

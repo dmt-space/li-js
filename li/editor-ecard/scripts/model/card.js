@@ -169,11 +169,11 @@
         // resize the satage to maximum size before saving it
         // we also have to resize the canvas and #cotainer width and height
         // so user won't see the change
-        this.stage.setSize(800, 600);
-        this.stage.setScale(1, 1);
-        this.stage.draw();
+        // this.stage.setSize(800, 600);
+        // this.stage.setScale(1, 1);
+        // this.stage.draw();
 
-        this.deselctAll();
+        // this.deselctAll();
 
         this.stage.toDataURL({
             mimeType: 'image/jpeg',
@@ -181,9 +181,9 @@
             callback: function (dataUrl) {
 
                 // restore stage size to original
-                this.stage.setSize(this.width, this.height);
-                this.stage.setScale(this.scale, this.scale);
-                this.stage.draw();
+                // this.stage.setSize(this.width, this.height);
+                // this.stage.setScale(this.scale, this.scale);
+                // this.stage.draw();
 
                 callback(dataUrl);
             }.bind(this)
