@@ -6,6 +6,7 @@ import '../editor-simplemde/editor-simplemde.js';
 import '../editor-showdown/editor-showdown.js';
 import '../viewer-md/viewer-md.js';
 import '../editor-iframe/editor-iframe.js';
+import '../editor-ecard/editor-ecard.js';
 import '../editor-suneditor/editor-suneditor.js';
 import '../button/button.js';
 import '../checkbox/checkbox.js';
@@ -163,6 +164,7 @@ customElements.define('li-wiki', class LiWiki extends LiElement {
                                 <li-button width="auto" @click="${this._addBox}">simplemde</li-button>
                                 <li-button width="auto" @click="${this._addBox}">showdown</li-button>
                                 <li-button width="auto" @click="${this._addBox}">iframe</li-button>
+                                <li-button width="auto" @click="${this._addBox}">ecard</li-button>
                             </div>
                         ` : this._lPanel === 'actions' ? html`
                             <b>actions</b>
@@ -243,7 +245,8 @@ customElements.define('li-wiki', class LiWiki extends LiElement {
                         ${(this.selectedEditors.filter(i => !i._deleted && i.show) || []).map(i => html`
                             ${i.name === 'showdown' ? html`
                                 <li-viewer-md .src="${i.value || ''}"></li-viewer-md>` : i.name === 'iframe' ? html`
-                                <iframe .srcdoc="${i.htmlValue || i.value || ''}" style="width:100%;border: none; height: ${i.h + 'px' || 'auto'}"></iframe>` : html`
+                                <iframe .srcdoc="${i.htmlValue || i.value || ''}" style="width:100%;border: none; height: ${i.h + 'px' || 'auto'}"></iframe>` : i.name === 'ecard' ? html`
+                                <img .src="${i.htmlValue || i.value || ''}" style="width:600px; border: none; height: 450px">` : html`
                                 <div class="res" .item="${i}" .innerHTML="${i.htmlValue || i.value || ''}"></div>
                             `}
                         `)}
@@ -832,7 +835,8 @@ customElements.define('li-wiki-box', class LiWikiBox extends LiElement {
             'suneditor': html`<li-editor-suneditor ref="ed" .item="${this.item}"></li-editor-suneditor>`,
             'simplemde': html`<li-editor-simplemde ref="ed" .item="${this.item}"></li-editor-simplemde>`,
             'showdown': html`<li-editor-showdown ref="ed" .item="${this.item}"></li-editor-showdown>`,
-            'iframe': html`<li-editor-iframe ref="ed" .item="${this.item}"></li-editor-iframe>`
+            'iframe': html`<li-editor-iframe ref="ed" .item="${this.item}"></li-editor-iframe>`,
+            'ecard': html`<li-editor-ecard ref="ed" .item="${this.item}"></li-editor-ecard>`
         }
         return editors[this.item?.type] || editors[this.item?.label] || editors['iframe'];
     }
