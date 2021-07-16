@@ -148,7 +148,7 @@ customElements.define('li-wiki', class LiWiki extends LiElement {
                         <li-button name="playlist-add" title="editors" @click="${() => this._lPanel = 'editors'}" ?toggled="${this._lPanel === 'editors'}" toggledClass="ontoggled"></li-button>
                         <li-button name="check" title="actions" @click="${() => this._lPanel = 'actions'}" ?toggled="${this._lPanel === 'actions'}" toggledClass="ontoggled"></li-button>
                         <li-button name="settings" title="settings" @click="${() => this._lPanel = 'settings'}" ?toggled="${this._lPanel === 'settings'}" toggledClass="ontoggled"></li-button>
-                        <li-button name="edit" title="ecard" @click="${() => this._lPanel = 'ecard'}" ?toggled="${this._lPanel === 'ecard'}" toggledClass="ontoggled"></li-button>
+                        <li-button name="image" title="ecard" @click="${() => this._lPanel = 'ecard'}" ?toggled="${this._lPanel === 'ecard'}" toggledClass="ontoggled"></li-button>
                         <div style="flex:1"></div>
                         <li-button name="refresh" title="reload page" @click="${() => document.location.reload()}"></li-button>
                         <li-button name="camera" title="save tree state" @click="${this._saveTreeState}"></li-button>

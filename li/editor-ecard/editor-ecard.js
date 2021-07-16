@@ -34,7 +34,7 @@ customElements.define('li-editor-ecard', class LiEditorECard extends LiElement {
 
     render() {
         return html`
-            <div style="display: flex;align-items: center; padding: 4px; width: 640px;">
+            <div style="display: flex;align-items: center; padding: 4px; width: 645px;">
                 <label>eCard editor</label>
                 <div style="flex: 1"></div>
                 <li-button name="save" width="160px" @click="${this._open}">Open in new tab</li-button>
