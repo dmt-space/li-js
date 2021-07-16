@@ -39,7 +39,7 @@ customElements.define('li-editor-ecard', class LiEditorECard extends LiElement {
                     <li-button name="content-copy" width="160px" @click="${this._copy}">Copy to clipboard</li-button>
                     <li-button name="close" @click="${() => window.dispatchEvent(new KeyboardEvent('keyup', { 'keyCode': 27 }))}" title="close"></li-button>
                 </div>
-                <iframe ref="editor" .srcdoc="${this.srcdoc}" style="border: none; width: 610px; height: 684px;"></iframe>
+                <iframe ref="editor" .srcdoc="${this.srcdoc}" style="border: none; width: 610px; height: 684px;" allow="clipboard-write"></iframe>
             </div>
         `
     }
