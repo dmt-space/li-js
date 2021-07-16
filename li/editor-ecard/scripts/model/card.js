@@ -176,7 +176,7 @@
         this.deselctAll();
 
         this.stage.toDataURL({
-            mimeType: 'image/jpeg',
+            mimeType: 'image/png',
             quality: 0.9,
             callback: function (dataUrl) {
 
@@ -186,6 +186,7 @@
                 this.stage.draw();
 
                 callback(dataUrl);
+                this.getBackground().select();
             }.bind(this)
         });
     },

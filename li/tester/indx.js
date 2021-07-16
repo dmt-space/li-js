@@ -351,4 +351,7 @@ export const indx = {
     
     'li-wiki': { label: 'li-wiki (prototype)', props: { iframe: '../wiki/index.html' } },
     wiki: [{ label: 'index', url: url + '/wiki' }],
+
+    'li-editor-ecard': { label: 'ecard', props: { iframe: '../editor-ecard/index.html' } },
+    'editor-ecard': [{ label: 'index', url: url + '/editor-ecard' }],
 }
