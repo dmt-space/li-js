@@ -25,10 +25,31 @@ customElements.define('li-dropdown', class LiDropdown extends LiElement {
                     opacity: 1;
                 }
             }
+            .modal {
+                display: none;
+                position: fixed;
+                z-index: 98;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0,0,0,0.4);
+            }
+            ::-webkit-scrollbar {
+                width: 4px;
+                height: 4px;
+            }
+            ::-webkit-scrollbar-track {
+                background: lightgray;
+            }
+            ::-webkit-scrollbar-thumb {
+                background-color: gray;
+            }
         `;
     }
     render() {
         return html`
+            <div id="modal" class="modal" @click="${this.close}"></div>
             <div id="dropdown" class="${this.opened ? 'b-show' : 'block'}" style=${styleMap({ ...this.size })}>
                 <slot id="component" name="${this.opened ? '' : '?'}" @slotchange="${this._slotChange}"></slot>
             </div>
@@ -111,18 +132,17 @@ customElements.define('li-dropdown', class LiDropdown extends LiElement {
         const rect = LIRect(this.parent);
         if (!this.component || !rect.ok) return;
         this.contentRect = this.component.getBoundingClientRect()
-        let top = rect.top;
-        let left = rect.left
         let height = this.contentRect?.height || 0;
         let width = this.contentRect?.width || 0;
+        let winWidth = window.innerWidth;
+        let winHeight = window.innerHeight;
+        let top = this.align  === 'modal' ? winHeight / 2 - height / 2 : rect.top;
+        let left = this.align  === 'modal' ? winWidth / 2 - width / 2 : rect.left
         if (!height || !width) {
             top += 'px';
             left += 'px';
             return { top, left };
         }
-
-        let winWidth = window.innerWidth;
-        let winHeight = window.innerHeight;
         let maxHeight = winHeight;
         let maxWidth = winWidth;
         let minHeight = this.minHeight || height;
@@ -138,7 +158,7 @@ customElements.define('li-dropdown', class LiDropdown extends LiElement {
 
         let size = {};
         this._steps = this._steps || [];
-        this.align = ['left', 'right', 'top', 'bottom'].includes(this.align) ? this.align : 'bottom';
+        this.align = ['left', 'right', 'top', 'bottom', 'modal'].includes(this.align) ? this.align : 'bottom';
         switch (this.align) {
             case 'left': {
                 right = this.intersect ? rect.right : rect.left;
@@ -230,6 +250,7 @@ customElements.define('li-dropdown', class LiDropdown extends LiElement {
         Object.keys(size).forEach(k => size[k] += 'px');
         this._steps = [];
         this.size = { ...{}, ...size };
+        this.$id.modal.style.display = this.align === 'modal' ? 'block' : 'none';
         return size;
     }
     _keyup(e) {

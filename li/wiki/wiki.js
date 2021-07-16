@@ -148,8 +148,8 @@ customElements.define('li-wiki', class LiWiki extends LiElement {
                         <li-button name="playlist-add" title="editors" @click="${() => this._lPanel = 'editors'}" ?toggled="${this._lPanel === 'editors'}" toggledClass="ontoggled"></li-button>
                         <li-button name="check" title="actions" @click="${() => this._lPanel = 'actions'}" ?toggled="${this._lPanel === 'actions'}" toggledClass="ontoggled"></li-button>
                         <li-button name="settings" title="settings" @click="${() => this._lPanel = 'settings'}" ?toggled="${this._lPanel === 'settings'}" toggledClass="ontoggled"></li-button>
-                        <li-button name="image" title="ecard" @click="${() => this._lPanel = 'ecard'}" ?toggled="${this._lPanel === 'ecard'}" toggledClass="ontoggled"></li-button>
                         <div style="flex:1"></div>
+                        <li-button name="image" title="open ecard editor" @click="${this._openEcard}"></li-button>
                         <li-button name="refresh" title="reload page" @click="${() => document.location.reload()}"></li-button>
                         <li-button name="camera" title="save tree state" @click="${this._saveTreeState}"></li-button>
                         <li-button name="save" title="save" @click="${this._treeActions}" .fill="${this._needSave ? 'red' : ''}" .color="${this._needSave ? 'red' : 'gray'}"></li-button>
@@ -210,10 +210,6 @@ customElements.define('li-wiki', class LiWiki extends LiElement {
                                 <input type="file" id="Import db" @change=${(e) => this._settings(e)}/>
                                 <div style="border-bottom:1px solid lightgray;width:100%;margin: 4px 0;"></div>
                             </div>
-                        ` : this._lPanel === 'ecard' ? html`
-                            <b>ecard</b>
-                            <div style="border-bottom:1px solid lightgray;width:100%;margin: 4px 0;"></div>
-                            <li-editor-ecard></li-editor-ecard>
                         ` : html`
                             <b>${this._starLabel || this._lPanel}</b>
                             <div style="border-bottom:1px solid lightgray;width:100%;margin: 4px 0;"></div>
@@ -270,6 +266,9 @@ customElements.define('li-wiki', class LiWiki extends LiElement {
             //console.log('templates - ', 'items: ', this.selectedTemplate.items.length, ' parts: ', this.selectedTemplate.parts.length)
         }
         this.$update()
+    }
+    async _openEcard() {
+        await LI.show('dropdown', 'editor-ecard', {}, { align: 'modal'});
     }
     _setDbName(e) {
         this.dbName = e.target.value;
