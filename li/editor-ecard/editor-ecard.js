@@ -16,9 +16,6 @@ customElements.define('li-editor-ecard', class LiEditorECard extends LiElement {
 
     static get styles() {
         return css`
-            :host {
-                overflow: auto;
-            }
             ::-webkit-scrollbar {
                 width: 4px;
                 height: 4px;
@@ -34,13 +31,16 @@ customElements.define('li-editor-ecard', class LiEditorECard extends LiElement {
 
     render() {
         return html`
-            <div style="display: flex;align-items: center; padding: 4px; width: 645px;">
-                <label>eCard editor</label>
-                <div style="flex: 1"></div>
-                <li-button name="save" width="160px" @click="${this._open}">Open in new tab</li-button>
-                <li-button name="content-copy" width="160px" @click="${this._copy}">Copy to clipboard</li-button>
+            <div style="border: 1px solid gray; border-radius: 4px; background: lightgray; margin: auto; padding: 2px; width: 610px;">
+                <div style="display: flex;align-items: center; padding: 4px; width: 600px;">
+                    <label>eCard editor</label>
+                    <div style="flex: 1"></div>
+                    <li-button name="save" width="160px" @click="${this._open}">Open in new tab</li-button>
+                    <li-button name="content-copy" width="160px" @click="${this._copy}">Copy to clipboard</li-button>
+                    <li-button name="close" @click="${() => window.dispatchEvent(new KeyboardEvent('keyup', { 'keyCode': 27 }))}" title="close"></li-button>
+                </div>
+                <iframe ref="editor" .srcdoc="${this.srcdoc}" style="border: none; width: 610px; height: 684px;"></iframe>
             </div>
-            <iframe ref="editor" .srcdoc="${this.srcdoc}" style="border: none; width: 650px; height: 690px;"></iframe>
         `
     }
 
