@@ -13,7 +13,8 @@ body {
     background: url(img/body.gif) repeat center top; 
     color: #333; 
     background-attachment:fixed; 
-    padding: 40px 0; 
+    /* padding: 40px 0;  */
+    margin: auto;
     box-sizing: border-box; 
     -moz-box-sizing: border-box; 
     -webkit-box-sizing: border-box; 

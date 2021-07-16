@@ -148,6 +148,7 @@ customElements.define('li-wiki', class LiWiki extends LiElement {
                         <li-button name="playlist-add" title="editors" @click="${() => this._lPanel = 'editors'}" ?toggled="${this._lPanel === 'editors'}" toggledClass="ontoggled"></li-button>
                         <li-button name="check" title="actions" @click="${() => this._lPanel = 'actions'}" ?toggled="${this._lPanel === 'actions'}" toggledClass="ontoggled"></li-button>
                         <li-button name="settings" title="settings" @click="${() => this._lPanel = 'settings'}" ?toggled="${this._lPanel === 'settings'}" toggledClass="ontoggled"></li-button>
+                        <li-button name="edit" title="ecard" @click="${() => this._lPanel = 'ecard'}" ?toggled="${this._lPanel === 'ecard'}" toggledClass="ontoggled"></li-button>
                         <div style="flex:1"></div>
                         <li-button name="refresh" title="reload page" @click="${() => document.location.reload()}"></li-button>
                         <li-button name="camera" title="save tree state" @click="${this._saveTreeState}"></li-button>
@@ -188,7 +189,7 @@ customElements.define('li-wiki', class LiWiki extends LiElement {
                             <b>settings</b>
                             <div style="border-bottom:1px solid lightgray;width:100%;margin: 4px 0;"></div>
                             <div style="display: flex; flex-direction: column; overflow: auto;">
-                                <div class="lbl" style="color:gray; opacity: 0.7">version: 0.8.7</div>
+                                <div class="lbl" style="color:gray; opacity: 0.7">version: 0.9.1</div>
                                 <div style="border-bottom:1px solid lightgray;width:100%;margin: 4px 0;"></div>
                                 <div style="display: flex"><div class="lbl" style="width: 100px">db name:</div><input .value="${this.dbName}" @change="${this._setDbName}"></div>
                                 <div style="border-bottom:1px solid lightgray;width:100%;margin: 4px 0;"></div>
@@ -209,6 +210,10 @@ customElements.define('li-wiki', class LiWiki extends LiElement {
                                 <input type="file" id="Import db" @change=${(e) => this._settings(e)}/>
                                 <div style="border-bottom:1px solid lightgray;width:100%;margin: 4px 0;"></div>
                             </div>
+                        ` : this._lPanel === 'ecard' ? html`
+                            <b>ecard</b>
+                            <div style="border-bottom:1px solid lightgray;width:100%;margin: 4px 0;"></div>
+                            <li-editor-ecard></li-editor-ecard>
                         ` : html`
                             <b>${this._starLabel || this._lPanel}</b>
                             <div style="border-bottom:1px solid lightgray;width:100%;margin: 4px 0;"></div>
