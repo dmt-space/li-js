@@ -149,7 +149,6 @@ customElements.define('li-wiki', class LiWiki extends LiElement {
                         <li-button name="check" title="actions" @click="${() => this._lPanel = 'actions'}" ?toggled="${this._lPanel === 'actions'}" toggledClass="ontoggled"></li-button>
                         <li-button name="settings" title="settings" @click="${() => this._lPanel = 'settings'}" ?toggled="${this._lPanel === 'settings'}" toggledClass="ontoggled"></li-button>
                         <div style="flex:1"></div>
-                        <li-button name="image" title="open ecard editor" @click="${this._openEcard}"></li-button>
                         <li-button name="refresh" title="reload page" @click="${() => document.location.reload()}"></li-button>
                         <li-button name="camera" title="save tree state" @click="${this._saveTreeState}"></li-button>
                         <li-button name="save" title="save" @click="${this._treeActions}" .fill="${this._needSave ? 'red' : ''}" .color="${this._needSave ? 'red' : 'gray'}"></li-button>
@@ -165,6 +164,8 @@ customElements.define('li-wiki', class LiWiki extends LiElement {
                                 <li-button width="auto" @click="${this._addBox}">simplemde</li-button>
                                 <li-button width="auto" @click="${this._addBox}">showdown</li-button>
                                 <li-button width="auto" @click="${this._addBox}">iframe</li-button>
+                                open editor:
+                                <li-button name="image" width="auto" @click="${this._openEcard}">eCard editor</li-button>
                             </div>
                         ` : this._lPanel === 'actions' ? html`
                             <b>actions</b>
