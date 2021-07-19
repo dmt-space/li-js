@@ -152,7 +152,7 @@ customElements.define('li-layout-app', class LiLayoutApp extends LiElement {
             <div style="${this.styleLP}">
                 <slot name="app-left" style="width:${this._widthL - 4}px;display:inline-block"></slot>
             </div>
-        ` : "";
+        ` : html``;
     }
     get styleRP() {
         return `border-left: ${this.border}; width: ${this._widthR}px; overflow-x: hidden; overflow-y: auto;flex: 0 0 ${this._widthR}px;display:flex;justify-content:start;
@@ -163,7 +163,7 @@ customElements.define('li-layout-app', class LiLayoutApp extends LiElement {
             <div style="${this.styleRP}">
                 <slot name="app-right" style="width:${this._widthR - 4}px;display:inline-block"></slot>
             </div>
-        ` : "";
+        ` : html``;
     }
     get mainPanel() {
         return html`
@@ -200,8 +200,8 @@ customElements.define('li-layout-app', class LiLayoutApp extends LiElement {
             </div>
         ` : "";
     }
-    get leftSplitter() { return html`<div class="pnl-spl" @mousedown="${e => this._movePanel('left')}"></div>` }
-    get rightSplitter() { return html`<div class="pnl-spl" @mousedown="${e => this._movePanel('right')}"></div>` }
+    get leftSplitter() { return !this._l ? html`` : html`<div class="pnl-spl" @mousedown="${e => this._movePanel('left')}"></div>` }
+    get rightSplitter() { return !this._r ? html`` : html`<div class="pnl-spl" @mousedown="${e => this._movePanel('right')}"></div>` }
     get tempPanel() { return html`<div class="temp" @mousemove="${this._mousemove}" @mouseup="${this._up}" @mouseout="${this._up}" style="z-index: ${this._indx}"></div>` }
     get shadowPanel() { return this.isOver ? html`<div style="position:absolute;top:0;bottom:0;left:0;right:0;z-index:98;background:gray;opacity:.5;cursor:pointer;transition:5s;" @click="${this._hideAll}"></div>` : '' }
     get body() {
