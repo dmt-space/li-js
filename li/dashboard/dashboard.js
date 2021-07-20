@@ -24,12 +24,18 @@ customElements.define('li-dashboard', class LiDashboard extends LiElement {
                 margin: 2px;
                 cursor: pointer;
             }
+            .app-main {
+                display: block;
+                position: relative;
+                width: 100%;
+                height: 100%;
+            }
         `;
     }
 
     render() {
         return html`
-            <li-layout-app hide="r" outside>
+            <li-layout-app hide="r" outside @mouseup="${e => this.action = ''}" @click="${e => this.focusedItem = undefined}">
                 <div slot="app-top" class="header">
                     <div style="flex:1"></div><b>dashboard</b><div style="flex:1"></div>
                 </div>
@@ -39,65 +45,19 @@ customElements.define('li-dashboard', class LiDashboard extends LiElement {
                             @dblclick="${e => this._dblclick(e, i)}"></div>
                     `)}
                 </div>
-                <li-dashpanel slot="app-main" .item="${this.item}"></li-dashpanel>   
+                <div slot="app-main" class="app-main" @drop="${this._drop}" @dragover="${this._over}">
+                    ${(this.item?.items || []).map(i => html`
+                        <li-dashpanel .item="${i}"></li-dashpanel>
+                    `)}
+                </div>
             </li-layout-app>
         `;
     }
 
     static get properties() {
         return {
-            item: {
-                type: Object,
-                default: {
-                    vertical: false,
-                    items: [
-                        { color: `hsla(0, 50%, 70%, .7)`, w: '400px', h: '99%' },
-                        {
-                            vertical: true,
-                            items: [
-                                { color: `hsla(45, 50%, 70%, .7)`, h: '400px' },
-                                {
-                                    vertical: false,
-                                    items: [
-                                        { color: `hsla(90, 50%, 70%, .7)` },
-                                        {
-                                            vertical: true,
-                                            items: [
-                                                { color: `hsla(135, 50%, 70%, .7)` },
-                                                {
-                                                    vertical: true,
-                                                    items: [
-                                                        { color: `hsla(180, 50%, 70%, .7)` },
-                                                        {
-                                                            vertical: false,
-                                                            items: [
-                                                                { color: `hsla(225, 50%, 70%, .7)` },
-                                                                {
-                                                                    vertical: false,
-                                                                    items: [
-                                                                        { color: `hsla(270, 50%, 70%, .7)` },
-                                                                        {
-                                                                            vertical: true,
-                                                                            items: [
-                                                                                { color: `hsla(315, 50%, 70%, .7)` },
-                                                                                { color: `hsla(360, 50%, 70%, .7)` }
-                                                                            ]
-                                                                        }
-                                                                    ]
-                                                                }
-                                                            ]
-                                                        }
-                                                    ]
-                                                }
-                                            ]
-                                        }
-                                    ]
-                                }
-                            ]
-                        }
-                    ]
-                }
-            },
+            item: { type: Object, default: {} },
+            action: { type: String, default: '', local: true },
             focusedItem: { type: Object, default: undefined, local: true },
             readOnly: { type: Boolean, reflect: true }
         }
@@ -105,21 +65,21 @@ customElements.define('li-dashboard', class LiDashboard extends LiElement {
 
     _start(e, color) {
         //console.log(color)
-        //this._dragElementColor = color;
+        this._dragElementColor = color;
     }
     _over(e) {
         //console.log(e)
-        //e.preventDefault();
+        e.preventDefault();
         //e.dataTransfer.dropEffect = "move";
     }
     _drop(e) {
-        // if (!this.item?.[0])
-        // this.item = [{ color: `hsla(${this._dragElementColor}, 50%, 70%, .7)` }];
-        // this.$update();
+        this.item.items = this.item.items || [];
+        this.item.items.push({ color: `hsla(${this._dragElementColor}, 50%, 70%, .7)`, left: 10, top: 10, w: 200, h: 100 });
+        this.$update();
     }
     _dblclick(e, color) {
-        // this._dragElementColor = color;
-        // this._drop();
+        this._dragElementColor = color;
+        this._drop();
     }
 
 });
@@ -128,9 +88,6 @@ customElements.define('li-dashpanel', class LiDashpanel extends LiElement {
 
     static get styles() {
         return css`
-            :host {
-                flex: 1 1 auto;
-            }
             ::-webkit-scrollbar {
                 width: 4px;
                 height: 4px;
@@ -143,67 +100,66 @@ customElements.define('li-dashpanel', class LiDashpanel extends LiElement {
             }
             .panel {
                 border: 1px solid gray;
-                min-width: 200px;
-                min-height: 100px;
-                flex: 1 1 auto;
-                margin: 4px;
-                /* height: (100% - 10px); */
                 cursor: pointer;
+                z-index: 0;
             }
             .focused {
-                border: 4px solid red;
+                box-shadow: 0 0 10px 1px orange;
+                z-index: 1;
             }
         `;
     }
 
     render() {
         return html`
-            ${!this.item?.items?.[0] ? html`` : html`
-                <div style="display: flex; flex-direction: ${this.item.vertical ? 'column' : 'row'}; width: 100%; height: 100%; flex-wrap: wrap; min-width: 200px"  @drop="${this._drop}" @dragover="${this._over}"
-                        @dragstart="${this._start}">
-                    <div class="panel ${!this.readOnly && this.focusedItem === this.item.items[0] ? 'focused' : ''}" style="
-                        width: ${this.item.items[0].w || ''}; 
-                        height: ${this.item.items[0].h || ''}; 
-                        background: ${this.item.items[0].color}" @click="${this._click}"></div>
-                    ${!this.item.items[1] ? html`` : html`
-                        ${this.item.items[1].items?.length ? html`
-                            <li-dashpanel .item=${this.item.items[1]}></li-dashpanel>
-                        ` : html`
-                            <div class="panel ${!this.readOnly && this.focusedItem === this.item.items[1] ? 'focused' : ''}" style="
-                            width: ${this.item.items[0].w || ''}; 
-                            height: ${this.item.items[0].h || ''}; 
-                            background: ${this.item.items[1].color}" @click="${this._click}"></div>
-                        `}
-                    `}
-                </div>
-            `}
+            <div class="panel ${!this.readOnly && this.focusedItem === this.item ? 'focused' : ''}" 
+                style="
+                    position: absolute;
+                    background: ${this.item?.color};
+                    left: ${this.item?.left || 0 + 'px'};
+                    top: ${this.item?.top || 0 + 'px'};
+                    width: ${this.item?.w || 200 + 'px'};
+                    height: ${this.item?.h || 100 + 'px'};
+                " 
+                @click="${this._click}"
+                @mousedown="${this._down}"
+                @mousemove="${this._move}"
+                @mouseup="${this._up}"
+                @dragstart="${this._start}">
+            </div>
         `;
     }
 
     static get properties() {
         return {
             item: { type: Object },
+            action: { type: String, default: '', local: true },
             focusedItem: { type: Object, default: undefined, local: true },
             readOnly: { type: Boolean, local: false }
         }
     }
-
-    _click(e) {
+    _start() {
         this.focusedItem = this.item;
     }
-
-    _start(e) {
-        //console.log(color)
-        this._dragElementColor = e.target.color;
+    _click(e) {
+        e.stopPropagation();
+        this.focusedItem = this.item;
     }
-    _over(e) {
-        //console.log(e)
-        e.preventDefault();
-        //e.dataTransfer.dropEffect = "move";
+    _move(e) {
+        if (this.action === 'mouseMove' && this.focusedItem === this.item) {
+            this.item.left += e.movementX;
+            this.item.top += e.movementY;
+            this.$update();
+        }
     }
-    _drop(e) {
-        // console.log(e)
-        this.item.items[1] = { color: `hsla(45, 50%, 70%, .7)` };
+    _down(e) {
+        this.action = 'mouseMove';
+        this.focusedItem = this.item;
+    }
+    _up(e) {
+        e => this.action = '';
+        this.item.left = Math.round(this.item.left / 5) * 5;
+        this.item.top = Math.round(this.item.top / 5) * 5;
         this.$update();
     }
 });
