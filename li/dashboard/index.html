@@ -1,5 +1,3 @@
-<script type="module" src="./dashboard.js"></script>
-
 <style>
     html * {
         font-family: Arial;
@@ -13,4 +11,94 @@
     }
 </style>
 
-<li-dashboard id="dash"></li-dashboard>
+<li-test-dashboard id="test-dash"></li-test-dashboard>
+
+<script type="module">
+    import { LiElement, html, css, unsafeCSS } from '../../li.js';
+    import '../layout-app/layout-app.js';
+    import './dashboard.js';
+
+    customElements.define('li-test-dashboard', class LiTestDashboard extends LiElement {
+
+        static get styles() {
+            return css`
+            ::-webkit-scrollbar { width: 4px; height: 4px; }
+            ::-webkit-scrollbar-track { background: lightgray; }
+            ::-webkit-scrollbar-thumb { background-color: gray; }
+            .color{
+                border: 1px solid lightgray; 
+                width: (100% - 6px); 
+                height: 32px; 
+                margin: 2px;
+                cursor: pointer;
+            }
+            .app-main {
+                display: block;
+                position: relative;
+                width: 100%;
+                height: 100%;
+            }
+        `;
+        }
+
+        render() {
+            return html`
+            <li-layout-app hide="r" outside @mouseup="${e => this.action = ''}" @click="${e => this.focusedItem = undefined}">
+                <div slot="app-top" class="header">
+                    <div style="flex:1"></div>dashboard<div style="flex:1"></div>
+                </div>
+                <div slot="app-left" style="padding-left:4px;display: flex; flex-direction: column;">
+                    <div style="padding:4px; color: gray;">Double click or move color box...</div>
+                    ${[0, 45, 90, 135, 180, 225, 270, 315].map(i => html`
+                        <div draggable="true" class="color" style="background: ${`hsla(${i}, 50%, 70%, .7)`}" @dragstart="${(e) => this._start(e, i)}"
+                            @dblclick="${e => this._dblclick(e, i)}"></div>
+                    `)}
+                </div>
+                <div slot="app-main" class="app-main" @drop="${this._drop}" @dragover="${this._over}">
+                    <li-dashboard .item="${this.item}"></li-dashboard>
+                </div>
+            </li-layout-app>
+        `;
+        }
+
+        static get properties() {
+            return {
+                item: {
+                    type: Object,
+                    default: {
+                        items: [
+                            { color: "hsla(180, 50%, 70%, .7)", left: 215, top: 10, w: 535, h: 440 },
+                            { color: "hsla(225, 50%, 70%, .7)", left: 755, top: 10, w: 275, h: 195 },
+                            { color: "hsla(270, 50%, 70%, .7)", left: 755, top: 210, w: 275, h: 240 },
+                            { color: "hsla(315, 50%, 70%, .7)", left: 215, top: 455, w: 815, h: 180 }
+                        ]
+                    }
+                },
+                action: { type: String, default: '', local: true },
+                focusedItem: { type: Object, default: undefined, local: true },
+                readOnly: { type: Boolean, reflect: true, default: false, local: true },
+                count: { type: Number, default: 0 }
+            }
+        }
+
+        _start(e, color) {
+            this._dragElementColor = color;
+        }
+        _over(e) {
+            e.preventDefault();
+        }
+        _drop(e) {
+            if (this._dragElementColor === undefined) return;
+            this.item.items = this.item.items || [];
+            this.item.items.push({ color: `hsla(${this._dragElementColor}, 50%, 70%, .7)`, left: 10, top: 10 + this.count * 105, w: 200, h: 100 });
+            this._dragElementColor = undefined;
+            this.count = this.count < 7 ? this.count + 1 : 0;
+            this.$update();
+        }
+        _dblclick(e, color) {
+            this._dragElementColor = color;
+            this._drop();
+        }
+
+    });
+</script>
