@@ -1,6 +1,5 @@
 import { LiElement, html, css, unsafeCSS } from '../../li.js';
 
-import '../layout-app/layout-app.js';
 import '../button/button.js';
 import '../icon/icon.js';
 
@@ -8,50 +7,15 @@ customElements.define('li-dashboard', class LiDashboard extends LiElement {
 
     static get styles() {
         return css`
-            ::-webkit-scrollbar {
-                width: 4px;
-                height: 4px;
-            }
-            ::-webkit-scrollbar-track {
-                background: lightgray;
-            }
-            ::-webkit-scrollbar-thumb {
-                background-color: gray;
-            }
-            .color{
-                border: 1px solid lightgray; 
-                width: (100% - 6px); 
-                height: 32px; 
-                margin: 2px;
-                cursor: pointer;
-            }
-            .app-main {
-                display: block;
-                position: relative;
-                width: 100%;
-                height: 100%;
-            }
+            ::-webkit-scrollbar { width: 4px; height: 4px; }
+            ::-webkit-scrollbar-track { background: lightgray; }
+            ::-webkit-scrollbar-thumb { background-color: gray; }
         `;
     }
 
     render() {
         return html`
-            <li-layout-app hide="r" outside @mouseup="${e => this.action = ''}" @click="${e => this.focusedItem = undefined}">
-                <div slot="app-top" class="header">
-                    <div style="flex:1"></div>dashboard<div style="flex:1"></div>
-                </div>
-                <div slot="app-left" style="padding-left:4px;display: flex; flex-direction: column;">
-                    ${[0, 45, 90, 135, 180, 225, 270, 315].map(i => html`
-                        <div draggable="true" class="color" style="background: ${`hsla(${i}, 50%, 70%, .7)`}" @dragstart="${(e) => this._start(e, i)}"
-                            @dblclick="${e => this._dblclick(e, i)}"></div>
-                    `)}
-                </div>
-                <div slot="app-main" class="app-main" @drop="${this._drop}" @dragover="${this._over}">
-                    ${(this.item?.items || []).map(i => html`
-                        <li-dashpanel .item="${i}"></li-dashpanel>
-                    `)}
-                </div>
-            </li-layout-app>
+            ${(this.item?.items || []).map(i => html`<li-dashpanel .item="${i}"></li-dashpanel>`)}
         `;
     }
 
@@ -63,39 +27,15 @@ customElements.define('li-dashboard', class LiDashboard extends LiElement {
             readOnly: { type: Boolean, reflect: true, default: false, local: true }
         }
     }
-
-    _start(e, color) {
-        this._dragElementColor = color;
-    }
-    _over(e) {
-        e.preventDefault();
-    }
-    _drop(e) {
-        this.item.items = this.item.items || [];
-        this.item.items.push({ color: `hsla(${this._dragElementColor}, 50%, 70%, .7)`, left: 10, top: 10, w: 200, h: 100 });
-        this.$update();
-    }
-    _dblclick(e, color) {
-        this._dragElementColor = color;
-        this._drop();
-    }
-
-});
+})
 
 customElements.define('li-dashpanel', class LiDashpanel extends LiElement {
 
     static get styles() {
         return css`
-            ::-webkit-scrollbar {
-                width: 4px;
-                height: 4px;
-            }
-            ::-webkit-scrollbar-track {
-                background: lightgray;
-            }
-            ::-webkit-scrollbar-thumb {
-                background-color: gray;
-            }
+            ::-webkit-scrollbar { width: 4px; height: 4px; }
+            ::-webkit-scrollbar-track { background: lightgray; }
+            ::-webkit-scrollbar-thumb { background-color: gray; }
             .panel {
                 border: 1px solid gray;
                 cursor: pointer;
@@ -108,26 +48,16 @@ customElements.define('li-dashpanel', class LiDashpanel extends LiElement {
             .marker {
                 position: absolute;
                 border-color: red;
-                opacity: .8;
+                opacity: 0;
                 z-index: 2;
-                cursor: move;
             }
-            #tl {
-                top: -8;
-                left: -8;
+            .marker:hover {
+                opacity: .8;
             }
-            #tr {
-                top: -8;
-                right: -8;
-            }
-            #br {
-                bottom: -8;
-                right: -8;
-            }
-            #bl {
-                bottom: -8;
-                left: -8;
-            }
+            #tl { top: -8; left: -8; }
+            #tr { top: -8; right: -8; }
+            #br { bottom: -8; right: -8; }
+            #bl { bottom: -8; left: -8; }
         `;
     }
 
@@ -137,7 +67,7 @@ customElements.define('li-dashpanel', class LiDashpanel extends LiElement {
                     ?hidden="${this.readOnly || this.focusedItem !== this.item || !this.action}"
                     @mousemove="${this._move}" @mouseup="${this._up}">
             </div>
-            <div class="panel ${!this.readOnly && this.focusedItem === this.item ? 'focused' : ''}" 
+            <div class="panel ${this.focusedItem === this.item ? 'focused' : ''}"
                     style="
                         position: absolute;
                         background: ${this.item?.color};
@@ -185,23 +115,15 @@ customElements.define('li-dashpanel', class LiDashpanel extends LiElement {
             this.$update();
         }
         if (this.action === 'markerMove') {
-            if (this._actionId === 'br') {
-                this.item.w += e.movementX;
-                this.item.h += e.movementY;
-            } else if (this._actionId === 'bl') {
-                this.item.w -= e.movementX;
-                this.item.h += e.movementY;
-                this.item.left += e.movementX;
-            } else if (this._actionId === 'tl') {
-                this.item.w -= e.movementX;
-                this.item.h -= e.movementY;
-                this.item.left += e.movementX;
-                this.item.top += e.movementY;
-            } else if (this._actionId === 'tr') {
-                this.item.w += e.movementX;
-                this.item.h -= e.movementY;
-                this.item.top += e.movementY;
+            let x = e.movementX, y = e.movementY, w = this.item.w, h = this.item.h, l = this.item.left, t = this.item.top;
+            const move = {
+                br: () => { w += x; h += y; },
+                bl: () => { w -= x; h += y; l += x; },
+                tl: () => { w -= x; h -= y; l += x; t += y; },
+                tr: () => { w += x; h -= y; t += y; }
             }
+            move[this._actionId]();
+            this.item.w = w; this.item.h = h; this.item.left = l; this.item.top = t;
             this.$update();
         }
     }
@@ -230,4 +152,4 @@ customElements.define('li-dashpanel', class LiDashpanel extends LiElement {
         this.action = 'markerMove';
         this._actionId = e.target.id;
     }
-});
+})

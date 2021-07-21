@@ -198,6 +198,9 @@ export const indx = {
     'li-layout-grid': { label: 'li-layout-grid' },
     'layout-grid': [{ label: 'index', url: url + '/layout-grid' }],
 
+    'li-dashboard': { label: 'li-dashboard', props: { iframe: '../dashboard/index.html' } },
+    dashboard: [{ label: 'index', url: url + '/dashboard' }],
+
     'li-layout-scheme': { label: 'li-scheme-designer', props: { iframe: '../layout-scheme/index-3.html' } },
     'layout-scheme': [{ label: 'demo-1', url: url + '/layout-scheme' },
     { label: 'demo-2', url: url + '/layout-scheme/index-2.html' }, { label: 'demo-3', url: url + '/layout-scheme/index-3.html' }],
