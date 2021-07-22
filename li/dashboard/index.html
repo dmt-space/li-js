@@ -54,9 +54,7 @@
                             @dblclick="${e => this._dblclick(e, i)}"></div>
                     `)}
                 </div>
-                <div slot="app-main" class="app-main" @drop="${this._drop}" @dragover="${this._over}">
-                    <li-dashboard .item="${this.item}"></li-dashboard>
-                </div>
+                <li-dashboard slot="app-main" class="app-main" @drop="${this._drop}" @dragover="${this._over}" .item="${this.item}"></li-dashboard>
             </li-layout-app>
         `;
         }
