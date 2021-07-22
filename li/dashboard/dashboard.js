@@ -55,31 +55,51 @@ customElements.define('li-dashpanel', class LiDashpanel extends LiElement {
             ::-webkit-scrollbar-thumb { background-color: gray; }
             .panel {
                 border: 1px solid gray;
+                cursor: pointer;
                 z-index: 0;
             }
             .focused {
                 box-shadow: 0 0 10px 2px gray;
                 z-index: 1;
             }
-            .marker {
+            .resize {
                 position: absolute;
-                opacity: 0;
                 z-index: 2;
             }
-            .marker:hover {
-                opacity: .8;
-            }
-            #tl { top: 0; left: 0; cursor: pointer; }
-            #tr { top: 0; right: 0; cursor: pointer; }
-            #br { bottom: 0; right: 0; cursor: pointer; }
-            #bl { bottom: 0; left: 0; cursor: pointer; }
+            #tl { height: 5px; width: 5px; top: 0; left: 0; cursor: nwse-resize }
+            #t { height: 5px; top: 0; left: 5; right: 5; cursor: ns-resize }
+            #tr { height: 5px; width: 5px; top: 0; right: 0; cursor: nesw-resize }
+            #l { width: 5px; top: 5; left: 0; bottom: 5; cursor: ew-resize }
+            #r { width: 5px; top: 5; right: 0; bottom: 5; cursor: ew-resize }
+            #br { height: 5px; width: 5px; bottom: 0; right: 0; cursor: nwse-resize }
+            #b { height: 5px; bottom: 0; left: 5; right: 5; cursor: ns-resize }
+            #bl { height: 5px; width: 5px; bottom: 0; left: 0; cursor: nesw-resize }
             #btns {
-                cursor: pointer;
+                position: absolute;
                 display: flex;
-                opacity: 0.1;
+                flex-direction: row-reverse;
+                top: 2;
+                right: 2;
             }
-            #btns:hover {
+            .btn {
+                z-index: 1;
+                opacity: 0.1;
+                cursor: pointer;
+            }
+            .btn:hover {
+                color: white;
+                background-color: gray;
                 opacity: .8;
+                z-index: 1;
+            }
+            .main {
+                position: absolute;
+                display: flex;
+                flex-direction: column;
+                top: 5;
+                bottom: 5;
+                left: 5;
+                right: 5;
             }
         `;
     }
@@ -92,7 +112,7 @@ customElements.define('li-dashpanel', class LiDashpanel extends LiElement {
                         ${this.expanded ? `
                             position: absolute; left: 0; top: 0; right: 0; bottom : 0; overflow: hidden;
                         ` : this.item?.collapsed ? `
-                            width: 98px; height: 22px; margin: 1px;
+                            position: relative; width: 98px; height: 25px; margin: 1px;
                         ` : `
                             position: absolute;
                             left: ${this.item?.left || 0 + 'px'};
@@ -101,19 +121,24 @@ customElements.define('li-dashpanel', class LiDashpanel extends LiElement {
                             height: ${this.item?.h || 100 + 'px'};
                         `}
                     "
-                    @click="${e => e.stopPropagation()}">
-                ${!this.readOnly && !this.action && !this.expanded && !this.item?.collapsed ? html`
-                    <li-icon id="tl" class="marker" name="swap-horiz" rotate="45" size="16" @mousedown="${e => this._down(e, 'resize')}"></li-icon>
-                    <li-icon id="tr" class="marker" name="swap-horiz" rotate="-45" size="16" @mousedown="${e => this._down(e, 'resize')}"></li-icon>
-                    <li-icon id="br" class="marker" name="swap-horiz" rotate="45" size="16" @mousedown="${e => this._down(e, 'resize')}"></li-icon>
-                    <li-icon id="bl" class="marker" name="swap-horiz" rotate="-45" size="16" @mousedown="${e => this._down(e, 'resize')}"></li-icon>
-                ` : html``}
-                <div id="btns">       
-                    <div style="flex: 1" @mousedown="${e => this._down(e, 'move')}"></div>
-                    <li-icon name="fullscreen-exit" size="20" @click="${this._collapsed}"></li-icon>
-                    <li-icon name="fullscreen" size="20" @click="${this._expanded}"></li-icon>
-                    <li-icon name="close" size="20" @click="${() => this.fire('close', this.item)}" style="margin-right: 12px;"></li-icon>
+                    @click="${e => e.stopPropagation()}"
+                    @mousedown="${e => this._down(e, 'move')}">
+                <div ?hidden="${this.readOnly || this.expanded || this.item?.collapsed}" @mousedown="${e => e.stopPropagation()}">
+                    <div id="tl" class="resize" @mousedown="${e => this._down(e, 'resize')}"></div>
+                    <div id="t"  class="resize" @mousedown="${e => this._down(e, 'resize')}"></div>
+                    <div id="tr" class="resize" @mousedown="${e => this._down(e, 'resize')}"></div>
+                    <div id="l"  class="resize" @mousedown="${e => this._down(e, 'resize')}"></div>
+                    <div id="r"  class="resize" @mousedown="${e => this._down(e, 'resize')}"></div>
+                    <div id="br" class="resize" @mousedown="${e => this._down(e, 'resize')}"></div>
+                    <div id="b"  class="resize" @mousedown="${e => this._down(e, 'resize')}"></div>
+                    <div id="bl" class="resize" @mousedown="${e => this._down(e, 'resize')}"></div>
                 </div>
+                <div id="btns">   
+                    <li-icon class="btn" name="close" size="20" @click="${() => this.fire('close', this.item)}"></li-icon>    
+                    <li-icon class="btn"  name="fullscreen" size="20" @click="${this._expanded}"></li-icon>
+                    <li-icon class="btn"  name="fullscreen-exit" size="20" @click="${this._collapsed}"></li-icon>
+                </div>
+                <div class="main" slot="dash-main" ?hidden="${this.item?.collapsed}"></div>
             </div>
 
         `;
@@ -167,10 +192,14 @@ customElements.define('li-dashpanel', class LiDashpanel extends LiElement {
         if (this.action === 'resize') {
             let x = e.movementX, y = e.movementY, w = this.item.w, h = this.item.h, l = this.item.left, t = this.item.top;
             const move = {
-                br: () => { w = w + x < 98 ? 98 : w + x; h = h + y < 22 ? 22 : h + y; },
-                bl: () => { w = w - x < 98 ? 98 : w - x; h = h + y < 22 ? 22 : h + y; l += x; },
-                tl: () => { w = w - x < 98 ? 98 : w - x; h = h - y < 22 ? 22 : h - y; l += x; t += y; },
-                tr: () => { w = w + x < 98 ? 98 : w + x; h = h - y < 22 ? 22 : h - y; t += y; }
+                tl: () => { w = w - x < 98 ? 98 : w - x; h = h - y < 25 ? 25 : h - y; l += x; t += y; },
+                t: () => { h = h - y < 25 ? 25 : h - y; t += y; },
+                tr: () => { w = w + x < 98 ? 98 : w + x; h = h - y < 25 ? 25 : h - y; t += y; },
+                l: () => { w = w - x < 98 ? 98 : w - x; l += x; },
+                r: () => { w = w + x < 98 ? 98 : w + x; },
+                bl: () => { w = w - x < 98 ? 98 : w - x; h = h + y < 25 ? 25 : h + y; l += x; },
+                b: () => { h = h + y < 25 ? 25 : h + y; },
+                br: () => { w = w + x < 98 ? 98 : w + x; h = h + y < 25 ? 25 : h + y; },
             }
             move[this._actionId]();
             this.item.w = w; this.item.h = h; this.item.left = l; this.item.top = t;
