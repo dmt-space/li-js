@@ -1,4 +1,4 @@
-import { LiElement, html, css, unsafeCSS } from '../../li.js';
+import { LiElement, html, css } from '../../li.js';
 
 import '../button/button.js';
 import '../icon/icon.js';
@@ -112,7 +112,7 @@ customElements.define('li-dashpanel', class LiDashpanel extends LiElement {
                         ${this.expanded ? `
                             position: absolute; left: 0; top: 0; right: 0; bottom : 0; overflow: hidden;
                         ` : this.item?.collapsed ? `
-                            position: relative; width: 98px; height: 25px; margin: 1px;
+                            position: relative; width: 100px; height: 25px; margin: 1px;
                         ` : `
                             position: absolute;
                             left: ${this.item?.left || 0 + 'px'};
@@ -192,14 +192,14 @@ customElements.define('li-dashpanel', class LiDashpanel extends LiElement {
         if (this.action === 'resize') {
             let x = e.movementX, y = e.movementY, w = this.item.w, h = this.item.h, l = this.item.left, t = this.item.top;
             const move = {
-                tl: () => { w = w - x < 98 ? 98 : w - x; h = h - y < 25 ? 25 : h - y; l += x; t += y; },
+                tl: () => { w = w - x < 100 ? 100 : w - x; h = h - y < 25 ? 25 : h - y; l += x; t += y; },
                 t: () => { h = h - y < 25 ? 25 : h - y; t += y; },
-                tr: () => { w = w + x < 98 ? 98 : w + x; h = h - y < 25 ? 25 : h - y; t += y; },
-                l: () => { w = w - x < 98 ? 98 : w - x; l += x; },
-                r: () => { w = w + x < 98 ? 98 : w + x; },
-                bl: () => { w = w - x < 98 ? 98 : w - x; h = h + y < 25 ? 25 : h + y; l += x; },
+                tr: () => { w = w + x < 100 ? 100 : w + x; h = h - y < 25 ? 25 : h - y; t += y; },
+                l: () => { w = w - x < 100 ? 100 : w - x; l += x; },
+                r: () => { w = w + x < 100 ? 100 : w + x; },
+                bl: () => { w = w - x < 100 ? 100 : w - x; h = h + y < 25 ? 25 : h + y; l += x; },
                 b: () => { h = h + y < 25 ? 25 : h + y; },
-                br: () => { w = w + x < 98 ? 98 : w + x; h = h + y < 25 ? 25 : h + y; },
+                br: () => { w = w + x < 100 ? 100 : w + x; h = h + y < 25 ? 25 : h + y; },
             }
             move[this._actionId]();
             this.item.w = w; this.item.h = h; this.item.left = l; this.item.top = t;
