@@ -127,11 +127,12 @@
                     return;
                 case '3':
                     this.item.items.map((i, idx) => {
-                        const s = 150
+                        i.collapsed = false;
+                        const s = 150;
                         i.w = s;
                         i.h = s;
-                        i.left = idx % 9 * s;
-                        i.top = Math.floor(idx / 9) * s;
+                        i.left = idx % 9 * s + idx % 9 * 5;
+                        i.top = Math.floor(idx / 9) * s + Math.floor(idx / 9) * 5;
                     })
                     this.$update();
                     return;
