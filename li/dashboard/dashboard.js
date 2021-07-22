@@ -55,7 +55,6 @@ customElements.define('li-dashpanel', class LiDashpanel extends LiElement {
             ::-webkit-scrollbar-thumb { background-color: gray; }
             .panel {
                 border: 1px solid gray;
-                /* cursor: pointer; */
                 z-index: 0;
             }
             .focused {
@@ -82,21 +81,19 @@ customElements.define('li-dashpanel', class LiDashpanel extends LiElement {
             #btns:hover {
                 opacity: .8;
             }
-
         `;
     }
 
     render() {
         return html`
-            <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1; pointer-events: ${this.action ? 'auto' : 'none'}" 
-                    ?hidden="${this.readOnly || this.focusedItem !== this.item || !this.action || this.expanded}"
-                    @mousemove="${this._move}" @mouseup="${this._up}">
-            </div>
             <div class="panel ${!this.expanded && !this.item?.collapsed && this.focusedItem === this.item ? 'focused' : ''}" ?hidden="${!this.ready}"
                     style="
                         background: ${this.item?.color};
-                        ${this.expanded ? `position: absolute; left: 0; top: 0; right: 0; bottom : 0; overflow: hidden;`: 
-                            this.item?.collapsed ? `width: 98px; height: 22px; margin: 1px;` : `
+                        ${this.expanded ? `
+                            position: absolute; left: 0; top: 0; right: 0; bottom : 0; overflow: hidden;
+                        ` : this.item?.collapsed ? `
+                            width: 98px; height: 22px; margin: 1px;
+                        ` : `
                             position: absolute;
                             left: ${this.item?.left || 0 + 'px'};
                             top: ${this.item?.top || 0 + 'px'};
@@ -104,17 +101,15 @@ customElements.define('li-dashpanel', class LiDashpanel extends LiElement {
                             height: ${this.item?.h || 100 + 'px'};
                         `}
                     "
-                    @mousemove="${this._move}"
-                    @mouseup="${this._up}"
-                    >
+                    @click="${e => e.stopPropagation()}">
                 ${!this.readOnly && !this.action && !this.expanded && !this.item?.collapsed ? html`
-                    <li-icon id="tl" class="marker" name="swap-horiz" rotate="45" size="16" @mousedown="${this._markerDown}"></li-icon>
-                    <li-icon id="tr" class="marker" name="swap-horiz" rotate="-45" size="16" @mousedown="${this._markerDown}"></li-icon>
-                    <li-icon id="br" class="marker" name="swap-horiz" rotate="45" size="16" @mousedown="${this._markerDown}"></li-icon>
-                    <li-icon id="bl" class="marker" name="swap-horiz" rotate="-45" size="16" @mousedown="${this._markerDown}"></li-icon>
+                    <li-icon id="tl" class="marker" name="swap-horiz" rotate="45" size="16" @mousedown="${e => this._down(e, 'resize')}"></li-icon>
+                    <li-icon id="tr" class="marker" name="swap-horiz" rotate="-45" size="16" @mousedown="${e => this._down(e, 'resize')}"></li-icon>
+                    <li-icon id="br" class="marker" name="swap-horiz" rotate="45" size="16" @mousedown="${e => this._down(e, 'resize')}"></li-icon>
+                    <li-icon id="bl" class="marker" name="swap-horiz" rotate="-45" size="16" @mousedown="${e => this._down(e, 'resize')}"></li-icon>
                 ` : html``}
                 <div id="btns">       
-                    <div style="flex: 1" @mousedown="${this._down}" @click="${this._click}"></div>
+                    <div style="flex: 1" @mousedown="${e => this._down(e, 'move')}"></div>
                     <li-icon name="fullscreen-exit" size="20" @click="${this._collapsed}"></li-icon>
                     <li-icon name="fullscreen" size="20" @click="${this._expanded}"></li-icon>
                     <li-icon name="close" size="20" @click="${() => this.fire('close', this.item)}" style="margin-right: 12px;"></li-icon>
@@ -140,24 +135,36 @@ customElements.define('li-dashpanel', class LiDashpanel extends LiElement {
 
     firstUpdated() {
         super.firstUpdated();
+        this.__move = this._move.bind(this);
+        this.__up = this._up.bind(this);
+        this._setReady();
+    }
+    _setReady() {
         setTimeout(() => {
             this.ready = true;
+            this.$update();
         }, 100);
     }
 
-    _click(e) {
-        if (this.expanded) return;
-        e.stopPropagation();
+    _down(e, action) {
+        if (this.readOnly || this.expanded) {
+            this.focusedItem = undefined;
+            return;
+        }
         this.focusedItem = this.item;
+        this.action = action;
+        this._actionId = e.target.id;
+        document.documentElement.addEventListener("mousemove", this.__move, false);
+        document.documentElement.addEventListener("mouseup", this.__up, false);
     }
     _move(e) {
         if (this.readOnly || this.focusedItem !== this.item) return;
-        if (this.action === 'mouseMove') {
+        if (this.action === 'move') {
             this.item.left += e.movementX;
             this.item.top += e.movementY;
             this.$update();
         }
-        if (this.action === 'markerMove') {
+        if (this.action === 'resize') {
             let x = e.movementX, y = e.movementY, w = this.item.w, h = this.item.h, l = this.item.left, t = this.item.top;
             const move = {
                 br: () => { w = w + x < 98 ? 98 : w + x; h = h + y < 22 ? 22 : h + y; },
@@ -170,15 +177,9 @@ customElements.define('li-dashpanel', class LiDashpanel extends LiElement {
             this.$update();
         }
     }
-    _down(e) {
-        if (this.readOnly || this.expanded) {
-            this.focusedItem = undefined;
-            return;
-        }
-        this.focusedItem = this.item;
-        this.action = 'mouseMove';
-    }
-    _up(e) {
+    _up() {
+        document.documentElement.removeEventListener("mousemove", this.__move, false);
+        document.documentElement.removeEventListener("mouseup", this.__up, false);
         if (this.readOnly || !this.action) return;
         this.action = '';
         this.item.left = Math.round(this.item.left / 5) * 5;
@@ -189,31 +190,18 @@ customElements.define('li-dashpanel', class LiDashpanel extends LiElement {
         this.item.top = this.item.top < 0 ? 0 : this.item.top;
         this.$update();
     }
-    _markerDown(e) {
-        if (this.readOnly) return;
-        e.stopPropagation();
-        this.focusedItem = this.item;
-        this.action = 'markerMove';
-        this._actionId = e.target.id;
-    }
     _expanded(e) {
         e.stopPropagation();
         this.ready = false;
-        this.expandedItem = this.expanded ? undefined : this.item;
+        this.expandedItem = this.expanded ? null : this.item;
         this.focusedItem = undefined;
-        setTimeout(() => {
-            this.ready = true;
-            this.$update();
-        }, 100);
+        this._setReady();
     }
     _collapsed() {
         this.ready = false;
         this.expandedItem = undefined
         this.focusedItem = undefined;
         this.item.collapsed = !this.item.collapsed
-        setTimeout(() => {
-            this.ready = true;
-            this.$update();
-        }, 100);
+        this._setReady();
     }
 })
