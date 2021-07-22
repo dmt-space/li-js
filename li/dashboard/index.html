@@ -53,6 +53,10 @@
                         <div draggable="true" class="color" style="background: ${`hsla(${i}, 50%, 70%, .7)`}" @dragstart="${(e) => this._start(e, i)}"
                             @dblclick="${e => this._dblclick(e, i)}"></div>
                     `)}
+                    <div style="padding:4px; color: gray;">Actions...</div>
+                    ${this.actionList.map((i, idx) => html`
+                        <li-button id="${idx}" width="auto" @click="${this._action}">${i}</li-button>
+                    `)}
                 </div>
                 <li-dashboard slot="app-main" class="app-main" @drop="${this._drop}" @dragover="${this._over}" .item="${this.item}"></li-dashboard>
             </li-layout-app>
@@ -97,6 +101,68 @@
             this._dragElementColor = color;
             this._drop();
         }
+        get actionList() {
+            return [
+                'add all color',
+                'collapse all',
+                'restore last view',
+                'set the same size',
+                'delete all',
+                'view-1',
+                'view-2'
+            ]
+        }
+        _action(e) {
+            switch (e.target.id) {
+                case '0':
+                    [0, 45, 90, 135, 180, 225, 270, 315].forEach(i => this._dblclick('', i));
+                    return;
+                case '1':
+                    this.item.items.forEach(i => i.collapsed = true);
+                    this.$update();
+                    return;
+                case '2':
+                    this.item.items.forEach(i => i.collapsed = false);
+                    this.$update();
+                    return;
+                case '3':
+                    this.item.items.map((i, idx) => {
+                        const s = 150
+                        i.w = s;
+                        i.h = s;
+                        i.left = idx % 9 * s;
+                        i.top = Math.floor(idx / 9) * s;
+                    })
+                    this.$update();
+                    return;
+                case '4':
+                    this.item.items = [];
+                    this.$update();
+                    return;
+                case '5':
+                    this.item.items = [
+                        { color: "hsla(180, 50%, 70%, .7)", left: 215, top: 10, w: 535, h: 440 },
+                        { color: "hsla(225, 50%, 70%, .7)", left: 755, top: 10, w: 275, h: 195 },
+                        { color: "hsla(270, 50%, 70%, .7)", left: 755, top: 210, w: 275, h: 240 },
+                        { color: "hsla(315, 50%, 70%, .7)", left: 215, top: 455, w: 815, h: 180 }
+                    ]
+                    this.$update();
+                    return;
+                case '6':
+                    this.item.items = [
+                        { color: "hsla(0, 50%, 70%, .7)", left: 630, top: 10, w: 435, h: 200 },
+                        { color: "hsla(45, 50%, 70%, .7)", left: 220, top: 10, w: 400, h: 200 },
+                        { color: "hsla(90, 50%, 70%, .7)", left: 220, top: 220, w: 655, h: 165 },
+                        { color: "hsla(135, 50%, 70%, .7)", left: 885, top: 220, w: 180, h: 310 },
+                        { color: "hsla(180, 50%, 70%, .7)", left: 220, top: 395, w: 655, h: 195 },
+                        { color: "hsla(225, 50%, 70%, .7)", left: 885, top: 540, w: 180, h: 195 },
+                        { color: "hsla(270, 50%, 70%, .7)", left: 220, top: 600, w: 655, h: 135 },
+                        { color: "hsla(315, 50%, 70%, .7)", left: 1075, top: 10, w: 250, h: 725 }
+                    ]
+                    this.$update();
+                    return;
+            }
 
+        }
     });
 </script>
