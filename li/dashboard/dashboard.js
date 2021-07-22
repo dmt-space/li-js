@@ -15,14 +15,13 @@ customElements.define('li-dashboard', class LiDashboard extends LiElement {
 
     render() {
         return html`
-            ${this.expandedItem ? html`
-                <li-dashpanel .item="${this.expandedItem}"></li-dashpanel>
-            ` : html`
+            <li-dashpanel .item="${this.expandedItem}" ?hidden="${!this.expandedItem}"></li-dashpanel>
+            <div ?hidden="${this.expandedItem}">
                 ${(this.item?.items || []).map(i => html`<li-dashpanel .item="${i}" ?hidden="${i.collapsed}"></li-dashpanel>`)}
                 <div style="position: absolute; left: 0; bottom: 0; display: flex; flex-wrap: wrap;">
                     ${(this.item?.items || []).filter(i => i.collapsed).map(i => html`<li-dashpanel .item="${i}"></li-dashpanel>`)}
                 </div>
-            `}
+            </div>
         `;
     }
 
@@ -209,6 +208,8 @@ customElements.define('li-dashpanel', class LiDashpanel extends LiElement {
     }
     _collapsed() {
         this.ready = false;
+        this.expandedItem = undefined
+        this.focusedItem = undefined;
         this.item.collapsed = !this.item.collapsed
         setTimeout(() => {
             this.ready = true;
