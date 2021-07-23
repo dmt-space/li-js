@@ -57,6 +57,7 @@ customElements.define('li-dashpanel', class LiDashpanel extends LiElement {
                 border: 1px solid gray;
                 cursor: pointer;
                 z-index: 0;
+                touch-action: none
             }
             .focused {
                 box-shadow: 0 0 10px 2px gray;
