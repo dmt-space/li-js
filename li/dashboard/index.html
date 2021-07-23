@@ -43,7 +43,7 @@
 
         render() {
             return html`
-            <li-layout-app hide="r" outside @mouseup="${e => this.action = ''}" @click="${e => this.focusedItem = undefined}">
+            <li-layout-app hide="r" outside @pointerup="${e => this.action = ''}" @click="${e => this.focusedItem = undefined}">
                 <div slot="app-top" class="header">
                     <div style="flex:1"></div>dashboard<div style="flex:1"></div>
                 </div>
