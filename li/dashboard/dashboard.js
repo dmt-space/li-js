@@ -186,13 +186,15 @@ customElements.define('li-dashpanel', class LiDashpanel extends LiElement {
     }
     _move(e) {
         if (this.readOnly || this.focusedItem !== this.item) return;
+        const movX = e.touches?.[0]?.movementX || e.movementX,
+            movY = e.touches?.[0]?.movementY || e.movementY;
         if (this.action === 'move') {
-            this.item.left += e.movementX;
-            this.item.top += e.movementY;
+            this.item.left += movX;
+            this.item.top += movY;
             this.$update();
         }
         if (this.action === 'resize') {
-            let x = e.movementX, y = e.movementY, w = this.item.w, h = this.item.h, l = this.item.left, t = this.item.top;
+            let x = movX, y = movY, w = this.item.w, h = this.item.h, l = this.item.left, t = this.item.top;
             const move = {
                 tl: () => { w = w - x < 100 ? 100 : w - x; h = h - y < 25 ? 25 : h - y; l += x; t += y; },
                 t: () => { h = h - y < 25 ? 25 : h - y; t += y; },
