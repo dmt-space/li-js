@@ -122,16 +122,16 @@ customElements.define('li-dashpanel', class LiDashpanel extends LiElement {
                         `}
                     "
                     @click="${e => e.stopPropagation()}"
-                    @mousedown="${e => this._down(e, 'move')}">
-                <div ?hidden="${this.readOnly || this.expanded || this.item?.collapsed}" @mousedown="${e => e.stopPropagation()}">
-                    <div id="tl" class="resize" @mousedown="${e => this._down(e, 'resize')}"></div>
-                    <div id="t"  class="resize" @mousedown="${e => this._down(e, 'resize')}"></div>
-                    <div id="tr" class="resize" @mousedown="${e => this._down(e, 'resize')}"></div>
-                    <div id="l"  class="resize" @mousedown="${e => this._down(e, 'resize')}"></div>
-                    <div id="r"  class="resize" @mousedown="${e => this._down(e, 'resize')}"></div>
-                    <div id="br" class="resize" @mousedown="${e => this._down(e, 'resize')}"></div>
-                    <div id="b"  class="resize" @mousedown="${e => this._down(e, 'resize')}"></div>
-                    <div id="bl" class="resize" @mousedown="${e => this._down(e, 'resize')}"></div>
+                    @pointerdown="${e => this._down(e, 'move')}">
+                <div ?hidden="${this.readOnly || this.expanded || this.item?.collapsed}" @pointerdown="${e => e.stopPropagation()}">
+                    <div id="tl" class="resize" @pointerdown="${e => this._down(e, 'resize')}"></div>
+                    <div id="t"  class="resize" @pointerdown="${e => this._down(e, 'resize')}"></div>
+                    <div id="tr" class="resize" @pointerdown="${e => this._down(e, 'resize')}"></div>
+                    <div id="l"  class="resize" @pointerdown="${e => this._down(e, 'resize')}"></div>
+                    <div id="r"  class="resize" @pointerdown="${e => this._down(e, 'resize')}"></div>
+                    <div id="br" class="resize" @pointerdown="${e => this._down(e, 'resize')}"></div>
+                    <div id="b"  class="resize" @pointerdown="${e => this._down(e, 'resize')}"></div>
+                    <div id="bl" class="resize" @pointerdown="${e => this._down(e, 'resize')}"></div>
                 </div>
                 <div id="btns">   
                     <li-icon class="btn" name="close" size="20" @click="${() => this.fire('close', this.item)}"></li-icon>    
@@ -179,8 +179,8 @@ customElements.define('li-dashpanel', class LiDashpanel extends LiElement {
         this.focusedItem = this.item;
         this.action = action;
         this._actionId = e.target.id;
-        document.documentElement.addEventListener("mousemove", this.__move, false);
-        document.documentElement.addEventListener("mouseup", this.__up, false);
+        document.documentElement.addEventListener("pointermove", this.__move, false);
+        document.documentElement.addEventListener("pointerup", this.__up, false);
     }
     _move(e) {
         if (this.readOnly || this.focusedItem !== this.item) return;
@@ -207,8 +207,8 @@ customElements.define('li-dashpanel', class LiDashpanel extends LiElement {
         }
     }
     _up() {
-        document.documentElement.removeEventListener("mousemove", this.__move, false);
-        document.documentElement.removeEventListener("mouseup", this.__up, false);
+        document.documentElement.removeEventListener("pointermove", this.__move, false);
+        document.documentElement.removeEventListener("pointerup", this.__up, false);
         if (this.readOnly || !this.action) return;
         this.action = '';
         this.item.left = Math.round(this.item.left / 5) * 5;
