@@ -57,7 +57,7 @@ customElements.define('li-dashpanel', class LiDashpanel extends LiElement {
                 border: 1px solid gray;
                 cursor: pointer;
                 z-index: 0;
-                touch-action: none
+                touch-action: none;
             }
             .focused {
                 box-shadow: 0 0 10px 2px gray;
@@ -66,6 +66,7 @@ customElements.define('li-dashpanel', class LiDashpanel extends LiElement {
             .resize {
                 position: absolute;
                 z-index: 2;
+                touch-action: none;
             }
             #tl { height: 5px; width: 5px; top: 0; left: 0; cursor: nwse-resize }
             #t { height: 5px; top: 0; left: 5; right: 5; cursor: ns-resize }
