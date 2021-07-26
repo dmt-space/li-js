@@ -102,6 +102,7 @@ customElements.define('li-dashpanel', class LiDashpanel extends LiElement {
                 bottom: 5;
                 left: 5;
                 right: 5;
+                overflow: auto;
             }
         `;
     }
@@ -140,7 +141,9 @@ customElements.define('li-dashpanel', class LiDashpanel extends LiElement {
                     <li-icon class="btn"  name="fullscreen" size="20" @click="${this._expanded}"></li-icon>
                     <li-icon class="btn"  name="fullscreen-exit" size="20" @click="${this._collapsed}"></li-icon>
                 </div>
-                <div class="main" slot="dash-main" ?hidden="${this.item?.collapsed}"></div>
+                <div class="main" style="visibility:${!this.expanded && this.item?.collapsed ? 'hidden' : 'visibility'}">
+                    <li-icon name="${this.item?.icon || 'apps'}" fill="gray" size="18"></li-icon>
+                </div>
             </div>
 
         `;
