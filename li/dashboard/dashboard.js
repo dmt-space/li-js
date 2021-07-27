@@ -184,13 +184,18 @@ customElements.define('li-dashpanel', class LiDashpanel extends LiElement {
         this.focusedItem = this.item;
         this.action = action;
         this._actionId = e.target.id;
+        this._lastX = e.pageX;
+        this._lastY = e.pageY;
         document.documentElement.addEventListener("pointermove", this.__move, false);
         document.documentElement.addEventListener("pointerup", this.__up, false);
+        document.documentElement.addEventListener("pointercancel", this.__up, false);
     }
     _move(e) {
         if (this.readOnly || this.focusedItem !== this.item) return;
-        const movX = e.touches?.[0]?.movementX || e.movementX,
-            movY = e.touches?.[0]?.movementY || e.movementY;
+        const movX = e.pageX - this._lastX,
+            movY = e.pageY - this._lastY;
+        this._lastX = e.pageX;
+        this._lastY = e.pageY;
         if (this.action === 'move') {
             this.item.left += movX;
             this.item.top += movY;
@@ -216,6 +221,7 @@ customElements.define('li-dashpanel', class LiDashpanel extends LiElement {
     _up() {
         document.documentElement.removeEventListener("pointermove", this.__move, false);
         document.documentElement.removeEventListener("pointerup", this.__up, false);
+        document.documentElement.removeEventListener("pointercancel", this.__up, false);
         if (this.readOnly || !this.action) return;
         this.action = '';
         this.item.left = Math.round(this.item.left / 5) * 5;
