@@ -123,20 +123,33 @@ customElements.define('li-editor-ace', class LiAceEditor extends LiElement {
     firstUpdated() {
         super.firstUpdated();
         ace.config.set('basePath', url.replace('editor-ace.js', 'src/'));
-        this.editor = ace.edit(this.$id.editor, { autoScrollEditorIntoView: true });
+        this.editor = ace.edit(this.$id.editor);
         this.editor.renderer.attachToShadowRoot();
-        this._update();
-    }
-
-    updated(changedProperties) {
-        if (this.editor) this._update();
-    }
-
-    _update() {
         this.editor.setTheme('ace/theme/' + this.theme);
         this.editor.getSession().setMode('ace/mode/' + this.mode);
         this.editor.setOptions(this.options);
         this.value = this.src;
         this.$update();
+    }
+
+    updated(changedProperties) {
+        if (this.editor) {
+            if (changedProperties.has('src')) {
+                this.value = this.src;
+                this.$update();
+            }
+            if (changedProperties.has('theme')) {
+                this.editor.setTheme('ace/theme/' + this.theme);
+                this.$update();
+            }
+            if (changedProperties.has('mode')) {
+                this.editor.getSession().setMode('ace/mode/' + this.mode);
+                this.$update();
+            }
+            if (changedProperties.has('options')) {
+                this.editor.setOptions(this.options);
+                this.$update();
+            }
+        }
     }
 })
