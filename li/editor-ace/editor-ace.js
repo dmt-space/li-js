@@ -4,6 +4,31 @@ import './src/ace.js'
 let url = import.meta.url;
 
 customElements.define('li-editor-ace', class LiAceEditor extends LiElement {
+
+    static get styles() {
+        return css`
+            ::-webkit-scrollbar { width: 4px; height: 4px; }
+            ::-webkit-scrollbar-track { background: lightgray; }
+            ::-webkit-scrollbar-thumb { background-color: gray; }
+        `;
+    }
+
+    render() {
+        return html`
+            <style>
+                #host {
+                    width:100%;
+                }
+                #editor {
+                    height: 400px;
+                }
+            </style>
+            <div id="host">
+                <div id="editor"></div>
+            </div>
+        `
+    }
+
     static get properties() {
         return {
             src: { type: String, default: '' },
@@ -41,8 +66,8 @@ customElements.define('li-editor-ace', class LiAceEditor extends LiElement {
             options: {
                 type: Object,
                 default: {
-                    mode: 'ace/mode/html',
-                    theme: 'ace/theme/chrome', // 'solarized_light',
+                    // mode: 'ace/mode/html',
+                    // theme: 'ace/theme/chrome', // 'solarized_light',
                     highlightActiveLine: true,
                     highlightSelectedWord: true,
                     readOnly: false,
@@ -68,10 +93,10 @@ customElements.define('li-editor-ace', class LiAceEditor extends LiElement {
                     showLineNumbers: true,
                     showGutter: true,
                     displayIndentGuides: true,
-                    fontSize: 12,
+                    fontSize: 20,
                     //fontFamily: css font-family value
-                    maxLines: Infinity,
-                    minLines: 3,
+                    maxLines: 40,
+                    minLines: 40,
                     //scrollPastEnd: number | boolean // number of page sizes to scroll after document end (typical values are 0, 0.5, and 1)
                     fixedWidthGutter: false,
                     firstLineNumber: 1,
@@ -87,59 +112,31 @@ customElements.define('li-editor-ace', class LiAceEditor extends LiElement {
         }
     }
 
-    static get styles() {
-        return css`
-            ::-webkit-scrollbar {
-                width: 4px;
-                height: 4px;
-            }
-            ::-webkit-scrollbar-track {
-                background: lightgray;
-            }
-            ::-webkit-scrollbar-thumb {
-                background-color: gray;
-            }
-        `;
+    get value() {
+        return this.editor?.getValue();
     }
-
-    render() {
-        return html`
-            <style>
-                #host {
-                    width:100%;
-                }
-                #editor {
-                    height: 400px;
-                }
-            </style>
-            <div id="host">
-                <div id="editor"></div>
-            </div>
-        `
+    set value(v) {
+        this.editor.setValue(v, -1);
+        this.editor.session.selection.clearSelection();
     }
 
     firstUpdated() {
         super.firstUpdated();
+        ace.config.set('basePath', url.replace('editor-ace.js', 'src/'));
+        this.editor = ace.edit(this.$id.editor, { autoScrollEditorIntoView: true });
+        this.editor.renderer.attachToShadowRoot();
         this._update();
     }
 
     updated(changedProperties) {
-        if (changedProperties.has('src') && this.editor) {
-            this.editor.setValue(this.src, -1);
-            this.$update();
-        }
+        if (this.editor) this._update();
     }
 
     _update() {
-        let ed = this.shadowRoot.getElementById('editor');
-        ace.config.set('basePath', url.replace('editor-ace.js', 'src/'));
-        this.editor = ace.edit(ed, { autoScrollEditorIntoView: true });
         this.editor.setTheme('ace/theme/' + this.theme);
         this.editor.getSession().setMode('ace/mode/' + this.mode);
-        this.editor.setValue(this.src, -1);
-        this.editor.renderer.attachToShadowRoot();
-        this.editor.setOptions({ maxLines: 40, minLines: 40, fontSize: 20 });
-        this.editor.session.selection.clearSelection();
+        this.editor.setOptions(this.options);
+        this.value = this.src;
         this.$update();
     }
 })
