@@ -49,7 +49,6 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             .inpm {
                 font-size: 16px;
                 background-color: transparent;
-                height: 18px;
             }
             .main {
                 position: relative;
