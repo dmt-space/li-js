@@ -3,6 +3,7 @@ import { LiElement, html, css } from '../../li.js';
 import '../layout-app/layout-app.js';
 import '../button/button.js';
 import '../checkbox/checkbox.js';
+import '../calendar/calendar.js';
 
 customElements.define('li-diary', class LiDiary extends LiElement {
 
@@ -76,13 +77,10 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                     <b class="lbl">${this.leftView}</b>
                     <div class="panel-in">
                         ${this.leftView === 'diary' ? html`
-                            <li-button name="dining" size="36" width="auto" @click="${this._setMainView}" ?toggled="${this.mainView === 'eating'}" toggledClass="ontoggled">eating</li-button>
-                            <li-button name="water_drop" size="36" width="auto" @click="${this._setMainView}" ?toggled="${this.mainView === 'water'}" toggledClass="ontoggled">water</li-button>
-                            <li-button name="hiking" size="36" width="auto" @click="${this._setMainView}" ?toggled="${this.mainView === 'walking'}" toggledClass="ontoggled">walking</li-button>
-                            <li-button name="sports_volleyball" size="36" width="auto" @click="${this._setMainView}" ?toggled="${this.mainView === 'sport'}" toggledClass="ontoggled">sport</li-button>
-                            <li-button name="bedroom_parent" size="36" width="auto" @click="${this._setMainView}" ?toggled="${this.mainView === 'dream'}" toggledClass="ontoggled">dream</li-button>
-                            <li-button name="monitor_weight" size="36" width="auto" @click="${this._setMainView}" ?toggled="${this.mainView === 'weighing'}" toggledClass="ontoggled">weighing</li-button>
-                            <li-button name="accessibility_new" size="36" width="auto" @click="${this._setMainView}" ?toggled="${this.mainView === 'measurements'}" toggledClass="ontoggled">measurements</li-button>
+                            ${this.types.map((i, idx) => html`
+                                <li-button .name="${i.icon}" size="36" width="auto" @click="${(e) => this._setMainView(e, idx)}" toggledClass="_white" 
+                                    ?toggled="${this.mainView === i.type}" fill="${`hsla(${idx * 40}, 50%, 50%, 1)`}" .back="${`hsla(${idx * 40}, 70%, 70%, 0.5)`}">${i.type}</li-button>
+                            `)}
                         ` : this.leftView === 'settings' ? html`
                             <div style="display: flex; flex-direction: column; overflow: auto;">
                                 <div class="lbl" style="color:gray; opacity: 0.7">version: 0.1.0</div>
@@ -99,7 +97,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                     </div>
                 </div>
                 <div slot="app-main" class="main" id="main">
-                    <div>${this.mainView}</div>
+                    <div style="color:${`hsla(${this._idx * 40}, 50%, 50%, 1)`}; font-size: 24px; text-decoration: underline;">${this.mainView}</div>
                     <div ?hidden="${this.mainView !== 'measurements'}">
                         <img src="./measure.jpg" style="width: 510px;">
                         ${[...Array(13).keys()].map((i, idx) => html`
@@ -108,7 +106,18 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                     </div>
                 </div>
                 <div slot="app-right" class="panel">
-                    calendar...
+                <div style="display: flex; border-bottom: 1px solid lightgray;">
+                        <li-button name="event" title="calendar" @click="${() => this.rightView = 'calendar'}" ?toggled="${this.rightView === 'calendar'}" toggledClass="ontoggled"></li-button>
+                        <li-button name="list" title="list" @click="${() => this.rightView = 'list'}" ?toggled="${this.rightView === 'list'}" toggledClass="ontoggled"></li-button>
+                    </div>
+                    <b class="lbl">${this.rightView}</b>
+                    <div class="panel-in" style="padding: 0px;">
+                        ${this.rightView === 'calendar' ? html`
+                            <li-calendar></li-calendar>
+                        ` : this.rightView === 'list' ? html`
+
+                        ` : html``}
+                    </div>
                 </div>
             </li-layout-app>
         `;
@@ -120,8 +129,21 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             dbIP: { type: String, default: 'http://admin:54321@localhost:5984/', save: true },
             autoReplication: { type: Boolean, default: false, save: true },
             leftView: { type: String, default: 'diary' },
+            rightView: { type: String, default: 'calendar' },
             mainView: { type: String, default: '' }
         }
+    }
+
+    get types() {
+        return [
+            { icon: 'dining', type: 'eating' },
+            { icon: 'water_drop', type: 'water' }, 
+            { icon: 'hiking', type: 'walking' }, 
+            { icon: 'sports_volleyball', type: 'sport' }, 
+            { icon: 'bedroom_parent', type: 'dream' }, 
+            { icon: 'monitor_weight', type: 'weighing' }, 
+            { icon: 'accessibility_new', type: 'measurements' }, 
+        ]
     }
 
     constructor() {
@@ -136,8 +158,10 @@ customElements.define('li-diary', class LiDiary extends LiElement {
         this.autoReplication = !this.autoReplication;
     }
 
-    _setMainView(e) {
+    _setMainView(e, idx) {
         this.mainView = e.target.innerText;
+        e.target.toggled = this.mainView === e.target.innerText;
+        this._idx = idx || 0;
         this.$update();
     }
 });

@@ -83,6 +83,10 @@ customElements.define('li-button', class LiButton extends LiElement {
                 transition: .3s;
                 background-color: lightgray;
             }
+            ._white {
+                transition: .3s;
+                background-color: white;
+            }
         `;
     }
     firstUpdated(setPath = false) {
