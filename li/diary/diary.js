@@ -31,7 +31,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                 border-top: 1px solid lightgray;
                 padding: 4px;
                 flex: 1;
-                overflow: hidden;
+                overflow: auto;
             }
             .lbl {
                 padding: 4px;
@@ -47,8 +47,12 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                 font-size: 18px;
             }
             .inpm {
-                font-size: 16px;
+                font-size: 18px;
                 background-color: transparent;
+            }
+            .inpm::placeholder {
+                color: lightgray;
+                opacity: .8;
             }
             .main {
                 position: relative;
@@ -97,10 +101,10 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                 <div slot="app-main" class="main" id="main">
                     <div>${this.mainView}</div>
                     <div ?hidden="${this.mainView !== 'measurements'}">
-                        <img src="./measure.png">
+                        <img src="./measure.jpg" style="width: 510px;">
                         ${[...Array(13).keys()].map((i, idx) => html`
-                            <input class="inpm" value="0" type="number" style=";position: absolute; top: ${idx * 41 + 50}px; left: 200px; width: 112px;">
-                        `)}
+                            <div style="position: absolute; top: ${idx * 40 + 32}px; left: 210px; color: lightgray; font-size: 12px; display: flex; align-items: center;">
+                                <input class="inpm" placeholder="0" style="width: 80px;">см</div>`)}
                     </div>
                 </div>
                 <div slot="app-right" class="panel">
