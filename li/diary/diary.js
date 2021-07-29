@@ -44,11 +44,12 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                 opacity: 0.9;
             }
             .inps {
-                font-size: 18;
+                font-size: 18px;
             }
             .inpm {
-                font-size: 14;
-                background-color: opacity;
+                font-size: 16px;
+                background-color: transparent;
+                height: 18px;
             }
             .main {
                 position: relative;
@@ -99,7 +100,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                     <div ?hidden="${this.mainView !== 'measurements'}">
                         <img src="./measure.png">
                         ${[...Array(13).keys()].map((i, idx) => html`
-                            <input class="inpm" value="0" type="number" style="text-align: center;position: absolute; top: ${idx * 41 + 49}px; left: 212px; width: 100px;">
+                            <input class="inpm" value="0" type="number" style=";position: absolute; top: ${idx * 41 + 50}px; left: 200px; width: 112px;">
                         `)}
                     </div>
                 </div>
