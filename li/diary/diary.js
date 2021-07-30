@@ -179,9 +179,9 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             { icon: 'hiking', type: 'walking' },
             { icon: 'sports_volleyball', type: 'sport' },
             { icon: 'bedroom_parent', type: 'dream' },
+            { icon: 'auto_stories', type: 'wiki', hideLabel: true },
             { icon: 'monitor_weight', type: 'weighing' },
             { icon: 'accessibility_new', type: 'measurements' },
-            { icon: 'auto_stories', type: 'wiki', hideLabel: true },
         ]
     }
     get _measurements() {

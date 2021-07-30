@@ -21,6 +21,9 @@ export const indx = {
     'li-color-picker': { label: 'li-color-picker' },
     'color-picker': [{ label: 'index', url: url + '/color-picker' }],
 
+    'li-calendar': { label: 'li-calendar' },
+    'calendar': [{ label: 'index', url: url + '/calendar' }],
+
     'li-accordion': { label: 'li-accordion', props: { iframe: '../accordion/index.html' } },
     accordion: [{ label: 'index', url: url + '/accordion' }, { label: 'index-2', url: url + '/accordion/index-2.html' }],
 
@@ -357,4 +360,7 @@ export const indx = {
 
     'li-editor-ecard': { label: 'ecard', props: { iframe: '../editor-ecard/index.html' } },
     'editor-ecard': [{ label: 'index', url: url + '/editor-ecard' }],
+
+    'li-diary': { label: 'li-diary', props: { iframe: '../diary/index.html' } },
+    'diary': [{ label: 'index', url: url + '/diary' }],
 }
