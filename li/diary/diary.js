@@ -99,10 +99,14 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                 <div slot="app-main" class="main" id="main">
                     <div style="color:${`hsla(${this._idx * 40}, 50%, 50%, 1)`}; font-size: 24px; text-decoration: underline;">${this.mainView}</div>
                     <div ?hidden="${this.mainView !== 'measurements'}">
-                        <img src="./measure.jpg" style="width: 510px;">
-                        ${[...Array(13).keys()].map((i, idx) => html`
-                            <div style="position: absolute; top: ${idx * 40 + 32}px; left: 210px; color: lightgray; font-size: 12px; display: flex; align-items: center;">
-                                <input class="inpm" placeholder="0" style="width: 80px;">см</div>`)}
+                        <img src="./measure.jpg" style="width: 510px;" @click="${e => console.log(e.offsetX, e.offsetY)}">
+                        ${this.measurements.map((i, idx) => html`
+                            <div style="position: absolute; top: ${(idx + 1) * 40}px; left: 200px; color: lightgray; font-size: 12px; display: flex; align-items: center;">
+                            <div>
+                                <input class="inpm" placeholder="0" style="width: 100px;">см
+                                <div style="width: 120px; margin-top: -2px; font-size:10px; border-top: 1px solid lightgray;" align="center">${i.name} </div>   
+                            </div>
+                        </div>`)}
                     </div>
                 </div>
                 <div slot="app-right" class="panel">
@@ -130,19 +134,37 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             autoReplication: { type: Boolean, default: false, save: true },
             leftView: { type: String, default: 'diary' },
             rightView: { type: String, default: 'calendar' },
-            mainView: { type: String, default: '' }
+            mainView: { type: String, default: '' },
+            measurements: {
+                type: Array,
+                default: [
+                    { name: 'шея', x: 104, y: 119, x1: 419, y2: 90, use: true, val: '', val: '' },
+                    { name: 'грудь', x: 104, y: 177, x1: 420, y2: 176, use: true, val: '' },
+                    { name: 'под грудью', x: 104, x1: 191, y2: 420, y: 189, use: true, val: '' },
+                    { name: 'бицепс', x: 163, y: 182, x1: 348, y2: 175, use: true, val: '' },
+                    { name: 'талия', x: 101, y: 222, x1: 422, y2: 213, use: true, val: '' },
+                    { name: 'предплечье', x: 166, y: 232, x1: 346, y2: 230, use: true, val: '' },
+                    { name: 'запястье', x: 147, y: 265, x1: 340, y2: 274, use: true, val: '' },
+                    { name: 'живот', x: 90, y: 267, x1: 405, y2: 245, use: true, val: '' },
+                    { name: 'бедра', x: 79, y: 297, x1: 414, y2: 279, use: true, val: '' },
+                    { name: 'бедро', x: 117, y: 332, x1: 377, y2: 327, use: true, val: '' },
+                    { name: 'над коленом', x: 134, y: 392, x1: 361, y2: 382, use: true, val: '' },
+                    { name: 'голень', x: 166, y: 458, x1: 364, y2: 446, use: true, val: '' },
+                    { name: 'щиколотка', x: 178, y: 510, x1: 362, y2: 513, use: true, val: '' },
+                ]
+            }
         }
     }
 
     get types() {
         return [
             { icon: 'dining', type: 'eating' },
-            { icon: 'water_drop', type: 'water' }, 
-            { icon: 'hiking', type: 'walking' }, 
-            { icon: 'sports_volleyball', type: 'sport' }, 
-            { icon: 'bedroom_parent', type: 'dream' }, 
-            { icon: 'monitor_weight', type: 'weighing' }, 
-            { icon: 'accessibility_new', type: 'measurements' }, 
+            { icon: 'water_drop', type: 'water' },
+            { icon: 'hiking', type: 'walking' },
+            { icon: 'sports_volleyball', type: 'sport' },
+            { icon: 'bedroom_parent', type: 'dream' },
+            { icon: 'monitor_weight', type: 'weighing' },
+            { icon: 'accessibility_new', type: 'measurements' },
         ]
     }
 
