@@ -101,24 +101,22 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                     <div ?hidden="${this.mainView !== 'measurements'}">
                         <img src="./measure.jpg" style="width: 510px;" @click="${e => console.log(e.offsetX, e.offsetY)}">
                         <svg viewBox="0 0 510 584" width="510" height="584" style="position: absolute; top:30; left:0;">
-                            ${this.measurements.map((i, idx) => svg`
+                            ${this.measurements.map((i, idx) => { return i.use ? svg`
                                 <line x1="${i.x}" y1="${i.y}" x2="200" y2="${idx * 40 + 31}" stroke="lightblue" />
                                 <line x1="200" y1="${idx * 40 + 31}" x2="320" y2="${idx * 40 + 31}" stroke="lightblue" />
                                 <line x1="320" y1="${idx * 40 + 31}" x2="${i.x1}" y2="${i.y1}" stroke="lightblue" />
                                 <circle cx="${i.x}" cy="${i.y}" r="2" fill="lightblue" />
                                 <circle cx="200" cy="${idx * 40 + 31}" r="2" fill="lightblue" />
                                 <circle cx="320" cy="${idx * 40 + 31}" r="2" fill="lightblue" />
-                                <circle cx="${i.x1}" cy="${i.y1}" r="2" fill="lightblue" />
-                            `)}
+                                <circle cx="${i.x1}" cy="${i.y1}" r="2" fill="lightblue" />` : svg`` }
+                            )} 
                         </svg>
-                        ${this.measurements.map((i, idx) => html`
-                            <div style="position: absolute; top: ${idx * 40 + 34}px; left: 120px; color: lightgray; font-size: 12px; display: flex; align-items: center;">
-                            <!-- <div> -->
-                            <div style="width: 120px; margin-top: -2px; font-size:10px;" align="right">${i.name}</div>  
-                            <input class="inpm" placeholder="0" style="width: 40px; text-align: center;">см
- 
-                            <!-- </div> -->
-                        </div>`)}
+                        ${this.measurements.map((i, idx) => { return i.use ? html`
+                            <div style="position: absolute; top: ${idx * 40 + 34}px; left: 100px; color: gray; font-size: 12px; display: flex; align-items: center;">
+                                <div style="width: 120px; margin-top: -2px; font-size:10px;" align="right">${i.name}</div>  
+                                <input class="inpm" placeholder="0" style="width: 80px; text-align: center;">см
+                            </div>
+                        ` : html``})}
                     </div>
                 </div>
                 <div slot="app-right" class="panel">
