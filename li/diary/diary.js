@@ -112,11 +112,12 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                             `)}
                         </svg>
                         ${this.measurements.map((i, idx) => html`
-                            <div style="position: absolute; top: ${(idx + 1) * 40}px; left: 200px; color: lightgray; font-size: 12px; display: flex; align-items: center;">
-                            <div>
-                                <input class="inpm" placeholder="0" style="width: 100px; text-align: center;padding-left:20px;">см
-                                <div style="width: 120px; margin-top: -2px; font-size:10px;" align="center">${i.name} </div>   
-                            </div>
+                            <div style="position: absolute; top: ${idx * 40 + 34}px; left: 120px; color: lightgray; font-size: 12px; display: flex; align-items: center;">
+                            <!-- <div> -->
+                            <div style="width: 120px; margin-top: -2px; font-size:10px;" align="right">${i.name}</div>  
+                            <input class="inpm" placeholder="0" style="width: 40px; text-align: center;">см
+ 
+                            <!-- </div> -->
                         </div>`)}
                     </div>
                 </div>
