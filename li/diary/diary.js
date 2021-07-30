@@ -4,6 +4,7 @@ import '../layout-app/layout-app.js';
 import '../button/button.js';
 import '../checkbox/checkbox.js';
 import '../calendar/calendar.js';
+import '../wiki/wiki.js';
 
 customElements.define('li-diary', class LiDiary extends LiElement {
 
@@ -97,26 +98,31 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                     </div>
                 </div>
                 <div slot="app-main" class="main" id="main">
-                    <div style="color:${`hsla(${this._idx * 40}, 50%, 50%, 1)`}; font-size: 24px; text-decoration: underline;">${this.mainView}</div>
+                    ${!this.types[this._idx]?.hideLabel ? html`
+                        <div style="color:${`hsla(${this._idx * 40}, 50%, 50%, 1)`}; font-size: 24px; text-decoration: underline;">${this.mainView}</div>
+                    ` : html``}
                     <div ?hidden="${this.mainView !== 'measurements'}">
                         <img src="./measure.jpg" style="width: 510px;" @click="${e => console.log(e.offsetX, e.offsetY)}">
                         <svg viewBox="0 0 510 584" width="510" height="584" style="position: absolute; top:30; left:0;">
-                            ${this.measurements.map((i, idx) => { return i.use ? svg`
+                            ${this._measurements.map((i, idx) => svg`
                                 <line x1="${i.x}" y1="${i.y}" x2="200" y2="${idx * 40 + 31}" stroke="lightblue" />
                                 <line x1="200" y1="${idx * 40 + 31}" x2="320" y2="${idx * 40 + 31}" stroke="lightblue" />
                                 <line x1="320" y1="${idx * 40 + 31}" x2="${i.x1}" y2="${i.y1}" stroke="lightblue" />
-                                <circle cx="${i.x}" cy="${i.y}" r="2" fill="lightblue" />
+                                <circle cx="${i.x}" cy="${i.y}" r="4" fill="lightblue" />
                                 <circle cx="200" cy="${idx * 40 + 31}" r="2" fill="lightblue" />
                                 <circle cx="320" cy="${idx * 40 + 31}" r="2" fill="lightblue" />
-                                <circle cx="${i.x1}" cy="${i.y1}" r="2" fill="lightblue" />` : svg`` }
-                            )} 
+                                <circle cx="${i.x1}" cy="${i.y1}" r="4" fill="lightblue" />
+                            `)} 
                         </svg>
-                        ${this.measurements.map((i, idx) => { return i.use ? html`
-                            <div style="position: absolute; top: ${idx * 40 + 34}px; left: 100px; color: gray; font-size: 12px; display: flex; align-items: center;">
-                                <div style="width: 120px; margin-top: -2px; font-size:10px;" align="right">${i.name}</div>  
+                        ${this._measurements.map((i, idx) => html`
+                            <div style="position: absolute; top: ${idx * 40 + 34}px; left: 100px; color: gray; font-size: 10px; display: flex; align-items: center;">
+                                <div style="width: 120px; text-align: right;">${i.name}</div>  
                                 <input class="inpm" placeholder="0" style="width: 80px; text-align: center;">см
                             </div>
-                        ` : html``})}
+                        `)}
+                    </div>
+                    <div ?hidden="${this.mainView !== 'wiki'}">
+                        <li-wiki id="diary-wiki" dbName="diary-wiki"></li-wiki>
                     </div>
                 </div>
                 <div slot="app-right" class="panel">
@@ -153,14 +159,14 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                     { name: 'под грудью', x: 104, y: 191, x1: 420, y1: 189, use: true, val: '' },
                     { name: 'бицепс', x: 163, y: 182, x1: 348, y1: 175, use: true, val: '' },
                     { name: 'талия', x: 101, y: 222, x1: 422, y1: 213, use: true, val: '' },
-                    { name: 'предплечье', x: 166, y: 232, x1: 346, y1: 230, use: true, val: '' },
-                    { name: 'запястье', x: 147, y: 265, x1: 340, y1: 274, use: true, val: '' },
+                    { name: 'предплечье', x: 166, y: 232, x1: 342, y1: 225, use: true, val: '' },
+                    { name: 'запястье', x: 147, y: 265, x1: 338, y1: 274, use: true, val: '' },
                     { name: 'живот', x: 90, y: 267, x1: 405, y1: 245, use: true, val: '' },
-                    { name: 'бедра', x: 79, y: 297, x1: 414, y1: 279, use: true, val: '' },
+                    { name: 'бедра', x: 79, y: 297, x1: 414, y1: 275, use: true, val: '' },
                     { name: 'бедро', x: 117, y: 332, x1: 377, y1: 327, use: true, val: '' },
                     { name: 'над коленом', x: 134, y: 392, x1: 361, y1: 382, use: true, val: '' },
                     { name: 'голень', x: 166, y: 458, x1: 364, y1: 446, use: true, val: '' },
-                    { name: 'щиколотка', x: 178, y: 510, x1: 362, y1: 513, use: true, val: '' },
+                    { name: 'щиколотка', x: 180, y: 510, x1: 362, y1: 513, use: true, val: '' },
                 ]
             }
         }
@@ -175,7 +181,11 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             { icon: 'bedroom_parent', type: 'dream' },
             { icon: 'monitor_weight', type: 'weighing' },
             { icon: 'accessibility_new', type: 'measurements' },
+            { icon: 'auto_stories', type: 'wiki', hideLabel: true },
         ]
+    }
+    get _measurements() {
+        return this.measurements.filter(i => i.use);
     }
 
     constructor() {
