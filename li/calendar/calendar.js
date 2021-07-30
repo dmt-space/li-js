@@ -29,8 +29,8 @@ customElements.define('li-calendar', class LiCalendar extends LiElement {
 
     render() {
         return html`
-        <div style="position: sticky; top:0 ;height: 4px; background-color: white;"></div>
-        <div class="box" style="margin-bottom: 2px; color: #505050;">
+        <div style="position: sticky; top:0 ;height: 4px; background-color: white; z-index: 1;"></div>
+        <div class="box" style="margin-bottom: 2px; color: #505050; z-index: 1;">
             ${['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'].map(i => html`
                 <div class="cell">${i}</div>
             `)}
