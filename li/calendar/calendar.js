@@ -44,15 +44,17 @@ customElements.define('li-calendar', class LiCalendar extends LiElement {
 
     static get properties() {
         return {
-            items: { type: Array, default: [] }
+            items: { type: Array, default: [] },
+            period: { type: Array, local: true },
         }
     }
 
     constructor() {
         super();
         this.items = [];
-        const endYear = new Date().getFullYear() + 1;
-        for (let y = 2020; y <= endYear; y++) {
+        const startYear = new Date().getFullYear() - 1,
+            endYear = new Date().getFullYear() + 1;
+        for (let y = startYear; y <= endYear; y++) {
             for (let m = 0; m < 12; m++) {
                 this.items.push({ date: new Date(y, m) });
             }
@@ -61,10 +63,8 @@ customElements.define('li-calendar', class LiCalendar extends LiElement {
     }
     firstUpdated() {
         super.firstUpdated();
-
-    }
-    updated(changedProperties) {
-
+        this.currentDate = LI.dates().short;
+        this.period = this.period || [this.currentDate, this.currentDate];
     }
 
 })
@@ -78,36 +78,29 @@ customElements.define('li-calendar-month', class LiCalendarMonth extends LiEleme
                 color: gray;
             }
             .box {
+                position: relative;
                 display: flex;
                 flex-wrap: wrap;
                 border: 1px solid lightgray;
                 margin: 4px;
             }
-            .cell {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                width: calc(1/7 * 100%);
-                height: 40px;
-                box-shadow: 0 0 1px 0 gray;
-                cursor: pointer;
-            }
-            .cell:hover {
-                filter: brightness(0);
-            }
             .month {
                 margin: 8px;
                 color: #505050;
+                cursor: pointer;
+            }
+            .cell {
+                width: calc(1/7 * 100%);
             }
         `;
     }
 
     render() {
         return html`
-            ${!this.showMonth ? html`` : html`<div class="month"> ${this.month}</div>`}
-            <div class="box" style="background-color: ${this.color}">
+            ${!this.showMonth ? html`` : html`<div class="month" @click="${this._clickMonth}"> ${this.monthStr}</div>`}
+            <div class="box">
                 ${this.calendar.map(i => html`
-                    <div class="cell">${i < 0 ? '' : i + 1}</div>
+                    <li-calendar-cell class="cell" .day="${i}" .year="${this.year}" .month="${this.month}" .days="${this.days}"></li-calendar-cell>
                 `)}
             </div>
         `;
@@ -116,37 +109,163 @@ customElements.define('li-calendar-month', class LiCalendarMonth extends LiEleme
     static get properties() {
         return {
             item: { type: Object },
+            date: { type: Object },
+            period: { type: Array, local: true },
             showMonth: { type: Boolean, default: true, reflect: true }
         }
     }
     get date() {
-        this._date = this._date || this.item?.date || new Date();
-        return this._date;
+        return this._date = this._date || this.item?.date || thid.date || new Date();
     }
-    get days() {
-        return new Date(this.date.getFullYear(), this.date.getMonth() + 1, 0).getDate();
-    }
-    get weekday() {
-        return new Date(this.date.getFullYear(), this.date.getMonth(), 1).getDay();
+    get year() {
+        return this._year = this._year = this.date.getFullYear();
     }
     get month() {
+        return this._month = this._month = this.date.getMonth();
+    }
+    get days() {
+        return new Date(this.year, this.month + 1, 0).getDate();
+    }
+    get weekday() {
+        return new Date(this.year, this.month, 1).getDay() || 7;
+    }
+    get monthStr() {
         const m = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'];
-        return m[this.date.getMonth()] + ', ' + this.date.getFullYear();
+        return m[this.month] + ', ' + this.year;
     }
     get calendar() {
-        let arr = [...Array(this.weekday >= 1 ? this.weekday - 1 : 6).keys()].map(i => -1);
+        let arr = [...Array(this.weekday - 1).keys()].map(i => -1);
         arr = [...arr, ...Array(this.days).keys()];
         const length = arr.length > 28 && arr.length < 35 ? 35 - arr.length : arr.length > 35 ? 42 - arr.length : 0;
         if (length)
-            arr = [...arr, ...[...Array(length).keys()].map(i => -1)];
-        return arr;
+            arr = [...arr.map(i => i), ...[...Array(length).keys()].map(i => -1)];
+        return [...arr.map(i => ++i)];
+    }
+
+    _clickMonth() {
+        this.period[0] = LI.dates(new Date(this.year, this.month, 1)).short;
+        this.period[1] = LI.dates(new Date(this.year, this.month, this.days)).short;
+        this.$update();
+    }
+
+})
+
+customElements.define('li-calendar-cell', class extends LiElement {
+
+    static get styles() {
+        return css`
+            :host {
+                position: relative;
+            }
+            .cell {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 40px;
+                /* box-shadow: 0 0 1px 0 gray; */
+            }
+            .cell:hover {
+                filter: brightness(0.7);
+            }
+            .marker {
+                position: absolute; 
+                bottom: 0;
+                width: 12px; 
+                height: 12px; 
+                border-radius: 50%;
+                cursor: pointer;
+            }
+            .start {
+                left: 0;
+                background-color: lightgreen;
+            }
+            .end {
+                right: 0;
+                background-color: lightblue;
+            }
+        `;
+    }
+
+    render() {
+        return html`
+            <div class="cell" style="background-color: ${this.inPeriod ? '#eee' : this.color}; 
+                cursor: ${this.day > 0 ? 'pointer' : 'inset'}; box-shadow: ${this.isToday ? 'inset 0 0 4px 2px orange' : '0 0 1px 0 gray'}"
+                @dragover="${this._dragover}" @drop="${this._drop}" @click="${this._click}">${this.day < 1 ? '' : this.day}</div>
+            ${this.day < 1 || !this.isStart ? html`` : html`
+                <div id="start" draggable="true" class="marker start" @dragstart="${this._dragstart}" @touchstart="${this._dragstart}"></div>
+            `}
+            ${this.day < 1 || !this.isEnd ? html`` : html`
+                <div id="end" draggable="true" class="marker end" @dragstart="${this._dragstart}" ></div>
+            `}
+        `;
+    }
+
+    static get properties() {
+        return {
+            day: { type: Number, default: 0 },
+            month: { type: Number },
+            year: { type: Number },
+            days: { type: Number, default: 0 },
+            period: { type: Array, local: true },
+            dragMarker: { type: Object, local: true }
+        }
+    }
+    get isToday() {
+        return this.day > 0 && LI.dates().short === this.dateStr;
+    }
+    get date() {
+        return this._date = this._date = new Date(this.year, this.month, this.day);
+    }
+    get dateS() {
+        if (this.period)
+            return this._dateS = this._dateS = new Date(+this.period[0].split('-')[0], this.period[0].split('-')[1] - 1, +this.period[0].split('-')[2]);
+    }
+    get dateE() {
+        if (this.period)
+            return this._dateE = this._dateE = new Date(+this.period[1].split('-')[0], this.period[1].split('-')[1] - 1, +this.period[1].split('-')[2]);
+    }
+    get dateStr() {
+        return this._dateStr = this._dateStr = LI.dates(this.date).short;
+    }
+    get isStart() {
+        return this.day > 0 && this.period && this.dateStr === this.period?.[0];
+    }
+    get isEnd() {
+        return this.day > 0 && this.period && this.dateStr === this.period?.[1];
+    }
+    get inPeriod() {
+        return this.day > 0 && this.date >= this.dateS && this.date <= this.dateE;
     }
     get color() {
-        return `hsla(${this.date.getMonth() * 25}, 70%, 70%, 0.2`;
+        return `hsla(${this.month * 25}, 70%, 70%, 0.2)`;
     }
 
-    updated(changedProperties) {
-
+    _dragstart(e) {
+        this.dragMarker = { id: e.target.id, date: this.date, s: new Date(this.period[0]), e: new Date(this.period[1]) };
+    }
+    _dragover(e) {
+        if (this.day > 0) {
+            if (this.dragMarker?.id === 'start' && this.date < this.dragMarker.e)
+                e.preventDefault();
+            if (this.dragMarker?.id === 'end' && this.date > this.dragMarker.s)
+                e.preventDefault();
+        }
+    }
+    _drop(e) {
+        e.preventDefault();
+        if (this.day > 0) {
+            if (this.dragMarker?.id === 'start')
+                this.period[0] = this.dateStr;
+            if (this.dragMarker?.id === 'end')
+                this.period[1] = this.dateStr;
+            this.$update();
+        }
+    }
+    _click(e) {
+        if (this.day > 0) {
+            this.period[0] = this.period[1] = this.dateStr;
+            this.$update();
+        }
     }
 
 })
