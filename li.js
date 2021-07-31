@@ -288,7 +288,8 @@ class CLI {
     dates(d = new Date()) {
         const utc = d.toISOString();
         const local = new Date(d.getTime() - (d.getTimezoneOffset()) * 60 * 1000).toISOString().slice(0, -5).replace('T', ' ');
-        return { utc, local };
+        const short = local.split(' ')[0];
+        return { utc, local, short };
     }
     ulidToDateTime(ulid) {
         return new Date(decodeTime(ulid));
