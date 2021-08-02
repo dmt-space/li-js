@@ -191,7 +191,7 @@ customElements.define('li-calendar-cell', class extends LiElement {
                 height: 40px;
             }
             .date:hover {
-                filter: invert(26%) contrast(190%);
+                filter: brightness(.75) contrast(200%);
             }
             .marker {
                 position: absolute; 
@@ -214,7 +214,7 @@ customElements.define('li-calendar-cell', class extends LiElement {
 
     render() {
         return html`
-            <div class="cell ${this.day > 0 ? 'date' : ''}" style="background-color: ${this.inPeriod ? '#ddd' : this.color}; 
+            <div class="cell ${this.day > 0 ? 'date' : ''}" style="background-color: ${this.inPeriod ? '#ffa' : this.color}; 
                 cursor: ${this.day > 0 ? 'pointer' : 'inset'}; box-shadow: ${this.isToday ? 'inset 0 0 4px 2px orange' : '0 0 1px 0 gray'}"
                 @dragover="${this._dragover}" @drop="${this._drop}" @click="${this._click}">${this.day < 1 ? '' : this.day}</div>
             ${this.day < 1 || !this.isStart ? html`` : html`
