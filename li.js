@@ -289,7 +289,8 @@ class CLI {
         const utc = d.toISOString();
         const local = new Date(d.getTime() - (d.getTimezoneOffset()) * 60 * 1000).toISOString().slice(0, -5).replace('T', ' ');
         const short = local.split(' ')[0];
-        return { utc, local, short };
+        const monthStr = short.slice(0, -3);
+        return { utc, local, short, monthStr };
     }
     ulidToDateTime(ulid) {
         return new Date(decodeTime(ulid));

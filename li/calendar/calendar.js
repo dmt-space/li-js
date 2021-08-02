@@ -1,4 +1,5 @@
 import { LiElement, html, css } from '../../li.js';
+import '../button/button.js';
 
 customElements.define('li-calendar', class LiCalendar extends LiElement {
 
@@ -6,15 +7,18 @@ customElements.define('li-calendar', class LiCalendar extends LiElement {
         return css`
             :host {
                 position: relative;
+                color: #505050;
             }
             .box {
                 position: sticky;
-                top: 4px;
+                top: 34px;
                 background-color: #eee;
                 display: flex;
                 flex-wrap: wrap;
                 border: 1px solid lightgray;
                 margin: 0 4px 4px 4px;
+                color: #505050; 
+                z-index: 1;
             }
             .cell {
                 display: flex;
@@ -29,16 +33,15 @@ customElements.define('li-calendar', class LiCalendar extends LiElement {
 
     render() {
         return html`
-        <div style="position: sticky; top:0 ;height: 4px; background-color: white; z-index: 1;"></div>
-        <div class="box" style="margin-bottom: 2px; color: #505050; z-index: 1;">
-            ${['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'].map(i => html`
-                <div class="cell">${i}</div>
-            `)}
-        </div>
-        ${this.items.map(i => html`
-            <li-calendar-month .item = ${i}></li-calendar-month>
-        `)}
-            
+            <div style="position: sticky; top:0 ;height: 28px; background-color: white; z-index: 1; padding: 3px; display: flex;align-items: center">
+                <div style="cursor: pointer;" @click="${this._clickSelected}">${this._periods}</div>
+                <div style="flex: 1"></div>
+                <li-button @click="${this._clickCurrent}" name="center-focus-strong" title="show current month"></li-button>
+            </div>
+            <div class="box">
+                ${['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'].map(i => html`<div class="cell">${i}</div>`)}
+            </div>
+            ${this.items.map(i => html`<li-calendar-month .item = ${i} id="${i.str}"></li-calendar-month>`)}
         `
     }
 
@@ -48,15 +51,23 @@ customElements.define('li-calendar', class LiCalendar extends LiElement {
             period: { type: Array, local: true },
         }
     }
+    get _periods() {
+        if (!this.period) return '';
+        const p0 = this.period[0].split('-').reverse().join('-');
+        if (this.period[0] === this.period[1]) return p0;
+        const p1 = this.period[1].split('-').reverse().join('-');
+        return p0 + ' ... ' + p1;
+    }
 
     constructor() {
         super();
         this.items = [];
-        const startYear = new Date().getFullYear() - 1,
-            endYear = new Date().getFullYear() + 1;
+        const currentYear = new Date().getFullYear(),
+            startYear = currentYear - 1,
+            endYear = currentYear + 1;
         for (let y = startYear; y <= endYear; y++) {
             for (let m = 0; m < 12; m++) {
-                this.items.push({ date: new Date(y, m) });
+                this.items.push({ date: new Date(y, m), str: LI.dates(new Date(y, m)).monthStr, m, y });
             }
         }
 
@@ -65,6 +76,22 @@ customElements.define('li-calendar', class LiCalendar extends LiElement {
         super.firstUpdated();
         this.currentDate = LI.dates().short;
         this.period = this.period || [this.currentDate, this.currentDate];
+        setTimeout(() => this._clickCurrent(), 100);
+    }
+
+    _clickSelected(e) {
+        this.$id[LI.dates(new Date(this.period?.[0])).monthStr].scrollIntoView();
+        this._scroll();
+    }
+    _clickCurrent(e) {
+        this.$id[LI.dates().monthStr].scrollIntoView();
+        this._scroll();
+    }
+    _scroll() {
+        this.parentElement.scrollTo({
+            top: this.parentElement.scrollTop - 80,
+            behavior: "smooth"
+        })
     }
 
 })
@@ -97,7 +124,7 @@ customElements.define('li-calendar-month', class LiCalendarMonth extends LiEleme
 
     render() {
         return html`
-            ${!this.showMonth ? html`` : html`<div class="month" @click="${this._clickMonth}"> ${this.monthStr}</div>`}
+            ${!this.showMonth ? html`` : html`<div class="month" @click="${this._clickMonth}">${this.monthStr}</div>`}
             <div class="box">
                 ${this.calendar.map(i => html`
                     <li-calendar-cell class="cell" .day="${i}" .year="${this.year}" .month="${this.month}" .days="${this.days}"></li-calendar-cell>
@@ -162,10 +189,9 @@ customElements.define('li-calendar-cell', class extends LiElement {
                 align-items: center;
                 justify-content: center;
                 height: 40px;
-                /* box-shadow: 0 0 1px 0 gray; */
             }
-            .cell:hover {
-                filter: brightness(0.7);
+            .date:hover {
+                filter: invert(26%) contrast(190%);
             }
             .marker {
                 position: absolute; 
@@ -188,7 +214,7 @@ customElements.define('li-calendar-cell', class extends LiElement {
 
     render() {
         return html`
-            <div class="cell" style="background-color: ${this.inPeriod ? '#eee' : this.color}; 
+            <div class="cell ${this.day > 0 ? 'date' : ''}" style="background-color: ${this.inPeriod ? '#ddd' : this.color}; 
                 cursor: ${this.day > 0 ? 'pointer' : 'inset'}; box-shadow: ${this.isToday ? 'inset 0 0 4px 2px orange' : '0 0 1px 0 gray'}"
                 @dragover="${this._dragover}" @drop="${this._drop}" @click="${this._click}">${this.day < 1 ? '' : this.day}</div>
             ${this.day < 1 || !this.isStart ? html`` : html`
