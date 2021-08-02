@@ -51,19 +51,25 @@ customElements.define('li-table', class extends LiElement {
                 max-height: 32px;
                 overflow: hidden;
             }
-            .scroll {
+            .vertical {
                 position: absolute;
                 top: 1;
                 bottom: 1;
                 border-left: 1px solid lightgray;
+                z-index: 1;
             }
-            .scroll:hover {
+            .scroll {
+                position: absolute;
+                top: 1;
+                height: 28px;
+                border: 2px solid transparent;
                 cursor: col-resize;
-                border: 2px solid lightgray;
-                margin-left: -2px;
+            }
+            .scroll:first-child {
+                border: none;
             }
             .scroll:last-child {
-                border-left: none;
+                border: none;
             }
         `;
     }
@@ -77,7 +83,9 @@ customElements.define('li-table', class extends LiElement {
             </div>
             <div class="main-panel">
                 ${this.data?.map((i, idx) => html`
-                    <div class="row"> ${this.columns?.map((i2, idx2) => html`<div class="cell" style="width: ${i2._width}">${idx + ' - 000' + (idx2 + 1)}</div>`)}</div>
+                    <div class="row"> ${this.columns?.map((i2, idx2) => html`
+                        <div class="cell" style="width: ${i2._width}">${idx + ' - 000' + (idx2 + 1)}</div>
+                    `)}</div>
                 `)}
             </div>
             <div class="bottom-panel">
@@ -86,7 +94,9 @@ customElements.define('li-table', class extends LiElement {
                 `)}
             </div>
             ${this.columns?.map((i, idx) => html`
-                <div class="scroll" style="left: ${i.left}"></div>
+                <div class="scroll" style="left: ${i.left - 4}px" @pointerdown="${(e) => this._pointerdown(e, i)}"></div>
+                <div class="vertical" style="left: ${i.left}px"></div>
+                <div class="scroll" style="left: ${i.left + 1}px" @pointerdown="${(e) => this._pointerdown(e, this.columns[idx+1])}"></div>
             `)}
         `
     }
@@ -113,6 +123,10 @@ customElements.define('li-table', class extends LiElement {
 
     firstUpdated() {
         super.firstUpdated();
+
+        this.__move = this._move.bind(this);
+        this.__up = this._up.bind(this);
+
         this.columns = [
             { label: 'col-001', width: 140 },
             { label: 'col-002', width: 200 },
@@ -127,10 +141,10 @@ customElements.define('li-table', class extends LiElement {
             { label: 'col-004' },
             { label: 'col-005' },
         ]
-        this.data =[];
+        this.data = [];
         for (let i = 0; i < 200; i++) {
             this.data.push([...this._data])
-            
+
         }
         console.log('generateDataSet')
         this._setScrollPosition();
@@ -151,13 +165,40 @@ customElements.define('li-table', class extends LiElement {
         })
         let w = (this.parentElement.offsetWidth - left) / l;
         left = 0;
-        this.columns.forEach(i => {
+        this.columns.map((i, idx) => {
+            i.idx = idx;
             i._width = i.width || w;
             left = i.left = left + i._width;
         })
         this.$update();
     }
 
+    _pointerdown(e, i) {
+        e.stopPropagation();
+        e.preventDefault();
+        this._lastX = e.pageX;
+        this._item = i;
+        document.documentElement.addEventListener("pointermove", this.__move, false);
+        document.documentElement.addEventListener("pointerup", this.__up, false);
+        document.documentElement.addEventListener("pointercancel", this.__up, false);
+    }
+    _move(e) {
+        const movX = e.pageX - this._lastX;
+        this._lastX = e.pageX;
+        this._item.left += movX;
+        this._item._width += movX;
+        this._item._width = this._item._width < 60 ? 60 : this._item._width;
+        this._item.width = this._item._width;
+        this._setScrollPosition();
+        //this.requestUpdate();
+    }
+    _up() {
+        document.documentElement.removeEventListener("pointermove", this.__move, false);
+        document.documentElement.removeEventListener("pointerup", this.__up, false);
+        document.documentElement.removeEventListener("pointercancel", this.__up, false);
+        this._setScrollPosition();
+        this.$update();
+    }
 })
 
 customElements.define('li-table-row', class extends LiElement {
