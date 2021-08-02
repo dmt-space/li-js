@@ -53,14 +53,17 @@ customElements.define('li-table', class extends LiElement {
             }
             .scroll {
                 position: absolute;
-                top: 0;
-                bottom: 0;
+                top: 1;
+                bottom: 1;
                 border-left: 1px solid lightgray;
             }
             .scroll:hover {
                 cursor: col-resize;
                 border: 2px solid lightgray;
                 margin-left: -2px;
+            }
+            .scroll:last-child {
+                border-left: none;
             }
         `;
     }
@@ -117,13 +120,19 @@ customElements.define('li-table', class extends LiElement {
             { label: 'col-004' },
             { label: 'col-005', width: 100 },
         ]
-        this.data = [
+        this._data = [
             { label: 'col-001' },
             { label: 'col-002' },
             { label: 'col-003' },
             { label: 'col-004' },
             { label: 'col-005' },
         ]
+        this.data =[];
+        for (let i = 0; i < 200; i++) {
+            this.data.push([...this._data])
+            
+        }
+        console.log('generateDataSet')
         this._setScrollPosition();
     }
 
