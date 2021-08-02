@@ -58,7 +58,7 @@ customElements.define('li-table', class extends LiElement {
                 border-left: 1px solid lightgray;
             }
             .scroll:hover {
-                cursor: pointer;
+                cursor: col-resize;
                 border: 2px solid lightgray;
                 margin-left: -2px;
             }
@@ -69,17 +69,17 @@ customElements.define('li-table', class extends LiElement {
         return html`
             <div class="top-panel">
                 ${this.columns?.map(i => html`
-                    <div class="column" style="width: ${i.width}">${i.label}</div>
+                    <div class="column" style="width: ${i._width}">${i.label}</div>
                 `)}
             </div>
             <div class="main-panel">
                 ${this.data?.map((i, idx) => html`
-                    <div class="row"> ${this.columns?.map((i2, idx2) => html`<div class="cell" style="width: ${i2.width}">${idx + ' - 000' + (idx2 + 1)}</div>`)}</div>
+                    <div class="row"> ${this.columns?.map((i2, idx2) => html`<div class="cell" style="width: ${i2._width}">${idx + ' - 000' + (idx2 + 1)}</div>`)}</div>
                 `)}
             </div>
             <div class="bottom-panel">
                 ${this.columns?.map(i => html`
-                    <div class="column" style="width: ${i.width}">${i.label}</div>
+                    <div class="column" style="width: ${i._width}">${i.label}</div>
                 `)}
             </div>
             ${this.columns?.map((i, idx) => html`
@@ -99,6 +99,15 @@ customElements.define('li-table', class extends LiElement {
         super();
     }
 
+    connectedCallback() {
+        super.connectedCallback();
+        window.addEventListener('resize', this._setScrollPosition.bind(this));
+    }
+    disconnectedCallback() {
+        window.removeEventListener('resize', this._setScrollPosition);
+        super.disconnectedCallback();
+    }
+
     firstUpdated() {
         super.firstUpdated();
         this.columns = [
@@ -115,6 +124,14 @@ customElements.define('li-table', class extends LiElement {
             { label: 'col-004' },
             { label: 'col-005' },
         ]
+        this._setScrollPosition();
+    }
+
+    updated(changedProperties) {
+
+    }
+
+    _setScrollPosition() {
         let l = this.columns.length;
         let left = 0;
         this.columns.forEach(i => {
@@ -126,13 +143,10 @@ customElements.define('li-table', class extends LiElement {
         let w = (this.parentElement.offsetWidth - left) / l;
         left = 0;
         this.columns.forEach(i => {
-            if (!i.width) i.width = w;
-            left = i.left = left + i.width;
+            i._width = i.width || w;
+            left = i.left = left + i._width;
         })
-    }
-
-    updated(changedProperties) {
-
+        this.$update();
     }
 
 })
