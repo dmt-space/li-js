@@ -10,22 +10,49 @@
         width: 100%;
         height: 100%;
         overflow: hidden;
+
     }
 </style>
 
 <div style="display: flex; align-items: center; justify-content: space-around; flex-wrap: wrap;height: 100%">
     <div style="width: 49%; height: 48%;position: relative;">
-        <li-table></li-table>
+        <li-table id="t1"></li-table>
     </div>
     <div style="width: 49%; height: 48%;position: relative;">
-        <li-table></li-table>
+        <li-table id="t2"></li-table>
     </div>
     <div style="width: 49%; height: 48%;position: relative;">
-        <li-table></li-table>
+        <li-table id="t3"></li-table>
     </div>
     <div style="width: 49%; height: 48%;position: relative;">
-        <li-table></li-table>
+        <li-table id="t4"></li-table>
     </div>
 </div>
 
+<script type="module">
 
+    t1.options = t2.options = t3.options = t4.options = {
+        //width: 1200
+    }
+    t1.columns = t2.columns = t3.columns = t4.columns = [
+        { label: 'col-001', width: 150 },
+        { label: 'col-002', width: 250 },
+        { label: 'col-003' },
+        { label: 'col-004' },
+        { label: 'col-005', width: 100 },
+    ]
+    const _data = [
+        { label: 'col-001' },
+        { label: 'col-002' },
+        { label: 'col-003' },
+        { label: 'col-004' },
+        { label: 'col-005' },
+    ]
+    t1.data = [];
+    for (let i = 0; i < 100; i++) {
+        t1.data.push([..._data])
+
+    }
+    t2.data = t3.data = t4.data = t1.data;
+
+</script>

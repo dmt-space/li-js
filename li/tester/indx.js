@@ -35,6 +35,9 @@ export const indx = {
     } },
     cell: [{ label: 'index', url: url + '/cell' }],
 
+    'li-table': { label: 'li-table', props: { iframe: '../table/index.html' } },
+    table: [{ label: 'index', url: url + '/table' }],
+
     'li-tabulator': {
         label: 'li-tabulator', props: {
             options: {
