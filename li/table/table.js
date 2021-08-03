@@ -6,9 +6,10 @@ customElements.define('li-table', class extends LiElement {
 
     static get styles() {
         return css`
-            ::-webkit-scrollbar { width: 4px; height: 4px; }
-            ::-webkit-scrollbar-track { background: lightgray; }
-            ::-webkit-scrollbar-thumb { background-color: gray; }
+            ::-webkit-scrollbar { display: none; }
+            /* ::-webkit-scrollbar { width: 4px; height: 4px; } */
+            /* ::-webkit-scrollbar-track { background: lightgray; } */
+            /* ::-webkit-scrollbar-thumb { background-color: gray; } */
             :host {
                 display: flex;
                 flex-direction: column;
@@ -16,6 +17,7 @@ customElements.define('li-table', class extends LiElement {
                 height: 100%;
             }
             .top-panel, .bottom-panel {
+                position: relative;
                 display: flex;
                 border-left: 1px solid gray;
                 border-right: 1px solid gray;
@@ -33,6 +35,7 @@ customElements.define('li-table', class extends LiElement {
                 align-items: center;
                 min-height: 32px;
                 overflow: hidden;
+                border-right: 1px solid lightgray;
             }
             .main-panel {
                 flex: 1;
@@ -40,6 +43,7 @@ customElements.define('li-table', class extends LiElement {
                 overflow: auto;
             }
             .row {
+                position: relative;
                 display: flex;
                 border-bottom: 1px solid lightgray;
                 min-height: 32px;
@@ -50,18 +54,11 @@ customElements.define('li-table', class extends LiElement {
                 align-items: center;
                 max-height: 32px;
                 overflow: hidden;
-            }
-            .vertical {
-                position: absolute;
-                top: 1;
-                bottom: 1;
-                border-left: 1px solid lightgray;
-                z-index: 1;
+                border-right: 1px solid lightgray;
             }
             .scroll {
                 position: absolute;
-                top: 1;
-                height: 28px;
+                height: calc(100% - 4px);
                 border: 2px solid transparent;
                 cursor: col-resize;
                 z-index: 2;
@@ -84,29 +81,27 @@ customElements.define('li-table', class extends LiElement {
 
     render() {
         return html`
+            <link rel="stylesheet" href="./simple-scrollbar.css">
             <div class="top-panel">
-                ${this.columns?.map(i => html`
-                    <div class="column" style="width: ${i._width}">${i.label}</div>
+                ${this.columns?.map((i, idx) => html`
+                    <div class="column" style="width: ${i._width - 1}">${i.label}</div>
+                    <div class="scroll" style="left: ${i.left - 3}" @pointerdown="${(e) => this._pointerdown(e, i)}"></div>
+                    <div class="point" .item="${i}" @click="${this._setAutoWidth}"
+                        style="left: ${i.left - i._width + 2}px; background-color: ${i.width ? 'gray' : 'orange'}"></div>
                 `)}
             </div>
-            <div class="main-panel">
+            <div id="main" class="main-panel">
                 ${this.data?.map((i, idx) => html`
                     <div class="row"> ${this.columns?.map((i2, idx2) => html`
-                        <div class="cell" style="width: ${i2._width}">${idx + ' - 00' + (idx2 + 1)}</div>
+                        <div class="cell" style="width: ${i2._width - 1}">${idx + ' - 00' + (idx2 + 1)}</div>
                     `)}</div>
                 `)}
             </div>
             <div class="bottom-panel">
                 ${this.columns?.map(i => html`
-                    <div class="column" style="width: ${i._width}">${i.label}</div>
+                    <div class="column" style="width: ${i._width - 1}">${i.label}</div>
                 `)}
             </div>
-            ${this.columns?.map((i, idx) => html`
-                <div class="vertical" style="left: ${i.left}px"></div>
-                <div class="scroll" style="left: ${i.left - 2}px" @pointerdown="${(e) => this._pointerdown(e, i)}"></div>
-                <div class="point" .item="${i}" @click="${this._setAutoWidth}"
-                    style="left: ${i.left - i._width + 2}px; background-color: ${i.width ? 'gray' : 'orange'}"></div>
-            `)}
         `
     }
 
@@ -182,7 +177,7 @@ customElements.define('li-table', class extends LiElement {
         this.$update();
     }
     _setAutoWidth(e) {
-        e.target.item.width = undefined; 
+        e.target.item.width = undefined;
         this._setScrollPosition();
     }
 
@@ -212,7 +207,7 @@ customElements.define('li-table', class extends LiElement {
             if (i.left > this.parentElement.offsetWidth || i._width < 24) _reset = true;
 
         })
-        if ( w > this.parentElement.offsetWidth || _reset) {
+        if (w > this.parentElement.offsetWidth || _reset) {
             this._item.left -= movX;
             this._item._width -= movX;
             //this._item._width = this._item._width < 60 ? 60 : this._item._width;
