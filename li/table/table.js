@@ -6,11 +6,13 @@ customElements.define('li-table', class extends LiElement {
 
     static get styles() {
         return css`
-            ::-webkit-scrollbar { display: none; }
-            /* ::-webkit-scrollbar { width: 4px; height: 4px; } */
-            /* ::-webkit-scrollbar-track { background: lightgray; } */
-            /* ::-webkit-scrollbar-thumb { background-color: gray; } */
+            /* ::-webkit-scrollbar { display: none; } */
+            ::-webkit-scrollbar { width: 4px; height: 4px; }
+            /* ::-webkit-scrollbar-track { background-color: transparent; } */
+            ::-webkit-scrollbar-thumb { background-color: #aaa;  border-radius: 2px; }
             :host {
+
+                position: relative;
                 display: flex;
                 flex-direction: column;
                 width: 100%;
@@ -38,9 +40,9 @@ customElements.define('li-table', class extends LiElement {
                 border-right: 1px solid lightgray;
             }
             .main-panel {
+                overflow: overlay;
                 flex: 1;
                 border: 1px solid gray;
-                overflow: auto;
             }
             .row {
                 position: relative;
@@ -58,8 +60,8 @@ customElements.define('li-table', class extends LiElement {
             }
             .scroll {
                 position: absolute;
-                height: calc(100% - 4px);
-                border: 2px solid transparent;
+                height: calc(100% - 8px);
+                border: 4px solid transparent;
                 cursor: col-resize;
                 z-index: 2;
             }
@@ -85,7 +87,7 @@ customElements.define('li-table', class extends LiElement {
             <div class="top-panel">
                 ${this.columns?.map((i, idx) => html`
                     <div class="column" style="width: ${i._width - 1}">${i.label}</div>
-                    <div class="scroll" style="left: ${i.left - 3}" @pointerdown="${(e) => this._pointerdown(e, i)}"></div>
+                    <div class="scroll" style="left: ${i.left - 6}" @pointerdown="${(e) => this._pointerdown(e, i)}"></div>
                     <div class="point" .item="${i}" @click="${this._setAutoWidth}"
                         style="left: ${i.left - i._width + 2}px; background-color: ${i.width ? 'gray' : 'orange'}"></div>
                 `)}
