@@ -65,8 +65,8 @@ customElements.define('li-table', class extends LiElement {
                 </div>
                 <div id="main" class="main-panel" style="width: ${this.maxWidth}">
                     ${this.data?.map((i, idx) => html`
-                        <div class="row"> ${this.columns?.map((i2, idx2) => html`
-                            <div class="cell" style="width: ${i2._width - 1}">${idx + ' -  00' + (idx2 + 1)}</div>
+                        <div class="row"> ${this.columns?.map((c, idx) => html`
+                            <div class="cell" style="width: ${c._width - 1}">${i[c.name]}</div>
                         `)}</div>
                     `)}
                 </div>
