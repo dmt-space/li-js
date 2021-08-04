@@ -14,6 +14,11 @@ customElements.define('li-table', class extends LiElement {
                 height: 100%;
                 overflow: auto;
                 border: 1px solid gray;
+                opacity: 0;
+                transition: opacity .5s linear;
+            }
+            .container[ready] {
+                opacity: 1;
             }
             .top-panel, .bottom-panel {
                 position: sticky;
@@ -55,11 +60,11 @@ customElements.define('li-table', class extends LiElement {
 
     render() {
         return html`
-            <div id="table" class="container" style="visibility: ${this.ready ? 'visible' : 'hidden'}">
+            <div id="table" class="container">
                 <div class="top-panel" style="width: ${this.maxWidth}">
                     ${this.columns?.map((i, idx) => html`
                         <div class="column" style="width: ${i._width - 1}">
-                            <li-table-header .item="${i}"></li-table-header>
+                            <li-table-header .item="${i}" type="header"></li-table-header>
                         </div>
                     `)}
                 </div>
@@ -73,7 +78,7 @@ customElements.define('li-table', class extends LiElement {
                 <div class="bottom-panel" style="width: ${this.maxWidth}">
                     ${this.columns?.map(i => html`
                         <div class="column" style="width: ${i._width - 1}">
-                            <li-table-header .item="${i}"></li-table-header>
+                            <li-table-header type="footer"></li-table-header>
                         </div>
                     `)}
                 </div>
@@ -83,6 +88,7 @@ customElements.define('li-table', class extends LiElement {
 
     static get properties() {
         return {
+            $partid: { type: String },
             options: { type: Object, local: true },
             columns: { type: Array, local: true },
             data: { type: Array, local: true },
@@ -111,13 +117,13 @@ customElements.define('li-table', class extends LiElement {
     updated(e) {
         if (e.has('columns')) {
             this._resizeColumns();
-            this.ready = true;
+            this.$id.table?.setAttribute('ready', true);
         }
     }
 
     _resizeColumns() {
         const parentWidth = this.parentElement.offsetWidth - (this._hasScroll ? 5 : 0);
-        this.maxWidth = this.options.width || parentWidth;
+        this.maxWidth = this.options?.width || parentWidth;
         let length = this.columns.length,
             left = 0;
         this.columns.forEach(i => {
@@ -182,15 +188,16 @@ customElements.define('li-table-header', class extends LiElement {
 
     render() {
         return html`
-            <div class="label">${this.item.label}</div>
+            <div class="label" style="writing-mode: ${this.options?.verticalHeader && this.type === 'header' ? 'vertical-lr' : ''}">${this.item?.label || this.item?.name}</div>
             <div class="point" @click="${this._setAutoWidth}"
-                style="background-color: ${this.item.width ? 'gray' : 'orange'}"></div>
+                style="background-color: ${this.item?.width ? 'gray' : 'orange'}"></div>
             <div class="resizer" @pointerdown="${this._pointerdown}"></div>
         `
     }
 
     static get properties() {
         return {
+            type: { type: String },
             item: { type: Object },
             options: { type: Object, local: true },
             columns: { type: Array, local: true },
