@@ -24,12 +24,16 @@ customElements.define('li-table', class extends LiElement {
                 display: flex;
                 z-index: 1;
             }
-            .top-panel>div>.column {
+            .top-panel {
                 top: 0;
+            }
+            .bottom-panel {
+                bottom: 0;
+            }
+            .top-panel>div>.column {
                 border-bottom: 1px solid gray;
             }
             .bottom-panel>div>.column {
-                bottom: 0;
                 border-top: 1px solid gray;
             }
             .column {
@@ -68,14 +72,14 @@ customElements.define('li-table', class extends LiElement {
                 `}
                 <div id="main" style="width: ${this.maxWidth}">
                     <div>
-                        ${this.data?.map(i => html`
+                        ${this.data?.map((i, idx) => html`
                             <div class="row"> ${this.columns?.map(c => html`
                                 <div class="cell" style="width: ${c._width - 1 < 0 ? 0 : c._width - 1}">
-                                    <li-table-cell .item="${i[c.name]}" .column="${c}"></li-table-cell>
+                                    <li-table-cell .item="${i[c.name]}" .column="${c}" idx="${idx}"></li-table-cell>
                                 </div>
                             `)}</div>
                         `)}
-                    </div>
+                    </div>             
                 </div>
                 ${this.options?.footerHidden ? html`` : html`
                     <div class="bottom-panel" style="width: ${this.maxWidth};background-color: white">
@@ -284,12 +288,17 @@ customElements.define('li-table-cell', class extends LiElement {
 
     render() {
         return html`
-            <div class="cell">${this.item || ''}</div>
+            ${this.item?.type === 'count' ? html`
+                <div class="cell">${this.idx + 1}</div>
+            ` : html`
+                <div class="cell">${this.item || ''}</div>
+            `}
         `
     }
 
     static get properties() {
         return {
+            idx: { type: Number },
             column: { type: Object },
             item: { type: Object },
             options: { type: Object, local: true },

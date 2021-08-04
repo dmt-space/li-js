@@ -40,6 +40,7 @@
         //footerHidden: true
     }
     t1.columns = [
+        { label: '№', name: 'c0', width: 40 },
         { label: 'col-001', name: 'c1', width: 150 },
         { label: 'col-002', name: 'c2', width: 250 },
         { label: 'col-003', name: 'c3' },
@@ -56,8 +57,10 @@
     t1.data = [];
     for (let i = 0; i < 100; i++) {
         t1.data.push(
-            { c1: 'row-' + i + ', col-001', c2: 'row-' + i + ', col-002', 
-                c3: 'row-' + i + ', col-003', c4: 'row-' + i + ', col-004', c5: 'row-' + i + ', col-005'},
+            {
+                c0: { type: 'count' }, c1: 'row-' + i + ', col-001', c2: 'row-' + i + ', col-002',
+                c3: 'row-' + i + ', col-003', c4: 'row-' + i + ', col-004', c5: 'row-' + i + ', col-005'
+            },
         );
     }
     t2.options = t3.options = t4.options = t1.options;
