@@ -6,24 +6,22 @@ customElements.define('li-table', class extends LiElement {
             ::-webkit-scrollbar { width: 4px; height: 4px; border-left: 1px solid gray;}
             ::-webkit-scrollbar-track { background-color: #eee;}
             ::-webkit-scrollbar-thumb { background-color: #aaa;  border-radius: 2px; }
-            .container {
+            #table {
                 position: relative;
                 display: flex;
                 flex-direction: column;
-                width: 100%;
                 height: 100%;
                 overflow: auto;
                 border: 1px solid gray;
                 opacity: 0;
                 transition: opacity .5s linear;
             }
-            .container[ready] {
+            #table[ready] {
                 opacity: 1;
             }
             .top-panel, .bottom-panel {
                 position: sticky;
                 display: flex;
-                background-color: #eee;
                 z-index: 1;
             }
             .top-panel {
@@ -45,43 +43,49 @@ customElements.define('li-table', class extends LiElement {
             .row {
                 position: relative;
                 display: flex;
-                border-bottom: 1px solid lightgray;
                 min-height: 32px;
             }
             .cell {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                overflow: hidden;
                 border-right: 1px solid lightgray;
+                border-bottom: 1px solid lightgray;
             }
         `;
     }
 
     render() {
         return html`
-            <div id="table" class="container">
-                <div class="top-panel" style="width: ${this.maxWidth}">
-                    ${this.columns?.map((i, idx) => html`
-                        <div class="column" style="width: ${i._width - 1}">
-                            <li-table-header .item="${i}" type="header"></li-table-header>
+            <div id="table">
+                ${this.options?.headerHidden ? html`` : html`
+                    <div class="top-panel" style="width: ${this.maxWidth}; background-color: white">
+                        <div style="display: flex; background-color: ${this.options?.headerColor || '#eee'}">
+                            ${this.columns?.map((i, idx) => html`
+                                <div class="column" style="width: ${i._width - 1}">
+                                    <li-table-header .item="${i}" type="header"></li-table-header>
+                                </div>
+                            `)}
                         </div>
-                    `)}
-                </div>
+                    </div>
+                `}
                 <div id="main" class="main-panel" style="width: ${this.maxWidth}">
-                    ${this.data?.map((i, idx) => html`
-                        <div class="row"> ${this.columns?.map((c, idx) => html`
-                            <div class="cell" style="width: ${c._width - 1}">${i[c.name]}</div>
+                    ${this.data?.map(i => html`
+                        <div class="row" style="width: ${this.maxWidth}"> ${this.columns?.map(c => html`
+                            <div class="cell" style="width: ${c._width - 1}">
+                                <li-table-cell .item="${i[c.name]}" .column="${c}"></li-table-cell>
+                            </div>
                         `)}</div>
                     `)}
                 </div>
-                <div class="bottom-panel" style="width: ${this.maxWidth}">
-                    ${this.columns?.map(i => html`
-                        <div class="column" style="width: ${i._width - 1}">
-                            <li-table-header type="footer"></li-table-header>
+                ${this.options?.footerHidden ? html`` : html`
+                    <div class="bottom-panel" style="width: ${this.maxWidth};background-color: white">
+                        <div style="display: flex; background-color:${this.options?.footerColor || '#eee'}">
+                            ${this.columns?.map(i => html`
+                                <div class="column" style="width: ${i._width - 1}">
+                                    <li-table-header type="footer"></li-table-header>
+                                </div>
+                            `)}
                         </div>
-                    `)}
-                </div>
+                    </div>
+                `}
             </div>
         `
     }
@@ -97,7 +101,7 @@ customElements.define('li-table', class extends LiElement {
         }
     }
     get _hasScroll() {
-        return this.$id?.main?.offsetWidth <= this.$id?.main?.scrollWidth;
+        return this.$id?.table?.clientHeight < this.$id?.table?.scrollHeight;
     }
 
     constructor() {
@@ -122,7 +126,7 @@ customElements.define('li-table', class extends LiElement {
     }
 
     _resizeColumns() {
-        const parentWidth = this.parentElement.offsetWidth - (this._hasScroll ? 5 : 0);
+        const parentWidth = this.parentElement.offsetWidth - (this._hasScroll ? 6 : 2);
         this.maxWidth = this.options?.width || parentWidth;
         let length = this.columns.length,
             left = 0;
@@ -153,13 +157,10 @@ customElements.define('li-table-header', class extends LiElement {
                 justify-content: center;
                 align-items: center;
                 height: 100%;
-                overflow: hidden
+                overflow: hidden;
             }
             .label {
                 padding: 4px;
-                /* writing-mode: vertical-lr; */
-                /* text-orientation: mixed; */
-                /* text-orientation: upright; */
             }
             .point {
                 position: absolute;
@@ -188,7 +189,7 @@ customElements.define('li-table-header', class extends LiElement {
 
     render() {
         return html`
-            <div class="label" style="writing-mode: ${this.options?.verticalHeader && this.type === 'header' ? 'vertical-lr' : ''}">${this.item?.label || this.item?.name}</div>
+            <div class="label" style="writing-mode: ${this.options?.headerVertical && this.type === 'header' ? 'vertical-lr' : ''}">${this.item?.label || this.item?.name}</div>
             <div class="point" @click="${this._setAutoWidth}"
                 style="background-color: ${this.item?.width ? 'gray' : 'orange'}"></div>
             <div class="resizer" @pointerdown="${this._pointerdown}"></div>
@@ -262,33 +263,34 @@ customElements.define('li-table-cell', class extends LiElement {
 
     static get styles() {
         return css`
-
+            :host {
+                position: relative;
+                display: flex;
+                flex: 1;
+                justify-content: center;
+                align-items: center;
+                height: 100%;
+                overflow: hidden;
+            }            
         `;
     }
 
     render() {
         return html`
-
+            <div class="cell">${this.item || ''}</div>
         `
     }
 
     static get properties() {
         return {
+            column: { type: Object },
+            item: { type: Object },
+            options: { type: Object, local: true },
             columns: { type: Array, local: true },
             data: { type: Array, local: true },
+            maxWidth: { type: Number, local: true },
+            _fn: { type: Object, local: true },
         }
-    }
-
-    constructor() {
-        super();
-    }
-
-    firstUpdated() {
-        super.firstUpdated();
-    }
-
-    updated(changedProperties) {
-
     }
 
 })
