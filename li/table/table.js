@@ -36,9 +36,9 @@ customElements.define('li-table', class extends LiElement {
                 min-height: 32px;
                 border-right: 1px solid lightgray;
             }
-            .main-panel {
+            #main {
                 position: relative;
-                flex: 1;
+                display: flex;
             }
             .row {
                 position: relative;
@@ -59,27 +59,29 @@ customElements.define('li-table', class extends LiElement {
                     <div class="top-panel" style="width: ${this.maxWidth}; background-color: white">
                         <div style="display: flex; background-color: ${this.options?.headerColor || '#eee'}">
                             ${this.columns?.map((i, idx) => html`
-                                <div class="column" style="width: ${i._width - 1}">
+                                <div class="column" style="width: ${i._width - 1 < 0 ? 0 : i._width - 1}">
                                     <li-table-header .item="${i}" type="header"></li-table-header>
                                 </div>
                             `)}
                         </div>
                     </div>
                 `}
-                <div id="main" class="main-panel" style="width: ${this.maxWidth}">
-                    ${this.data?.map(i => html`
-                        <div class="row" style="width: ${this.maxWidth}"> ${this.columns?.map(c => html`
-                            <div class="cell" style="width: ${c._width - 1}">
-                                <li-table-cell .item="${i[c.name]}" .column="${c}"></li-table-cell>
-                            </div>
-                        `)}</div>
-                    `)}
+                <div id="main" style="width: ${this.maxWidth}">
+                    <div>
+                        ${this.data?.map(i => html`
+                            <div class="row"> ${this.columns?.map(c => html`
+                                <div class="cell" style="width: ${c._width - 1 < 0 ? 0 : c._width - 1}">
+                                    <li-table-cell .item="${i[c.name]}" .column="${c}"></li-table-cell>
+                                </div>
+                            `)}</div>
+                        `)}
+                    </div>
                 </div>
                 ${this.options?.footerHidden ? html`` : html`
                     <div class="bottom-panel" style="width: ${this.maxWidth};background-color: white">
                         <div style="display: flex; background-color:${this.options?.footerColor || '#eee'}">
                             ${this.columns?.map(i => html`
-                                <div class="column" style="width: ${i._width - 1}">
+                                <div class="column" style="width: ${i._width - 1 < 0 ? 0 : i._width - 1}">
                                     <li-table-header type="footer"></li-table-header>
                                 </div>
                             `)}
