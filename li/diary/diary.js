@@ -105,27 +105,27 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                     ` : html``}
                     ${this._mainView?.name !== 'eating' ? html`` : html`
                         <div style="display:flex; width: 100%">
-                            <li-table $partid="table-eating" id="table-eating" .columns="${this._columns}" .data="${this._data}"></li-table>
+                            <li-table $partid="table-eating" id="table-eating" .options="${this._options}" .columns="${this._columns}" .data="${this._data}"></li-table>
                         </div>
                     `}
                     ${this._mainView?.name !== 'water' ? html`` : html`
                         <div style="display:flex; width: 100%">
-                            <li-table $partid="table-water" id="table-water" .columns="${this._columns}" .data="${this._data}"></li-table>
+                            <li-table $partid="table-water" id="table-water" .options="${this._options}" .columns="${this._columns}" .data="${this._data}"></li-table>
                         </div>
                     `}
                     ${this._mainView?.name !== 'walking' ? html`` : html`
                         <div style="display:flex; width: 100%">
-                            <li-table $partid="table-walking" id="table-walking" .columns="${this._columns}" .data="${this._data}"></li-table>
+                            <li-table $partid="table-walking" id="table-walking" .options="${this._options}" .columns="${this._columns}" .data="${this._data}"></li-table>
                         </div>
                     `}
                     ${this._mainView?.name !== 'sport' ? html`` : html`
                         <div style="display:flex; width: 100%">
-                            <li-table $partid="table-sport" id="table-sport" .columns="${this._columns}" .data="${this._data}"></li-table>
+                            <li-table $partid="table-sport" id="table-sport" .options="${this._options}" .columns="${this._columns}" .data="${this._data}"></li-table>
                         </div>
                     `}
                     ${this._mainView?.name !== 'dream' ? html`` : html`
                         <div style="display:flex; width: 100%">
-                            <li-table $partid="table-dream" id="table-dream" .columns="${this._columns}" .data="${this._data}"></li-table>
+                            <li-table $partid="table-dream" id="table-dream" .options="${this._options}" .columns="${this._columns}" .data="${this._data}"></li-table>
                         </div>
                     `}
                     ${this._mainView?.name !== 'wiki' ? html`` : html`
@@ -133,7 +133,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                     `}
                     ${this._mainView?.name !== 'weighing' ? html`` : html`
                         <div style="display:flex; width: 100%">
-                            <li-table $partid="table-weighing" id="table-weighing" .columns="${this._columns}" .data="${this._data}"></li-table>
+                            <li-table $partid="table-weighing" id="table-weighing" .options="${this._options}" .columns="${this._columns}" .data="${this._data}"></li-table>
                         </div>
                     `}
                     ${this._mainView?.name !== 'measurements' ? html`` : html`
@@ -156,8 +156,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                             </div>
                         `)}
                         <div style="display:flex; width: 100%">
-                            <li-table $partid="table-measurements" id="table-measurements" .columns="${this._columns}" .data="${this._data}"
-                                .options=${{verticalHeader: true}}></li-table>
+                            <li-table $partid="table-measurements" id="table-measurements" .options="${this._options}" .columns="${this._columns}" .data="${this._data}"></li-table>
                         </div>
                     `}
                 </div>
@@ -238,10 +237,12 @@ customElements.define('li-diary', class LiDiary extends LiElement {
     }
 
     _setMainView(e, idx, i) {
+        if (this.mainView === i.label) return;
         this._mainView = i;
-        const mainView = i.label,
-            columns = {
-                'eating': [
+        const mainView = i.label;
+        const sets = {
+            'eating': {
+                columns: [
                     { name: 'время приема' },
                     { name: 'количество' },
                     { name: 'кал.' },
@@ -249,39 +250,51 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                     { name: 'жир.' },
                     { name: 'угл.' },
                     // { name: 'примечание' },
-                ],
-                'water': [
+                ]
+            },
+            'water': {
+                columns: [
                     { name: 'время приема' },
                     { name: 'количество' },
                     // { name: 'примечание' },
-                ],
-                'walking': [
+                ]
+            },
+            'walking': {
+                columns: [
                     { name: 'старт' },
                     { name: 'длительность' },
                     { name: 'расстояние' },
                     { name: 'кал.' },
                     // { name: 'примечание' },
-                ],
-                'sport': [
+                ]
+            },
+            'sport': {
+                columns: [
                     { name: 'тип' },
                     { name: 'старт' },
                     { name: 'параметры' },
                     { name: 'кал.' },
                     // { name: 'примечание' },
-                ],
-                'dream': [
+                ]
+            },
+            'dream': {
+                columns: [
                     { name: 'старт' },
                     { name: 'длительность' },
                     { name: 'кал.' },
                     // { name: 'примечание' },
-                ],
-                'wiki': [],
-                'weighing': [
+                ]
+            },
+            'wiki': [],
+            'weighing': {
+                columns: [
                     { name: 'время измерения' },
                     { name: 'вес' },
                     // { name: 'примечание' },
-                ],
-                'measurements': [
+                ]
+            },
+            'measurements': {
+                columns: [
                     { name: 'шея' },
                     { name: 'грудь' },
                     { name: 'под грудью' },
@@ -296,8 +309,17 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                     { name: 'голень' },
                     { name: 'щиколотка' },
                 ],
-            }
-        this._columns = columns[this._mainView.name];
+                options: {
+                    headerVertical: true
+                }
+            },
+        }
+        const opts = {
+            headerColor: `hsla(${idx * 40}, 50%, 50%, .1)`,
+            footerColor: `hsla(${idx * 40}, 50%, 50%, .1)`,
+        };
+        this._columns = sets[this._mainView.name].columns;
+        this._options = { ...(sets[this._mainView.name].options || {}), ...opts };
         this._data = [{}, {}, {}];
         this.mainView = mainView;
         e.target.toggled = this.mainView === mainView;
