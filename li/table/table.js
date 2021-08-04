@@ -24,11 +24,11 @@ customElements.define('li-table', class extends LiElement {
                 display: flex;
                 z-index: 1;
             }
-            .top-panel {
+            .top-panel>div>.column {
                 top: 0;
                 border-bottom: 1px solid gray;
             }
-            .bottom-panel {
+            .bottom-panel>div>.column {
                 bottom: 0;
                 border-top: 1px solid gray;
             }
@@ -192,10 +192,14 @@ customElements.define('li-table-header', class extends LiElement {
 
     render() {
         return html`
-            <div class="label" style="writing-mode: ${this.options?.headerVertical && this.type === 'header' ? 'vertical-lr' : ''}">${this.item?.label || this.item?.name}</div>
-            <div class="point" @click="${this._setAutoWidth}"
-                style="background-color: ${this.item?.width ? 'gray' : 'orange'}"></div>
-            <div class="resizer" @pointerdown="${this._pointerdown}"></div>
+            <div class="label" style="writing-mode: ${this.options?.headerVertical && this.type === 'header' ? 'vertical-lr' : ''}">
+                ${this.item?.label || this.item?.name}
+            </div>
+            ${this.type !== 'header' ? html`` : html`
+                <div class="point" @click="${this._setAutoWidth}"
+                    style="background-color: ${this.item?.width ? 'gray' : 'orange'}"></div>
+                <div class="resizer" @pointerdown="${this._pointerdown}"></div>
+            `}
         `
     }
 
