@@ -163,6 +163,7 @@ customElements.define('li-table-header', class extends LiElement {
             }
             .label {
                 padding: 4px;
+                word-break: break-word;
             }
             .point {
                 position: absolute;
