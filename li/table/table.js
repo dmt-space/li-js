@@ -43,6 +43,7 @@ customElements.define('li-table', class extends LiElement {
             #main {
                 position: relative;
                 display: flex;
+                flex: 1;
             }
             .row {
                 position: relative;
@@ -53,9 +54,11 @@ customElements.define('li-table', class extends LiElement {
                 border-right: 1px solid lightgray;
                 border-bottom: 1px solid lightgray;
             }
+            .cell:last-child {
+                border-right: none;
+            }
         `;
     }
-
     render() {
         return html`
             <div id="table">
@@ -71,7 +74,7 @@ customElements.define('li-table', class extends LiElement {
                     </div>
                 `}
                 <div id="main" style="width: ${this.maxWidth}">
-                    <div>
+                    <div style="border-right: 1px solid lightgray;">
                         ${this.data?.map((i, idx) => html`
                             <div class="row"> ${this.columns?.map(c => html`
                                 <div class="cell" style="width: ${c._width - 1 < 0 ? 0 : c._width - 1}">
@@ -193,7 +196,6 @@ customElements.define('li-table-header', class extends LiElement {
             }
         `;
     }
-
     render() {
         return html`
             <div class="label" style="writing-mode: ${this.options?.headerVertical && this.type === 'header' ? 'vertical-lr' : ''}">
@@ -212,9 +214,6 @@ customElements.define('li-table-header', class extends LiElement {
             type: { type: String },
             item: { type: Object },
             options: { type: Object, local: true },
-            columns: { type: Array, local: true },
-            data: { type: Array, local: true },
-            maxWidth: { type: Number, local: true },
             _fn: { type: Object, local: true },
         }
     }
@@ -245,20 +244,7 @@ customElements.define('li-table-header', class extends LiElement {
         this.item._width = this.item._width < 24 ? 24 : this.item._width;
         this.item.width = this.item._width;
         this._fn._resizeColumns();
-        let _reset = false;
-        let w = 0;
-        this.columns.forEach(i => {
-            w += i._width;
-            if (i.left > this.maxWidth || i._width < 24) _reset = true;
-        })
-        if (w > this.maxWidth || _reset) {
-            this.item.left -= movX;
-            this.item._width -= movX;
-            this.item.width = this.item._width;
-            this._fn._resizeColumns();
-        } else {
-            this._lastX = e.pageX;
-        }
+        this._lastX = e.pageX;
     }
     _up() {
         this._resize = false;
@@ -267,11 +253,9 @@ customElements.define('li-table-header', class extends LiElement {
         document.documentElement.removeEventListener("pointercancel", this.__up, false);
         this.$update();
     }
-
 })
 
 customElements.define('li-table-cell', class extends LiElement {
-
     static get styles() {
         return css`
             :host {
@@ -285,7 +269,6 @@ customElements.define('li-table-cell', class extends LiElement {
             }            
         `;
     }
-
     render() {
         return html`
             ${this.item?.type === 'count' ? html`
@@ -299,14 +282,7 @@ customElements.define('li-table-cell', class extends LiElement {
     static get properties() {
         return {
             idx: { type: Number },
-            column: { type: Object },
             item: { type: Object },
-            options: { type: Object, local: true },
-            columns: { type: Array, local: true },
-            data: { type: Array, local: true },
-            maxWidth: { type: Number, local: true },
-            _fn: { type: Object, local: true },
         }
     }
-
 })
