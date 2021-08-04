@@ -8,6 +8,7 @@ customElements.define('li-calendar', class LiCalendar extends LiElement {
             :host {
                 position: relative;
                 color: #505050;
+                user-select: none;
             }
             .box {
                 position: sticky;
@@ -112,7 +113,7 @@ customElements.define('li-calendar-month', class LiCalendarMonth extends LiEleme
                 margin: 4px;
             }
             .month {
-                margin: 8px;
+                margin: 8px 0;
                 color: #505050;
                 cursor: pointer;
             }
@@ -124,7 +125,10 @@ customElements.define('li-calendar-month', class LiCalendarMonth extends LiEleme
 
     render() {
         return html`
-            ${!this.showMonth ? html`` : html`<div class="month" @click="${this._clickMonth}">${this.monthStr}</div>`}
+            ${!this.showMonth ? html`` : html`
+                <span class="month" @click="${this._selectMonth}" style="margin-left: 8px">${this.monthStr.split(' ')[0]}</span>
+                <span class="month" @click="${this._selectYear}">${this.monthStr.split(' ')[1]}</span>
+            `}
             <div class="box">
                 ${this.calendar.map(i => html`
                     <li-calendar-cell class="cell" .day="${i}" .year="${this.year}" .month="${this.month}" .days="${this.days}"></li-calendar-cell>
@@ -169,9 +173,14 @@ customElements.define('li-calendar-month', class LiCalendarMonth extends LiEleme
         return [...arr.map(i => ++i)];
     }
 
-    _clickMonth() {
+    _selectMonth() {
         this.period[0] = LI.dates(new Date(this.year, this.month, 1)).short;
         this.period[1] = LI.dates(new Date(this.year, this.month, this.days)).short;
+        this.$update();
+    }
+    _selectYear() {
+        this.period[0] = LI.dates(new Date(this.year, 0, 1)).short;
+        this.period[1] = LI.dates(new Date(this.year, 11, 31)).short;
         this.$update();
     }
 
