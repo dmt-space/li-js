@@ -309,9 +309,9 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                     { name: 'голень' },
                     { name: 'щиколотка' },
                 ],
-                options: {
-                    headerVertical: true
-                }
+                // options: {
+                //     headerVertical: true
+                // }
             },
         }
         const opts = {

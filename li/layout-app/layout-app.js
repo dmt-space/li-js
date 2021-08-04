@@ -67,7 +67,9 @@ customElements.define('li-layout-app', class LiLayoutApp extends LiElement {
         }
         this.sides = (this._widthL || ('-' + (this._lastWidthL || this.minSize))) + ',' + (this._widthR || ('-' + (this._lastWidthR || this.minSize)));
         this._move = '';
-        window.dispatchEvent(new Event('resize'));
+        requestAnimationFrame(() => {
+            window.dispatchEvent(new Event('resize'));
+        });
     }
     _mousemove(e) {
         if (!this._move) return;
@@ -88,7 +90,9 @@ customElements.define('li-layout-app', class LiLayoutApp extends LiElement {
         }
         this._widthL = this._l < 0 ? 0 : l;
         this.sides = (this._widthL || ('-' + (this._lastWidthL || this.minSize))) + ',' + (this._widthR || ('-' + (this._lastWidthR || this.minSize)));
-        window.dispatchEvent(new Event('resize'));
+        requestAnimationFrame(() => {
+            window.dispatchEvent(new Event('resize'));
+        });
     }
     _hideR(e) {
         const over = this.over || this.overRight || false;
@@ -103,7 +107,9 @@ customElements.define('li-layout-app', class LiLayoutApp extends LiElement {
         }
         this._widthR = this._r < 0 ? 0 : r;
         this.sides = (this._widthL || ('-' + (this._lastWidthL || this.minSize))) + ',' + (this._widthR || ('-' + (this._lastWidthR || this.minSize)));
-        window.dispatchEvent(new Event('resize'));
+        requestAnimationFrame(() => {
+            window.dispatchEvent(new Event('resize'));
+        });
     }
     _hideAll() {
         this._hideL(true);
