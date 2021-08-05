@@ -67,7 +67,7 @@ customElements.define('li-table', class extends LiElement {
                         <div style="display: flex; background-color: ${this.options?.headerColor || '#eee'}">
                             ${this.columns?.map((i, idx) => html`
                                 <div class="column" style="width: ${i._width - 1 < 0 ? 0 : i._width - 1}">
-                                    <li-table-header .item="${i}" type="header"></li-table-header>
+                                    <li-table-header .column="${i}" type="header"></li-table-header>
                                 </div>
                             `)}
                         </div>
@@ -89,7 +89,7 @@ customElements.define('li-table', class extends LiElement {
                         <div style="display: flex; background-color:${this.options?.footerColor || '#eee'}">
                             ${this.columns?.map(i => html`
                                 <div class="column" style="width: ${i._width - 1 < 0 ? 0 : i._width - 1}">
-                                    <li-table-header type="footer"></li-table-header>
+                                    <li-table-header .column="${i}" type="footer"></li-table-header>
                                 </div>
                             `)}
                         </div>
@@ -199,11 +199,11 @@ customElements.define('li-table-header', class extends LiElement {
     render() {
         return html`
             <div class="label" style="writing-mode: ${this.options?.headerVertical && this.type === 'header' ? 'vertical-lr' : ''}">
-                ${this.item?.label || this.item?.name}
+                ${this.type === 'header' && (this.column?.label || this.column?.name) || ''}
             </div>
-            ${this.type !== 'header' ? html`` : html`
+            ${this.disableResize ? html`` : html`
                 <div class="point" @click="${this._setAutoWidth}"
-                    style="background-color: ${this.item?.width ? 'gray' : 'orange'}"></div>
+                    style="background-color: ${this.column?.width ? 'gray' : 'orange'}"></div>
                 <div class="resizer" @pointerdown="${this._pointerdown}"></div>
             `}
         `
@@ -212,10 +212,13 @@ customElements.define('li-table-header', class extends LiElement {
     static get properties() {
         return {
             type: { type: String },
-            item: { type: Object },
+            column: { type: Object },
             options: { type: Object, local: true },
             _fn: { type: Object, local: true },
         }
+    }
+    get disableResize() {
+        return this.options?.disableResizeColumns || this.column?.disableResize;
     }
 
     firstUpdated() {
@@ -225,7 +228,7 @@ customElements.define('li-table-header', class extends LiElement {
     }
 
     _setAutoWidth(e) {
-        this.item.width = undefined;
+        this.column.width = undefined;
         this._fn._resizeColumns();
     }
     _pointerdown(e) {
@@ -239,10 +242,10 @@ customElements.define('li-table-header', class extends LiElement {
     }
     _move(e) {
         const movX = e.pageX - this._lastX;
-        this.item.left += movX;
-        this.item._width += movX;
-        this.item._width = this.item._width < 24 ? 24 : this.item._width;
-        this.item.width = this.item._width;
+        this.column.left += movX;
+        this.column._width += movX;
+        this.column._width = this.column._width < 24 ? 24 : this.column._width;
+        this.column.width = this.column._width;
         this._fn._resizeColumns();
         this._lastX = e.pageX;
     }
@@ -258,24 +261,30 @@ customElements.define('li-table-header', class extends LiElement {
 customElements.define('li-table-cell', class extends LiElement {
     static get styles() {
         return css`
-            :host {
+            .cell {
                 position: relative;
                 display: flex;
                 flex: 1;
                 justify-content: center;
                 align-items: center;
+                width: 100%;
                 height: 100%;
                 overflow: hidden;
-            }            
+                word-break: break-word;
+                outline: none;
+                text-align:center;
+            }
         `;
     }
     render() {
         return html`
-            ${this.item?.type === 'count' ? html`
-                <div class="cell">${this.idx + 1}</div>
-            ` : html`
-                <div class="cell">${this.item || ''}</div>
-            `}
+            <div style="background-color: ${this.idx%2 ? '#f5f5f5' : 'white'}">
+                ${this.column?.isCount ? html`
+                    <div class="cell" >${this.idx + 1}</div>
+                ` : html`
+                    <div class="cell" contenteditable="${this.readOnly ? 'false' : 'true'}">${this.item}</div>
+                `}
+            </div>
         `
     }
 
@@ -283,6 +292,11 @@ customElements.define('li-table-cell', class extends LiElement {
         return {
             idx: { type: Number },
             item: { type: Object },
+            column: { type: Object },
+            options: { type: Object, local: true },
         }
+    }
+    get readOnly() {
+        return this.item?.readOnly || this.column?.readOnly || this.options?.readOnly;
     }
 })

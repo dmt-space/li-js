@@ -212,7 +212,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
         return [
             { icon: 'dining', name: 'eating', label: 'еда' },
             { icon: 'water_drop', name: 'water', label: 'вода' },
-            { icon: 'hiking', name: 'walking', label: 'ходьба' },
+            { icon: 'hiking', name: 'walking', label: 'шаги' },
             { icon: 'sports_volleyball', name: 'sport', label: 'спорт' },
             { icon: 'bedroom_parent', name: 'dream', label: 'сон' },
             { icon: 'auto_stories', name: 'wiki', label: 'wiki', hideLabel: true },
@@ -243,6 +243,8 @@ customElements.define('li-diary', class LiDiary extends LiElement {
         const sets = {
             'eating': {
                 columns: [
+                    { label: '№', isCount: true, width: 40, disableResize: true },
+                    { name: 'дата' },
                     { name: 'время приема' },
                     { name: 'количество' },
                     { name: 'кал.' },
@@ -254,6 +256,8 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             },
             'water': {
                 columns: [
+                    { label: '№', isCount: true, width: 40, disableResize: true },
+                    { name: 'дата' },
                     { name: 'время приема' },
                     { name: 'количество' },
                     // { name: 'примечание' },
@@ -261,6 +265,8 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             },
             'walking': {
                 columns: [
+                    { label: '№', isCount: true, width: 40, disableResize: true },
+                    { name: 'дата' },
                     { name: 'старт' },
                     { name: 'длительность' },
                     { name: 'расстояние' },
@@ -270,6 +276,8 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             },
             'sport': {
                 columns: [
+                    { label: '№', isCount: true, width: 40, disableResize: true },
+                    { name: 'дата' },
                     { name: 'тип' },
                     { name: 'старт' },
                     { name: 'параметры' },
@@ -279,6 +287,8 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             },
             'dream': {
                 columns: [
+                    { label: '№', isCount: true, width: 40, disableResize: true },
+                    { name: 'дата' },
                     { name: 'старт' },
                     { name: 'длительность' },
                     { name: 'кал.' },
@@ -288,13 +298,20 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             'wiki': [],
             'weighing': {
                 columns: [
+                    { label: '№', isCount: true, width: 40, disableResize: true },
+                    { name: 'дата' },
                     { name: 'время измерения' },
                     { name: 'вес' },
                     // { name: 'примечание' },
-                ]
+                ],
+                options: {
+                    footerHidden: true
+                }
             },
             'measurements': {
                 columns: [
+                    { label: '№', isCount: true, width: 40, disableResize: true },
+                    { name: 'дата' },
                     { name: 'шея' },
                     { name: 'грудь' },
                     { name: 'под грудью' },
@@ -309,9 +326,9 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                     { name: 'голень' },
                     { name: 'щиколотка' },
                 ],
-                // options: {
-                //     headerVertical: true
-                // }
+                options: {
+                    footerHidden: true
+                }
             },
         }
         const opts = {
