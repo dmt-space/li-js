@@ -1,23 +1,10 @@
 import { LiElement, html, css } from '../../li.js';
 
 let start = 0;
-let end = 100;
+let end = 200;
 let ok;
-const io = new IntersectionObserver(
-    e => {
+let scroll = 1;
 
-        if (ok && e[0].intersectionRatio > 0) {
-            start += 50;
-            end += 50;
-            console.log(start, end);
-            console.log(e[0].intersectionRatio, e[0].target);
-        }
-        ok = true;
-    },
-    {
-        /* Using default options. Details below */
-    }
-)
 
 customElements.define('li-table', class extends LiElement {
     static get styles() {
@@ -64,11 +51,6 @@ customElements.define('li-table', class extends LiElement {
                 display: flex;
                 flex: 1;
             }
-            .row {
-                position: relative;
-                display: flex;
-                min-height: 32px;
-            }
             .cell {
                 border-right: 1px solid lightgray;
                 border-bottom: 1px solid lightgray;
@@ -92,15 +74,16 @@ customElements.define('li-table', class extends LiElement {
                         </div>
                     </div>
                 `}
-                <div id="main" style="width: ${this.maxWidth}">
-                    <div style="border-right: 1px solid lightgray; height: 100000px">
+                <div id="main" style="width: ${this.maxWidth}" @mousewheel=${e => scroll = e.deltaY < 0 ? -1 : 1}>
+                    <div style="border-right: 1px solid lightgray; height: 32000px">
                         <div style="position: absolute; top: ${start * 32}">
                             ${this._data.map((i, idx) => html`
-                                <div class="row"> ${this.columns?.map(c => html`
-                                    <div class="cell" style="width: ${c._width - 1 < 0 ? 0 : c._width - 1}">
-                                        <li-table-cell .item="${i[c.name]}" .column="${c}" idx="${idx}"></li-table-cell>
-                                    </div>
-                                `)}</div>
+                                <li-table-row idx=${idx}> ${this.columns?.map(c => html`
+                                        <div class="cell" style="width: ${c._width - 1 < 0 ? 0 : c._width - 1}">
+                                            <li-table-cell .item="${i[c.name]}" .column="${c}" idx="${idx}"></li-table-cell>
+                                        </div>
+                                    `)}
+                                </li-table-row>
                             `)}
                         </div>
                     </div>             
@@ -142,6 +125,33 @@ customElements.define('li-table', class extends LiElement {
         this.__resizeColumns = this._resizeColumns.bind(this);
         this._fn = this._fn || {};
         this._fn._resizeColumns = () => this._resizeColumns();
+
+        this._fn.io = new IntersectionObserver(
+            e => {
+                if (ok && e[0].intersectionRatio === 0 && e[0].target.idx === 99 && scroll > 0) {
+                    start += 50;
+                    end += 50;
+                    // console.log(start, end);
+                    // console.log(e[0].intersectionRatio, e[0].target);
+                    setTimeout(() => {
+                        this.$update();
+                    }, 300);
+                }
+                if (start > 0 && ok && e[0].intersectionRatio === 0 && e[0].target.idx === 49 && scroll < 0) {
+                    start -= 50;
+                    end -= 50;
+                    // console.log(start, end);
+                    // console.log(e[0].intersectionRatio, e[0].target);
+                    setTimeout(() => {
+                        this.$update();
+                    }, 500);
+                }
+                ok = true;
+            },
+            {
+
+            }
+        )
     }
     connectedCallback() {
         super.connectedCallback();
@@ -179,6 +189,43 @@ customElements.define('li-table', class extends LiElement {
         this.$update();
     }
 })
+
+customElements.define('li-table-row', class extends LiElement {
+    static get styles() {
+        return css`
+            .row {
+                position: relative;
+                display: flex;
+                min-height: 32px;
+            }
+        `;
+    }
+    render() {
+        return html`
+            <div class="row" style="color: ${this.color || ''}"><slot></slot></div>
+        `
+    }
+
+    static get properties() {
+        return {
+            idx: { type: Number, reflect: true },
+            _fn: { type: Object, local: true },
+        }
+    }
+
+    firstUpdated() {
+        super.firstUpdated();
+        if (this.idx === 99) {
+            this._fn?.io.observe(this);
+            this.color = 'blue'
+        }
+        if (this.idx === 49) {
+            this._fn?.io.observe(this);
+            this.color = 'red'
+        }
+    }
+})
+
 
 customElements.define('li-table-header', class extends LiElement {
     static get styles() {
@@ -304,7 +351,7 @@ customElements.define('li-table-cell', class extends LiElement {
         return html`
             <div ref="cell" style="background-color: ${this.idx % 2 ? '#f5f5f5' : 'white'}">
                 ${this.column?.isCount ? html`
-                    <div class="cell" >${this.count}</div>
+                    <div class="cell">${this.count}</div>
                 ` : html`
                     <div class="cell" contenteditable="${this.readOnly ? 'false' : 'true'}">${this.item}</div>
                 `}
@@ -325,12 +372,5 @@ customElements.define('li-table-cell', class extends LiElement {
     }
     get count() {
         return start + this.idx + 1;
-    }
-
-    firstUpdated() {
-        super.firstUpdated();
-        if ((this.idx + 1) % 50 === 0 && this.column?.isCount) {
-            io.observe(this);
-        }
     }
 })
