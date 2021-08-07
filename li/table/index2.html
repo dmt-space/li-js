@@ -21,38 +21,41 @@
 </div>
 
 <script type="module">
+    setTimeout(() => {
 
-    t1.options = {
-        lazy: true,
-        // width: 1200,
-        //headerVertical: true,
-        headerColor: `hsla(210, 50%, 50%, .1)`,
-        footerColor: `hsla(210, 50%, 50%, .1)`,
-        //headerHidden: true,
-        //footerHidden: true,
-        // disableResizeColumns: true
-    }
 
-    t1.columns = [
-        // { label: '№', name: 'c0', width: 40 },
-        { label: '№', isCount: true, width: 60, disableResize: true },
-        { label: 'col-001', name: 'c1', width: 180 },
-        { label: 'col-002', name: 'c2', width: 250 },
-        { label: 'col-003', name: 'c3' },
-        { label: 'col-004', name: 'c4' },
-        { label: 'col-005', name: 'c5', width: 180 },
-        { label: '', name: '' },
-    ]
+        t1.options = {
+            lazy: true,
+            // width: 1200,
+            //headerVertical: true,
+            headerColor: `hsla(210, 50%, 50%, .1)`,
+            footerColor: `hsla(210, 50%, 50%, .1)`,
+            //headerHidden: true,
+            //footerHidden: true,
+            // disableResizeColumns: true
+        }
 
-    t1.data = [];
-    for (let i = 0; i < 1000; i++) {
-        t1.data.push(
-            {
-                c1: 'row-' + i + ', col-001', c2: 'row-' + i + ', col-002',
-                c3: 'row-' + i + ', col-003', c4: 'row-' + i + ', col-004', c5: 'row-' + i + ', col-005'
-            },
-        );
-    }
+        t1.columns = [
+            // { label: '№', name: 'c0', width: 40 },
+            { label: '№', isCount: true, width: 60, disableResize: true },
+            { label: 'col-001', name: 'c1', width: 180 },
+            { label: 'col-002', name: 'c2', width: 250 },
+            { label: 'col-003', name: 'c3' },
+            { label: 'col-004', name: 'c4' },
+            { label: 'col-005', name: 'c5', width: 180 },
+            { label: '', name: '' },
+        ]
 
+        t1.data = [];
+        for (let i = 1; i < 10001; i++) {
+            t1.data.push(
+                {
+                    c1: 'row-' + i + ', col-001', c2: 'row-' + i + ', col-002',
+                    c3: 'row-' + i + ', col-003', c4: 'row-' + i + ', col-004', c5: 'row-' + i + ', col-005'
+                },
+            );
+        }
+
+    }, 300);
 
 </script>

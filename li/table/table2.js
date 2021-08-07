@@ -69,11 +69,11 @@ customElements.define('li-table', class extends LiElement {
                     </div>
                 `}
                 <div id="main" style="width: ${this.maxWidth}" @mousewheel=${e => this.lazy.scroll = e.deltaY < 0 ? -1 : 1}>
-                    <div style="border-right: 1px solid lightgray; height: 32000px">
+                    <div style="border-right: 1px solid lightgray; height: 320000px">
                         <div style="position: absolute; top: ${this.lazy?.start * 32}">
                             ${this._data.map((i, idx) => html`
                                 <li-table-row idx=${idx}> ${this.columns?.map(c => html`
-                                        <div class="cell" style="width: ${c._width - 1 < 0 ? 0 : c._width - 1}">
+                                        <div class="cell" style="width: ${c._width - 1 < 0 ? 0 : c._width - 1}; height: 31px">
                                             <li-table-cell .item="${i[c.name]}" .column="${c}" idx="${idx}"></li-table-cell>
                                         </div>
                                     `)}
@@ -105,14 +105,14 @@ customElements.define('li-table', class extends LiElement {
             data: { type: Array, local: true },
             maxWidth: { type: Number, local: true },
             _fn: { type: Object, local: true },
-            lazy: { type: Object, default: { step: 100, start: 0, end: 200, scroll: 1, ok: false }, local: true }
+            lazy: { type: Object, default: { step: 50, start: 0, end: 100, max: 100, scroll: 1, ok: false }, local: true }
         }
     }
     get _hasScroll() {
         return this.$id?.table?.clientHeight < this.$id?.table?.scrollHeight;
     }
     get _data() {
-        return this.options?.lazy ? this.data?.slice(this.lazy?.start, this.lazy?.end) || [] : this.data || [];
+        return this.options?.lazy ? this.data?.slice(this.lazy.start, this.lazy.end) || [] : this.data || [];
     }
 
     constructor() {
@@ -121,19 +121,31 @@ customElements.define('li-table', class extends LiElement {
         this._fn = this._fn || {};
         this._fn._resizeColumns = () => this._resizeColumns();
         this._fn.io = new IntersectionObserver(e => {
-            if (this.lazy.ok && e[0].intersectionRatio === 0) {
-                if (e[0].target.idx === this.lazy.step - 1 && this.lazy.scroll > 0) {
-                    this.lazy.start += this.lazy.step / 2;
-                    this.lazy.end += this.lazy.step / 2;
-                    setTimeout(() => this.$update(), 300);
+            if (this.options?.lazy) {
+                if (this.lazy.ok && e[0].intersectionRatio === 0 && this.lazy.scroll > 0 && e[0].target.idx !== 0) {
+                    this.lazy.start += this.lazy.step;
+                    this.lazy.end = this.lazy.start + this.lazy.max;
+                    console.log(e[0].target);
+                    console.log(this.lazy.start, this.lazy.end, this.lazy.scroll);
+
+                    this.$update();
+                    //this.requestUpdate();
                 }
-                if (this.lazy.start > 0 && e[0].target.idx === this.lazy.step / 2 -1 && this.lazy.scroll < 0) {
-                    this.lazy.start -= this.lazy.step / 2;
-                    this.lazy.end -= this.lazy.step / 2;
-                    setTimeout(() => this.$update(), 300);
+                if (this.lazy.ok && e[0].intersectionRatio > 0 && this.lazy.scroll < 0 && e[0].target.idx === 0) {
+                    this.lazy.start -= this.lazy.step;
+                    this.lazy.end = this.lazy.start + this.lazy.max;
+                    if (this.lazy.start < 0) {
+                        this.lazy.start = 0;
+                        this.lazy.end = this.lazy.max;
+                    }
+                    console.log(e[0].target);
+                    console.log(this.lazy.start, this.lazy.end, this.lazy.scroll);
+
+                    this.$update();
+                    //this.requestUpdate();
                 }
+                this.lazy.ok = true;
             }
-            this.lazy.ok = true;
         })
     }
     connectedCallback() {
@@ -179,7 +191,6 @@ customElements.define('li-table-row', class extends LiElement {
             .row {
                 position: relative;
                 display: flex;
-                min-height: 32px;
             }
         `;
     }
@@ -193,20 +204,17 @@ customElements.define('li-table-row', class extends LiElement {
         return {
             idx: { type: Number, reflect: true },
             _fn: { type: Object, local: true },
-            lazy: { type: Object, local: true }
+            lazy: { type: Object, local: true },
+            options: { type: Object, local: true },
         }
     }
 
-    firstUpdated() {
-        super.firstUpdated();
-        if (this._fn?.io) {
-            if (this.idx === this.lazy.step - 1) {
+    updated(e) {
+        if (e.has('options') && this.options?.lazy) {
+            if ((this.idx + 1) % this.lazy.step === 0 || this.idx === 0) {
                 this._fn?.io.observe(this);
-                this.color = 'blue'
-            }
-            if (this.idx === this.lazy.step / 2 - 1) {
-                this._fn?.io.observe(this);
-                this.color = 'red'
+                this.color = 'blue';
+                this.requestUpdate();
             }
         }
     }
@@ -335,7 +343,7 @@ customElements.define('li-table-cell', class extends LiElement {
     }
     render() {
         return html`
-            <div ref="cell" style="background-color: ${this.idx % 2 ? '#f5f5f5' : 'white'}">
+            <div id="cell" style="background-color: ${this.count % 2 ? '#f5f5f5' : 'white'}">
                 ${this.column?.isCount ? html`
                     <div class="cell">${this.count}</div>
                 ` : html`
