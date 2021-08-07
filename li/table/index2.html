@@ -1,4 +1,4 @@
-<script type="module" src="./table2.js"></script>
+<script type="module" src="./table.js"></script>
 
 <style>
     html,
@@ -27,12 +27,14 @@
         t1.options = {
             lazy: true,
             // width: 1200,
-            //headerVertical: true,
+            // headerVertical: true,
             headerColor: `hsla(210, 50%, 50%, .1)`,
             footerColor: `hsla(210, 50%, 50%, .1)`,
-            //headerHidden: true,
-            //footerHidden: true,
-            // disableResizeColumns: true
+            // headerHidden: true,
+            // footerHidden: true,
+            // disableResizeColumns: true,
+            rowHeight: 36,
+            // rowMinHeight: '64'
         }
 
         t1.columns = [
@@ -47,7 +49,8 @@
         ]
 
         t1.data = [];
-        for (let i = 1; i < 10001; i++) {
+        for (let _i = 0; _i < 1000; _i++) {
+            let i = _i + 1;
             t1.data.push(
                 {
                     c1: 'row-' + i + ', col-001', c2: 'row-' + i + ', col-002',
