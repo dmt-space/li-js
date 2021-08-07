@@ -32,10 +32,12 @@
 <script type="module">
 
     t1.options = {
+        lazy: true,
         // width: 1200,
         //headerVertical: true,
         headerColor: `hsla(210, 50%, 50%, .1)`,
         footerColor: `hsla(210, 50%, 50%, .1)`,
+        rowHeight: 36
         //headerHidden: true,
         //footerHidden: true,
         // disableResizeColumns: true
@@ -70,7 +72,7 @@
         // disableResizeColumns: true
     }
     t1.columns = [
-        // { label: '№', name: 'c0', width: 40 },
+        { label: '№', isCount: true, width: 60 },
         { label: 'col-001', name: 'c1', width: 150 },
         { label: 'col-002', name: 'c2', width: 250 },
         { label: 'col-003', name: 'c3' },
@@ -106,7 +108,7 @@
         { label: '', name: '' },
     ]
     t1.data = [];
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 10000; i++) {
         t1.data.push(
             {
                 c1: 'row-' + i + ', col-001', c2: 'row-' + i + ', col-002',
