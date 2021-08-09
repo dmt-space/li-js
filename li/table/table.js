@@ -38,23 +38,36 @@ customElements.define('li-table', class extends LiElement {
             }
             .column {
                 min-height: 32px;
-                border-right: 1px solid lightgray;
+                /* border-right: 1px solid lightgray; */
             }
             #main {
                 position: relative;
                 display: flex;
                 flex: 1;
             }
+            .vertical-line {
+                position: absolute;
+                border-right: 1px solid lightgray;
+                height: 100%;
+                width: 1px;
+                top: 1;
+                z-index: 2;
+                opacity: 1;
+                transition: opacity .5s linear;
+            }
         `;
     }
     render() {
         return html`
-            <div id="table">
+            ${this.columns?.map((i, idx) => html`
+                <div class="vertical-line" style="left : ${i.left - 1}px; opacity: ${this.ready ? 1 : 0}"></div>
+            `)}
+            <div id="table" @scroll=${this._scroll} @pointer=${this._pointer}>
                 ${this.options?.headerHidden ? html`` : html`
                     <div class="top-panel" style="width: ${this.maxWidth}; background-color: white">
                         <div style="display: flex; background-color: ${this.options?.headerColor || '#eee'}">
                             ${this.columns?.map((i, idx) => html`
-                                <div class="column" style="width: ${i._width - 1 < 0 ? 0 : i._width - 1}">
+                                <div class="column" style="width: ${i._width < 0 ? 0 : i._width}">
                                     <li-table-header .column="${i}" type="header"></li-table-header>
                                 </div>
                             `)}
@@ -74,7 +87,7 @@ customElements.define('li-table', class extends LiElement {
                     <div class="bottom-panel" style="width: ${this.maxWidth};background-color: white">
                         <div style="display: flex; background-color:${this.options?.footerColor || '#eee'}">
                             ${this.columns?.map(i => html`
-                                <div class="column" style="width: ${i._width - 1 < 0 ? 0 : i._width - 1}">
+                                <div class="column" style="width: ${i._width < 0 ? 0 : i._width};">
                                     <li-table-header .column="${i}" type="footer"></li-table-header>
                                 </div>
                             `)}
@@ -94,6 +107,7 @@ customElements.define('li-table', class extends LiElement {
             maxWidth: { type: Number, local: true },
             _fn: { type: Object, local: true },
             lazy: { type: Object, default: { step: 100, start: 0, end: 200, max: 200, scroll: 1, ok: false }, local: true },
+            ready: { type: Boolean }
         }
     }
     get _hasScroll() {
@@ -152,7 +166,10 @@ customElements.define('li-table', class extends LiElement {
         if (e.has('columns')) {
             this._resizeColumns();
             setTimeout(() => {
-                requestAnimationFrame(() => this.$id.table?.setAttribute('ready', true));
+                requestAnimationFrame(() => {
+                    this.$id.table?.setAttribute('ready', true);
+                    this.ready = true;
+                });
             }, 100);
 
         }
@@ -181,6 +198,19 @@ customElements.define('li-table', class extends LiElement {
     _wheel(e) {
         this.lazy.scroll = e.deltaY < 0 ? -1 : 1;
     }
+    _scroll(e) {
+        const start = Math.floor((e.target.scrollTop / this._rowHeight) );
+        if (start % 2) return;
+        console.log(start);
+        // this.lazy.start = start;
+        // this.lazy.end = this.lazy.start + this.lazy.max;
+        // // console.log(e[0].target);
+        // // console.log(this.lazy.start, this.lazy.end, this.lazy.scroll);
+        // this.$update();
+    }
+    _pointer() {
+        this._down = true;
+    }
 })
 
 customElements.define('li-table-row', class extends LiElement {
@@ -189,6 +219,7 @@ customElements.define('li-table-row', class extends LiElement {
             :host {
                 position: relative;
                 display: flex;
+                border-bottom: 1px solid lightgray;
             }
         `;
     }
@@ -344,8 +375,6 @@ customElements.define('li-table-cell', class extends LiElement {
             :host {
                 display: flex;
                 flex: 1;
-                border-right: 1px solid lightgray;
-                border-bottom: 1px solid lightgray;
             }
             .cell {
                 position: relative;
@@ -364,10 +393,10 @@ customElements.define('li-table-cell', class extends LiElement {
     }
     get styles() {
         return {
-            width: this.column?._width - 1 < 0 ? 0 : this.column?._width - 1,
+            width: this.column?._width - 1 < 0 ? 0 : this.column?._width,
             height: this.options?.rowHeight ? this.options?.rowHeight - 1 + 'px' : 'auto',
-            'max-height': this.options?.rowHeight ? this.options?.rowHeight - 1 + 'px' : 'auto',
-            'min-height': this.options?.rowMinHeight ? this.options?.rowMinHeight - 1 || 31 + 'px' : '31px',
+            'max-height': this.options?.rowHeight ? this.options?.rowHeight + 'px' : 'auto',
+            'min-height': this.options?.rowMinHeight ? this.options?.rowMinHeight || 32 + 'px' : '32px',
             'background-color': this.count % 2 ? '#f5f5f5' : 'white',
             color: this.color
         }
