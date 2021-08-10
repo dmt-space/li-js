@@ -77,7 +77,8 @@ customElements.define('li-table', class extends LiElement {
             maxWidth: { type: Number, local: true },
             _fn: { type: Object, local: true },
             lazy: { type: Object, default: { step: 100, start: 0, end: 200, max: 200, scroll: 1, ok: false }, local: true },
-            ready: { type: Boolean }
+            ready: { type: Boolean },
+            left: { type: Number, local: true },
         }
     }
     get _hasScroll() {
@@ -93,7 +94,7 @@ customElements.define('li-table', class extends LiElement {
         return (this.data?.length) * this._rowHeight;
     }
     get _left() {
-        return this.$id.container?.scrollLeft;
+        return this.$id?.container?.scrollLeft || 0;
     }
 
     constructor() {
@@ -143,7 +144,8 @@ customElements.define('li-table', class extends LiElement {
     }
 
     _resizeColumns() {
-        this.maxWidth = this.options?.width || this.parentElement.offsetWidth - (this._hasScroll ? 1 : 1);
+        this.left = this._left;
+        this.maxWidth = this.options?.width || this.parentElement.offsetWidth - (this._hasScroll ? 7 : 2);
         let length = this.columns.length,
             left = 0;
         this.columns.forEach(i => {
@@ -166,6 +168,7 @@ customElements.define('li-table', class extends LiElement {
     }
     _scroll(e) {
         requestAnimationFrame(()=> {
+            this.left = this._left;
             // this.$update();
             this.requestUpdate();
         })
@@ -249,7 +252,7 @@ customElements.define('li-table-header-row', class extends LiElement {
     render() {
         return html`
             ${this.options?.footerHidden ? html`` : html`
-                <div class="panel ${this.type}">
+                <div class="panel ${this.type}" style="left: ${-this.left}">
                     <div style="display: flex; background-color:${this.options?.footerColor || '#eee'}">
                         ${this.columns?.map(i => html`
                             <div style="width: ${i._width < 0 ? 0 : i._width}; min-height: ${this._columnMinHeight}">
@@ -265,6 +268,7 @@ customElements.define('li-table-header-row', class extends LiElement {
     static get properties() {
         return {
             type: { type: String },
+            left: { type: Number, local: true },
             _fn: { type: Object, local: true },
             lazy: { type: Object, local: true },
             options: { type: Object, local: true },
@@ -425,7 +429,7 @@ customElements.define('li-table-cell', class extends LiElement {
     }
     get styles() {
         return {
-            width: this.column?._width - 1 < 0 ? 0 : this.column?._width - 1,
+            width: this.column?._width < 0 ? 0 : this.column?._width,
             height: this.options?.rowHeight ? this.options?.rowHeight - 1 + 'px' : 'auto',
             'max-height': this.options?.rowHeight ? this.options?.rowHeight + 'px' : 'auto',
             'min-height': this.options?.rowMinHeight ? this.options?.rowMinHeight || 32 + 'px' : '32px',
