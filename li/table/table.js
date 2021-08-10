@@ -51,7 +51,7 @@ customElements.define('li-table', class extends LiElement {
         return html`
             <div id="table">
                 <li-table-header-row class="panel top" type="top"></li-table-header-row>
-                <div id="container" @scroll=${this._scroll} @pointer=${this._pointer}>
+                <div id="container" @scroll=${this._scroll} @pointerdown=${this._pointerdown}>
                     <div id="main" style="width: ${this.maxWidth}" @mousewheel=${this._wheel}>
                         <div style="position: absolute; top: ${this.options?.lazy ? this.lazy?.start * this._rowHeight : 0}">
                             ${this._data.map((row, idx) => html`<li-table-row .row=${row} idx=${idx}></li-table-row>`)}
@@ -63,7 +63,7 @@ customElements.define('li-table', class extends LiElement {
             </div>
             ${this.columns?.map((i, idx) => html`
                 <div class="vertical-line" style="left : ${i.left - this._left}px; opacity: ${this.ready ? 1 : 0}; 
-                    visibility: ${i.left - this._left  < 0 || i.left - this._left > this.maxWidth ? 'hidden' : 'visibility'}"></div>
+                    visibility: ${i.left - this._left < 0 || i.left - this._left > this.maxWidth ? 'hidden' : 'visibility'}"></div>
             `)}
         `
     }
@@ -96,6 +96,9 @@ customElements.define('li-table', class extends LiElement {
     get _left() {
         return this.$id?.container?.scrollLeft || 0;
     }
+    get _rowCount() {
+        return Math.round(this.$id.main.offsetHeight / this._rowHeight);
+    }
 
     constructor() {
         super();
@@ -108,8 +111,9 @@ customElements.define('li-table', class extends LiElement {
                     this.lazy.start += this.lazy.step;
                     this.lazy.end = this.lazy.start + this.lazy.max;
                     this.$update();
+                    // this.requestUpdate();
                 }
-                if (this.lazy.ok && e[0].intersectionRatio > 0 && this.lazy.scroll < 0 && e[0].target.idx === 0) {
+                if (this.lazy.ok && e[0].intersectionRatio > 0 && this.lazy.scroll < 0) {
                     this.lazy.start -= this.lazy.step;
                     this.lazy.end = this.lazy.start + this.lazy.max;
                     if (this.lazy.start < 0) {
@@ -117,6 +121,7 @@ customElements.define('li-table', class extends LiElement {
                         this.lazy.end = this.lazy.max;
                     }
                     this.$update();
+                    // this.requestUpdate();
                 }
                 this.lazy.ok = true;
             }
@@ -167,23 +172,40 @@ customElements.define('li-table', class extends LiElement {
         this.lazy.scroll = e.deltaY < 0 ? -1 : 1;
     }
     _scroll(e) {
-        requestAnimationFrame(()=> {
-            this.left = this._left;
-            // this.$update();
-            this.requestUpdate();
+        //this.left = this._left;
+        this._scrollTop = Math.floor((e.target.scrollTop / this._rowHeight));
+        // this._refreshData();
+        requestAnimationFrame(() => {
+            this.$update();
         })
-        // const start = Math.floor((e.target.scrollTop / this._rowHeight) );
-        // if (start % 2) return;
-        // console.log(start);
-        // this.lazy.start = start;
-        // this.lazy.end = this.lazy.start + this.lazy.max;
-        // // console.log(e[0].target);
-        // // console.log(this.lazy.start, this.lazy.end, this.lazy.scroll);
-        // this.$update();
-        // this.requestUpdate();
     }
-    _pointer() {
+    _refreshData() {
+        if (this._down) return;
+        // LI.throttle('_scroll', () => {
+        //console.log('scroll')
+        if (this._scrollTop <= this._rowCount && this.lazy.start !== 0) {
+            this.lazy.start = 0;
+            this.lazy.end = this.lazy.start + this.lazy.max;
+        } else if (this._scrollTop >= this.data.length - this._rowCount) {
+            this.lazy.start = this.data.length - this._rowCount - 2;
+            this.lazy.end = this.lazy.start + this.lazy.max;
+        } else {
+            this.lazy.start = this._scrollTop;
+            this.lazy.end = this.lazy.start + this.lazy.max;
+        }
+        requestAnimationFrame(() => {
+            this.$update();
+        })
+        // }, 50)
+    }
+    _pointerdown(e) {
+        document.addEventListener('pointerup', this.__pointerup = this.__pointerup || this._pointerup.bind(this));
         this._down = true;
+    }
+    _pointerup(e) {
+        document.removeEventListener('pointerup', this.__pointerup);
+        this._down = false;
+        //this._refreshData();
     }
 })
 

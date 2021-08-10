@@ -72,7 +72,7 @@
         // disableResizeColumns: true
     }
     t1.columns = [
-        { label: '№', isCount: true, width: 60 },
+        { label: '№', name: 'c0', width: 60 },
         { label: 'col-001', name: 'c1', width: 150 },
         { label: 'col-002', name: 'c2', width: 250 },
         { label: 'col-003', name: 'c3' },
@@ -81,7 +81,7 @@
         { label: '', name: '' },
     ]
     t2.columns = [
-        { label: '№', isCount: true, width: 40, disableResize: true },
+        { label: '№', name: 'c0', width: 40, disableResize: true },
         { label: 'col-006', name: 'c1', width: 120 },
         { label: 'col-007', name: 'c2', width: 120 },
         { label: 'col-008', name: 'c3', width: 120 },
@@ -90,7 +90,7 @@
     ]
     t3.columns = [
         { label: '', name: '', width: 20, color: 'gray', disableResize: true, readOnly: true },
-        { label: '№', isCount: true, width: 40 },
+        { label: '№', name: 'c0', width: 40 },
         { label: 'col-001', name: 'c1', width: 150 },
         { label: 'col-002', name: 'c2', width: 250 },
         { label: 'col-003', name: 'c3' },
@@ -99,7 +99,7 @@
         { label: '', name: '', readOnly: true },
     ]
     t4.columns = [
-        { label: '№', isCount: true, width: 40 },
+        { label: '№', name: 'c0', width: 40 },
         { label: 'col-001', name: 'c1', width: 150 },
         { label: 'col-002', name: 'c2', width: 250 },
         { label: 'col-003', name: 'c3' },
@@ -111,6 +111,7 @@
     for (let i = 0; i < 10000; i++) {
         t1.data.push(
             {
+                c0: i + 1,
                 c1: 'row-' + i + ', col-001', c2: 'row-' + i + ', col-002',
                 c3: 'row-' + i + ', col-003', c4: 'row-' + i + ', col-004', c5: 'row-' + i + ', col-005'
             },
@@ -120,6 +121,7 @@
     for (let i = 0; i < 10; i++) {
         t2.data.push(
             {
+                c0: i + 1,
                 c1: 'row-' + i + ', col-006', c2: 'row-' + i + ', col-007',
                 c3: 'row-' + i + ', col-008', c4: 'row-' + i + ', col-009', c5: 'row-' + i + ', col-010'
             },
@@ -129,6 +131,7 @@
     for (let i = 0; i < 50; i++) {
         t3.data.push(
             {
+                c0: i + 1,
                 c1: 'row-' + i + ', col-001', c2: 'row-' + i + ', col-002',
                 c3: 'row-' + i + ', col-003', c4: 'row-' + i + ', col-004', c5: 'row-' + i + ', col-005'
             },
@@ -138,6 +141,7 @@
     for (let i = 0; i < 100; i++) {
         t4.data.push(
             {
+                c0: i + 1,
                 c1: 'row-' + i + ', col-001', c2: 'row-' + i + ', col-002',
                 c3: 'row-' + i + ', col-003', c4: 'row-' + i + ', col-004', c5: 'row-' + i + ', col-005'
             },

@@ -39,7 +39,7 @@
 
         t1.columns = [
             // { label: '№', name: 'c0', width: 40 },
-            { label: '№', isCount: true, width: 60, disableResize: true },
+            { label: '№', name: 'c0', width: 60, disableResize: true },
             { label: 'col-001', name: 'c1', width: 180 },
             { label: 'col-002', name: 'c2', width: 250 },
             { label: 'col-003', name: 'c3' },
@@ -53,6 +53,7 @@
             let i = _i + 1;
             t1.data.push(
                 {
+                    c0: i,
                     c1: 'row-' + i + ', col-001', c2: 'row-' + i + ', col-002',
                     c3: 'row-' + i + ', col-003', c4: 'row-' + i + ', col-004', c5: 'row-' + i + ', col-005'
                 },
