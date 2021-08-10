@@ -59,7 +59,12 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             }
             .main {
                 position: relative;
-                /* display: flex; */
+                height: 100%;
+            }
+            .container {
+                display:flex; 
+                flex-direction: column;
+                flex: 1;
             }
         `;
     }
@@ -103,36 +108,16 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                     ${!this.types[this._idx]?.hideLabel ? html`
                         <div style="color:${`hsla(${this._idx * 40}, 50%, 50%, 1)`}; font-size: 24px; text-decoration: underline;">${this.mainView}</div>
                     ` : html``}
-                    ${this._mainView?.name !== 'eating' ? html`` : html`
-                        <div style="display:flex; width: 100%">
+                    ${!['eating', 'water', 'walking', 'sport', 'dream'].includes(this._mainView?.name) ? html`` : html`
+                        <div class=container>   
                             <li-table $partid="table-eating" id="table-eating" .options="${this._options}" .columns="${this._columns}" .data="${this._data}"></li-table>
-                        </div>
-                    `}
-                    ${this._mainView?.name !== 'water' ? html`` : html`
-                        <div style="display:flex; width: 100%">
-                            <li-table $partid="table-water" id="table-water" .options="${this._options}" .columns="${this._columns}" .data="${this._data}"></li-table>
-                        </div>
-                    `}
-                    ${this._mainView?.name !== 'walking' ? html`` : html`
-                        <div style="display:flex; width: 100%">
-                            <li-table $partid="table-walking" id="table-walking" .options="${this._options}" .columns="${this._columns}" .data="${this._data}"></li-table>
-                        </div>
-                    `}
-                    ${this._mainView?.name !== 'sport' ? html`` : html`
-                        <div style="display:flex; width: 100%">
-                            <li-table $partid="table-sport" id="table-sport" .options="${this._options}" .columns="${this._columns}" .data="${this._data}"></li-table>
-                        </div>
-                    `}
-                    ${this._mainView?.name !== 'dream' ? html`` : html`
-                        <div style="display:flex; width: 100%">
-                            <li-table $partid="table-dream" id="table-dream" .options="${this._options}" .columns="${this._columns}" .data="${this._data}"></li-table>
                         </div>
                     `}
                     ${this._mainView?.name !== 'wiki' ? html`` : html`
                         <li-wiki id="diary-wiki" dbName="diary-wiki"></li-wiki>
                     `}
                     ${this._mainView?.name !== 'weighing' ? html`` : html`
-                        <div style="display:flex; width: 100%">
+                        <div class=container> 
                             <li-table $partid="table-weighing" id="table-weighing" .options="${this._options}" .columns="${this._columns}" .data="${this._data}"></li-table>
                         </div>
                     `}
@@ -155,7 +140,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                                 <input class="inpm" placeholder="0" style="width: 80px; text-align: center;">см
                             </div>
                         `)}
-                        <div style="display:flex; width: 100%">
+                        <div class="container">
                             <li-table $partid="table-measurements" id="table-measurements" .options="${this._options}" .columns="${this._columns}" .data="${this._data}"></li-table>
                         </div>
                     `}
@@ -243,7 +228,6 @@ customElements.define('li-diary', class LiDiary extends LiElement {
         const sets = {
             'eating': {
                 columns: [
-                    { label: '№', isCount: true, width: 40, disableResize: true },
                     { name: 'дата' },
                     { name: 'время приема' },
                     { name: 'количество' },
@@ -256,7 +240,6 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             },
             'water': {
                 columns: [
-                    { label: '№', isCount: true, width: 40, disableResize: true },
                     { name: 'дата' },
                     { name: 'время приема' },
                     { name: 'количество' },
@@ -265,7 +248,6 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             },
             'walking': {
                 columns: [
-                    { label: '№', isCount: true, width: 40, disableResize: true },
                     { name: 'дата' },
                     { name: 'старт' },
                     { name: 'длительность' },
@@ -276,7 +258,6 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             },
             'sport': {
                 columns: [
-                    { label: '№', isCount: true, width: 40, disableResize: true },
                     { name: 'дата' },
                     { name: 'тип' },
                     { name: 'старт' },
@@ -287,7 +268,6 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             },
             'dream': {
                 columns: [
-                    { label: '№', isCount: true, width: 40, disableResize: true },
                     { name: 'дата' },
                     { name: 'старт' },
                     { name: 'длительность' },
@@ -298,7 +278,6 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             'wiki': [],
             'weighing': {
                 columns: [
-                    { label: '№', isCount: true, width: 40, disableResize: true },
                     { name: 'дата' },
                     { name: 'время измерения' },
                     { name: 'вес' },
@@ -310,7 +289,6 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             },
             'measurements': {
                 columns: [
-                    { label: '№', isCount: true, width: 40, disableResize: true },
                     { name: 'дата' },
                     { name: 'шея' },
                     { name: 'грудь' },
