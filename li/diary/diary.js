@@ -62,9 +62,13 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                 height: 100%;
             }
             .container {
-                display:flex; 
-                flex-direction: column;
-                flex: 1;
+                display: flex; 
+                margin: 2px;
+            }
+            .list {
+                display: flex; 
+                height:  100%;
+                margin: 4px 0px 4px 8px;
             }
         `;
     }
@@ -109,7 +113,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                         <div style="color:${`hsla(${this._idx * 40}, 50%, 50%, 1)`}; font-size: 24px; text-decoration: underline;">${this.mainView}</div>
                     ` : html``}
                     ${!['eating', 'water', 'walking', 'sport', 'dream'].includes(this._mainView?.name) ? html`` : html`
-                        <div class=container>   
+                        <div class="container">   
                             <li-table $partid="table-eating" id="table-eating" .options="${this._options}" .columns="${this._columns}" .data="${this._data}"></li-table>
                         </div>
                     `}
@@ -117,7 +121,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                         <li-wiki id="diary-wiki" dbName="diary-wiki"></li-wiki>
                     `}
                     ${this._mainView?.name !== 'weighing' ? html`` : html`
-                        <div class=container> 
+                        <div class="container"> 
                             <li-table $partid="table-weighing" id="table-weighing" .options="${this._options}" .columns="${this._columns}" .data="${this._data}"></li-table>
                         </div>
                     `}
@@ -155,7 +159,9 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                         ${this.rightView === 'calendar' ? html`
                             <li-calendar></li-calendar>
                         ` : this.rightView === 'list' ? html`
-
+                                <div class="list">
+                                    <li-table $partid="table-list" id="table-measurements" .options="${{}}" .columns="${[{name: '001'}, {name: '002'}]}" .data="${[{}, {}]}"></li-table>                      
+                                </div>
                         ` : html``}
                     </div>
                 </div>
