@@ -45,9 +45,9 @@ customElements.define('li-table', class extends LiElement {
                 ${this.options?.headerHidden ? html`` : html`<div style="border-top:1px solid gray; height: 1px;"></div>`}
                 <div id="container" @scroll=${this._scroll}>
                     <div id="main" style="width: ${this.maxWidth}">
-                        <div style="position: absolute; top: ${this.options?.lazy ? this.lazy?.start * this._rowHeight : 0}">
+                        <div style="position: absolute; top: ${this.options?.lazy ? this._shift * this._rowHeight : 0}px">
                             ${this._data.map((row, idx) => html`<li-table-row .row=${row} idx=${idx}></li-table-row>`)}
-                        </div>            
+                        </div>           
                     </div>
                     <div style="border:1px solid transparent; height: ${this._tableHeight}px;"></div>
                 </div>
@@ -72,10 +72,20 @@ customElements.define('li-table', class extends LiElement {
         }
     }
     get _hasScroll() {
-        return this.$id?.container?.offsetHeight < this.$id?.main?.scrollHeight;
+        return this.$id?.main?.scrollHeight;
     }
     get _data() {
-        return this.options?.lazy ? this.data?.slice(this._start, this.lazy.end) || [] : this.data || [];
+        let end = this.lazy.end,
+            start = this._start;
+        if (!this._outSide && this.lazy.scroll < 0) {
+            end = this._start + this.lazy.max;
+            start = this._start - this.lazy.step;
+        }
+        return this.options?.lazy ? this.data?.slice(start, end) || [] : this.data || [];
+    }
+    get _shift() {
+        if (this._outSide) return this.lazy?.start;
+        return this.lazy?.scroll < 0 ? this.lazy?.start - this.lazy?.step : this.lazy?.start;
     }
     get _rowHeight() {
         return this.$refs?.row?.offsetHeight || this.options?.rowHeight || this.options?.rowMinHeight || 32;
@@ -87,7 +97,11 @@ customElements.define('li-table', class extends LiElement {
         return this.$id?.container?.scrollLeft || 0;
     }
     get _rowCount() {
-        return Math.round(this.$id.main.offsetHeight / this._rowHeight);
+        return Math.round(this.$id?.main?.offsetHeight / this._rowHeight || 0);
+    }
+    get _outSide() {
+        this._scrollTop = this._scrollTop || 0;
+        return this._scrollTop < this.lazy?.step || this._scrollTop >= this.data?.length - this._rowCount;
     }
 
     constructor() {
