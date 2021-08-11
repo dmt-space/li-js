@@ -67,8 +67,9 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             }
             .list {
                 display: flex; 
-                height:  100%;
-                margin: 4px 0px 4px 8px;
+                flex: 1;
+                height: 100%;
+                margin: 2px;
             }
         `;
     }
@@ -160,7 +161,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                             <li-calendar></li-calendar>
                         ` : this.rightView === 'list' ? html`
                                 <div class="list">
-                                    <li-table $partid="table-list" id="table-measurements" .options="${{}}" .columns="${[{name: '001'}, {name: '002'}]}" .data="${[{}, {}]}"></li-table>                      
+                                    <li-table $partid="table-list" id="table-list" ></li-table>                      
                                 </div>
                         ` : html``}
                     </div>
@@ -221,6 +222,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
 
     async firstUpdated() {
         super.firstUpdated();
+        this.food = await import('./food.js');
     }
 
     _autoReplication() {
