@@ -179,7 +179,7 @@ export class LiElement extends LitElement {
     }
 
     $update(property, value) { LI.$update.call(this, property, value) }
-    _ev(event) { return event + '-' + this.id || '' }
+    _ev(event) { return event + '-' + (this.partid || this.id || '') }
     $listen(event, fn) {
         let ev = this._ev(event);
         if (!this.$$) {
@@ -200,6 +200,7 @@ export class LiElement extends LitElement {
     $fire(event, value) {
         let ev = this._ev(event);
         if (event && this.$$ && ev) {
+            this.$$[ev] = this.$$[ev] || icaro({ count: 0 });
             this.$$[ev].value = undefined;
             this.$$[ev].value = value;
             ++this.$$[ev].count;
