@@ -1,4 +1,17 @@
-export default [
+export let options = {
+  lazy: true
+}
+
+export let columns = [
+  { name: 'name', label: 'наименование' },
+  { name: 'prot', label: 'б', width: 50 },
+  { name: 'fats', label: 'ж', width: 50 },
+  { name: 'carb', label: 'у', width: 50 },
+  { name: 'kcal', label: 'ккал', width: 50 },
+  // { name: 'water', label: 'вода', width: 70 },
+]
+
+export let data = [
   {
     "name": "Adrenaline nature энергетик",
     "prot": 0,
