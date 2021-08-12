@@ -21,49 +21,11 @@
 </div>
 
 <script type="module">
-    import { options, data, columns } from './food.js';
+    import { foodList } from '../diary/food.js';
+
     setTimeout(() => {
-        t1.options = options;
-        t1.data = data;
-        t1.columns = columns;
-        t1.data.forEach((i, idx) => i.c0 = idx);
-
-        //     t1.options = {
-        //         lazy: true,
-        //         // width: 1200,
-        //         // headerVertical: true,
-        //         headerColor: `hsla(210, 50%, 50%, .1)`,
-        //         footerColor: `hsla(210, 50%, 50%, .1)`,
-        //         // headerHidden: true,
-        //         // footerHidden: true,
-        //         // disableResizeColumns: true,
-        //         rowHeight: 36,
-        //         // rowMinHeight: '64'
-        //     }
-
-        //     t1.columns = [
-        //         // { label: '№', name: 'c0', width: 40 },
-        //         { label: '№', name: 'c0', width: 60, disableResize: true },
-        //         { label: 'col-001', name: 'c1', width: 180 },
-        //         { label: 'col-002', name: 'c2', width: 250 },
-        //         { label: 'col-003', name: 'c3' },
-        //         { label: 'col-004', name: 'c4' },
-        //         { label: 'col-005', name: 'c5', width: 180 },
-        //         { label: '', name: '' },
-        //     ]
-
-        //     t1.data = [];
-        //     for (let _i = 0; _i < 1000; _i++) {
-        //         let i = _i + 1;
-        //         t1.data.push(
-        //             {
-        //                 c0: i,
-        //                 c1: 'row-' + i + ', col-001', c2: 'row-' + i + ', col-002',
-        //                 c3: 'row-' + i + ', col-003', c4: 'row-' + i + ', col-004', c5: 'row-' + i + ', col-005'
-        //             },
-        //         );
-        //     }
-
-    }, 50);
+        t1.data = foodList;
+        t1.data.rows.forEach((i, idx) => i._idx = idx + 1);
+    }, 300);
 
 </script>
