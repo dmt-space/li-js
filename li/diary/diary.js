@@ -6,7 +6,7 @@ import '../checkbox/checkbox.js';
 import '../calendar/calendar.js';
 import '../wiki/wiki.js';
 import '../table/table.js';
-import { options, data, columns } from './food.js';
+import { foodList } from './food.js';
 
 customElements.define('li-diary', class LiDiary extends LiElement {
 
@@ -116,7 +116,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                     ` : html``}
                     ${!['eating', 'water', 'walking', 'sport', 'dream'].includes(this._mainView?.name) ? html`` : html`
                         <div class="container">   
-                            <li-table $partid="table-eating" id="table-eating" .options="${this._options}" .columns="${this._columns}" .data="${this._data}"></li-table>
+                            <li-table $partid="table-eating" id="table-eating" .data="${this._data}"></li-table>
                         </div>
                     `}
                     ${this._mainView?.name !== 'wiki' ? html`` : html`
@@ -124,7 +124,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                     `}
                     ${this._mainView?.name !== 'weighing' ? html`` : html`
                         <div class="container"> 
-                            <li-table $partid="table-weighing" id="table-weighing" .options="${this._options}" .columns="${this._columns}" .data="${this._data}"></li-table>
+                            <li-table $partid="table-weighing" id="table-weighing" .data="${this._data}"></li-table>
                         </div>
                     `}
                     ${this._mainView?.name !== 'measurements' ? html`` : html`
@@ -147,7 +147,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                             </div>
                         `)}
                         <div class="container">
-                            <li-table $partid="table-measurements" id="table-measurements" .options="${this._options}" .columns="${this._columns}" .data="${this._data}"></li-table>
+                            <li-table $partid="table-measurements" id="table-measurements" .data="${this._data}"></li-table>
                         </div>
                     `}
                 </div>
@@ -162,7 +162,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                             <li-calendar></li-calendar>
                         ` : this.rightView === 'list' ? html`
                                 <div class="list">
-                                    <li-table $partid="table-list" id="table-list" .options=${options} .data=${data} .columns=${columns}></li-table>                      
+                                    <li-table $partid="table-list" id="table-list" .data=${foodList}></li-table>                      
                                 </div>
                         ` : html``}
                     </div>
@@ -314,9 +314,10 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             headerColor: `hsla(${idx * 40}, 50%, 50%, .1)`,
             footerColor: `hsla(${idx * 40}, 50%, 50%, .1)`,
         };
-        this._columns = sets[this._mainView.name].columns;
-        this._options = { ...(sets[this._mainView.name].options || {}), ...opts };
-        this._data = [{}, {}, {}];
+        this._data = {};
+        this._data.columns = sets[this._mainView.name].columns;
+        this._data.options = { ...(sets[this._mainView.name].options || {}), ...opts };
+        this._data.rows = [{}, {}, {}];
         this.mainView = mainView;
         e.target.toggled = this.mainView === mainView;
         this._idx = idx || 0;
