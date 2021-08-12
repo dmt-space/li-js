@@ -6,6 +6,7 @@ import '../checkbox/checkbox.js';
 import '../calendar/calendar.js';
 import '../wiki/wiki.js';
 import '../table/table.js';
+import { options, data, columns } from './food.js';
 
 customElements.define('li-diary', class LiDiary extends LiElement {
 
@@ -161,7 +162,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                             <li-calendar></li-calendar>
                         ` : this.rightView === 'list' ? html`
                                 <div class="list">
-                                    <li-table $partid="table-list" id="table-list" ></li-table>                      
+                                    <li-table $partid="table-list" id="table-list" .options=${options} .data=${data} .columns=${columns}></li-table>                      
                                 </div>
                         ` : html``}
                     </div>
@@ -216,15 +217,6 @@ customElements.define('li-diary', class LiDiary extends LiElement {
         return this.measurements.filter(i => i.use);
     }
 
-    constructor() {
-        super();
-    }
-
-    async firstUpdated() {
-        super.firstUpdated();
-        this.food = await import('./food.js');
-    }
-
     _autoReplication() {
         this.autoReplication = !this.autoReplication;
     }
@@ -236,13 +228,14 @@ customElements.define('li-diary', class LiDiary extends LiElement {
         const sets = {
             'eating': {
                 columns: [
-                    { name: 'дата' },
-                    { name: 'время приема' },
-                    { name: 'количество' },
-                    { name: 'кал.' },
-                    { name: 'бел.' },
-                    { name: 'жир.' },
-                    { name: 'угл.' },
+                    { name: 'дата', width: 120 },
+                    { name: 'время', width: 100 },
+                    { name: 'трапеза' },
+                    { name: 'количество', width: 100 },
+                    { name: 'кал.', width: 80 },
+                    { name: 'бел.', width: 80 },
+                    { name: 'жир.', width: 80 },
+                    { name: 'угл.', width: 80 },
                     // { name: 'примечание' },
                 ]
             },
