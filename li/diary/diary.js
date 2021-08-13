@@ -94,7 +94,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                         ${this.leftView === 'diary' ? html`
                             ${this.types.map((i, idx) => html`
                                 <li-button .name="${i.icon}" size="36" width="auto" @click="${(e) => this._setMainView(e, idx, i)}" toggledClass="_white" 
-                                    ?toggled="${this.mainView === i.label}" fill="${`hsla(${idx * 40}, 50%, 50%, 1)`}" .back="${`hsla(${idx * 40}, 70%, 70%, 0.5)`}">${i.label}</li-button>
+                                    ?toggled="${this.mainView === i.label}" fill="${`hsla(${idx * this.step}, 50%, 50%, 1)`}" .back="${`hsla(${idx * this.step}, 70%, 70%, 0.5)`}">${i.label}</li-button>
                             `)}
                         ` : this.leftView === 'settings' ? html`
                             <div style="display: flex; flex-direction: column; overflow: auto;">
@@ -113,15 +113,19 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                 </div>
                 <div slot="app-main" class="main" id="main">
                     ${!this.types[this._idx]?.hideLabel ? html`
-                        <div style="color:${`hsla(${this._idx * 40}, 50%, 50%, 1)`}; font-size: 24px; text-decoration: underline;">${this.mainView}</div>
+                        <div style="color:${`hsla(${this._idx * this.step}, 50%, 50%, 1)`}; font-size: 24px; text-decoration: underline;">${this.mainView}</div>
                     ` : html``}
                     ${!['eating', 'water', 'walking', 'sport', 'dream'].includes(this._mainView?.name) ? html`` : html`
                         <div class="container">   
-                            <li-table $partid="table-eating" id="table-eating" .data="${this._data}"></li-table>
+                            <li-table .$partid=${'table-' + this._mainView?.name} id=${'table-' + this._mainView?.name} .data="${this._data}"></li-table>
                         </div>
                     `}
-                    ${this._mainView?.name !== 'wiki' ? html`` : html`
-                        <li-wiki id="diary-wiki" dbName="diary-wiki"></li-wiki>
+                    ${this._mainView?.name !== 'favorites' ? html`` : html`
+                        <div class="container-calorie" style="display: flex; flex-direction: column"> 
+                            <li-table $partid="table-favorites" id="table-favorites" .data="${this._data}" style="height: 50%"></li-table>
+                            <div style="color:${`hsla(${this._idx * this.step}, 50%, 50%, 1)`}; font-size: 24px; text-decoration: underline;">таблица калорийности</div>
+                            <li-table $partid="table-fcalorie" id="table-fcalorie" .data="${foodList}" style="height: 50%"></li-table>
+                        </div>
                     `}
                     ${this._mainView?.name !== 'weighing' ? html`` : html`
                         <div class="container"> 
@@ -132,17 +136,17 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                         <img src="./measure.jpg" style="width: 510px;" @click="${e => console.log(e.offsetX, e.offsetY)}">
                         <svg viewBox="0 0 510 584" width="510" height="584" style="position: absolute; top:30; left:0;">
                             ${this._measurements.map((i, idx) => svg`
-                                <line x1="${i.x}" y1="${i.y}" x2="200" y2="${idx * 40 + 31}" stroke="lightblue" />
-                                <line x1="200" y1="${idx * 40 + 31}" x2="320" y2="${idx * 40 + 31}" stroke="lightblue" />
-                                <line x1="320" y1="${idx * 40 + 31}" x2="${i.x1}" y2="${i.y1}" stroke="lightblue" />
+                                <line x1="${i.x}" y1="${i.y}" x2="200" y2="${idx * this.step + 31}" stroke="lightblue" />
+                                <line x1="200" y1="${idx * this.step + 31}" x2="320" y2="${idx * this.step + 31}" stroke="lightblue" />
+                                <line x1="320" y1="${idx * this.step + 31}" x2="${i.x1}" y2="${i.y1}" stroke="lightblue" />
                                 <circle cx="${i.x}" cy="${i.y}" r="4" fill="lightblue" />
-                                <circle cx="200" cy="${idx * 40 + 31}" r="2" fill="lightblue" />
-                                <circle cx="320" cy="${idx * 40 + 31}" r="2" fill="lightblue" />
+                                <circle cx="200" cy="${idx * this.step + 31}" r="2" fill="lightblue" />
+                                <circle cx="320" cy="${idx * this.step + 31}" r="2" fill="lightblue" />
                                 <circle cx="${i.x1}" cy="${i.y1}" r="4" fill="lightblue" />
                             `)} 
                         </svg>
                         ${this._measurements.map((i, idx) => html`
-                            <div style="position: absolute; top: ${idx * 40 + 34}px; left: 100px; color: gray; font-size: 10px; display: flex; align-items: center;">
+                            <div style="position: absolute; top: ${idx * this.step + 34}px; left: 100px; color: gray; font-size: 10px; display: flex; align-items: center;">
                                 <div style="width: 120px; text-align: right;">${i.name}</div>  
                                 <input class="inpm" placeholder="0" style="width: 80px; text-align: center;">см
                             </div>
@@ -156,6 +160,9 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                             <li-table $partid="table-calorie" id="table-calorie" .data="${foodList}"></li-table>
                         </div>
                     `}
+                    ${this._mainView?.name !== 'wiki' ? html`` : html`
+                        <li-wiki id="diary-wiki" dbName="diary-wiki"></li-wiki>
+                    `}
                 </div>
                 <div slot="app-right" class="panel">
                 <div style="display: flex; border-bottom: 1px solid lightgray;">
@@ -167,7 +174,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                         ${this.rightView === 'calendar' ? html`
                             <li-calendar></li-calendar>
                         ` : this.rightView === 'list' ? html`
-                                <li-table class="list" $partid="table-list" id="table-list" .data=${foodList}></li-table>                      
+                                <!-- <li-table class="list" $partid="table-list" id="table-list" .data=${foodList}></li-table>                       -->
                         ` : html``}
                     </div>
                 </div>
@@ -180,6 +187,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             dbName: { type: String, default: 'my diary', save: true },
             dbIP: { type: String, default: 'http://admin:54321@localhost:5984/', save: true },
             autoReplication: { type: Boolean, default: false, save: true },
+            step: { type: Number, default: 35 },
             leftView: { type: String, default: 'diary' },
             rightView: { type: String, default: 'calendar' },
             mainView: { type: String, default: '' },
@@ -208,14 +216,15 @@ customElements.define('li-diary', class LiDiary extends LiElement {
     get types() {
         return [
             { icon: 'dining', name: 'eating', label: 'еда' },
+            { icon: 'account-box', name: 'favorites', label: 'избранное' },
+            { icon: 'flatware', name: 'calorie', label: 'таблица калорийности' },
             { icon: 'water_drop', name: 'water', label: 'вода' },
             { icon: 'hiking', name: 'walking', label: 'шаги' },
             { icon: 'sports_volleyball', name: 'sport', label: 'спорт' },
             { icon: 'bedroom_parent', name: 'dream', label: 'сон' },
-            { icon: 'auto_stories', name: 'wiki', label: 'wiki', hideLabel: true },
             { icon: 'monitor_weight', name: 'weighing', label: 'вес' },
             { icon: 'accessibility_new', name: 'measurements', label: 'измерения' },
-            { icon: 'flatware', name: 'calorie', label: 'таблица калорийности' },
+            { icon: 'auto_stories', name: 'wiki', label: 'wiki', hideLabel: true },
         ]
     }
     get _measurements() {
@@ -233,106 +242,109 @@ customElements.define('li-diary', class LiDiary extends LiElement {
 
     _setMainView(e, idx, i) {
         if (this.mainView === i.label) return;
-        this._mainView = i;
-        const mainView = i.label;
-        const sets = {
-            'eating': {
-                columns: [
-                    { name: 'дата', width: 120 },
-                    { name: 'время', width: 100 },
-                    { name: 'трапеза' },
-                    { name: 'количество', width: 100 },
-                    { name: 'кал.', width: 80 },
-                    { name: 'бел.', width: 80 },
-                    { name: 'жир.', width: 80 },
-                    { name: 'угл.', width: 80 },
-                    // { name: 'примечание' },
-                ]
-            },
-            'water': {
-                columns: [
-                    { name: 'дата' },
-                    { name: 'время приема' },
-                    { name: 'количество' },
-                    // { name: 'примечание' },
-                ]
-            },
-            'walking': {
-                columns: [
-                    { name: 'дата' },
-                    { name: 'старт' },
-                    { name: 'длительность' },
-                    { name: 'расстояние' },
-                    { name: 'кал.' },
-                    // { name: 'примечание' },
-                ]
-            },
-            'sport': {
-                columns: [
-                    { name: 'дата' },
-                    { name: 'тип' },
-                    { name: 'старт' },
-                    { name: 'параметры' },
-                    { name: 'кал.' },
-                    // { name: 'примечание' },
-                ]
-            },
-            'dream': {
-                columns: [
-                    { name: 'дата' },
-                    { name: 'старт' },
-                    { name: 'длительность' },
-                    { name: 'кал.' },
-                    // { name: 'примечание' },
-                ]
-            },
-            'wiki': [],
-            'weighing': {
-                columns: [
-                    { name: 'дата' },
-                    { name: 'время измерения' },
-                    { name: 'вес' },
-                    // { name: 'примечание' },
-                ],
-                options: {
-                    footerHidden: true
-                }
-            },
-            'measurements': {
-                columns: [
-                    { name: 'дата' },
-                    { name: 'шея' },
-                    { name: 'грудь' },
-                    { name: 'под грудью' },
-                    { name: 'бицепс' },
-                    { name: 'талия' },
-                    { name: 'предплечье' },
-                    { name: 'запястье' },
-                    { name: 'живот' },
-                    { name: 'бедра' },
-                    { name: 'бедро' },
-                    { name: 'над коленом' },
-                    { name: 'голень' },
-                    { name: 'щиколотка' },
-                ],
-                options: {
-                    footerHidden: true
-                }
-            },
-        }
-        const opts = {
-            headerColor: `hsla(${idx * 40}, 50%, 50%, .1)`,
-            footerColor: `hsla(${idx * 40}, 50%, 50%, .1)`,
-        };
-        this._data = {};
-        if (sets[this._mainView.name]) {
-            this._data.columns = sets[this._mainView.name].columns;
-            this._data.options = { ...(sets[this._mainView.name].options || {}), ...opts };
-            this._data.rows = [{}, {}, {}];
-        }
-        this.mainView = mainView;
-        e.target.toggled = this.mainView === mainView;
-        this._idx = idx || 0;
-        this.$update();
+        this._mainView = undefined;
+        requestAnimationFrame(() => {
+            this._mainView = i;
+            const mainView = i.label;
+            const sets = {
+                'eating': {
+                    columns: [
+                        { name: 'дата', width: 120 },
+                        { name: 'время', width: 100 },
+                        { name: 'трапеза' },
+                        { name: 'количество', width: 100 },
+                        { name: 'кал.', width: 80 },
+                        { name: 'бел.', width: 80 },
+                        { name: 'жир.', width: 80 },
+                        { name: 'угл.', width: 80 },
+                        // { name: 'примечание' },
+                    ]
+                },
+                'water': {
+                    columns: [
+                        { name: 'дата' },
+                        { name: 'время приема' },
+                        { name: 'количество' },
+                        // { name: 'примечание' },
+                    ]
+                },
+                'walking': {
+                    columns: [
+                        { name: 'дата' },
+                        { name: 'старт' },
+                        { name: 'длительность' },
+                        { name: 'расстояние' },
+                        { name: 'кал.' },
+                        // { name: 'примечание' },
+                    ]
+                },
+                'sport': {
+                    columns: [
+                        { name: 'дата' },
+                        { name: 'тип' },
+                        { name: 'старт' },
+                        { name: 'параметры' },
+                        { name: 'кал.' },
+                        // { name: 'примечание' },
+                    ]
+                },
+                'dream': {
+                    columns: [
+                        { name: 'дата' },
+                        { name: 'старт' },
+                        { name: 'длительность' },
+                        { name: 'кал.' },
+                        // { name: 'примечание' },
+                    ]
+                },
+                'wiki': [],
+                'weighing': {
+                    columns: [
+                        { name: 'дата' },
+                        { name: 'время измерения' },
+                        { name: 'вес' },
+                        // { name: 'примечание' },
+                    ],
+                    options: {
+                        footerHidden: true
+                    }
+                },
+                'measurements': {
+                    columns: [
+                        { name: 'дата' },
+                        { name: 'шея' },
+                        { name: 'грудь' },
+                        { name: 'под грудью' },
+                        { name: 'бицепс' },
+                        { name: 'талия' },
+                        { name: 'предплечье' },
+                        { name: 'запястье' },
+                        { name: 'живот' },
+                        { name: 'бедра' },
+                        { name: 'бедро' },
+                        { name: 'над коленом' },
+                        { name: 'голень' },
+                        { name: 'щиколотка' },
+                    ],
+                    options: {
+                        footerHidden: true
+                    }
+                },
+            }
+            const opts = {
+                headerColor: `hsla(${idx * this.step}, 50%, 50%, .1)`,
+                footerColor: `hsla(${idx * this.step}, 50%, 50%, .1)`,
+            };
+            this._data = {};
+            if (sets[this._mainView.name]) {
+                this._data.columns = sets[this._mainView.name].columns;
+                this._data.options = { ...(sets[this._mainView.name].options || {}), ...opts };
+                this._data.rows = [{}, {}, {}];
+            }
+            this.mainView = mainView;
+            e.target.toggled = this.mainView === mainView;
+            this._idx = idx || 0;
+            this.$update();
+        });
     }
 });
