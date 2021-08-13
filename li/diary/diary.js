@@ -67,10 +67,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                 margin: 2px;
             }
             .list {
-                display: flex; 
-                flex: 1;
-                height: 100%;
-                margin: 2px;
+                padding: 4px 0 4px 4px;
             }
         `;
     }
@@ -161,9 +158,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                         ${this.rightView === 'calendar' ? html`
                             <li-calendar></li-calendar>
                         ` : this.rightView === 'list' ? html`
-                                <div class="list">
-                                    <li-table $partid="table-list" id="table-list" .data=${foodList}></li-table>                      
-                                </div>
+                                <li-table class="list" $partid="table-list" id="table-list" .data=${foodList}></li-table>                      
                         ` : html``}
                     </div>
                 </div>
@@ -215,6 +210,11 @@ customElements.define('li-diary', class LiDiary extends LiElement {
     }
     get _measurements() {
         return this.measurements.filter(i => i.use);
+    }
+
+    connectedCallback() {
+        super.connectedCallback();
+        foodList.rows.forEach((i, idx) => i._idx = idx + 1);
     }
 
     _autoReplication() {
