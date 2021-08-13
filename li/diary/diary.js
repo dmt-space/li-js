@@ -64,10 +64,14 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             }
             .container {
                 display: flex; 
-                margin: 2px;
+                padding: 2px;
             }
             .list {
                 padding: 4px 0 4px 4px;
+            }
+            .container-calorie {
+                height: calc(100% - 40px);
+                padding: 2px;
             }
         `;
     }
@@ -147,6 +151,11 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                             <li-table $partid="table-measurements" id="table-measurements" .data="${this._data}"></li-table>
                         </div>
                     `}
+                    ${this._mainView?.name !== 'calorie' ? html`` : html`
+                        <div class="container-calorie"> 
+                            <li-table $partid="table-calorie" id="table-calorie" .data="${foodList}"></li-table>
+                        </div>
+                    `}
                 </div>
                 <div slot="app-right" class="panel">
                 <div style="display: flex; border-bottom: 1px solid lightgray;">
@@ -206,6 +215,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             { icon: 'auto_stories', name: 'wiki', label: 'wiki', hideLabel: true },
             { icon: 'monitor_weight', name: 'weighing', label: 'вес' },
             { icon: 'accessibility_new', name: 'measurements', label: 'измерения' },
+            { icon: 'flatware', name: 'calorie', label: 'таблица калорийности' },
         ]
     }
     get _measurements() {
@@ -315,9 +325,11 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             footerColor: `hsla(${idx * 40}, 50%, 50%, .1)`,
         };
         this._data = {};
-        this._data.columns = sets[this._mainView.name].columns;
-        this._data.options = { ...(sets[this._mainView.name].options || {}), ...opts };
-        this._data.rows = [{}, {}, {}];
+        if (sets[this._mainView.name]) {
+            this._data.columns = sets[this._mainView.name].columns;
+            this._data.options = { ...(sets[this._mainView.name].options || {}), ...opts };
+            this._data.rows = [{}, {}, {}];
+        }
         this.mainView = mainView;
         e.target.toggled = this.mainView === mainView;
         this._idx = idx || 0;
