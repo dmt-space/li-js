@@ -7,6 +7,11 @@ customElements.define('li-table', class extends LiElement {
             ::-webkit-scrollbar { width: 4px; height: 4px; border-left: 1px solid gray;}
             ::-webkit-scrollbar-track { background-color: #eee;}
             ::-webkit-scrollbar-thumb { background-color: #aaa;  border-radius: 2px; }
+            :host {
+                box-sizing: border-box;
+                height: 100%;
+                width: 100%;
+            }
             #table {
                 position: relative;
                 display: flex;
@@ -42,7 +47,7 @@ customElements.define('li-table', class extends LiElement {
     render() {
         return html`
             <div id="table">
-                <li-table-header-row class="panel top" type="top"></li-table-header-row>
+                <li-table-panel-row class="panel top" type="top"></li-table-panel-row>
                 ${this.data?.options?.headerHidden ? html`` : html`<div style="border-top:1px solid gray; height: 1px;"></div>`}
                 <div id="container" @scroll=${this._scroll}>
                     <div id="main" style="width: ${this.maxWidth}">
@@ -53,7 +58,7 @@ customElements.define('li-table', class extends LiElement {
                     <div style="border:1px solid transparent; height: ${this._tableHeight}px;"></div>
                 </div>
                 ${this.data?.options?.footerHidden ? html`` : html`<div style="border-bottom:1px solid gray; height: 1px;"></div>`}
-                <li-table-header-row class="panel bottom" type="bottom"></li-table-header-row>
+                <li-table-panel-row class="panel bottom" type="bottom"></li-table-panel-row>
             </div>
         `
     }
@@ -134,7 +139,7 @@ customElements.define('li-table', class extends LiElement {
 
     _resizeColumns() {
         this.left = this._left;
-        this.maxWidth = this.data?.options?.width || this.parentElement.offsetWidth - (this._hasScroll ? 7 : 2);
+        this.maxWidth = this.$id?.main?.offsetWidth + 2;
         let length = this.data?.columns?.length,
             left = 0;
         this.data?.columns?.forEach(i => {
@@ -214,7 +219,7 @@ customElements.define('li-table-row', class extends LiElement {
     }
 })
 
-customElements.define('li-table-header-row', class extends LiElement {
+customElements.define('li-table-panel-row', class extends LiElement {
     static get styles() {
         return css`
             .panel {
@@ -227,10 +232,10 @@ customElements.define('li-table-header-row', class extends LiElement {
                 width: 100%;
                 height: 24px;
             }
-            .top {
+            ._top {
                 border-bottom: 1px solid lightgray;
             }
-            .bottom {
+            ._bottom {
                 border-top: 1px solid lightgray;
             }
             li-button {
@@ -242,7 +247,7 @@ customElements.define('li-table-header-row', class extends LiElement {
     render() {
         return html`
             ${this.type === 'bottom' && this.data?.options?.footerHidden || this.type === 'top' && this.data?.options?.headerHidden ? html`` : html`
-                ${this.type === 'top' ? html`<div class="service top">
+                ${this.type === 'top' ? html`<div class="service _top">
                     <li-button name="add" size=18 style="margin-left: auto" border='none' title="add"></li-button>
                     <li-button name="delete" size=18 border='none' title="dlete"></li-button>
                     <li-button name="edit" size=18 border='none' title="edit"></li-button>
@@ -251,12 +256,12 @@ customElements.define('li-table-header-row', class extends LiElement {
                     <div style="display: flex; background-color:${this.data?.options?.footerColor || '#eee'}">
                         ${this.data?.columns?.map(i => html`
                             <div style="width: ${i._width < 0 ? 0 : i._width}; min-height: ${this._columnMinHeight}">
-                                <li-table-header-cell .column="${i}" type=${this.type}></li-table-header-cell>
+                                <li-table-panel-cell .column="${i}" type=${this.type}></li-table-panel-cell>
                             </div>
                         `)}
                     </div>
                 </div>
-                ${this.type === 'bottom' ? html`<div class="service bottom">
+                ${this.type === 'bottom' ? html`<div class="service _bottom">
                     <li-button name="chevron-left" size=18 style="margin-left: auto" border='none' @click=${(e) => this.fire('scrollTo', -1_000_000_000)}></li-button>
                     <li-button size=18 border='none' style="display: ${this.data?.rows?.length > 1000 ? 'block' : 'none'}" @click=${(e) => this.fire('scrollTo', -1000)}>1000</li-button>
                     <li-button size=18 border='none' style="display: ${this.data?.rows?.length > 100 ? 'block' : 'none'}" @click=${(e) => this.fire('scrollTo', -100)}>100</li-button>
@@ -281,7 +286,7 @@ customElements.define('li-table-header-row', class extends LiElement {
 })
 
 
-customElements.define('li-table-header-cell', class extends LiElement {
+customElements.define('li-table-panel-cell', class extends LiElement {
     static get styles() {
         return css`
             :host {
