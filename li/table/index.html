@@ -44,7 +44,10 @@
             headerColor: `hsla(210, 50%, 50%, .1)`,
             headerHeight: 36,
             footerColor: `hsla(210, 50%, 50%, .1)`,
-            rowHeight: 36
+            rowHeight: 36,
+            // headerService: true,
+            footerService: true,
+            footerServiceText: '100 000 rows'
             //headerHidden: true,
             //footerHidden: true,
             // disableResizeColumns: true
@@ -80,7 +83,7 @@
         }
 
         t1.data.rows = [];
-        for (let i = 0; i < 10000; i++) {
+        for (let i = 0; i < 100000; i++) {
             t1.data.rows.push(
                 {
                     _idx: i + 1,
