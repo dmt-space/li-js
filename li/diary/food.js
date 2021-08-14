@@ -1,11 +1,15 @@
 export const foodList = {
   options: {
-    lazy: true
+    lazy: true,
+    headerService: true,
+    headerServiceText: 'header service panel',
+    footerService: true,
+    footerServiceText: 'footer service panel'
   },
   columns: [
     { name: '_idx', label: '№', width: 50 },
     { name: 'category', label: 'категория', width: 200 },
-    { name: 'name', label: 'наименование' },
+    { name: 'name', label: 'наименование', textAlign: 'left' },
     { name: 'num', label: 'кол', width: 50 },
     { name: 'ed', label: 'изм', width: 50 },
     { name: 'prot', label: 'б', width: 60 },
