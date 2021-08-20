@@ -1,0 +1,24 @@
+name: lit-element
+
+on: [push]
+
+jobs:
+  build-lit:
+    runs-on: ubuntu-latest
+    if: "contains(toJSON(github.event.commits.*.message), '[build]')"
+
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Build
+      run: |
+           cd build
+           sudo bash build.sh
+
+    - name: Archive lit-element
+      uses: actions/upload-artifact@v1
+      with:
+        name: lit-element
+        path: build/dist
