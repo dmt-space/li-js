@@ -42,7 +42,7 @@ customElements.define('li-l-system', class LiLSystem extends LiElement {
 
     constructor() {
         super();
-        //this.constructor.elementProperties.get('name').list = Object.keys(data) || [];
+        // this.constructor.elementProperties.get('name').list = Object.keys(data) || [];
         this.constructor._classProperties.get('name').list = Object.keys(data) || [];
     }
 

@@ -343,7 +343,8 @@ async function makeData(el, { expert, group, sort, showFunction, categories }, s
     const exts = /^(_|\$)/;
     const _label = el?.constructor?.name || el?.localName || '';
     const data = { _label, items: [] };
-    const props = el?.constructor?._classProperties; // elementProperties;
+    // const props = el?.constructor?.elementProperties;
+    const props = el?.constructor?._classProperties;
 
     function fn(key, category = 'props', props, list) {
         if (['Πi', 'Πk', 'Πo', 'Πl', 'Πh', 'Πg', 'L', 'Φt'].includes(key)) return;
