@@ -1,18 +1,24 @@
-// import { LitElement } from 'https://unpkg.com/lit-element@3.0.0-rc.2/lit-element.js?module'
-import { LitElement } from './lib/lit-element/lit-element.js'
-// export * from 'https://unpkg.com/lit-element@3.0.0-rc.2/lit-element.js?module'
-export * from './lib/lit-element/lit-element.js'
+// import { LitElement } from 'https://unpkg.com/lit-element@3.0.0-rc.2/lit-element.js?module';
+// export * from 'https://unpkg.com/lit-element@3.0.0-rc.2/lit-element.js?module';
 // export { styleMap } from 'https://unpkg.com/lit-html@2.0.0-rc.2/directives/style-map.js?module';
-export { styleMap } from './lib/lit-html/directives/style-map.js';
 // export { unsafeHTML } from 'https://unpkg.com/lit-html@2.0.0-rc.2/directives/unsafe-html.js?module';
-export { unsafeHTML } from './lib/lit-html/directives/unsafe-html.js';
 
-import { ulid, decodeTime } from './lib/ulid/ulid.js'
-import './lib/icaro/icaro.js'
+import { LitElement } from 'https://unpkg.com/lit-element@2.5.1/lit-element.js?module';
+export * from 'https://unpkg.com/lit-element@2.5.1/lit-element.js?module';
+export { styleMap } from 'https://unpkg.com/lit-html@1.4.1/directives/style-map.js?module';
+export { unsafeHTML } from 'https://unpkg.com/lit-html@1.4.1/directives/unsafe-html.js?module';
 
-const urlLI = import.meta.url
+// import { LitElement } from './lib/lit-element/lit-element.js';
+// export * from './lib/lit-element/lit-element.js';
+// export { styleMap } from './lib/lit-html/directives/style-map.js';
+// export { unsafeHTML } from './lib/lit-html/directives/unsafe-html.js';
 
-window.globalThis = window.globalThis || window
+import { ulid, decodeTime } from './lib/ulid/ulid.js';
+import './lib/icaro/icaro.js';
+
+const urlLI = import.meta.url;
+
+window.globalThis = window.globalThis || window;
 
 document.addEventListener('mousedown', (e) => LI.mousePos = new DOMRect(e.pageX, e.pageY));
 if (!window.LIRect) {
@@ -31,7 +37,8 @@ export class LiElement extends LitElement {
     constructor() {
         super();
 
-        this.$properties = this.constructor._classProperties; // elementProperties;
+        // this.$properties = this.constructor.elementProperties;
+        this.$properties = this.constructor._classProperties;
         for (const k of this.$properties.keys()) {
             const prop = this.$properties.get(k)
             if (prop?.save) {
