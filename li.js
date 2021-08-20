@@ -1,7 +1,11 @@
-import { LitElement } from 'https://unpkg.com/lit-element@3.0.0-rc.2/lit-element.js?module'
-export * from 'https://unpkg.com/lit-element@3.0.0-rc.2/lit-element.js?module'
-export { styleMap } from 'https://unpkg.com/lit-html@2.0.0-rc.2/directives/style-map.js?module';
-export { unsafeHTML } from 'https://unpkg.com/lit-html@2.0.0-rc.2/directives/unsafe-html.js?module';
+// import { LitElement } from 'https://unpkg.com/lit-element@3.0.0-rc.2/lit-element.js?module'
+import { LitElement } from './lib/lit-element/lit-element.js'
+// export * from 'https://unpkg.com/lit-element@3.0.0-rc.2/lit-element.js?module'
+export * from './lib/lit-element/lit-element.js'
+// export { styleMap } from 'https://unpkg.com/lit-html@2.0.0-rc.2/directives/style-map.js?module';
+export { styleMap } from './lib/lit-html/directives/style-map.js';
+// export { unsafeHTML } from 'https://unpkg.com/lit-html@2.0.0-rc.2/directives/unsafe-html.js?module';
+export { unsafeHTML } from './lib/lit-html/directives/unsafe-html.js';
 
 import { ulid, decodeTime } from './lib/ulid/ulid.js'
 import './lib/icaro/icaro.js'
@@ -27,7 +31,7 @@ export class LiElement extends LitElement {
     constructor() {
         super();
 
-        this.$properties = this.constructor.elementProperties;
+        this.$properties = this.constructor._classProperties; // elementProperties;
         for (const k of this.$properties.keys()) {
             const prop = this.$properties.get(k)
             if (prop?.save) {
