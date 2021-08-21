@@ -208,7 +208,7 @@ customElements.define('li-table-row', class extends LiElement {
     render() {
         return html`
             ${this.data?.columns?.map(c => html`
-                <li-table-cell .item="${this.row[c.name]}" .column="${c}" idx="${this.row['_idx'] || 0}" color=${this.color}></li-table-cell>
+                <li-table-cell .item="${this.row[c.name]}" .column="${c}" idx="${this.row['_idx'] || 0}" color=${this.color} @click=${this._click}></li-table-cell>
             `)}
         `
     }
@@ -222,6 +222,9 @@ customElements.define('li-table-row', class extends LiElement {
     }
     get _rowHeight() {
         return this.data?.options?.rowHeight || this.data?.options?.rowMinHeight || 32;
+    }
+    _click(e) {
+        this.fire('tableSelected', this.row)
     }
 })
 
@@ -259,9 +262,10 @@ customElements.define('li-table-panel-row', class extends LiElement {
     render() {
         return html`
             ${this.type === 'bottom' && this.data?.options?.footerHidden || this.type === 'top' && this.data?.options?.headerHidden ? html`` : html`
-                ${this.type === 'top' && this.data?.options?.headerService ? html`<div class="service _top">
-                <div class="service-text">${this.data?.options?.headerServiceText || ''}</div>    
-                <li-button name="add" size=18 style="margin-left: auto" border='none' title="add"></li-button>
+                ${this.type === 'top' && this.data?.options?.headerService ? html`
+                <div class="service _top">
+                    <div class="service-text">${this.data?.options?.headerServiceText || ''}</div>    
+                    <li-button name="add" size=18 style="margin-left: auto" border='none' title="add"></li-button>
                     <li-button name="delete" size=18 border='none' title="dlete"></li-button>
                     <li-button name="edit" size=18 border='none' title="edit"></li-button>
                 </div>` : html``}   
@@ -274,7 +278,8 @@ customElements.define('li-table-panel-row', class extends LiElement {
                         `)}
                     </div>
                 </div>
-                ${this.type === 'bottom' && this.data?.options?.footerService ? html`<div class="service _bottom">
+                ${this.type === 'bottom' && this.data?.options?.footerService ? html`
+                <div class="service _bottom">
                     <div class="service-text">${this.data?.options?.footerServiceText || ''}</div>
                     <li-button name="chevron-left" width="auto" size=18 style="margin-left: auto" border='none' @click=${(e) => this.fire('scrollTo', -1_000_000_000)}></li-button>
                     <li-button size=18 width="auto" border='none' style="display: ${this.data?.rows?.length > 100_000 ? 'block' : 'none'}" @click=${(e) => this.fire('scrollTo', -100_000)}>-100 000</li-button>

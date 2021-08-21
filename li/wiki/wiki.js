@@ -12,6 +12,7 @@ import '../button/button.js';
 import '../checkbox/checkbox.js';
 import '../../lib/li-utils/utils.js';
 import '../layout-tree/layout-tree.js';
+import '../table/table.js';
 
 import '../../lib/pouchdb/pouchdb.js';
 import '../../lib/li-utils/utils.js';
@@ -26,9 +27,8 @@ customElements.define('li-wiki', class LiWiki extends LiElement {
             autoSync: { type: Boolean, default: false, save: true },
             _firstLoad: { type: Boolean, default: true, save: true },
             articles: { type: Array, default: [], local: true },
+            sortArticles: { type: Object, default: [] },
             selectedArticle: { type: Object, local: true },
-            templates: { type: Array, default: [], local: true },
-            selectedTemplate: { type: Object },
             _itemBox: { type: Object, local: true },
             _expandedBox: { type: Object, local: true },
             _indexFullArea: { type: Number, default: -1, local: true },
@@ -144,7 +144,7 @@ customElements.define('li-wiki', class LiWiki extends LiElement {
                 <div slot="app-left" class="panel">
                     <div style="display: flex">
                         <li-button name="tree-structure" title="articles" @click="${() => this._lPanel = 'articles'}" ?toggled="${this._lPanel === 'articles'}" toggledClass="ontoggled"></li-button>
-                        <li-button name="bookmark-border" title="templates" @click="${() => this._lPanel = 'templates'}" ?toggled="${this._lPanel === 'templates'}" toggledClass="ontoggled"></li-button></li-button>
+                        <li-button name="filter-list" title="sortArticles" @click="${() => this._lPanel = 'sortArticles'}" ?toggled="${this._lPanel === 'sortArticles'}" toggledClass="ontoggled"></li-button></li-button>
                         <li-button name="playlist-add" title="editors" @click="${() => this._lPanel = 'editors'}" ?toggled="${this._lPanel === 'editors'}" toggledClass="ontoggled"></li-button>
                         <li-button name="check" title="actions" @click="${() => this._lPanel = 'actions'}" ?toggled="${this._lPanel === 'actions'}" toggledClass="ontoggled"></li-button>
                         <li-button name="settings" title="settings" @click="${() => this._lPanel = 'settings'}" ?toggled="${this._lPanel === 'settings'}" toggledClass="ontoggled"></li-button>
@@ -211,6 +211,10 @@ customElements.define('li-wiki', class LiWiki extends LiElement {
                                 <input type="file" id="Import db" @change=${(e) => this._settings(e)}/>
                                 <div style="border-bottom:1px solid lightgray;width:100%;margin: 4px 0;"></div>
                             </div>
+                        ` : this._lPanel === 'sortArticles' ? html`
+                            <b>${this._lPanel}</b>
+                            <div style="border-bottom:1px solid lightgray;width:100%;margin: 4px 0;"></div>
+                            <li-table .data=${this.sortArticles} style="cursor: pointer;height: calc(100% - 25px)"></li-table> 
                         ` : html`
                             <b>${this._starLabel || this._lPanel}</b>
                             <div style="border-bottom:1px solid lightgray;width:100%;margin: 4px 0;"></div>
@@ -262,14 +266,10 @@ customElements.define('li-wiki', class LiWiki extends LiElement {
             await this._setSelectedEditors();
             //console.log('articles - ', 'items: ', this.selectedArticle.items.length, ' parts: ', this.selectedArticle.parts.length)
         }
-        else if (this._lPanel === 'templates') {
-            this.selectedTemplate = e.detail;
-            //console.log('templates - ', 'items: ', this.selectedTemplate.items.length, ' parts: ', this.selectedTemplate.parts.length)
-        }
         this.$update()
     }
     async _openEcard() {
-        await LI.show('dropdown', 'editor-ecard', {}, { align: 'modal'});
+        await LI.show('dropdown', 'editor-ecard', {}, { align: 'modal' });
     }
     _setDbName(e) {
         this.dbName = e.target.value;
@@ -461,12 +461,12 @@ customElements.define('li-wiki', class LiWiki extends LiElement {
             window.open(a.href, '_blank');
         }
     }
-    get _starLabel() { return this._lPanel === 'articles' ? this['_star-articles']?.label : this['_star-templates']?.label };
-    get _star() { return this._lPanel === 'articles' ? this['_star-articles'] || this.articles : this['_star-templates'] || this.templates }
-    get _items() { return this._lPanel === 'articles' ? this.articles : this.templates }
-    get _flat() { return this._lPanel === 'articles' ? this._articles : this._templates }
-    get _selected() { return this._lPanel === 'articles' ? this.selectedArticle : this.selectedTemplate }
-    get _label() { return this._lPanel === 'articles' ? 'new-article' : 'new-template' }
+    get _starLabel() { return this['_star-articles']?.label }
+    get _star() { return this['_star-articles'] || this.articles }
+    get _items() { return this.articles }
+    get _flat() { return this._articles }
+    get _selected() { return this.selectedArticle }
+    get _label() { return 'new-article' }
     _treeActions(e, title, confirm = true) {
         title = title || e.target.title;
         const fn = {
@@ -515,7 +515,6 @@ customElements.define('li-wiki', class LiWiki extends LiElement {
             },
             'save': async () => {
                 await this._saveTreeAction('articles');
-                await this._saveTreeAction('templates');
                 this._updateTree();
 
                 if (this._lPanel === 'articles') {
@@ -525,6 +524,8 @@ customElements.define('li-wiki', class LiWiki extends LiElement {
                 Object.keys(this._articles).forEach(k => this._articles[k].partsLoaded = false);
                 this._deletedList = [];
                 this._changedList = [];
+
+                this._setSortArticles();
             },
             'saveTreeState': async () => {
                 await this._saveTreeState();
@@ -545,16 +546,7 @@ customElements.define('li-wiki', class LiWiki extends LiElement {
                 this.articles = [this.rootArticle]
                 this._articles = await this._createTree('articles');
                 this.selectedArticle = this._articles[this._localStore['selected-articles']] || this.articles[0];
-            });
-        } else {
-            this._templates = {};
-            this.templates = undefined;
-            requestAnimationFrame(async () => {
-                this.rootTemplate = new ITEM({ ...await this.dbLocal.get('$wiki:templates') });
-                this.templates = [this.rootTemplate]
-                this._templates = await this._createTree('templates');
-                this.selectedTemplate = this._templates[this._localStore['selected-templates']] || this.templates[0];
-            });
+            })
         }
         this._refreshTree = false;
     }
@@ -601,7 +593,7 @@ customElements.define('li-wiki', class LiWiki extends LiElement {
             _ls = await this.dbLocal.get('_local/store')
         } catch (error) { }
         _ls._id = '_local/store';
-        _ls['selected-' + type] = type === 'articles' ? this.selectedArticle?._id || '' : this.selectedTemplate?._id || '';
+        _ls['selected-' + type] = this.selectedArticle?._id || '';
         _ls['expanded-' + type] = expanded;
         _ls['starId-' + type] = this['_star-' + type]?._id || undefined;
         await this.dbLocal.put(_ls);
@@ -624,6 +616,11 @@ customElements.define('li-wiki', class LiWiki extends LiElement {
         super();
         this._dbName = window.location.href.split('#')?.[1];
         if (this._dbName) this.id = 'wiki_' + this._dbName;
+        this.listen('tableSelected', async e => {
+            this.selectedArticle = e.detail;
+            await this._setSelectedEditors();
+            this.$update();
+        });
     }
 
     async firstUpdated() {
@@ -635,7 +632,6 @@ customElements.define('li-wiki', class LiWiki extends LiElement {
             this.dbLocal = new PouchDB(this.dbName);
             this.dbRemote = new PouchDB(this.dbIP + this.dbName);
             if (this.autoSync) this.replicationHandler = this.dbLocal.sync(this.dbRemote, { live: true });
-
             if (this._firstLoad && this.dbName === 'li-wiki-demo') {
                 const response = await fetch(LI.$url.replace('li.js', 'li/wiki/li-wiki-demo.json'));
                 const text = await response.text();
@@ -645,49 +641,32 @@ customElements.define('li-wiki', class LiWiki extends LiElement {
                 );
                 this._firstLoad = false;
             }
-
             try { this.rootArticle = await this.dbLocal.get('$wiki:articles') } catch (error) { }
             if (!this.rootArticle) {
                 await this.dbLocal.put((new ITEM({ _id: '$wiki:articles', label: 'wiki-articles', type: 'articles' })).doc);
                 this.rootArticle = await this.dbLocal.get('$wiki:articles');
             }
             this.rootArticle = new ITEM({ ...this.rootArticle });
-            try { this.rootTemplate = await this.dbLocal.get('$wiki:templates') } catch (error) { }
-            if (!this.rootTemplate) {
-                await this.dbLocal.put((new ITEM({ _id: '$wiki:templates', label: 'wiki-templates', type: 'templates' })).doc);
-                this.rootTemplate = await this.dbLocal.get('$wiki:templates');
-            }
-            this.rootTemplate = new ITEM({ ...this.rootTemplate });
-
             this.articles = [this.rootArticle];
-            this.templates = [this.rootTemplate];
             try {
                 this._localStore = await this.dbLocal.get('_local/store');
             } catch (error) { }
             this._localStore = this._localStore || {};
-
             this._articles = await this._createTree('articles');
-            this._templates = await this._createTree('templates');
             this.selectedArticle = this._articles[this._localStore['selected-articles']] || this.articles[0];
-            this.selectedTemplate = this._templates[this._localStore['selected-templates']] || this.templates[0];
             if (this._localStore['starId-articles']) {
                 this['_star-articles'] = this._articles[this._localStore['starId-articles']] || undefined;
                 this.$refs.star.toggled = true;
             }
-            if (this._localStore['starId-templates']) {
-                this['_star-templates'] = this._templates[this._localStore['starId-templates']] || undefined;
-                //this.$refs.star.toggled = true;
-            }
-
             await this._setSelectedEditors();
-
             Object.keys(this._articles).forEach(k => this._articles[k].changed = false);
-            Object.keys(this._templates).forEach(k => this._templates[k].changed = false);
             LI.listen(document, 'needSave', (e) => {
                 //console.log(e.detail);
                 if (e?.detail?._id && e?.detail?.type === '_deleted') this._deletedList.add(e.detail._id);
                 else if (e?.detail?._id && !this._deletedList.includes(e.detail._id)) this._changedList.add(e.detail._id);
             });
+
+            this._setSortArticles();
 
             this.$update();
         }, 100);
@@ -720,6 +699,24 @@ customElements.define('li-wiki', class LiWiki extends LiElement {
         flat[rootParent] = this[type][0];
         this._localStore['expanded-' + type]?.forEach(k => flat[k] ? flat[k].expanded = true : '');
         return flat;
+    }
+    _setSortArticles() {
+        const rows = [];
+        let idx = 0;
+        Object.keys(this._articles).forEach(k => {
+            const article = this._articles[k];
+            if (article.partsId?.length) {
+                article.idx = ++idx;
+                article.name = article._data.label;
+                rows.push(article);
+            }
+        })
+        const data = {
+            options: { lazy: true, footerService: true },
+            columns: [{ label: '№', name: 'idx', width: 50 }, { label: 'articles', name: 'name', textAlign: 'left' }],
+            rows: rows.sort((a, b) => a.idx > b.idx ? -1 : 1)
+        }
+        this.sortArticles = data;
     }
     async _setSelectedEditors() {
         if (!this._selected || this._selected.partsLoaded || !this._selected.partsId) return;
