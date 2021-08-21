@@ -714,7 +714,7 @@ customElements.define('li-wiki', class LiWiki extends LiElement {
         const data = {
             options: { lazy: true, footerService: true },
             columns: [{ label: '№', name: 'idx', width: 50 }, { label: 'articles', name: 'name', textAlign: 'left' }],
-            rows: rows.sort((a, b) => a.idx > b.idx ? -1 : 1)
+            rows: rows.sort((a, b) => a.ulid > b.ulid ? -1 : 1)
         }
         this.sortArticles = data;
     }
