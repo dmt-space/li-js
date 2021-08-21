@@ -71,7 +71,8 @@ customElements.define('li-table', class extends LiElement {
             lazy: { type: Object, default: { step: 40, start: 0, end: 80, max: 80, scroll: 1, ok: false }, local: true },
             ready: { type: Boolean },
             left: { type: Number, local: true },
-            _start: { type: Number }
+            _start: { type: Number },
+            selected: { type: Object, default: {}, local: true },
         }
     }
     get _hasScroll() {
@@ -188,7 +189,7 @@ customElements.define('li-table', class extends LiElement {
             this.lazy.scrollLast = this.lazy.scroll;
             this._start = this.lazy.start = this._scrollTop - 1;
             this.lazy.end = this.lazy.start + this.lazy.max;
-            console.log(this._start, this.lazy.end)
+            //console.log(this._start, this.lazy.end)
             this.$update();
         }
     }
@@ -197,19 +198,28 @@ customElements.define('li-table', class extends LiElement {
 customElements.define('li-table-row', class extends LiElement {
     static get styles() {
         return css`
-            :host {
+            .row {
                 position: relative;
                 display: flex;
                 border-bottom: 1px solid lightgray;
                 box-sizing: border-box;
+                cursor: pointer;
+            }
+            .row:not(.selected):hover {
+                border-bottom: 1px solid black;
+            }
+            .row.selected {
+                border-bottom: 1px solid blue;
             }
         `;
     }
     render() {
-        return html`
-            ${this.data?.columns?.map(c => html`
-                <li-table-cell .item="${this.row[c.name]}" .column="${c}" idx="${this.row['_idx'] || 0}" color=${this.color} @click=${this._click}></li-table-cell>
-            `)}
+        return html` 
+            <div class="row ${this._selected ? 'selected' : ''}" style="background-color: ${this._selected ? 'lightyellow' : this.idx % 2 ? '#f5f5f5' : 'white'}">
+                ${this.data?.columns?.map(c => html`
+                    <li-table-cell .item="${this.row[c.name]}" .column="${c}" idx="${this.idx || 0}" color=${this.color} @click=${this._click}></li-table-cell>
+                `)}
+            </div>        
         `
     }
 
@@ -217,14 +227,20 @@ customElements.define('li-table-row', class extends LiElement {
         return {
             row: { type: Object },
             idx: { type: Number },
-            data: { type: Object, local: true }
+            data: { type: Object, local: true },
+            selected: { type: Object, default: {}, local: true },
         }
     }
     get _rowHeight() {
         return this.data?.options?.rowHeight || this.data?.options?.rowMinHeight || 32;
     }
+    get _selected() {
+        return this.selected === this.row;
+    }
+    
     _click(e) {
-        this.fire('tableSelected', this.row)
+        this.selected = this.row;
+        this.fire('tableSelected', this.row);
     }
 })
 
@@ -414,6 +430,7 @@ customElements.define('li-table-cell', class extends LiElement {
                 flex: 1;
                 border-right: 1px solid lightgray;
                 box-sizing: border-box;
+                background-color: transparent
             }
             .cell {
                 position: relative;
@@ -434,7 +451,7 @@ customElements.define('li-table-cell', class extends LiElement {
             height: this.data?.options?.rowHeight ? this.data?.options?.rowHeight - 1 + 'px' : 'auto',
             'max-height': this.data?.options?.rowHeight ? this.data?.options?.rowHeight + 'px' : 'auto',
             'min-height': this.data?.options?.rowMinHeight ? this.data?.options?.rowMinHeight || 32 + 'px' : '32px',
-            'background-color': this.idx % 2 ? '#f5f5f5' : 'white',
+            // 'background-color': this.idx % 2 ? '#f5f5f5' : 'white',
             color: this.color,
             'text-align': this.column?.textAlign || 'center',
             'justify-content': this.column?.textAlign || 'center'
