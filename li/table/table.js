@@ -288,7 +288,7 @@ customElements.define('li-table-panel-row', class extends LiElement {
                 <div class="panel ${this.type}" style="left: ${-this.left}; height: ${this.data?.options?.headerHeight ? this.data?.options?.headerHeight : 'auto'}">
                     <div style="display: flex; background-color:${this.data?.options?.footerColor || '#eee'}">
                         ${this.data?.columns?.map(i => html`
-                            <div style="width: ${i._width < 0 ? 0 : i._width}; min-height: ${this._columnMinHeight}">
+                            <div style="width: ${i._width < 16 ? 16 : i._width}; min-height: ${this._columnMinHeight}">
                                 <li-table-panel-cell .column="${i}" type=${this.type}></li-table-panel-cell>
                             </div>
                         `)}
@@ -430,7 +430,7 @@ customElements.define('li-table-cell', class extends LiElement {
                 flex: 1;
                 border-right: 1px solid lightgray;
                 box-sizing: border-box;
-                background-color: transparent
+                background-color: transparent;
             }
             .cell {
                 position: relative;
@@ -447,7 +447,7 @@ customElements.define('li-table-cell', class extends LiElement {
     }
     get styles() {
         return {
-            width: this.column?._width - 1 < 0 ? 0 : this.column?._width - 1,
+            width: this.column?._width - 1 < 15 ? 15 : this.column?._width - 1,
             height: this.data?.options?.rowHeight ? this.data?.options?.rowHeight - 1 + 'px' : 'auto',
             'max-height': this.data?.options?.rowHeight ? this.data?.options?.rowHeight + 'px' : 'auto',
             'min-height': this.data?.options?.rowMinHeight ? this.data?.options?.rowMinHeight || 32 + 'px' : '32px',

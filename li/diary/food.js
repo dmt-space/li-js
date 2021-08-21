@@ -4,7 +4,9 @@ export const foodList = {
     headerService: true,
     headerServiceText: 'header service panel',
     footerService: true,
-    footerServiceText: 'footer service panel'
+    footerServiceText: 'footer service panel',
+    headerHeight: 36,
+    rowHeight: 36
   },
   columns: [
     { name: '_idx', label: '№', width: 50 },
