@@ -70,19 +70,18 @@ customElements.define('li-table', class extends LiElement {
             $partid: { type: String },
             data: { type: Object, local: true },
             maxWidth: { type: Number, local: true },
-            lazy: { type: Object, default: { step: 40, start: 0, end: 80, max: 80, scroll: 1, ok: false }, local: true },
+            lazy: { type: Object, default: { step: 40, start: 0, end: 80, max: 80, scroll: 1 }, local: true },
             ready: { type: Boolean },
             left: { type: Number, local: true },
-            _start: { type: Number },
             selected: { type: Object, default: {}, local: true },
         }
     }
     get _rows() {
         if (!this.data?.options?.lazy) return this.data?.rows || [];
-        return this.data?.rows?.slice(this._start, this.lazy.end,) || [];
+        return this.data?.rows?.slice(this.lazy.start, this.lazy.end,) || [];
     }
     get _rowHeight() {
-        return this.data?.options?.rowHeight || 36;
+        return this.data?.options?.rowHeight || this.data?.options?.rowMinHeight || 32;
     }
     get _tableHeight() {
         return (this.data?.rows?.length || 0) * this._rowHeight + 1;
@@ -100,7 +99,7 @@ customElements.define('li-table', class extends LiElement {
         this.listen('scrollTo', (e) => {
             this.$id?.container?.scrollTo(0, this.$id.container.scrollTop += e.detail * this._rowHeight);
         });
-        this._start = this._lastTop = this._top = this._lastLeft = this._scrollTop = 0;
+        this._lastTop = this._top = this._lastLeft = this._scrollTop = 0;
     }
     disconnectedCallback() {
         window.removeEventListener('resize', this.__resizeColumns);
@@ -161,18 +160,17 @@ customElements.define('li-table', class extends LiElement {
         ) {
             this.lazy.scrollLast = this.lazy.scroll;
             if (this.lazy.scroll > 0) {
-                this._start = this.lazy.start = this._scrollTop - 1;
+                this.lazy.start = this._scrollTop - 1;
                 this.lazy.end = this.lazy.start + this.lazy.max;
-                console.log(this._start, this.lazy.end)
+                console.log(this.lazy.start, this.lazy.end)
                 this.$update();
-            } else if (this._start !== 0) {
+            } else if (this.lazy.start !== 0) {
                 this.lazy.start = this._scrollTop - 1 - this.lazy.max;
-                this._start = this.lazy.start = this.lazy.start < 0 ? 0 : this.lazy.start;
+                this.lazy.start = this.lazy.start < 0 ? 0 : this.lazy.start;
                 this.lazy.end = this.lazy.start + this.lazy.max + this._visibleRowCount + 2;
-                console.log(this._start, this.lazy.end)
+                console.log(this.lazy.start, this.lazy.end)
                 this.$update();
             }
-
         }
     }
 })
@@ -199,7 +197,7 @@ customElements.define('li-table-row', class extends LiElement {
         return html` 
             <div class="row ${this._selected ? 'selected' : ''}" style="background-color: ${this._selected ? 'lightyellow' : this.idx % 2 ? '#f5f5f5' : 'white'}">
                 ${this.data?.columns?.map(c => html`
-                    <li-table-cell .item="${this.row[c.name]}" .column="${c}" idx="${this.idx || 0}" @click=${this._click}></li-table-cell>
+                    <li-table-cell .item="${this.row[c.name]}" .column="${c}" @click=${this._click}></li-table-cell>
                 `)}
             </div>        
         `
@@ -425,10 +423,9 @@ customElements.define('li-table-cell', class extends LiElement {
     get styles() {
         return {
             width: this.column?._width < 16 ? 16 : this.column?._width,
-            height: this.data?.options?.rowHeight ? this.data?.options?.rowHeight - 1 + 'px' : 'auto',
-            'max-height': this.data?.options?.rowHeight ? this.data?.options?.rowHeight + 'px' : 'auto',
+            height: this.data?.options?.rowHeight ? this.data?.options?.rowHeight - 1 + 'px' : '100%',
+            'max-height': this.data?.options?.rowHeight ? this.data?.options?.rowHeight + 'px' : '100%',
             'min-height': this.data?.options?.rowMinHeight ? this.data?.options?.rowMinHeight || 32 + 'px' : '32px',
-            // 'background-color': this.idx % 2 ? '#f5f5f5' : 'white',
             'text-align': this.column?.textAlign || 'center',
             'justify-content': this.column?.textAlign || 'center'
         }
@@ -441,7 +438,6 @@ customElements.define('li-table-cell', class extends LiElement {
 
     static get properties() {
         return {
-            idx: { type: Number },
             item: { type: Object },
             column: { type: Object },
             data: { type: Object, local: true }
