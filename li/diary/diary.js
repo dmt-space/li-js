@@ -330,6 +330,29 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                         footerHidden: true
                     }
                 },
+                'favorites': {
+                    options: {
+                        lazy: true,
+                        headerService: true,
+                        headerServiceText: 'header service panel',
+                        footerService: true,
+                        footerServiceText: 'footer service panel',
+                        headerHeight: 36,
+                        rowHeight: 36,
+                        searchColumns: ['category', 'name']
+                    },
+                    columns: [
+                        { name: '_idx', label: '№', width: 50 },
+                        { name: 'category', label: 'категория', width: 200 },
+                        { name: 'name', label: 'наименование', textAlign: 'left', showTitle: true },
+                        { name: 'num', label: 'кол', width: 50 },
+                        { name: 'ed', label: 'изм', width: 50 },
+                        { name: 'prot', label: 'б', width: 60 },
+                        { name: 'fats', label: 'ж', width: 60 },
+                        { name: 'carb', label: 'у', width: 60 },
+                        { name: 'kcal', label: 'ккал', width: 60 },
+                    ]
+                }
             }
             const opts = {
                 headerColor: `hsla(${idx * this.step}, 50%, 50%, .1)`,
@@ -339,7 +362,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             if (sets[this._mainView.name]) {
                 this._data.columns = sets[this._mainView.name].columns;
                 this._data.options = { ...(sets[this._mainView.name].options || {}), ...opts };
-                this._data.rows = [{}, {}, {}];
+                this._data.rows = [];
             }
             this.mainView = mainView;
             e.target.toggled = this.mainView === mainView;
