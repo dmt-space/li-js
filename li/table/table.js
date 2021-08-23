@@ -131,10 +131,11 @@ customElements.define('li-table', class extends LiElement {
     _setRows() {
         this.data._rows = [...[], ...this.data.rows];
         if (this.data.options?.searchColumns?.length && this.strSearch) {
+            const strSearch = this.strSearch.toLowerCase();
             this.data._rows = this.data._rows.filter(i => {
                 let ok;
                 this.data.options?.searchColumns.forEach(j => {
-                    ok = ok || i[j]?.toLowerCase().includes(this.strSearch);
+                    ok = ok || i[j]?.toLowerCase().includes(strSearch);
                 })
                 if (ok) return i;
             });
