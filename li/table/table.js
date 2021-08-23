@@ -4,7 +4,7 @@ import '../button/button.js';
 customElements.define('li-table', class extends LiElement {
     static get styles() {
         return css`
-            ::-webkit-scrollbar { width: 4px; height: 4px; border-left: 1px solid gray;}
+            ::-webkit-scrollbar { width: 4px; height: 4px; border-left: 1px solid gray}
             ::-webkit-scrollbar-track { background-color: #eee;}
             ::-webkit-scrollbar-thumb { background-color: #aaa;  border-radius: 2px; }
             :host {
@@ -74,23 +74,27 @@ customElements.define('li-table', class extends LiElement {
             ready: { type: Boolean },
             left: { type: Number, local: true },
             selected: { type: Object, default: {}, local: true },
+            strSearch: { type: String, default: '', local: true },
         }
     }
     get _rows() {
-        if (!this.data?.options?.lazy) return this.data?.rows || [];
-        return this.data?.rows?.slice(this.lazy.start, this.lazy.end,) || [];
+        if (!this.data?.options?.lazy) return this.data?._rows || [];
+        return this.data?._rows?.slice(this.lazy.start, this.lazy.end,) || [];
     }
     get _rowHeight() {
         return this.data?.options?.rowHeight || this.data?.options?.rowMinHeight || 32;
     }
     get _tableHeight() {
-        return (this.data?.rows?.length || 0) * this._rowHeight + 1;
+        return (this.data?._rows?.length || 0) * this._rowHeight + 1;
     }
     get _left() {
         return this.$id?.container?.scrollLeft || 0;
     }
     get _visibleRowCount() {
         return Math.round(this.$id?.container?.clientHeight / this._rowHeight || 0);
+    }
+    get _hasScroll() {
+        return this.$id?.main?.scrollHeight;
     }
 
     connectedCallback() {
@@ -108,7 +112,9 @@ customElements.define('li-table', class extends LiElement {
     updated(e) {
         if (e.has('data')) {
             if (this.data) {
-                this.lazy.step = this.data.options?.lazyStep || this._visibleRowCount + 2 || 40;
+                this.data._setRows = () => this._setRows();
+                this._setRows();
+                this.lazy.step = this.data.options?.lazyStep || this._visibleRowCount || 40;
                 this.lazy.end = this.lazy.max = this.data.options?.lazyMax || this.lazy.step * 2;
                 this.data._resizeColumns = () => this._resizeColumns();
                 this._resizeColumns();
@@ -122,9 +128,22 @@ customElements.define('li-table', class extends LiElement {
         }
     }
 
+    _setRows() {
+        this.data._rows = [...[], ...this.data.rows];
+        if (this.data.options?.searchColumns?.length && this.strSearch) {
+            this.data._rows = this.data._rows.filter(i => {
+                let ok;
+                this.data.options?.searchColumns.forEach(j => {
+                    ok = ok || i[j]?.toLowerCase().includes(this.strSearch);
+                })
+                if (ok) return i;
+            });
+        }
+        this.data._rows.forEach((i, idx) => i._idx = idx + 1);
+    }
     _resizeColumns() {
         this.left = this._left;
-        this.maxWidth = this.$id?.main?.offsetWidth;
+        this.maxWidth = this.$id?.main?.offsetWidth - (this._hasScroll ? 4 : 0);
         let length = this.data?.columns?.length,
             left = 0;
         this.data?.columns?.forEach(i => {
@@ -161,14 +180,14 @@ customElements.define('li-table', class extends LiElement {
             this.lazy.scrollLast = this.lazy.scroll;
             if (this.lazy.scroll > 0) {
                 this.lazy.start = this._scrollTop - 1;
-                this.lazy.end = this.lazy.start + this.lazy.max;
-                console.log(this.lazy.start, this.lazy.end)
+                this.lazy.end = this.lazy.start + this._visibleRowCount + this.lazy.max;
+                // console.log(this.lazy.start, this.lazy.end, this.lazy.end - this.lazy.start, 'step-' + this.lazy.step, 'max-' + this.lazy.max)
                 this.$update();
             } else if (this.lazy.start !== 0) {
-                this.lazy.start = this._scrollTop - 1 - this.lazy.max;
+                this.lazy.start = this._scrollTop - this.lazy.max;
                 this.lazy.start = this.lazy.start < 0 ? 0 : this.lazy.start;
-                this.lazy.end = this.lazy.start + this.lazy.max + this._visibleRowCount + 2;
-                console.log(this.lazy.start, this.lazy.end)
+                this.lazy.end = this.lazy.start + this.lazy.max + this._visibleRowCount;
+                // console.log(this.lazy.start, this.lazy.end, this.lazy.end - this.lazy.start, 'step-' + this.lazy.step, 'max-' + this.lazy.max)
                 this.$update();
             }
         }
@@ -253,6 +272,14 @@ customElements.define('li-table-panel-row', class extends LiElement {
                 padding: 2px;
                 font-size: 12px;
             }
+            #strSearch {
+                color: gray;
+                border: 1px solid lightgray;
+
+            }
+            #strSearch:focus {
+                outline: none !important;
+            }
         `;
     }
     render() {
@@ -260,10 +287,12 @@ customElements.define('li-table-panel-row', class extends LiElement {
             ${this.type === 'bottom' && this.data?.options?.footerHidden || this.type === 'top' && this.data?.options?.headerHidden ? html`` : html`
                 ${this.type === 'top' && this.data?.options?.headerService ? html`
                 <div class="service _top">
-                    <div class="service-text">${this.data?.options?.headerServiceText || ''}</div>    
-                    <li-button name="add" size=18 style="margin-left: auto" border='none' title="add"></li-button>
-                    <li-button name="delete" size=18 border='none' title="dlete"></li-button>
-                    <li-button name="edit" size=18 border='none' title="edit"></li-button>
+                    <div class="service-text">${this.data?.options?.headerServiceText || ''}</div>
+                    ${this.data.options?.searchColumns?.length ? html`
+                        <input id="strSearch" style="margin-left: auto" @change=${this._setStrSearch}>
+                        <li-button name="search" size=18 border='none' title="search" @click=${this._setStrSearch}></li-button>
+                        <li-button name="close" size=18 border='none' title="clear" @click=${this._clearStrSearch}></li-button>
+                    `: html``}   
                 </div>` : html``}   
                 <div class="panel ${this.type}" style="left: ${-this.left}; height: ${this.data?.options?.headerHeight ? this.data?.options?.headerHeight : 'auto'}">
                     <div style="display: flex; background-color:${this.data?.options?.footerColor || '#eee'}">
@@ -278,14 +307,14 @@ customElements.define('li-table-panel-row', class extends LiElement {
                 <div class="service _bottom">
                     <div class="service-text">${this.data?.options?.footerServiceText || ''}</div>
                     <li-button name="chevron-left" width="auto" size=18 style="margin-left: auto" border='none' @click=${(e) => this.fire('scrollTo', -1_000_000_000)}></li-button>
-                    <li-button size=18 width="auto" border='none' style="display: ${this.data?.rows?.length > 100_000 ? 'block' : 'none'}" @click=${(e) => this.fire('scrollTo', -100_000)}>-100 000</li-button>
-                    <li-button size=18 width="auto" border='none' style="display: ${this.data?.rows?.length > 10_000 ? 'block' : 'none'}" @click=${(e) => this.fire('scrollTo', -10_000)}>-10 000</li-button>
-                    <li-button size=18 width="auto" border='none' style="display: ${this.data?.rows?.length > 1_000 ? 'block' : 'none'}" @click=${(e) => this.fire('scrollTo', -1_000)}>-1 000</li-button>
-                    <li-button size=18 width="auto" border='none' style="display: ${this.data?.rows?.length > 100 ? 'block' : 'none'}" @click=${(e) => this.fire('scrollTo', -100)}>-100</li-button>
-                    <li-button size=18 width="auto" border='none' style="display: ${this.data?.rows?.length > 100 ? 'block' : 'none'}" @click=${(e) => this.fire('scrollTo', 100)}>+100</li-button>
-                    <li-button size=18 width="auto" border='none' style="display: ${this.data?.rows?.length > 1_000 ? 'block' : 'none'}" @click=${(e) => this.fire('scrollTo', 1_000)}>+1 000</li-button>
-                    <li-button size=18 width="auto" border='none' style="display: ${this.data?.rows?.length > 10_000 ? 'block' : 'none'}" @click=${(e) => this.fire('scrollTo', 10_000)}>+10 000</li-button>
-                    <li-button size=18 width="auto" border='none' style="display: ${this.data?.rows?.length > 100_000 ? 'block' : 'none'}" @click=${(e) => this.fire('scrollTo', 100_000)}>+100 000</li-button>
+                    <li-button size=18 width="auto" border='none' style="display: ${this.data?._rows?.length > 100_000 ? 'block' : 'none'}" @click=${(e) => this.fire('scrollTo', -100_000)}>-100 000</li-button>
+                    <li-button size=18 width="auto" border='none' style="display: ${this.data?._rows?.length > 10_000 ? 'block' : 'none'}" @click=${(e) => this.fire('scrollTo', -10_000)}>-10 000</li-button>
+                    <li-button size=18 width="auto" border='none' style="display: ${this.data?._rows?.length > 1_000 ? 'block' : 'none'}" @click=${(e) => this.fire('scrollTo', -1_000)}>-1 000</li-button>
+                    <li-button size=18 width="auto" border='none' style="display: ${this.data?._rows?.length > 100 ? 'block' : 'none'}" @click=${(e) => this.fire('scrollTo', -100)}>-100</li-button>
+                    <li-button size=18 width="auto" border='none' style="display: ${this.data?._rows?.length > 100 ? 'block' : 'none'}" @click=${(e) => this.fire('scrollTo', 100)}>+100</li-button>
+                    <li-button size=18 width="auto" border='none' style="display: ${this.data?._rows?.length > 1_000 ? 'block' : 'none'}" @click=${(e) => this.fire('scrollTo', 1_000)}>+1 000</li-button>
+                    <li-button size=18 width="auto" border='none' style="display: ${this.data?._rows?.length > 10_000 ? 'block' : 'none'}" @click=${(e) => this.fire('scrollTo', 10_000)}>+10 000</li-button>
+                    <li-button size=18 width="auto" border='none' style="display: ${this.data?._rows?.length > 100_000 ? 'block' : 'none'}" @click=${(e) => this.fire('scrollTo', 100_000)}>+100 000</li-button>
                     <li-button name="chevron-right" width="auto" size=18 border='none' @click=${(e) => this.fire('scrollTo', 1_000_000_000)}></li-button>
                 </div>` : html``} 
             `}
@@ -296,11 +325,29 @@ customElements.define('li-table-panel-row', class extends LiElement {
         return {
             type: { type: String },
             left: { type: Number, local: true },
-            data: { type: Object, local: true }
+            data: { type: Object, local: true },
+            strSearch: { type: String, local: true },
         }
     }
     get _columnMinHeight() {
         return this.data?.options?.columnMinHeight || this.data?.options?.columnMinHeight || 32;
+    }
+
+    firstUpdated() {
+        super.firstUpdated();
+        this.renderRoot.getElementById('strSearch').value = this.strSearch  || '';
+    }
+
+    _clearStrSearch() {
+        this.renderRoot.getElementById('strSearch').value = '';
+        this._setStrSearch();
+    }
+    _setStrSearch() {
+        this.strSearch = this.renderRoot.getElementById('strSearch').value;
+        setTimeout(() => {
+            this.data._setRows();
+            this.$update();
+        }, 100)
     }
 })
 
@@ -318,6 +365,7 @@ customElements.define('li-table-panel-cell', class extends LiElement {
                 overflow: hidden;
                 border-right: 1px solid lightgray;
                 box-sizing: border-box;
+                font-size: 14px;
             }
             .label {
                 padding: 4px;
@@ -351,6 +399,7 @@ customElements.define('li-table-panel-cell', class extends LiElement {
         return html`
             <div class="label" style="writing-mode: ${this.data?.options?.headerVertical && this.type === 'header' ? 'vertical-lr' : ''}">
                 ${this.type === 'top' && (this.column?.label || this.column?.name) || ''}
+                ${this.type === 'bottom' && this.column?.name === '_idx' ? this.data._rows.length : ''}
             </div>
             ${this.disableResize ? html`` : html`
                 <div class="point" @click="${this._setAutoWidth}"
@@ -427,12 +476,14 @@ customElements.define('li-table-cell', class extends LiElement {
             'max-height': this.data?.options?.rowHeight ? this.data?.options?.rowHeight + 'px' : '100%',
             'min-height': this.data?.options?.rowMinHeight ? this.data?.options?.rowMinHeight || 32 + 'px' : '32px',
             'text-align': this.column?.textAlign || 'center',
-            'justify-content': this.column?.textAlign || 'center'
+            'justify-content': this.column?.textAlign || 'center',
+            'font-size': this.column?.fontSize || ''
         }
     }
     render() {
         return html`
-            <div class="cell" contenteditable="${this.readOnly ? 'false' : 'true'}" style=${styleMap(this.styles)}>${this.item}</div>
+            <div class="cell" contenteditable="${this.readOnly ? 'false' : 'true'}" style=${styleMap(this.styles)}
+                .title=${this.column?.showTitle ? this.item : ''}>${this.item}</div>
         `
     }
 

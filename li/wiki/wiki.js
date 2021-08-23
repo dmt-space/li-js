@@ -702,19 +702,18 @@ customElements.define('li-wiki', class LiWiki extends LiElement {
     }
     _setSortArticles() {
         const rows = [];
-        let idx = 0;
-        Object.keys(this._articles).forEach(k => {
+        Object.keys(this._articles).sort((a, b) => a.ulid > b.ulid ? 1 : -1).forEach(k => {
             const article = this._articles[k];
             if (article.partsId?.length) {
-                article.idx = ++idx;
                 article.name = article._data.label;
                 rows.push(article);
             }
         })
+        rows.shift();
         const data = {
-            options: { lazy: true, footerService: true },
-            columns: [{ label: '№', name: 'idx', width: 50 }, { label: 'articles', name: 'name', textAlign: 'left' }],
-            rows: rows.sort((a, b) => a.ulid > b.ulid ? -1 : 1)
+            options: { lazy: true, footerService: true, rowHeight: 36, headerService: true, searchColumns: ['name'] },
+            columns: [{ label: '№', name: '_idx', width: 50 }, { label: 'articles', name: 'name', textAlign: 'left', showTitle: true }],
+            rows: rows
         }
         this.sortArticles = data;
     }

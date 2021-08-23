@@ -6,12 +6,13 @@ export const foodList = {
     footerService: true,
     footerServiceText: 'footer service panel',
     headerHeight: 36,
-    rowHeight: 36
+    rowHeight: 36,
+    searchColumns: ['category', 'name']
   },
   columns: [
     { name: '_idx', label: '№', width: 50 },
     { name: 'category', label: 'категория', width: 200 },
-    { name: 'name', label: 'наименование', textAlign: 'left' },
+    { name: 'name', label: 'наименование', textAlign: 'left', showTitle: true },
     { name: 'num', label: 'кол', width: 50 },
     { name: 'ed', label: 'изм', width: 50 },
     { name: 'prot', label: 'б', width: 60 },
