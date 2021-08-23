@@ -50,12 +50,14 @@ customElements.define('li-table', class extends LiElement {
                 <li-table-panel-row class="panel top" type="top"></li-table-panel-row>
                 ${this.data?.options?.headerHidden ? html`` : html`<div style="border-top:1px solid gray; height: 1px;"></div>`}
                 <div id="container" @scroll=${this._scroll}>
-                    <div id="main" style="width: ${this.maxWidth}">
-                        <div style="position: absolute; top: ${this.data?.options?.lazy ? this._shift * this._rowHeight : 0}px">
-                            ${this._rows.map((row, idx) => html`<li-table-row .row=${row} idx=${idx}></li-table-row>`)}
-                        </div>           
+                    <div id="main" style="width: ${this.maxWidth}px; height: ${this._tableHeight}px;">
+                        ${this._rows.map((row, idx) => html`
+                            <li-table-row .row=${row} idx=${idx} style="box-sizing: border-box;
+                                position: ${this.data?.options?.lazy ? 'absolute' : 'relative'};
+                                top: ${this.data?.options?.lazy ? (row._idx - 1) * this._rowHeight + 'px' : ''}">
+                            </li-table-row>
+                        `)}   
                     </div>
-                    <div style="border:1px solid transparent; height: ${this._tableHeight}px;"></div>
                 </div>
                 ${this.data?.options?.footerHidden ? html`` : html`<div style="border-bottom:1px solid gray; height: 1px;"></div>`}
                 <li-table-panel-row class="panel bottom" type="bottom"></li-table-panel-row>
@@ -75,42 +77,21 @@ customElements.define('li-table', class extends LiElement {
             selected: { type: Object, default: {}, local: true },
         }
     }
-    get _hasScroll() {
-        return this.$id?.main?.scrollHeight;
-    }
     get _rows() {
-        if (this.data?.options?.lazy) {
-            let end = this.lazy.end,
-                start = this._start;
-            if (!this._outSide && this.lazy.scroll < 0) {
-                end = this._start + this.lazy.max;
-                start = this._start - this.lazy.step;
-            }
-            return this.data?.rows?.slice(start, end) || [];
-        }
-        return this.data?.rows || [];
-    }
-    get _length() {
-        return this.data?.rows?.length || 0;
-    }
-    get _shift() {
-        if (this._outSide) return this.lazy?.start;
-        return this.lazy?.scroll < 0 ? this.lazy?.start - this.lazy?.step : this.lazy?.start;
+        if (!this.data?.options?.lazy) return this.data?.rows || [];
+        return this.data?.rows?.slice(this._start, this.lazy.end,) || [];
     }
     get _rowHeight() {
-        return this.$refs?.row?.offsetHeight || this.data?.options?.rowHeight || this.data?.options?.rowMinHeight || 32;
+        return this.data?.options?.rowHeight || 36;
     }
     get _tableHeight() {
-        return (this._length) * this._rowHeight + 1;
+        return (this.data?.rows?.length || 0) * this._rowHeight + 1;
     }
     get _left() {
         return this.$id?.container?.scrollLeft || 0;
     }
-    get _rowCount() {
-        return Math.round(this.$id?.main?.offsetHeight / this._rowHeight || 0);
-    }
-    get _outSide() {
-        return this._scrollTop < this.lazy?.step || this._scrollTop >= this.data?.length - this._rowCount;
+    get _visibleRowCount() {
+        return Math.round(this.$id?.container?.clientHeight / this._rowHeight || 0);
     }
 
     connectedCallback() {
@@ -128,10 +109,11 @@ customElements.define('li-table', class extends LiElement {
     updated(e) {
         if (e.has('data')) {
             if (this.data) {
+                this.lazy.step = this.data.options?.lazyStep || this._visibleRowCount + 2 || 40;
+                this.lazy.end = this.lazy.max = this.data.options?.lazyMax || this.lazy.step * 2;
                 this.data._resizeColumns = () => this._resizeColumns();
                 this._resizeColumns();
                 setTimeout(() => {
-                    this._resizeColumns();
                     requestAnimationFrame(() => {
                         this.$id.table?.setAttribute('ready', true);
                         this.ready = true;
@@ -143,7 +125,7 @@ customElements.define('li-table', class extends LiElement {
 
     _resizeColumns() {
         this.left = this._left;
-        this.maxWidth = this.$id?.main?.offsetWidth + 2;
+        this.maxWidth = this.$id?.main?.offsetWidth;
         let length = this.data?.columns?.length,
             left = 0;
         this.data?.columns?.forEach(i => {
@@ -174,23 +156,23 @@ customElements.define('li-table', class extends LiElement {
         }
     }
     _refreshRows() {
-        if (this._scrollTop < this.lazy.step && this.lazy.start !== 0) {
-            this._start = this.lazy.start = 0;
-            this.lazy.end = this.lazy.start + this.lazy.max;
-            this.$update();
-        } else if (this._scrollTop >= this._length - this._rowCount) {
-            this._start = this.lazy.start = this._length - this.lazy.max;
-            this.lazy.end = this._length;
-            this.$update();
-        } else if (this._scrollTop > this.lazy.start + this.lazy.step && this.lazy.scroll > 0 ||
-            this.lazy.start > this.lazy.step && this._scrollTop < this.lazy.start - this.lazy.step && this.lazy.scroll < 0 ||
-            this.lazy.start > this.lazy.step && this._scrollTop < this.lazy.start + this.lazy.step && this.lazy.scroll < 0 && this.lazy.scrollLast > 0) {
-
+        if (this._scrollTop > this.lazy.start + this.lazy.step && this.lazy.scroll > 0
+            || this._scrollTop < this.lazy.start + this.lazy.step && this.lazy.scroll < 0
+        ) {
             this.lazy.scrollLast = this.lazy.scroll;
-            this._start = this.lazy.start = this._scrollTop - 1;
-            this.lazy.end = this.lazy.start + this.lazy.max;
-            //console.log(this._start, this.lazy.end)
-            this.$update();
+            if (this.lazy.scroll > 0) {
+                this._start = this.lazy.start = this._scrollTop - 1;
+                this.lazy.end = this.lazy.start + this.lazy.max;
+                console.log(this._start, this.lazy.end)
+                this.$update();
+            } else if (this._start !== 0) {
+                this.lazy.start = this._scrollTop - 1 - this.lazy.max;
+                this._start = this.lazy.start = this.lazy.start < 0 ? 0 : this.lazy.start;
+                this.lazy.end = this.lazy.start + this.lazy.max + this._visibleRowCount + 2;
+                console.log(this._start, this.lazy.end)
+                this.$update();
+            }
+
         }
     }
 })
@@ -217,7 +199,7 @@ customElements.define('li-table-row', class extends LiElement {
         return html` 
             <div class="row ${this._selected ? 'selected' : ''}" style="background-color: ${this._selected ? 'lightyellow' : this.idx % 2 ? '#f5f5f5' : 'white'}">
                 ${this.data?.columns?.map(c => html`
-                    <li-table-cell .item="${this.row[c.name]}" .column="${c}" idx="${this.idx || 0}" color=${this.color} @click=${this._click}></li-table-cell>
+                    <li-table-cell .item="${this.row[c.name]}" .column="${c}" idx="${this.idx || 0}" @click=${this._click}></li-table-cell>
                 `)}
             </div>        
         `
@@ -237,7 +219,7 @@ customElements.define('li-table-row', class extends LiElement {
     get _selected() {
         return this.selected === this.row;
     }
-    
+
     _click(e) {
         this.selected = this.row;
         this.fire('tableSelected', this.row);
@@ -425,14 +407,9 @@ customElements.define('li-table-panel-cell', class extends LiElement {
 customElements.define('li-table-cell', class extends LiElement {
     static get styles() {
         return css`
-            :host {
-                display: flex;
-                flex: 1;
-                border-right: 1px solid lightgray;
-                box-sizing: border-box;
-                background-color: transparent;
-            }
             .cell {
+                border-right: 1px solid lightgray;
+                background-color: transparent;
                 position: relative;
                 display: flex;
                 flex: 1;
@@ -447,12 +424,11 @@ customElements.define('li-table-cell', class extends LiElement {
     }
     get styles() {
         return {
-            width: this.column?._width - 1 < 15 ? 15 : this.column?._width - 1,
+            width: this.column?._width < 16 ? 16 : this.column?._width,
             height: this.data?.options?.rowHeight ? this.data?.options?.rowHeight - 1 + 'px' : 'auto',
             'max-height': this.data?.options?.rowHeight ? this.data?.options?.rowHeight + 'px' : 'auto',
             'min-height': this.data?.options?.rowMinHeight ? this.data?.options?.rowMinHeight || 32 + 'px' : '32px',
             // 'background-color': this.idx % 2 ? '#f5f5f5' : 'white',
-            color: this.color,
             'text-align': this.column?.textAlign || 'center',
             'justify-content': this.column?.textAlign || 'center'
         }
@@ -468,8 +444,7 @@ customElements.define('li-table-cell', class extends LiElement {
             idx: { type: Number },
             item: { type: Object },
             column: { type: Object },
-            data: { type: Object, local: true },
-            color: { type: String },
+            data: { type: Object, local: true }
         }
     }
 })
