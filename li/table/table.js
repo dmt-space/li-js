@@ -50,7 +50,7 @@ customElements.define('li-table', class extends LiElement {
                 <li-table-panel-row class="panel top" type="top"></li-table-panel-row>
                 ${this.data?.options?.headerHidden ? html`` : html`<div style="border-top:1px solid gray; height: 1px;"></div>`}
                 <div id="container" @scroll=${this._scroll}>
-                    <div id="main" style="width: ${this.maxWidth}px; height: ${this._tableHeight}px;">
+                    <div id="main" style="width: ${this.maxWidth}px; height: ${this.data?.options?.lazy ? this._tableHeight + 'px' : 'unset'}">
                         ${this._rows.map((row, idx) => html`
                             <li-table-row .row=${row} idx=${idx} style="box-sizing: border-box;
                                 position: ${this.data?.options?.lazy ? 'absolute' : 'relative'};
@@ -75,6 +75,7 @@ customElements.define('li-table', class extends LiElement {
             left: { type: Number, local: true },
             selected: { type: Object, default: {}, local: true },
             strSearch: { type: String, default: '', local: true },
+            action: { type: Object, global: true }
         }
     }
     get _rows() {
@@ -124,6 +125,13 @@ customElements.define('li-table', class extends LiElement {
                         this.ready = true;
                     });
                 }, 100);
+            }
+        }
+        if (e.has('action') && this.action) {
+            // console.log(this.action);
+            if (this[this.action.fn] && this.id === this.action.id) {
+                this[this.action.fn]();
+                this.$update();
             }
         }
     }
@@ -336,7 +344,11 @@ customElements.define('li-table-panel-row', class extends LiElement {
 
     firstUpdated() {
         super.firstUpdated();
-        this.renderRoot.getElementById('strSearch').value = this.strSearch  || '';
+        if (this.data?.options?.headerService && this.data?.options?.searchColumns?.length) {
+            const search = this.renderRoot.getElementById('strSearch');
+            if (search)
+                search.value = this.strSearch || '';
+        }
     }
 
     _clearStrSearch() {
@@ -474,7 +486,7 @@ customElements.define('li-table-cell', class extends LiElement {
         return {
             width: this.column?._width < 16 ? 16 : this.column?._width,
             height: this.data?.options?.rowHeight ? this.data?.options?.rowHeight - 1 + 'px' : '100%',
-            'max-height': this.data?.options?.rowHeight ? this.data?.options?.rowHeight + 'px' : '100%',
+            'max-height': this.data?.options?.rowHeight ? this.data?.options?.rowHeight - 1 + 'px' : '100%',
             'min-height': this.data?.options?.rowMinHeight ? this.data?.options?.rowMinHeight || 32 + 'px' : '32px',
             'text-align': this.column?.textAlign || 'center',
             'justify-content': this.column?.textAlign || 'center',
@@ -484,7 +496,7 @@ customElements.define('li-table-cell', class extends LiElement {
     render() {
         return html`
             <div class="cell" contenteditable="${this.readOnly ? 'false' : 'true'}" style=${styleMap(this.styles)}
-                .title=${this.column?.showTitle ? this.item : ''}>${this.item}</div>
+                .title=${this.column?.showTitle ? this.item : ''} @input=${this._changeValue}>${this.item}</div>
         `
     }
 
@@ -494,5 +506,9 @@ customElements.define('li-table-cell', class extends LiElement {
             column: { type: Object },
             data: { type: Object, local: true }
         }
+    }
+
+    _changeValue(e) {
+        // console.log(e);
     }
 })
