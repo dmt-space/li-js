@@ -104,6 +104,9 @@ customElements.define('li-table', class extends LiElement {
         this.listen('scrollTo', (e) => {
             this.$id?.container?.scrollTo(0, this.$id.container.scrollTop += e.detail * this._rowHeight);
         });
+        this.listen('_setRows', (e) => {
+            this._setRows();
+        });
         this._lastTop = this._top = this._lastLeft = this._scrollTop = 0;
     }
     disconnectedCallback() {
@@ -138,17 +141,27 @@ customElements.define('li-table', class extends LiElement {
 
     _setRows() {
         this.data._rows = [...[], ...this.data.rows];
-        if (this.data.options?.searchColumns?.length && this.strSearch) {
-            const strSearch = this.strSearch.toLowerCase();
+        let search = this.data.options?.searchColumns?.length && this.strSearch ? this.strSearch.toLowerCase() : '';
+        if (search) {
             this.data._rows = this.data._rows.filter(i => {
-                let ok;
-                this.data.options?.searchColumns.forEach(j => {
-                    ok = ok || i[j]?.toLowerCase().includes(strSearch);
-                })
+                let ok = false;
+                this.data.options.searchColumns.forEach(j => ok = ok || i[j]?.toLowerCase().includes(search));
                 if (ok) return i;
-            });
+            })
         }
-        this.data._rows.forEach((i, idx) => i._idx = idx + 1);
+        let idx = 0,
+            sum = this.data?.options?.sum?.length;
+        if (sum) {
+            this.data.options._sum = {};
+            this.data.options.sum.forEach(j => this.data.options._sum[j] = 0);
+        }
+        this.data._rows = this.data._rows.filter(i => {
+            if (!i._deleted) {
+                i._idx = ++idx;
+                if (sum) this.data.options.sum.forEach(j => this.data.options._sum[j] += Number(i[j]) || 0);
+                return true;
+            }
+        })
     }
     _resizeColumns() {
         this.left = this._left;
@@ -225,7 +238,7 @@ customElements.define('li-table-row', class extends LiElement {
         return html` 
             <div class="row ${this._selected ? 'selected' : ''}" style="background-color: ${this._selected ? 'lightyellow' : this.idx % 2 ? '#f5f5f5' : 'white'}">
                 ${this.data?.columns?.map(c => html`
-                    <li-table-cell .item="${this.row[c.name]}" .column="${c}" @click=${this._click}></li-table-cell>
+                    <li-table-cell .item="${this.row[c.name]}" .column="${c}" @click=${this._click} .row=${this.row}></li-table-cell>
                 `)}
             </div>        
         `
@@ -413,6 +426,7 @@ customElements.define('li-table-panel-cell', class extends LiElement {
             <div class="label" style="writing-mode: ${this.data?.options?.headerVertical && this.type === 'header' ? 'vertical-lr' : ''}">
                 ${this.type === 'top' && (this.column?.label || this.column?.name) || ''}
                 ${this.type === 'bottom' && this.column?.name === '_idx' ? this.data._rows.length : ''}
+                ${this.sum}
             </div>
             ${this.disableResize ? html`` : html`
                 <div class="point" @click="${this._setAutoWidth}"
@@ -431,6 +445,9 @@ customElements.define('li-table-panel-cell', class extends LiElement {
     }
     get disableResize() {
         return this.data?.options?.disableResizeColumns || this.column?.disableResize;
+    }
+    get sum() {
+        return this.type === 'bottom' && this.data?.options?.sum?.includes(this.column.name) ? this.data.options._sum[this.column.name] : '';
     }
 
     _setAutoWidth(e) {
@@ -504,11 +521,17 @@ customElements.define('li-table-cell', class extends LiElement {
         return {
             item: { type: Object },
             column: { type: Object },
-            data: { type: Object, local: true }
+            data: { type: Object, local: true },
+            row: { type: Object },
         }
     }
 
     _changeValue(e) {
-        // console.log(e);
+        this.row[this.column.name] = e.target.innerText;
+        LI.debounce('_setRows', () => {
+            this.fire('_setRows');
+            this.$update();
+        }, 300);
+        e.target.innerText = this.row[this.column.name];
     }
 })
