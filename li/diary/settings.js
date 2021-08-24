@@ -32,15 +32,17 @@ export const sets = {
 
         }, 
         columns: [
-            { name: 'дата', width: 120 },
-            { name: 'время', width: 100 },
-            { name: 'трапеза' },
-            { name: 'количество', width: 100 },
-            { name: 'кал.', width: 80 },
-            { name: 'бел.', width: 80 },
-            { name: 'жир.', width: 80 },
-            { name: 'угл.', width: 80 },
-            // { name: 'примечание' },
+            { name: '_idx', label: '№', width: 50 },
+            { name: 'date', label: 'дата', width: 100 },
+            { name: 'time', label: 'время', width: 100 },
+            { name: 'type', label: 'тип', width: 100 },
+            { name: 'name', label: 'наименование', textAlign: 'left', showTitle: true },
+            { name: 'num', label: 'кол', width: 50 },
+            { name: 'ed', label: 'изм', width: 50 },
+            { name: 'prot', label: 'б', width: 60 },
+            { name: 'fats', label: 'ж', width: 60 },
+            { name: 'carb', label: 'у', width: 60 },
+            { name: 'kcal', label: 'ккал', width: 60 },
         ],
         rows: [
 
@@ -51,10 +53,11 @@ export const sets = {
 
         }, 
         columns: [
+            { name: '_idx', label: '№', width: 50 },
             { name: 'дата' },
             { name: 'время приема' },
             { name: 'количество' },
-            // { name: 'примечание' },
+            { name: 'примечание' },
         ],
         rows: [
             
@@ -65,12 +68,13 @@ export const sets = {
 
         }, 
         columns: [
+            { name: '_idx', label: '№', width: 50 },
             { name: 'дата' },
             { name: 'старт' },
             { name: 'длительность' },
             { name: 'расстояние' },
             { name: 'кал.' },
-            // { name: 'примечание' },
+            { name: 'примечание' },
         ],
         rows: [
             
@@ -81,12 +85,13 @@ export const sets = {
 
         }, 
         columns: [
+            { name: '_idx', label: '№', width: 50 },
             { name: 'дата' },
             { name: 'тип' },
             { name: 'старт' },
             { name: 'параметры' },
             { name: 'кал.' },
-            // { name: 'примечание' },
+            { name: 'примечание' },
         ],
         rows: [
             
@@ -97,11 +102,12 @@ export const sets = {
 
         }, 
         columns: [
+            { name: '_idx', label: '№', width: 50 },
             { name: 'дата' },
             { name: 'старт' },
             { name: 'длительность' },
             { name: 'кал.' },
-            // { name: 'примечание' },
+            { name: 'примечание' },
         ],
         rows: [
             
@@ -109,13 +115,14 @@ export const sets = {
     },
     'weighing': {
         options: {
-            footerHidden: true
+            // footerHidden: true
         },
         columns: [
+            { name: '_idx', label: '№', width: 50 },
             { name: 'дата' },
             { name: 'время измерения' },
             { name: 'вес' },
-            // { name: 'примечание' },
+            { name: 'примечание' },
         ],
         rows: [
             
@@ -123,9 +130,10 @@ export const sets = {
     },
     'measurements': {
         options: {
-            footerHidden: true
+            // footerHidden: true
         },
         columns: [
+            { name: '_idx', label: '№', width: 50 },
             { name: 'дата' },
             { name: 'шея' },
             { name: 'грудь' },
