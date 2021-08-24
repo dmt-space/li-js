@@ -7,6 +7,7 @@ import '../calendar/calendar.js';
 import '../wiki/wiki.js';
 import '../table/table.js';
 import { foodList } from './food.js';
+import { sets } from './settings.js';
 
 customElements.define('li-diary', class LiDiary extends LiElement {
 
@@ -113,10 +114,16 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                 </div>
                 <div slot="app-main" class="main" id="main">
                     ${!this.types[this._idx]?.hideLabel ? html`
-                        <div style="color:${`hsla(${this._idx * this.step}, 50%, 50%, 1)`}; font-size: 24px; text-decoration: underline;">${this.mainView}</div>
+                        <div style="display: flex">
+                            <div style="color:${`hsla(${this._idx * this.step}, 50%, 50%, 1)`}; font-size: 24px; text-decoration: underline;">${this.mainView}</div>
+                            ${!'eating water walking sport dream weighing favorites'.includes(this._mainView?.name) ? html`` : html`
+                                <li-button name="add" title="add new row" fill="${`hsla(${this._idx * this.step}, 50%, 50%, 1)`}" back="${`hsla(${this._idx * this.step}, 50%, 50%, .1)`}" style="margin-left: auto"></li-button>
+                                <li-button name="close" title="delete row" fill="${`hsla(${this._idx * this.step}, 50%, 50%, 1)`}" back="${`hsla(${this._idx * this.step}, 50%, 50%, .1)`}"></li-button>
+                            `}
+                        </div>
                     ` : html``}
                     ${!['eating', 'water', 'walking', 'sport', 'dream'].includes(this._mainView?.name) ? html`` : html`
-                        <div class="container">   
+                        <div class="container">
                             <li-table .$partid=${'table-' + this._mainView?.name} id=${'table-' + this._mainView?.name} .data="${this._data}"></li-table>
                         </div>
                     `}
@@ -151,6 +158,11 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                                 <input class="inpm" placeholder="0" style="width: 80px; text-align: center;">см
                             </div>
                         `)}
+                        <div style="display: flex;">
+                            <li-button name="check" title="заполнить" fill="${`hsla(${this._idx * this.step}, 50%, 50%, 1)`}" back="${`hsla(${this._idx * this.step}, 50%, 50%, .1)`}"></li-button>
+                            <li-button name="add" title="add new row" fill="${`hsla(${this._idx * this.step}, 50%, 50%, 1)`}" back="${`hsla(${this._idx * this.step}, 50%, 50%, .1)`}" style="margin-left: auto"></li-button>
+                            <li-button name="close" title="delete row" fill="${`hsla(${this._idx * this.step}, 50%, 50%, 1)`}" back="${`hsla(${this._idx * this.step}, 50%, 50%, .1)`}"></li-button>
+                        </div>
                         <div class="container">
                             <li-table $partid="table-measurements" id="table-measurements" .data="${this._data}"></li-table>
                         </div>
@@ -192,48 +204,19 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             rightView: { type: String, default: 'calendar' },
             mainView: { type: String, default: '' },
             _mainView: { type: Object },
-            measurements: {
-                type: Array,
-                default: [
-                    { name: 'шея', x: 104, y: 119, x1: 419, y1: 90, use: true, val: '', val: '' },
-                    { name: 'грудь', x: 104, y: 177, x1: 420, y1: 176, use: true, val: '' },
-                    { name: 'под грудью', x: 104, y: 191, x1: 420, y1: 189, use: true, val: '' },
-                    { name: 'бицепс', x: 163, y: 182, x1: 348, y1: 175, use: true, val: '' },
-                    { name: 'талия', x: 101, y: 222, x1: 422, y1: 213, use: true, val: '' },
-                    { name: 'предплечье', x: 166, y: 232, x1: 342, y1: 225, use: true, val: '' },
-                    { name: 'запястье', x: 147, y: 265, x1: 338, y1: 274, use: true, val: '' },
-                    { name: 'живот', x: 90, y: 267, x1: 405, y1: 245, use: true, val: '' },
-                    { name: 'бедра', x: 79, y: 297, x1: 414, y1: 275, use: true, val: '' },
-                    { name: 'бедро', x: 117, y: 332, x1: 377, y1: 327, use: true, val: '' },
-                    { name: 'над коленом', x: 134, y: 392, x1: 361, y1: 382, use: true, val: '' },
-                    { name: 'голень', x: 166, y: 458, x1: 364, y1: 446, use: true, val: '' },
-                    { name: 'щиколотка', x: 180, y: 510, x1: 362, y1: 513, use: true, val: '' },
-                ]
-            }
+            measurements: { type: Array },
+            types: { type: Array }
         }
     }
 
-    get types() {
-        return [
-            { icon: 'dining', name: 'eating', label: 'еда' },
-            { icon: 'account-box', name: 'favorites', label: 'избранное' },
-            { icon: 'flatware', name: 'calorie', label: 'таблица калорийности' },
-            { icon: 'water_drop', name: 'water', label: 'вода' },
-            { icon: 'hiking', name: 'walking', label: 'шаги' },
-            { icon: 'sports_volleyball', name: 'sport', label: 'спорт' },
-            { icon: 'bedroom_parent', name: 'dream', label: 'сон' },
-            { icon: 'monitor_weight', name: 'weighing', label: 'вес' },
-            { icon: 'accessibility_new', name: 'measurements', label: 'измерения' },
-            { icon: 'auto_stories', name: 'wiki', label: 'wiki', hideLabel: true },
-        ]
-    }
     get _measurements() {
         return this.measurements.filter(i => i.use);
     }
 
     connectedCallback() {
         super.connectedCallback();
-        foodList.rows.forEach((i, idx) => i._idx = idx + 1);
+        this.measurements = sets.measurementsPos;
+        this.types = sets.types;
     }
 
     _autoReplication() {
@@ -246,114 +229,6 @@ customElements.define('li-diary', class LiDiary extends LiElement {
         requestAnimationFrame(() => {
             this._mainView = i;
             const mainView = i.label;
-            const sets = {
-                'eating': {
-                    columns: [
-                        { name: 'дата', width: 120 },
-                        { name: 'время', width: 100 },
-                        { name: 'трапеза' },
-                        { name: 'количество', width: 100 },
-                        { name: 'кал.', width: 80 },
-                        { name: 'бел.', width: 80 },
-                        { name: 'жир.', width: 80 },
-                        { name: 'угл.', width: 80 },
-                        // { name: 'примечание' },
-                    ]
-                },
-                'water': {
-                    columns: [
-                        { name: 'дата' },
-                        { name: 'время приема' },
-                        { name: 'количество' },
-                        // { name: 'примечание' },
-                    ]
-                },
-                'walking': {
-                    columns: [
-                        { name: 'дата' },
-                        { name: 'старт' },
-                        { name: 'длительность' },
-                        { name: 'расстояние' },
-                        { name: 'кал.' },
-                        // { name: 'примечание' },
-                    ]
-                },
-                'sport': {
-                    columns: [
-                        { name: 'дата' },
-                        { name: 'тип' },
-                        { name: 'старт' },
-                        { name: 'параметры' },
-                        { name: 'кал.' },
-                        // { name: 'примечание' },
-                    ]
-                },
-                'dream': {
-                    columns: [
-                        { name: 'дата' },
-                        { name: 'старт' },
-                        { name: 'длительность' },
-                        { name: 'кал.' },
-                        // { name: 'примечание' },
-                    ]
-                },
-                'wiki': [],
-                'weighing': {
-                    columns: [
-                        { name: 'дата' },
-                        { name: 'время измерения' },
-                        { name: 'вес' },
-                        // { name: 'примечание' },
-                    ],
-                    options: {
-                        footerHidden: true
-                    }
-                },
-                'measurements': {
-                    columns: [
-                        { name: 'дата' },
-                        { name: 'шея' },
-                        { name: 'грудь' },
-                        { name: 'под грудью' },
-                        { name: 'бицепс' },
-                        { name: 'талия' },
-                        { name: 'предплечье' },
-                        { name: 'запястье' },
-                        { name: 'живот' },
-                        { name: 'бедра' },
-                        { name: 'бедро' },
-                        { name: 'над коленом' },
-                        { name: 'голень' },
-                        { name: 'щиколотка' },
-                    ],
-                    options: {
-                        footerHidden: true
-                    }
-                },
-                'favorites': {
-                    options: {
-                        lazy: true,
-                        headerService: true,
-                        headerServiceText: 'header service panel',
-                        footerService: true,
-                        footerServiceText: 'footer service panel',
-                        headerHeight: 36,
-                        rowHeight: 36,
-                        searchColumns: ['category', 'name']
-                    },
-                    columns: [
-                        { name: '_idx', label: '№', width: 50 },
-                        { name: 'category', label: 'категория', width: 200 },
-                        { name: 'name', label: 'наименование', textAlign: 'left', showTitle: true },
-                        { name: 'num', label: 'кол', width: 50 },
-                        { name: 'ed', label: 'изм', width: 50 },
-                        { name: 'prot', label: 'б', width: 60 },
-                        { name: 'fats', label: 'ж', width: 60 },
-                        { name: 'carb', label: 'у', width: 60 },
-                        { name: 'kcal', label: 'ккал', width: 60 },
-                    ]
-                }
-            }
             const opts = {
                 headerColor: `hsla(${idx * this.step}, 50%, 50%, .1)`,
                 footerColor: `hsla(${idx * this.step}, 50%, 50%, .1)`,
@@ -362,7 +237,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             if (sets[this._mainView.name]) {
                 this._data.columns = sets[this._mainView.name].columns;
                 this._data.options = { ...(sets[this._mainView.name].options || {}), ...opts };
-                this._data.rows = [];
+                this._data.rows = sets[this._mainView.name].rows;
             }
             this.mainView = mainView;
             e.target.toggled = this.mainView === mainView;
