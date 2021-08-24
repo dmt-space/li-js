@@ -81,7 +81,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
         return html`
             <li-layout-app>
                 <div slot="app-top" class="header">
-                    <div style="flex:1"></div>${this.dbName || 'my diary'}<div style="flex:1"></div>
+                    <div style="flex:1"></div>${(this.dbName || 'my diary') + this._periods}<div style="flex:1"></div>
                 </div>
                 <div slot="app-left" class="panel">
                     <div style="display: flex; border-bottom: 1px solid lightgray;">
@@ -177,17 +177,9 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                     `}
                 </div>
                 <div slot="app-right" class="panel">
-                <div style="display: flex; border-bottom: 1px solid lightgray;">
-                        <li-button name="event" title="calendar" @click="${() => this.rightView = 'calendar'}" ?toggled="${this.rightView === 'calendar'}" toggledClass="ontoggled"></li-button>
-                        <li-button name="list" title="list" @click="${() => this.rightView = 'list'}" ?toggled="${this.rightView === 'list'}" toggledClass="ontoggled"></li-button>
-                    </div>
                     <b class="lbl">${this.rightView}</b>
                     <div class="panel-in" style="padding: 0px;">
-                        ${this.rightView === 'calendar' ? html`
-                            <li-calendar></li-calendar>
-                        ` : this.rightView === 'list' ? html`
-                                <!-- <li-table class="list" $partid="table-list" id="table-list" .data=${foodList}></li-table>                       -->
-                        ` : html``}
+                        <li-calendar></li-calendar>
                     </div>
                 </div>
             </li-layout-app>
@@ -205,12 +197,20 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             mainView: { type: String, default: '' },
             _mainView: { type: Object },
             measurements: { type: Array },
-            types: { type: Array }
+            types: { type: Array },
+            period: { type: Array, local: true },
         }
     }
 
     get _measurements() {
         return this.measurements.filter(i => i.use);
+    }
+    get _periods() {
+        if (!this.period) return '';
+        const p0 = this.period[0].split('-').reverse().join('-');
+        if (this.period[0] === this.period[1]) return ` (${p0})`;
+        const p1 = this.period[1].split('-').reverse().join('-');
+        return ` (${p0} ... ${p1})`;
     }
 
     connectedCallback() {
