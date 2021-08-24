@@ -29,7 +29,7 @@ export const sets = {
     'wiki': [],
     'eating': {
         options: {
-
+            sum: ['num', 'prot', 'fats', 'carb', 'kcal']
         }, 
         columns: [
             { name: '_idx', label: '№', width: 50 },
@@ -50,14 +50,14 @@ export const sets = {
     },
     'water': {
         options: {
-
+            sum: ['num']
         }, 
         columns: [
             { name: '_idx', label: '№', width: 50 },
             { name: 'date', label: 'дата', width: 100 },
-            { name: 'время приема' },
-            { name: 'количество' },
-            { name: 'примечание' },
+            { name: 'time', label: 'время приема' },
+            { name: 'num', label: 'количество' },
+            { name: 'note', label: 'примечание' },
         ],
         rows: [
             
@@ -65,16 +65,16 @@ export const sets = {
     },
     'walking': {
         options: {
-
+            sum: ['dur', 'dist', 'kcal']
         }, 
         columns: [
             { name: '_idx', label: '№', width: 50 },
             { name: 'date', label: 'дата', width: 100 },
-            { name: 'старт' },
-            { name: 'длительность' },
-            { name: 'расстояние' },
-            { name: 'кал.' },
-            { name: 'примечание' },
+            { name: 'start', label: 'старт' },
+            { name: 'dur', label: 'длительность' },
+            { name: 'dist', label: 'расстояние' },
+            { name: 'kcal', label: 'кал.' },
+            { name: 'note', label: 'примечание' },
         ],
         rows: [
             
@@ -82,16 +82,17 @@ export const sets = {
     },
     'sport': {
         options: {
-
+            sum: ['dur', 'kcal']
         }, 
         columns: [
             { name: '_idx', label: '№', width: 50 },
             { name: 'date', label: 'дата', width: 100 },
-            { name: 'тип' },
-            { name: 'старт' },
-            { name: 'параметры' },
-            { name: 'кал.' },
-            { name: 'примечание' },
+            { name: 'type', label: 'тип' },
+            { name: 'start', label: 'старт' },
+            { name: 'dur', label: 'длительность' },
+            { name: 'opts', label: 'параметры' },
+            { name: 'kcal', label: 'кал.' },
+            { name: 'note', label: 'примечание' },
         ],
         rows: [
             
@@ -99,15 +100,15 @@ export const sets = {
     },
     'dream': {
         options: {
-
+            sum: ['dur', 'kcal']
         }, 
         columns: [
             { name: '_idx', label: '№', width: 50 },
             { name: 'date', label: 'дата', width: 100 },
-            { name: 'старт' },
-            { name: 'длительность' },
-            { name: 'кал.' },
-            { name: 'примечание' },
+            { name: 'start', label: 'старт' },
+            { name: 'dur', label: 'длительность' },
+            { name: 'kcal', label: 'кал.' },
+            { name: 'note', label: 'примечание' },
         ],
         rows: [
             
@@ -120,9 +121,9 @@ export const sets = {
         columns: [
             { name: '_idx', label: '№', width: 50 },
             { name: 'date', label: 'дата', width: 100 },
-            { name: 'время измерения' },
-            { name: 'вес' },
-            { name: 'примечание' },
+            { name: 'time', label: 'время измерения' },
+            { name: 'val', label: 'вес' },
+            { name: 'note', label: 'примечание' },
         ],
         rows: [
             
@@ -135,19 +136,19 @@ export const sets = {
         columns: [
             { name: '_idx', label: '№', width: 50 },
             { name: 'date', label: 'дата', width: 100 },
-            { name: 'шея' },
-            { name: 'грудь' },
-            { name: 'под грудью' },
-            { name: 'бицепс' },
-            { name: 'талия' },
-            { name: 'предплечье' },
-            { name: 'запястье' },
-            { name: 'живот' },
-            { name: 'бедра' },
-            { name: 'бедро' },
-            { name: 'над коленом' },
-            { name: 'голень' },
-            { name: 'щиколотка' },
+            { name: 'шея', label: 'шея' },
+            { name: 'грудь', label: 'грудь' },
+            { name: 'под грудью', label: 'под грудью' },
+            { name: 'бицепс', label: 'бицепс' },
+            { name: 'талия', label: 'талия' },
+            { name: 'предплечье', label: 'предплечье' },
+            { name: 'запястье', label: 'запястье', label: 'запястье' },
+            { name: 'живот', label: 'живот' },
+            { name: 'бедра', label: 'бедра' },
+            { name: 'бедро', label: 'бедро' },
+            { name: 'над коленом', label: 'над коленом' },
+            { name: 'голень', label: 'голень' },
+            { name: 'щиколотка', label: 'щиколотка' },
         ],
         rows: [
             
