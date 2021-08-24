@@ -35,7 +35,7 @@ export const sets = {
             { name: '_idx', label: '№', width: 50 },
             { name: 'date', label: 'дата', width: 100 },
             { name: 'time', label: 'время', width: 100 },
-            { name: 'type', label: 'тип', width: 100 },
+            { name: 'eating', label: 'прием пищи', width: 140 },
             { name: 'name', label: 'наименование', textAlign: 'left', showTitle: true },
             { name: 'num', label: 'кол', width: 50 },
             { name: 'ed', label: 'изм', width: 50 },
@@ -54,7 +54,7 @@ export const sets = {
         }, 
         columns: [
             { name: '_idx', label: '№', width: 50 },
-            { name: 'дата' },
+            { name: 'date', label: 'дата', width: 100 },
             { name: 'время приема' },
             { name: 'количество' },
             { name: 'примечание' },
@@ -69,7 +69,7 @@ export const sets = {
         }, 
         columns: [
             { name: '_idx', label: '№', width: 50 },
-            { name: 'дата' },
+            { name: 'date', label: 'дата', width: 100 },
             { name: 'старт' },
             { name: 'длительность' },
             { name: 'расстояние' },
@@ -86,7 +86,7 @@ export const sets = {
         }, 
         columns: [
             { name: '_idx', label: '№', width: 50 },
-            { name: 'дата' },
+            { name: 'date', label: 'дата', width: 100 },
             { name: 'тип' },
             { name: 'старт' },
             { name: 'параметры' },
@@ -103,7 +103,7 @@ export const sets = {
         }, 
         columns: [
             { name: '_idx', label: '№', width: 50 },
-            { name: 'дата' },
+            { name: 'date', label: 'дата', width: 100 },
             { name: 'старт' },
             { name: 'длительность' },
             { name: 'кал.' },
@@ -119,7 +119,7 @@ export const sets = {
         },
         columns: [
             { name: '_idx', label: '№', width: 50 },
-            { name: 'дата' },
+            { name: 'date', label: 'дата', width: 100 },
             { name: 'время измерения' },
             { name: 'вес' },
             { name: 'примечание' },
@@ -134,7 +134,7 @@ export const sets = {
         },
         columns: [
             { name: '_idx', label: '№', width: 50 },
-            { name: 'дата' },
+            { name: 'date', label: 'дата', width: 100 },
             { name: 'шея' },
             { name: 'грудь' },
             { name: 'под грудью' },

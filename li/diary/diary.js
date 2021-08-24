@@ -88,7 +88,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                         <li-button name="create" title="diary" @click="${() => this.leftView = 'diary'}" ?toggled="${this.leftView === 'diary'}" toggledClass="ontoggled"></li-button>
                         <li-button name="settings" title="settings" @click="${() => this.leftView = 'settings'}" ?toggled="${this.leftView === 'settings'}" toggledClass="ontoggled"></li-button>
                         <div style="flex:1"></div>
-                        <li-button name="save" title="save" @click="${this._treeActions}" .fill="${this._needSave ? 'red' : ''}" .color="${this._needSave ? 'red' : 'gray'}"></li-button>
+                        <li-button name="save" title="save" .fill="${this._needSave ? 'red' : ''}" .color="${this._needSave ? 'red' : 'gray'}"></li-button>
                     </div>
                     <b class="lbl">${this.leftView}</b>
                     <div class="panel-in">
@@ -117,7 +117,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                         <div style="display: flex">
                             <div style="color:${`hsla(${this._idx * this.step}, 50%, 50%, 1)`}; font-size: 24px; text-decoration: underline;">${this.mainView}</div>
                             ${!'eating water walking sport dream weighing favorites'.includes(this._mainView?.name) ? html`` : html`
-                                <li-button name="add" title="add new row" fill="${`hsla(${this._idx * this.step}, 50%, 50%, 1)`}" back="${`hsla(${this._idx * this.step}, 50%, 50%, .1)`}" style="margin-left: auto"></li-button>
+                                <li-button name="add" @click=${this._addRow} title="add new row" fill="${`hsla(${this._idx * this.step}, 50%, 50%, 1)`}" back="${`hsla(${this._idx * this.step}, 50%, 50%, .1)`}" style="margin-left: auto"></li-button>
                                 <li-button name="close" title="delete row" fill="${`hsla(${this._idx * this.step}, 50%, 50%, 1)`}" back="${`hsla(${this._idx * this.step}, 50%, 50%, .1)`}"></li-button>
                             `}
                         </div>
@@ -129,9 +129,9 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                     `}
                     ${this._mainView?.name !== 'favorites' ? html`` : html`
                         <div class="container-calorie" style="display: flex; flex-direction: column"> 
-                            <li-table $partid="table-favorites" id="table-favorites" .data="${this._data}" style="height: 50%"></li-table>
+                            <li-table $partid="table-favorites" id="table-favorites" .data="${this._data}" style="height: 48%"></li-table>
                             <div style="color:${`hsla(${this._idx * this.step}, 50%, 50%, 1)`}; font-size: 24px; text-decoration: underline;">таблица калорийности</div>
-                            <li-table $partid="table-fcalorie" id="table-fcalorie" .data="${foodList}" style="height: 50%"></li-table>
+                            <li-table $partid="table-fcalorie" id="table-fcalorie" .data="${foodList}" style="height: 48%"></li-table>
                         </div>
                     `}
                     ${this._mainView?.name !== 'weighing' ? html`` : html`
@@ -160,7 +160,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                         `)}
                         <div style="display: flex;">
                             <li-button name="check" title="заполнить" fill="${`hsla(${this._idx * this.step}, 50%, 50%, 1)`}" back="${`hsla(${this._idx * this.step}, 50%, 50%, .1)`}"></li-button>
-                            <li-button name="add" title="add new row" fill="${`hsla(${this._idx * this.step}, 50%, 50%, 1)`}" back="${`hsla(${this._idx * this.step}, 50%, 50%, .1)`}" style="margin-left: auto"></li-button>
+                            <li-button name="add" @click=${this._addRow} title="add new row" fill="${`hsla(${this._idx * this.step}, 50%, 50%, 1)`}" back="${`hsla(${this._idx * this.step}, 50%, 50%, .1)`}" style="margin-left: auto"></li-button>
                             <li-button name="close" title="delete row" fill="${`hsla(${this._idx * this.step}, 50%, 50%, 1)`}" back="${`hsla(${this._idx * this.step}, 50%, 50%, .1)`}"></li-button>
                         </div>
                         <div class="container">
@@ -199,6 +199,9 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             measurements: { type: Array },
             types: { type: Array },
             period: { type: Array, local: true },
+            action: { type: Object, global: true },
+            _addItems: { type: Array, default: [] },
+            _delItems: { type: Array, default: [] },
         }
     }
 
@@ -211,6 +214,9 @@ customElements.define('li-diary', class LiDiary extends LiElement {
         if (this.period[0] === this.period[1]) return ` (${p0})`;
         const p1 = this.period[1].split('-').reverse().join('-');
         return ` (${p0} ... ${p1})`;
+    }
+    get _needSave() {
+        return this._addItems?.length || this._delItems?.length;
     }
 
     connectedCallback() {
@@ -244,5 +250,20 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             this._idx = idx || 0;
             this.$update();
         });
+    }
+    _addRow(e) {
+        this.action = undefined;
+        const ulid = LI.ulid(),
+            type = this._mainView.name,
+            _id = `${type}:${ulid}`,
+            created = LI.dates(),
+            item = { _id, ulid, type, created, date: created.short };
+        this._addItems = this._addItems || [];
+        this._addItems.push(item);
+        this._data.rows.push(item);
+        this.action = {
+            id: `table-${type}`,
+            fn: '_setRows'
+        }
     }
 });
