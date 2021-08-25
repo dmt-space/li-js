@@ -711,7 +711,17 @@ customElements.define('li-wiki', class LiWiki extends LiElement {
         })
         rows.shift();
         const data = {
-            options: { lazy: true, footerService: true, rowHeight: 36, headerService: true, searchColumns: ['name'] },
+            options: { 
+                // lazy: true, 
+                headerService: true,
+                headerServiceText: 'sort by last add',
+                footerHidden: true,
+                footerService: true,
+                footerServiceTotal: true,
+                // rowHeight: 40,
+                fontSize: '.9rem',
+                searchColumns: ['name'] 
+            },
             columns: [{ label: '№', name: '_idx', width: 50 }, { label: 'articles', name: 'name', textAlign: 'left', showTitle: true }],
             rows: rows
         }
