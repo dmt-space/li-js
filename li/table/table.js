@@ -74,7 +74,7 @@ customElements.define('li-table', class extends LiElement {
             lazy: { type: Object },
             ready: { type: Boolean },
             left: { type: Number, local: true },
-            selected: { type: Object, default: {}, local: true },
+            selected: { type: Object, local: true },
             strSearch: { type: String, default: '', local: true },
             action: { type: Object, global: true }
         }
@@ -107,12 +107,7 @@ customElements.define('li-table', class extends LiElement {
     connectedCallback() {
         super.connectedCallback();
         window.addEventListener('resize', this.__resizeColumns = this.__resizeColumns || this._resizeColumns.bind(this));
-        this.listen('scrollTo', (e) => {
-            this.$id?.container?.scrollTo(0, this.$id.container.scrollTop += e.detail * this._rowHeight);
-        });
-        this.listen('_setRows', (e) => {
-            this._setRows();
-        });
+        this.listen('scrollTo', (e) => this.$id?.container?.scrollTo(0, this.$id.container.scrollTop += e.detail * this._rowHeight));
         this._lastTop = this._top = this._lastLeft = this._scrollTop = 0;
     }
     disconnectedCallback() {
@@ -141,15 +136,20 @@ customElements.define('li-table', class extends LiElement {
             if (this[this.action.fn] && this.id === this.action.id) {
                 this[this.action.fn]();
                 this.$update();
+                if (this.action.scrollToEnd) {
+                    setTimeout(() => {
+                        this.selected = this._data.rows[this._data.rows.length - 1];
+                        this.$id?.container?.scrollTo(0, this.$id.container.scrollTop += 1_000_000_000);
+                    }, 50);
+                }
             }
         }
     }
 
     _setRows() {
-        this._data.rows = [...[], ...this.data.rows];
         let search = this.data.options?.searchColumns?.length && this.strSearch ? this.strSearch.toLowerCase() : '';
         if (search) {
-            this._data.rows = this._data.rows.filter(i => {
+            this._data.rows = this.data.rows.filter(i => {
                 let ok = false;
                 this.data.options.searchColumns.forEach(j => ok = ok || i[j]?.toLowerCase().includes(search));
                 if (ok) return i;
@@ -162,7 +162,7 @@ customElements.define('li-table', class extends LiElement {
             this.data.options._sum = {};
             this.data.options.sum.forEach(j => this._data.sum[j] = 0);
         }
-        this._data.rows = this._data.rows.filter(i => {
+        this._data.rows = this.data.rows.filter(i => {
             if (!i._deleted) {
                 i._idx = ++idx;
                 if (sum) this.data.options.sum.forEach(j => this._data.sum[j] += Number(i[j]) || 0);
@@ -170,6 +170,14 @@ customElements.define('li-table', class extends LiElement {
             }
         })
         this.$update();
+    }
+    _deleteRow(row = this.selected) {
+        if (!row) return;
+        const idx = row._idx === this._data.rows.length ? this._data.rows.length - 2 : row._idx;
+        row._deleted = true;
+        this.selected = this._data.rows[idx];
+        this._setRows();
+
     }
     _resizeColumns() {
         this.left = this._left;
@@ -210,11 +218,13 @@ customElements.define('li-table', class extends LiElement {
             this.lazy.scrollLast = this.lazy.scroll;
             if (this.lazy.scroll > 0) {
                 this.lazy.start = this._scrollTop - 1;
+                this.lazy.start = this.lazy.start % 2 ? this.lazy.start - 1 : this.lazy.start;
                 this.lazy.end = this.lazy.start + this._visibleRowCount + this.lazy.max;
                 // console.log(this.lazy.start, this.lazy.end, this.lazy.end - this.lazy.start, 'step-' + this.lazy.step, 'max-' + this.lazy.max)
                 this.$update();
             } else if (this.lazy.start !== 0) {
                 this.lazy.start = this._scrollTop - this.lazy.max;
+                this.lazy.start = this.lazy.start % 2 ? this.lazy.start - 1 : this.lazy.start;
                 this.lazy.start = this.lazy.start < 0 ? 0 : this.lazy.start;
                 this.lazy.end = this.lazy.start + this.lazy.max + this._visibleRowCount;
                 // console.log(this.lazy.start, this.lazy.end, this.lazy.end - this.lazy.start, 'step-' + this.lazy.step, 'max-' + this.lazy.max)
@@ -234,9 +244,9 @@ customElements.define('li-table-row', class extends LiElement {
                 box-sizing: border-box;
                 cursor: pointer;
             }
-            .row:not(.selected):hover {
+            /* .row:not(.selected):hover {
                 border-bottom: 1px solid black;
-            }
+            } */
             .row.selected {
                 border-bottom: 1px solid blue;
             }
@@ -525,9 +535,10 @@ customElements.define('li-table-cell', class extends LiElement {
         return html`
             <div class="cell" contenteditable="${this.readOnly ? 'false' : 'true'}" style=${styleMap(this.styles)}
                 .title=${this.column?.showTitle ? this.item : ''} 
-                @input=${this._changeValue}
+                @input=${e => this._isChange = true}
                 @dblclick=${this._dblClick}
-            >${this.item}</div>
+                @blur=${this._blur}
+            >${this.row[this.column.name]}</div>
         `
     }
 
@@ -542,13 +553,16 @@ customElements.define('li-table-cell', class extends LiElement {
         }
     }
 
-    _changeValue(e) {
-        this.row[this.column.name] = e.target.innerText;
-        LI.debounce('_setRows', () => {
-            this.fire('_setRows');
+    _blur(e) {
+        if (this._isChange) {
+            this._isChange = false;
+            this.row[this.column.name] = e.target.innerText;
+            // e.target.innerText = '';
+            this._data._setRows();
+            this.requestUpdate();
             this.$update();
-        }, 300);
-        e.target.innerText = this.row[this.column.name];
+            // e.target.innerText = this.row[this.column.name];
+        }
     }
     _dblClick(e) {
         this.action = undefined;

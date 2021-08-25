@@ -118,7 +118,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                             <div style="color:${`hsla(${this._idx * this.step}, 50%, 50%, 1)`}; font-size: 24px; text-decoration: underline;">${this.mainView}</div>
                             ${!'eating water walking sport dream weighing favorites'.includes(this._mainView?.name) ? html`` : html`
                                 <li-button name="add" @click=${this._addRow} title="add new row" fill="${`hsla(${this._idx * this.step}, 50%, 50%, 1)`}" back="${`hsla(${this._idx * this.step}, 50%, 50%, .1)`}" style="margin-left: auto"></li-button>
-                                <li-button name="close" title="delete row" fill="${`hsla(${this._idx * this.step}, 50%, 50%, 1)`}" back="${`hsla(${this._idx * this.step}, 50%, 50%, .1)`}"></li-button>
+                                <li-button name="close" @click=${this._deleteRow} title="delete row" fill="${`hsla(${this._idx * this.step}, 50%, 50%, 1)`}" back="${`hsla(${this._idx * this.step}, 50%, 50%, .1)`}"></li-button>
                             `}
                         </div>
                     ` : html``}
@@ -179,7 +179,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                         </div>
                     `}
                     ${this._mainView?.name !== 'calorie' ? html`` : html`
-                        <div class="container-calorie"> 
+                        <div class="container-split"> 
                             <li-table $partid="table-calorie" id="table-calorie" .data="${foodList}"></li-table>
                         </div>
                     `}
@@ -225,6 +225,10 @@ customElements.define('li-diary', class LiDiary extends LiElement {
         if (this.period[0] === this.period[1]) return ` (${p0})`;
         const p1 = this.period[1].split('-').reverse().join('-');
         return ` (${p0} ... ${p1})`;
+    }
+    get _currentDate() {
+        if (!this.period) return '';
+        return this.period[1];
     }
     get _needSave() {
         return this._addItems?.length || this._delItems?.length;
@@ -277,15 +281,24 @@ customElements.define('li-diary', class LiDiary extends LiElement {
         const ulid = LI.ulid(),
             type = this._mainView.name,
             _id = `${type}:${ulid}`,
-            created = LI.dates();
+            created = LI.dates(new Date(this._currentDate));
         let item = { _id, ulid, type, created, date: created.short };
-        if (row) item = { ...item, ...row };
+        if (row) item = { ...row,...item };
         this._addItems = this._addItems || [];
         this._addItems.push(item);
         this._data.rows.push(item);
         this.action = {
             id: `table-${type}`,
-            fn: '_setRows'
+            fn: '_setRows',
+            scrollToEnd: true
+        }
+    }
+    _deleteRow() {
+        this.action = undefined;
+        const type = this._mainView.name;
+        this.action = {
+            id: `table-${type}`,
+            fn: '_deleteRow'
         }
     }
 });
