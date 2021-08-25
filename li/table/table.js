@@ -218,14 +218,14 @@ customElements.define('li-table', class extends LiElement {
                 this.lazy.start = this._scrollTop - 1;
                 this.lazy.start = this.lazy.start % 2 ? this.lazy.start - 1 : this.lazy.start;
                 this.lazy.end = this.lazy.start + this._visibleRowCount + this.lazy.max;
-                console.log(this.lazy.start, this.lazy.end, this.lazy.end - this.lazy.start, 'step-' + this.lazy.step, 'max-' + this.lazy.max)
+                //console.log(this.lazy.start, this.lazy.end, this.lazy.end - this.lazy.start, 'step-' + this.lazy.step, 'max-' + this.lazy.max)
                 this.$update();
             } else if (this.lazy.start !== 0) {
                 this.lazy.start = this._scrollTop - this.lazy.max;
                 this.lazy.start = this.lazy.start % 2 ? this.lazy.start - 1 : this.lazy.start;
                 this.lazy.start = this.lazy.start < 0 ? 0 : this.lazy.start;
                 this.lazy.end = this.lazy.start + this.lazy.max + this._visibleRowCount;
-                console.log(this.lazy.start, this.lazy.end, this.lazy.end - this.lazy.start, 'step-' + this.lazy.step, 'max-' + this.lazy.max)
+                //console.log(this.lazy.start, this.lazy.end, this.lazy.end - this.lazy.start, 'step-' + this.lazy.step, 'max-' + this.lazy.max)
                 this.$update();
             }
         }
