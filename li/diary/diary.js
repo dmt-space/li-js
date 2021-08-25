@@ -125,12 +125,20 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                     ${this._mainView?.name !== 'eating' ? html`` : html`
                         <div class="container-split" style="display: flex; flex-direction: column"> 
                             <li-table $partid="table-eating" id="table-eating" .data="${this._data}" style="height: 48%"></li-table>
-                            <div style="color:${`hsla(${this._idx * this.step}, 50%, 50%, 1)`}; font-size: 24px; text-decoration: underline;">избранное</div>
-                            <li-table $partid="table-favorites" id="table-favorites"  style="height: 48%" .data="${{
-                                columns: sets.favorites.columns,
-                                options: sets.favorites.options,
-                                rows: sets.favorites.rows
-                            }}"></li-table>
+                            <div style="display: flex">
+                            <div @click=${e => this._eating = '001'} style="cursor: pointer; color:${`hsla(${this._idx * this.step}, 50%, 50%, 1)`}; font-size: 24px; text-decoration: ${this._eating !== '002' ? 'underline' : ''}">избранное</div>
+                            <div style="flex:1"></div>
+                            <div @click=${e => this._eating = '002'} style="cursor: pointer; color:${`hsla(${this._idx * this.step}, 50%, 50%, 1)`}; font-size: 24px; text-decoration: ${this._eating === '002' ? 'underline' : ''}">таблица калорийности</div>
+                            </div>
+                            ${this._eating !== '002' ? html`
+                                <li-table $partid="table-favorites" id="table-favorites" style="height: 48%" .data="${{
+                                    columns: sets.favorites.columns,
+                                    options: sets.favorites.options,
+                                    rows: sets.favorites.rows
+                                }}"></li-table>
+                            ` : html`
+                                <li-table $partid="table-ecalorie" id="table-ecalorie" style="height: 48%" .data="${foodList}"></li-table>
+                            `}
                         </div>
                     `}
                     ${this._mainView?.name !== 'favorites' ? html`` : html`
@@ -213,6 +221,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             action: { type: Object, global: true },
             _addItems: { type: Array, default: [] },
             _delItems: { type: Array, default: [] },
+            _eating: { type: String, default: '001' },
         }
     }
 
@@ -242,6 +251,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
     updated(e) {
         if (e.has('action') && this.action) {
             if ((this._mainView.name === 'eating' && this.action.id === 'table-favorites'
+                || this._mainView.name === 'eating' && this.action.id === 'table-ecalorie'
                 || this._mainView.name === 'favorites' && this.action.id === 'table-fcalorie')
                 && this.action.action === 'dblClickTableCell'
             ) {

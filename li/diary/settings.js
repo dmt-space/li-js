@@ -158,9 +158,10 @@ export const sets = {
         options: {
             lazy: true,
             headerService: true,
-            headerServiceText: 'header service panel',
+            headerServiceText: 'favorites',
+            footerHidden: true,
             footerService: true,
-            footerServiceText: 'footer service panel',
+            footerServiceTotal: true,
             headerHeight: 36,
             rowHeight: 36,
             searchColumns: ['category', 'name'],
