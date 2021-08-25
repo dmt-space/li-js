@@ -69,8 +69,9 @@ customElements.define('li-table', class extends LiElement {
         return {
             $partid: { type: String },
             data: { type: Object, local: true },
+            _data: { type: Object, local: true },
             maxWidth: { type: Number, local: true },
-            lazy: { type: Object, default: { step: 40, start: 0, end: 80, max: 80, scroll: 1 }, local: true },
+            lazy: { type: Object },
             ready: { type: Boolean },
             left: { type: Number, local: true },
             selected: { type: Object, default: {}, local: true },
@@ -79,14 +80,14 @@ customElements.define('li-table', class extends LiElement {
         }
     }
     get _rows() {
-        if (!this.data?.options?.lazy) return this.data?._rows || [];
-        return this.data?._rows?.slice(this.lazy.start, this.lazy.end,) || [];
+        if (!this.data?.options?.lazy) return this._data.rows || [];
+        return this._data.rows?.slice(this.lazy.start, this.lazy.end,) || [];
     }
     get _rowHeight() {
         return this.data?.options?.rowHeight || this.data?.options?.rowMinHeight || 32;
     }
     get _tableHeight() {
-        return (this.data?._rows?.length || 0) * this._rowHeight + 1;
+        return (this._data?.rows?.length || 0) * this._rowHeight + 1;
     }
     get _left() {
         return this.$id?.container?.scrollLeft || 0;
@@ -98,6 +99,11 @@ customElements.define('li-table', class extends LiElement {
         return this.$id?.main?.scrollHeight;
     }
 
+    constructor() {
+        super();
+        this.lazy = { step: 40, start: 0, end: 80, max: 80, scroll: 1 };
+        this._data = {};
+    }
     connectedCallback() {
         super.connectedCallback();
         window.addEventListener('resize', this.__resizeColumns = this.__resizeColumns || this._resizeColumns.bind(this));
@@ -116,11 +122,11 @@ customElements.define('li-table', class extends LiElement {
     updated(e) {
         if (e.has('data')) {
             if (this.data) {
-                this.data._setRows = () => this._setRows();
+                this._data._setRows = () => this._setRows();
                 this._setRows();
                 this.lazy.step = this.data.options?.lazyStep || this._visibleRowCount || 40;
                 this.lazy.end = this.lazy.max = this.data.options?.lazyMax || this.lazy.step * 2;
-                this.data._resizeColumns = () => this._resizeColumns();
+                this._data._resizeColumns = () => this._resizeColumns();
                 this._resizeColumns();
                 setTimeout(() => {
                     requestAnimationFrame(() => {
@@ -140,10 +146,10 @@ customElements.define('li-table', class extends LiElement {
     }
 
     _setRows() {
-        this.data._rows = [...[], ...this.data.rows];
+        this._data.rows = [...[], ...this.data.rows];
         let search = this.data.options?.searchColumns?.length && this.strSearch ? this.strSearch.toLowerCase() : '';
         if (search) {
-            this.data._rows = this.data._rows.filter(i => {
+            this._data.rows = this._data.rows.filter(i => {
                 let ok = false;
                 this.data.options.searchColumns.forEach(j => ok = ok || i[j]?.toLowerCase().includes(search));
                 if (ok) return i;
@@ -152,16 +158,18 @@ customElements.define('li-table', class extends LiElement {
         let idx = 0,
             sum = this.data?.options?.sum?.length;
         if (sum) {
+            this._data.sum = {};
             this.data.options._sum = {};
-            this.data.options.sum.forEach(j => this.data.options._sum[j] = 0);
+            this.data.options.sum.forEach(j => this._data.sum[j] = 0);
         }
-        this.data._rows = this.data._rows.filter(i => {
+        this._data.rows = this._data.rows.filter(i => {
             if (!i._deleted) {
                 i._idx = ++idx;
-                if (sum) this.data.options.sum.forEach(j => this.data.options._sum[j] += Number(i[j]) || 0);
+                if (sum) this.data.options.sum.forEach(j => this._data.sum[j] += Number(i[j]) || 0);
                 return true;
             }
         })
+        this.$update();
     }
     _resizeColumns() {
         this.left = this._left;
@@ -249,6 +257,7 @@ customElements.define('li-table-row', class extends LiElement {
             row: { type: Object },
             idx: { type: Number },
             data: { type: Object, local: true },
+            _data: { type: Object, local: true },
             selected: { type: Object, default: {}, local: true },
         }
     }
@@ -329,14 +338,14 @@ customElements.define('li-table-panel-row', class extends LiElement {
                 <div class="service _bottom">
                     <div class="service-text">${this.data?.options?.footerServiceText || ''}</div>
                     <li-button name="chevron-left" width="auto" size=18 style="margin-left: auto" border='none' @click=${(e) => this.fire('scrollTo', -1_000_000_000)}></li-button>
-                    <li-button size=18 width="auto" border='none' style="display: ${this.data?._rows?.length > 100_000 ? 'block' : 'none'}" @click=${(e) => this.fire('scrollTo', -100_000)}>-100 000</li-button>
-                    <li-button size=18 width="auto" border='none' style="display: ${this.data?._rows?.length > 10_000 ? 'block' : 'none'}" @click=${(e) => this.fire('scrollTo', -10_000)}>-10 000</li-button>
-                    <li-button size=18 width="auto" border='none' style="display: ${this.data?._rows?.length > 1_000 ? 'block' : 'none'}" @click=${(e) => this.fire('scrollTo', -1_000)}>-1 000</li-button>
-                    <li-button size=18 width="auto" border='none' style="display: ${this.data?._rows?.length > 100 ? 'block' : 'none'}" @click=${(e) => this.fire('scrollTo', -100)}>-100</li-button>
-                    <li-button size=18 width="auto" border='none' style="display: ${this.data?._rows?.length > 100 ? 'block' : 'none'}" @click=${(e) => this.fire('scrollTo', 100)}>+100</li-button>
-                    <li-button size=18 width="auto" border='none' style="display: ${this.data?._rows?.length > 1_000 ? 'block' : 'none'}" @click=${(e) => this.fire('scrollTo', 1_000)}>+1 000</li-button>
-                    <li-button size=18 width="auto" border='none' style="display: ${this.data?._rows?.length > 10_000 ? 'block' : 'none'}" @click=${(e) => this.fire('scrollTo', 10_000)}>+10 000</li-button>
-                    <li-button size=18 width="auto" border='none' style="display: ${this.data?._rows?.length > 100_000 ? 'block' : 'none'}" @click=${(e) => this.fire('scrollTo', 100_000)}>+100 000</li-button>
+                    <li-button size=18 width="auto" border='none' style="display: ${this._data?.rows?.length > 100_000 ? 'block' : 'none'}" @click=${(e) => this.fire('scrollTo', -100_000)}>-100 000</li-button>
+                    <li-button size=18 width="auto" border='none' style="display: ${this._data?.rows?.length > 10_000 ? 'block' : 'none'}" @click=${(e) => this.fire('scrollTo', -10_000)}>-10 000</li-button>
+                    <li-button size=18 width="auto" border='none' style="display: ${this._data?.rows?.length > 1_000 ? 'block' : 'none'}" @click=${(e) => this.fire('scrollTo', -1_000)}>-1 000</li-button>
+                    <li-button size=18 width="auto" border='none' style="display: ${this._data?.rows?.length > 100 ? 'block' : 'none'}" @click=${(e) => this.fire('scrollTo', -100)}>-100</li-button>
+                    <li-button size=18 width="auto" border='none' style="display: ${this._data?.rows?.length > 100 ? 'block' : 'none'}" @click=${(e) => this.fire('scrollTo', 100)}>+100</li-button>
+                    <li-button size=18 width="auto" border='none' style="display: ${this._data?.rows?.length > 1_000 ? 'block' : 'none'}" @click=${(e) => this.fire('scrollTo', 1_000)}>+1 000</li-button>
+                    <li-button size=18 width="auto" border='none' style="display: ${this._data?.rows?.length > 10_000 ? 'block' : 'none'}" @click=${(e) => this.fire('scrollTo', 10_000)}>+10 000</li-button>
+                    <li-button size=18 width="auto" border='none' style="display: ${this._data?.rows?.length > 100_000 ? 'block' : 'none'}" @click=${(e) => this.fire('scrollTo', 100_000)}>+100 000</li-button>
                     <li-button name="chevron-right" width="auto" size=18 border='none' @click=${(e) => this.fire('scrollTo', 1_000_000_000)}></li-button>
                 </div>` : html``} 
             `}
@@ -348,6 +357,7 @@ customElements.define('li-table-panel-row', class extends LiElement {
             type: { type: String },
             left: { type: Number, local: true },
             data: { type: Object, local: true },
+            _data: { type: Object, local: true },
             strSearch: { type: String, local: true },
         }
     }
@@ -371,7 +381,7 @@ customElements.define('li-table-panel-row', class extends LiElement {
     _setStrSearch() {
         this.strSearch = this.renderRoot.getElementById('strSearch').value;
         setTimeout(() => {
-            this.data._setRows();
+            this._data._setRows();
             this.$update();
         }, 100)
     }
@@ -425,7 +435,7 @@ customElements.define('li-table-panel-cell', class extends LiElement {
         return html`
             <div class="label" style="writing-mode: ${this.data?.options?.headerVertical && this.type === 'header' ? 'vertical-lr' : ''}">
                 ${this.type === 'top' && (this.column?.label || this.column?.name) || ''}
-                ${this.type === 'bottom' && this.column?.name === '_idx' ? this.data._rows.length : ''}
+                ${this.type === 'bottom' && this.column?.name === '_idx' ? this._data?.rows?.length : ''}
                 ${this.sum}
             </div>
             ${this.disableResize ? html`` : html`
@@ -440,19 +450,20 @@ customElements.define('li-table-panel-cell', class extends LiElement {
         return {
             type: { type: String },
             column: { type: Object },
-            data: { type: Object, local: true }
+            data: { type: Object, local: true },
+            _data: { type: Object, local: true },
         }
     }
     get disableResize() {
         return this.data?.options?.disableResizeColumns || this.column?.disableResize;
     }
     get sum() {
-        return this.type === 'bottom' && this.data?.options?.sum?.includes(this.column.name) ? this.data.options._sum[this.column.name] : '';
+        return this.type === 'bottom' && this.data?.options?.sum?.includes(this.column.name) ? Math.round(this._data.sum[this.column.name] * 100) / 100 : '';
     }
 
     _setAutoWidth(e) {
         this.column.width = undefined;
-        this.data._resizeColumns();
+        this._data._resizeColumns();
     }
     _pointerdown(e) {
         e.stopPropagation();
@@ -469,7 +480,7 @@ customElements.define('li-table-panel-cell', class extends LiElement {
         this.column._width += movX;
         this.column._width = this.column._width < 24 ? 24 : this.column._width;
         this.column.width = this.column._width;
-        this.data._resizeColumns();
+        this._data._resizeColumns();
         this._lastX = e.pageX;
     }
     _up() {
@@ -513,7 +524,10 @@ customElements.define('li-table-cell', class extends LiElement {
     render() {
         return html`
             <div class="cell" contenteditable="${this.readOnly ? 'false' : 'true'}" style=${styleMap(this.styles)}
-                .title=${this.column?.showTitle ? this.item : ''} @input=${this._changeValue}>${this.item}</div>
+                .title=${this.column?.showTitle ? this.item : ''} 
+                @input=${this._changeValue}
+                @dblclick=${this._dblClick}
+            >${this.item}</div>
         `
     }
 
@@ -522,7 +536,9 @@ customElements.define('li-table-cell', class extends LiElement {
             item: { type: Object },
             column: { type: Object },
             data: { type: Object, local: true },
+            _data: { type: Object, local: true },
             row: { type: Object },
+            action: { type: Object, global: true },
         }
     }
 
@@ -533,5 +549,16 @@ customElements.define('li-table-cell', class extends LiElement {
             this.$update();
         }, 300);
         e.target.innerText = this.row[this.column.name];
+    }
+    _dblClick(e) {
+        this.action = undefined;
+        if (this.data?.options?.actions?.includes('dblClickTableCell')) {
+            this.action = {
+                id: this.id || this.partid,
+                action: `dblClickTableCell`,
+                row: this.row,
+                cell: e.target.innerText
+            }
+        }
     }
 })

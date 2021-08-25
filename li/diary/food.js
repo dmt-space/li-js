@@ -7,7 +7,8 @@ export const foodList = {
     footerServiceText: 'footer service panel',
     headerHeight: 36,
     rowHeight: 36,
-    searchColumns: ['category', 'name']
+    searchColumns: ['category', 'name'],
+    actions: ['dblClickTableCell']
   },
   columns: [
     { name: '_idx', label: '№', width: 50 },

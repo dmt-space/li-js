@@ -70,7 +70,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             .list {
                 padding: 4px 0 4px 4px;
             }
-            .container-calorie {
+            .container-split {
                 height: calc(100% - 40px);
                 padding: 2px;
             }
@@ -122,16 +122,27 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                             `}
                         </div>
                     ` : html``}
-                    ${!['eating', 'water', 'walking', 'sport', 'dream'].includes(this._mainView?.name) ? html`` : html`
-                        <div class="container">
-                            <li-table .$partid=${'table-' + this._mainView?.name} id=${'table-' + this._mainView?.name} .data="${this._data}"></li-table>
+                    ${this._mainView?.name !== 'eating' ? html`` : html`
+                        <div class="container-split" style="display: flex; flex-direction: column"> 
+                            <li-table $partid="table-eating" id="table-eating" .data="${this._data}" style="height: 48%"></li-table>
+                            <div style="color:${`hsla(${this._idx * this.step}, 50%, 50%, 1)`}; font-size: 24px; text-decoration: underline;">избранное</div>
+                            <li-table $partid="table-favorites" id="table-favorites"  style="height: 48%" .data="${{
+                                columns: sets.favorites.columns,
+                                options: sets.favorites.options,
+                                rows: sets.favorites.rows
+                            }}"></li-table>
                         </div>
                     `}
                     ${this._mainView?.name !== 'favorites' ? html`` : html`
-                        <div class="container-calorie" style="display: flex; flex-direction: column"> 
+                        <div class="container-split" style="display: flex; flex-direction: column"> 
                             <li-table $partid="table-favorites" id="table-favorites" .data="${this._data}" style="height: 48%"></li-table>
                             <div style="color:${`hsla(${this._idx * this.step}, 50%, 50%, 1)`}; font-size: 24px; text-decoration: underline;">таблица калорийности</div>
                             <li-table $partid="table-fcalorie" id="table-fcalorie" .data="${foodList}" style="height: 48%"></li-table>
+                        </div>
+                    `}
+                    ${!['water', 'walking', 'sport', 'dream'].includes(this._mainView?.name) ? html`` : html`
+                        <div class="container">
+                            <li-table .$partid=${'table-' + this._mainView?.name} id=${'table-' + this._mainView?.name} .data="${this._data}"></li-table>
                         </div>
                     `}
                     ${this._mainView?.name !== 'weighing' ? html`` : html`
@@ -224,6 +235,16 @@ customElements.define('li-diary', class LiDiary extends LiElement {
         this.measurements = sets.measurementsPos;
         this.types = sets.types;
     }
+    updated(e) {
+        if (e.has('action') && this.action) {
+            if ((this._mainView.name === 'eating' && this.action.id === 'table-favorites'
+                || this._mainView.name === 'favorites' && this.action.id === 'table-fcalorie')
+                && this.action.action === 'dblClickTableCell'
+            ) {
+                this._addRow(this.action.row);
+            }
+        }
+    }
 
     _autoReplication() {
         this.autoReplication = !this.autoReplication;
@@ -251,13 +272,14 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             this.$update();
         });
     }
-    _addRow(e) {
+    _addRow(row) {
         this.action = undefined;
         const ulid = LI.ulid(),
             type = this._mainView.name,
             _id = `${type}:${ulid}`,
-            created = LI.dates(),
-            item = { _id, ulid, type, created, date: created.short };
+            created = LI.dates();
+        let item = { _id, ulid, type, created, date: created.short };
+        if (row) item = { ...item, ...row };
         this._addItems = this._addItems || [];
         this._addItems.push(item);
         this._data.rows.push(item);
