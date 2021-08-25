@@ -537,7 +537,7 @@ customElements.define('li-table-cell', class extends LiElement {
             'min-height': this.data?.options?.rowMinHeight ? this.data?.options?.rowMinHeight || 32 + 'px' : '32px',
             'text-align': this.column?.textAlign || 'center',
             'justify-content': this.column?.textAlign || 'center',
-            'font-size': this.column?.fontSize || '1rem'
+            'font-size': this.column?.fontSize || this.data?.options?.fontSize || '1rem'
         }
     }
     render() {
