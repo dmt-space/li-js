@@ -204,6 +204,9 @@ export const indx = {
     },
     'layout-designer': [{ label: 'index', url: url + '/layout-designer' }],
 
+    'li-layout-designer-2': { label: 'li-layout-designer-2', props: { iframe: '../layout-designer-2/index.html' } },
+    'layout-designer-2': [{ label: 'index', url: url + '/layout-designer-2' }],
+
     'li-layout-grid': { label: 'li-layout-grid' },
     'layout-grid': [{ label: 'index', url: url + '/layout-grid' }],
 
