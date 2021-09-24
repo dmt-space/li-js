@@ -1,18 +1,20 @@
-// import { LitElement } from 'https://unpkg.com/lit-element@3.0.0-rc.2/lit-element.js?module';
-// export * from 'https://unpkg.com/lit-element@3.0.0-rc.2/lit-element.js?module';
-// export { styleMap } from 'https://unpkg.com/lit-html@2.0.0-rc.2/directives/style-map.js?module';
-// export { unsafeHTML } from 'https://unpkg.com/lit-html@2.0.0-rc.2/directives/unsafe-html.js?module';
+window.globalThis = window.globalThis || window;
 
-import { LitElement } from './lib/lit/min/lit-element.js';
-export {  css, unsafeCSS } from './lib/lit/min/lit-element.js';
-export { html,  svg, classMap, styleMap, unsafeHTML, unsafeSVG } from './lib/lit/min/lit-html.js';
+// lit: 2.0.0
+import { LitElement } from 'https://unpkg.com/lit@2.0.0/index.js?module';
+export * from 'https://unpkg.com/lit@2.0.0/index.js?module';
+export { styleMap } from 'https://unpkg.com/lit@2.0.0/directives/style-map.js?module';
+export { unsafeHTML } from 'https://unpkg.com/lit@2.0.0/directives/unsafe-html.js?module';
+
+// lit-element: 2.5.1, lit-html: 1.4.1
+// import { LitElement } from './lib/lit/min/lit-element.js';
+// export { css, unsafeCSS } from './lib/lit/min/lit-element.js';
+// export { html, svg, classMap, styleMap, unsafeHTML, unsafeSVG } from './lib/lit/min/lit-html.js';
 
 import { ulid, decodeTime } from './lib/ulid/ulid.js';
 import './lib/icaro/icaro.js';
 
 const urlLI = import.meta.url;
-
-window.globalThis = window.globalThis || window;
 
 document.addEventListener('mousedown', (e) => LI.mousePos = new DOMRect(e.pageX, e.pageY));
 if (!window.LIRect) {
@@ -31,8 +33,7 @@ export class LiElement extends LitElement {
     constructor() {
         super();
 
-        // this.$properties = this.constructor.elementProperties;
-        this.$properties = this.constructor._classProperties;
+        this.$properties = this.constructor.elementProperties || this.constructor._classProperties;
         for (const k of this.$properties.keys()) {
             const prop = this.$properties.get(k)
             if (prop?.save) {
@@ -89,7 +90,7 @@ export class LiElement extends LitElement {
             });
 
         }
-        this._partid = this.$partid  || this._partid || this.partid;
+        this._partid = this.$partid || this._partid || this.partid;
         this.$$.__update = 0;
         this.$$.__changed = 0;
     }
@@ -136,15 +137,24 @@ export class LiElement extends LitElement {
     get $root() { return this.getRootNode().host; }
     get _saveFileName() { return ((this.id || this.partid || this.localName.replace('li-', '')) + '.saves') }
     $(v) { return this.$$[v].value }
+    $id(id) {
+        if (!id) return this.renderRoot.querySelectorAll('[id]');
+        return this.renderRoot.getElementById(id);
+    }
+    $refs(ref) {
+        const refs = this.renderRoot.querySelectorAll('[ref]');
+        if (!ref) return refs;
+        let node = undefined;
+        if (refs?.length) refs.forEach(i => {
+            let _ref = i.getAttribute('ref');
+            if (_ref === ref) node = node || i;
+        })
+        return node;
+    }
 
     firstUpdated() {
         super.firstUpdated();
-        if (this.args)
-            Object.keys(this.args).forEach(k => this[k] = this.args[k]);
-        this.$id = {};
-        this.renderRoot.querySelectorAll('[id]').forEach(node => this.$id[node.id] = node);
-        this.$refs = {};
-        this.renderRoot.querySelectorAll('[ref]').forEach(node => this.$refs[node.getAttribute('ref')] = node);
+        if (this.args) Object.keys(this.args).forEach(k => this[k] = this.args[k]);
         this.__isFirstUpdated = true;
     }
 

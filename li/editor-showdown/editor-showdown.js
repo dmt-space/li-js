@@ -61,8 +61,8 @@ customElements.define('li-editor-showdown', class LiEditorShowdown extends LiEle
     }
 
     _update() {
-        if (!this.$refs?.editor?.editor) return;
-        this.editor = this.$refs.editor.editor;
+        if (!this.$refs('editor')?.editor) return;
+        this.editor = this.$refs('editor').editor;
         this.editor.setTheme('ace/theme/solarized_light');
         this.editor.getSession().setMode('ace/mode/markdown');
         this.editor.setOptions({ fontSize: 16, maxLines: Infinity, minLines: 100, });

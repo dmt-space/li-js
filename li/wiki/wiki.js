@@ -246,7 +246,7 @@ customElements.define('li-wiki', class LiWiki extends LiElement {
                         </div>
                     `}
                     <div class="splitter ${this._action === 'splitter-move' ? 'splitter-move' : ''}" @mousedown="${this._moveSplitter}"></div>
-                    <div class="main-panel" style="flex: 1;" ?hidden="${this._widthL >= this.$id?.main.offsetWidth && !this._action !== 'splitter-move'}">
+                    <div class="main-panel" style="flex: 1;" ?hidden="${this._widthL >= this.$id('main')?.offsetWidth && !this._action !== 'splitter-move'}">
                         ${(this.selectedEditors.filter(i => !i._deleted && i.show) || []).map(i => html`
                             ${i.name === 'showdown' ? html`
                                 <li-viewer-md .src="${i.value || ''}"></li-viewer-md>` : i.name === 'iframe' ? html`
@@ -293,7 +293,7 @@ customElements.define('li-wiki', class LiWiki extends LiElement {
     }
     _settings(e) {
         const id = e.target.id,
-            w = this.$id.main.offsetWidth,
+            w = this.$id('main').offsetWidth,
             d = this.selectedEditors || [],
             fn = {
                 s00: () => this._widthL = w / 2 - 20,
@@ -656,7 +656,7 @@ customElements.define('li-wiki', class LiWiki extends LiElement {
             this.selectedArticle = this._articles[this._localStore['selected-articles']] || this.articles[0];
             if (this._localStore['starId-articles']) {
                 this['_star-articles'] = this._articles[this._localStore['starId-articles']] || undefined;
-                this.$refs.star.toggled = true;
+                this.$refs('star').toggled = true;
             }
             await this._setSelectedEditors();
             Object.keys(this._articles).forEach(k => this._articles[k].changed = false);
@@ -750,7 +750,7 @@ customElements.define('li-wiki', class LiWiki extends LiElement {
         if (this._action === 'splitter-move') {
             e.preventDefault();
             this._widthL = this._widthL + e.movementX;
-            this._widthL = this._widthL <= 0 ? 0 : this._widthL >= this.$id?.main.offsetWidth ? this.$id.main.offsetWidth : this._widthL;
+            this._widthL = this._widthL <= 0 ? 0 : this._widthL >= this.$id('main')?.offsetWidth ? this.$id('main').offsetWidth : this._widthL;
         } else if (this._action === 'set-box-height') {
             this._itemBox.h = this._itemBox.h + e.movementY;
             this._itemBox.h = this._itemBox.h > 0 ? this._itemBox.h : 0;

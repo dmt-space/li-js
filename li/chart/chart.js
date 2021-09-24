@@ -35,7 +35,7 @@ customElements.define('li-chart', class LiChart extends LiElement {
             changedProperties.forEach((oldValue, propName) => update = ['type', 'data', 'options'].includes(propName));
             if (update) this.init();
         } else if (this.type && this.data) {
-            this.canvas = this.$refs.canvas;
+            this.canvas = this.$refs('canvas');
             this.ctx = this.canvas.getContext('2d');
             this.init();
             this.hasFirstInit = true;

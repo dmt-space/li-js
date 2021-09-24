@@ -37,7 +37,7 @@ customElements.define('li-color-input', class LiColorInput extends LiElement {
     firstUpdated() {
         super.firstUpdated();
 
-        this.maska = Maska.create(this.$id.txt, { mask: '!#HHHHHH', tokens: { 'H': { pattern: /[0-9a-fA-F]/, uppercase: true } } });
+        this.maska = Maska.create(this.$id('txt'), { mask: '!#HHHHHH', tokens: { 'H': { pattern: /[0-9a-fA-F]/, uppercase: true } } });
     }
 
     render() {
@@ -48,11 +48,11 @@ customElements.define('li-color-input', class LiColorInput extends LiElement {
     }
 
     _setTxt(e) {
-        this.value = this.$id?.txt.value;
+        this.value = this.$id('txt')?.value;
         this.$update();
     }
     _setClr(e) {
-        this.value = this.$id?.clr.value.toUpperCase();
+        this.value = this.$id('clr')?.value.toUpperCase();
         this.$update();
     }
 });

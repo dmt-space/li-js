@@ -68,7 +68,7 @@ customElements.define('li-editor-simplemde', class LiEditorSimpleMDE extends LiE
 
     _update() {
         this.editor = new SimpleMDE({
-            element: this.$refs.editor,
+            element: this.$refs('editor'),
             blockStyles: {
                 bold: "__",
                 italic: "_"

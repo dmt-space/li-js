@@ -96,9 +96,9 @@ customElements.define('li-tetris', class LiTetris extends LiElement {
     firstUpdated() {
         super.firstUpdated();
 
-        this.canvas = this.$id.board;
+        this.canvas = this.$id('board');
         this.ctx = this.canvas.getContext('2d');
-        this.canvasNext = this.$id.next;
+        this.canvasNext = this.$id('next');
         this.ctxNext = this.canvasNext.getContext('2d');
         this.board = new Board(this);
         this.addEventListener();

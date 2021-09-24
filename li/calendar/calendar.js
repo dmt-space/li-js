@@ -81,11 +81,11 @@ customElements.define('li-calendar', class LiCalendar extends LiElement {
     }
 
     _clickSelected(e) {
-        this.$id[LI.dates(new Date(this.period?.[0])).monthStr].scrollIntoView();
+        this.$id(LI.dates(new Date(this.period?.[0])).monthStr).scrollIntoView();
         this._scroll();
     }
     _clickCurrent(e) {
-        this.$id[LI.dates().monthStr].scrollIntoView();
+        this.$id(LI.dates().monthStr).scrollIntoView();
         this._scroll();
     }
     _scroll() {

@@ -17,7 +17,7 @@ customElements.define('li-layout-grid', class LiLayoutGrid extends LiElement {
 
     firstUpdated() {
         super.firstUpdated();
-        this._gridMain = this.$refs.main;
+        this._gridMain = this.$refs('main');
         this.__mousewheel = this._mousewheel.bind(this);
         LI.listen(this, 'mousewheel', this.__mousewheel, true);
         window.addEventListener('scroll', () => { this._update() });
@@ -98,16 +98,16 @@ customElements.define('li-layout-grid', class LiLayoutGrid extends LiElement {
         `;
     }
 
-    get _w() { return this.width || (this.$refs?.main?.offsetWidth + this.$refs?.grid?.scrollLeft + 100) || 0 }
+    get _w() { return this.width || (this.$refs('main')?.offsetWidth + this.$refs('grid')?.scrollLeft + 100) || 0 }
     set _w(v) { }
-    get _h() { return this.height || (this.$refs?.main?.offsetHeight + this.$refs?.grid?.scrollTop + 100) || 0 }
+    get _h() { return this.height || (this.$refs('main')?.offsetHeight + this.$refs('grid')?.scrollTop + 100) || 0 }
     set _h(v) { }
-    get _scrollLeft() { return this.$refs?.grid?.scrollLeft || 0 }
+    get _scrollLeft() { return this.$refs('grid')?.scrollLeft || 0 }
     set _scrollLeft(v) { }
-    get _scrollTop() { return this.$refs?.grid?.scrollTop || 0 }
+    get _scrollTop() { return this.$refs('grid')?.scrollTop || 0 }
     set _scrollTop(v) { }
 
-    get _mainHeight() { return window.innerHeight - (this.$refs?.main?.offsetTop || 0) }
+    get _mainHeight() { return window.innerHeight - (this.$refs('main')?.offsetTop || 0) }
     get _unit() {
         return this._step === 0.1 ? 'mm'
             : (this._step === 1 || this._step === 10) ? 'cm'

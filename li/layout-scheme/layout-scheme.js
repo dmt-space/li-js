@@ -209,7 +209,7 @@ customElements.define('li-layout-scheme', class LiLayoutScheme extends LiElement
     }
 
     get links() {
-        if (!this.block || !this.block.items || !this.$$ || !this.$refs?.main) return [];
+        if (!this.block || !this.block.items || !this.$$ || !this.$refs('main')) return [];
         const links = [];
         try {
             let _color = 0;
@@ -369,10 +369,10 @@ customElements.define('li-layout-scheme-block', class LiLayoutSchemeBlock extend
     }
 
     _getConnector(p, id) {
-        if (this.$refs[p] && this.$refs[p].children)
-            for (let i = 0; i < this.$refs[p].children.length; i++)
-                if (this.$refs[p].children[i].item.id === id)
-                    return this.$refs[p].children[i];
+        if (this.$refs(p)?.children?.length)
+            for (let i = 0; i < this.$refs(p).children.length; i++)
+                if (this.$refs(p).children[i].item.id === id)
+                    return this.$refs(p).children[i];
     }
 
     static get styles() {
@@ -431,7 +431,7 @@ customElements.define('li-layout-scheme-block', class LiLayoutSchemeBlock extend
                 ${!(this.bl?.model) ? html`` : html`
                     <div class="connectors" style="cursor: ${this.$$?.editMode ? 'pointer' : 'default'}">
                         ${!(this.bl?.model?.left?.length) ? html`` : html`
-                            <div style="width:${this.$refs?.left?.offsetWidth || 0 + 'px'}"></div>
+                            <div style="width:${this.$refs('left')?.offsetWidth || 0 + 'px'}"></div>
                         `}
                         <div class="connectors" ref="top">
                             ${!(this.item?.editMode ? this.editMode : !this.item?.editMode) ? html`` : html`
@@ -440,7 +440,7 @@ customElements.define('li-layout-scheme-block', class LiLayoutSchemeBlock extend
                             `}
                         </div>
                         ${!(this.bl?.model?.right?.length) ? html`` : html`
-                            <div style="width:${this.$refs?.right?.offsetWidth || 0 + 'px'}"></div>
+                            <div style="width:${this.$refs('right')?.offsetWidth || 0 + 'px'}"></div>
                         `}
                     </div>
                 `}
@@ -497,7 +497,7 @@ customElements.define('li-layout-scheme-block', class LiLayoutSchemeBlock extend
                 ${!(this.bl?.model) ? html`` : html`
                     <div class="connectors"  style="cursor: ${this.$$?.editMode ? 'pointer' : 'default'}">
                         ${!(this.bl?.model?.left?.length) ? html`` : html`
-                            <div style="width:${this.$refs?.left?.offsetWidth || 0 + 'px'}"></div>
+                            <div style="width:${this.$refs('left')?.offsetWidth || 0 + 'px'}"></div>
                         `}
                         <div class="connectors" ref="bottom">
                             ${!(this.item?.editMode ? this.editMode : !this.item?.editMode) ? html`` : html`
@@ -506,7 +506,7 @@ customElements.define('li-layout-scheme-block', class LiLayoutSchemeBlock extend
                             `}
                         </div>
                         ${!(this.bl?.model?.right?.length) ? html`` : html`
-                            <div style="width:${this.$refs?.right?.offsetWidth || 0 + 'px'}"></div>
+                            <div style="width:${this.$refs('right')?.offsetWidth || 0 + 'px'}"></div>
                         `}
                     </div>
                 `}

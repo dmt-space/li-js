@@ -22,13 +22,13 @@ customElements.define('li-cell', class LiCell extends LiElement {
 
         if (this.type === 'cleave-numeral') {
             this.inputType = 'text';
-            this._ca = new Cleave(this.$id.input, {
+            this._ca = new Cleave(this.$id('input'), {
                 numeral: true,
                 delimiter: ' ',
             });
         } else if (this.type === 'cleave-date') {
             this.inputType = 'date';
-            this._dt = new Cleave(this.$id.input, {
+            this._dt = new Cleave(this.$id('input'), {
                 date: true,
                 datePattern: ['Y', 'm', 'd'],
                 delimiter: '-'
@@ -111,7 +111,7 @@ customElements.define('li-cell', class LiCell extends LiElement {
     }
 
     updated() {
-        if (this.type === 'checkbox') this.$id.input.checked = this.value;
+        if (this.type === 'checkbox') this.$id('input').checked = this.value;
     }
 
     _openTextarea(e) {
@@ -123,7 +123,7 @@ customElements.define('li-cell', class LiCell extends LiElement {
     }
 
     _tap(e) {
-        let el = this.$id.input;
+        let el = this.$id('input');
         this.value = this.type === 'checkbox' ? el.checked : e.target.className ? e.target.innerText : el.value;
         LI.fire(document, "dropdownDataChange", { target: this, value: this.value });
     }

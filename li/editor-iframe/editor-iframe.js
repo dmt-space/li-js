@@ -61,8 +61,8 @@ customElements.define('li-editor-iframe', class LiEditorIFrame extends LiElement
     }
 
     _update() {
-        if (!this.$refs?.editor?.editor) return;
-        this.editor = this.$refs.editor.editor;
+        if (!this.$refs('editor')?.editor) return;
+        this.editor = this.$refs('editor').editor;
         this.editor.setTheme('ace/theme/chrome');
         this.editor.getSession().setMode('ace/mode/html');
         this.editor.setOptions({ fontSize: 16, maxLines: Infinity, minLines: 100, });

@@ -112,7 +112,7 @@ customElements.define('li-editor-html', class LiEditorHTML extends LiElement {
 
     _update() {
         if (!this.editor) {
-            this.ace = this.$refs.ace.editor;
+            this.ace = this.$refs('ace').editor;
             this.ace.setTheme('ace/theme/chrome');
             this.ace.getSession().setMode('ace/mode/html');
             this.ace.setOptions({ fontSize: 16, maxLines: Infinity, minLines: 100, });
@@ -123,7 +123,7 @@ customElements.define('li-editor-html', class LiEditorHTML extends LiElement {
             });
 
             this.editor = pell.init({
-                element: this.$refs.editor,
+                element: this.$refs('editor'),
                 onChange: () => { if (this.item) this.item.value = this.value; this.$update() },
                 actions: [
                     'bold',

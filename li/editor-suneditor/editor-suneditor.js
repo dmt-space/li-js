@@ -62,7 +62,7 @@ customElements.define('li-editor-suneditor', class LiEditorSunEditor extends LiE
     }
 
     _update() {
-        this.editor = SUNEDITOR.create(this.$refs?.editor, {
+        this.editor = SUNEDITOR.create(this.$refs('editor'), {
             height: '100%',
             width: '100%',
             buttonList: [

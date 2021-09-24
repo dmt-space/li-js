@@ -19,20 +19,20 @@ customElements.define('li-layout-grid', class LiLayoutGrid extends LiElement {
     }
     get _sizeBig() { return this.zoom * this._step / 10 * 100 }
     get _sizeSmall() { return this._step === 0.1 ? 0 : this._sizeBig / 10 }
-    get _mainHeight() { return window.innerHeight - (this.$refs?.main?.offsetTop || 0) }
+    get _mainHeight() { return window.innerHeight - (this.$refs('main')?.offsetTop || 0) }
 
     firstUpdated() {
         super.firstUpdated();
-        this._gridMain = this.$refs.main;
+        this._gridMain = this.$refs('main');
         this.__mousewheel = this._mousewheel.bind(this);
         this._resizeRuller();
         LI.listen(this, 'mousewheel', this.__mousewheel, true);
     }
 
     _resizeRuler_h(zoom = this.zoom, _step = this._step) {
-        const _cvWidth = this.$refs?.main?.offsetWidth;
-        const _scrollDx = this.$refs?.main?.scrollLeft;
-        const ctx = this._initRuler(this.$refs.ruler_h, _cvWidth, 25);
+        const _cvWidth = this.$refs('main')?.offsetWidth;
+        const _scrollDx = this.$refs('main')?.scrollLeft;
+        const ctx = this._initRuler(this.$refs('ruler_h'), _cvWidth, 25);
         let k = Math.round(_cvWidth / _step / zoom);
         for (let i = Math.round(_scrollDx / zoom / _step); i < Math.round(k + _scrollDx / zoom / _step); i++) {
             if (!(i % (10))) {
@@ -43,9 +43,9 @@ customElements.define('li-layout-grid', class LiLayoutGrid extends LiElement {
         }
     }
     _resizeRuler_v(zoom = this.zoom, _step = this._step) {
-        const _cvHeight = this.$refs?.main?.offsetHeight;
-        const _scrollDy = this.$refs?.main?.scrollTop;
-        const ctx = this._initRuler(this.$refs.ruler_v, 25, _cvHeight);
+        const _cvHeight = this.$refs('main')?.offsetHeight;
+        const _scrollDy = this.$refs('main')?.scrollTop;
+        const ctx = this._initRuler(this.$refs('ruler_v'), 25, _cvHeight);
         ctx.rotate(.5 * Math.PI);
         let k = Math.round(_cvHeight / _step / zoom);
         for (let i = Math.round(_scrollDy / zoom / _step); i < Math.round(k + _scrollDy / zoom / _step); i++) {

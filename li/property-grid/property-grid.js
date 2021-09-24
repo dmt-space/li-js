@@ -180,7 +180,7 @@ customElements.define('li-property-grid', class LiPropertyGrid extends LiElement
             ++this.ioLength;
         })
         this.item = obj;
-        if (this.$refs?.cnt) this.$refs.cnt.scrollTop = 0;
+        if (this.$refs('cnt')) this.$refs('cnt').scrollTop = 0;
         this.$update();
     }
     _expert(e, expert) {
@@ -215,11 +215,11 @@ customElements.define('li-property-grid', class LiPropertyGrid extends LiElement
         });
     }
     _scroll(e) {
-        if (!this.$refs?.splitter) return
+        if (!this.$refs('splitter')) return
         this._top = (e.target.scrollTop - 2) + 'px';
         requestAnimationFrame(() => {
-            this.$refs.splitter.style.top = this._top;
-            this.$refs.splitter2.style.top = this._top;
+            this.$refs('splitter').style.top = this._top;
+            this.$refs('splitter2').style.top = this._top;
         })
     }
 })
@@ -326,7 +326,7 @@ customElements.define('li-property-tree', class LiPropertyTree extends LiElement
     }
     async _openDropdown(e, i, idx) {
         try {
-            let val = await LI.show('dropdown', 'tester-cell', { type: i.type, value: i.value, props: { list: i.list } }, { parent: this.$refs['inp-' + idx], useParent: true, align: 'down', useParentWidth: true, addWidth: e.target.offsetWidth + 3 });
+            let val = await LI.show('dropdown', 'tester-cell', { type: i.type, value: i.value, props: { list: i.list } }, { parent: this.$refs('inp-' + idx), useParent: true, align: 'down', useParentWidth: true, addWidth: e.target.offsetWidth + 3 });
             e.target.value = i.obj[i.label] = val.detail.value;
             this.$update();
         } catch (error) { }
@@ -343,8 +343,7 @@ async function makeData(el, { expert, group, sort, showFunction, categories }, s
     const exts = /^(_|\$)/;
     const _label = el?.constructor?.name || el?.localName || '';
     const data = { _label, items: [] };
-    // const props = el?.constructor?.elementProperties;
-    const props = el?.constructor?._classProperties;
+    const props = el?.constructor?.elementProperties || el?.constructor?._classProperties;
 
     function fn(key, category = 'props', props, list) {
         if (['Πi', 'Πk', 'Πo', 'Πl', 'Πh', 'Πg', 'L', 'Φt'].includes(key)) return;

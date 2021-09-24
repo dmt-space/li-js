@@ -123,7 +123,7 @@ customElements.define('li-editor-ace', class LiAceEditor extends LiElement {
     firstUpdated() {
         super.firstUpdated();
         ace.config.set('basePath', url.replace('editor-ace.js', 'src/'));
-        this.editor = ace.edit(this.$id.editor);
+        this.editor = ace.edit(this.$id('editor'));
         this.editor.renderer.attachToShadowRoot();
         this.editor.setTheme('ace/theme/' + this.theme);
         this.editor.getSession().setMode('ace/mode/' + this.mode);

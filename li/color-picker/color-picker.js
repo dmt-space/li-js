@@ -17,8 +17,8 @@ customElements.define('li-color-picker', class LiColorPicker extends LiElement {
     firstUpdated() {
         super.firstUpdated();
         this.pickers = {
-            hue: { palette: this.$id.slider, handler: this.$id.sliderHandler },
-            color: { palette: this.$id.picker, handler: this.$id.pickerHandler }
+            hue: { palette: this.$id('slider'), handler: this.$id('sliderHandler') },
+            color: { palette: this.$id('picker'), handler: this.$id('pickerHandler') }
         };
         this.hsbInputs = selectInputs(this.renderRoot, "hsb");
         this.rgbInputs = selectInputs(this.renderRoot, "rgb");
@@ -45,7 +45,7 @@ customElements.define('li-color-picker', class LiColorPicker extends LiElement {
         this.hexInput.value = this.oldValue = this.value;
         this.updateState(toHSB(this.value));
 
-        this.maska = Maska.create(this.$id.txt, { mask: 'HHHHHH', tokens: { 'H': { pattern: /[0-9a-fA-F]/, uppercase: true } } });
+        this.maska = Maska.create(this.$id('txt'), { mask: 'HHHHHH', tokens: { 'H': { pattern: /[0-9a-fA-F]/, uppercase: true } } });
     }
 
     static get styles() {

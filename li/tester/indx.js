@@ -207,11 +207,11 @@ export const indx = {
     'li-layout-designer-2': { label: 'li-layout-designer-2', props: { iframe: '../layout-designer-2/index.html' } },
     'layout-designer-2': [{ label: 'index', url: url + '/layout-designer-2' }],
 
-    'li-layout-grid': { label: 'li-layout-grid' },
-    'layout-grid': [{ label: 'index', url: url + '/layout-grid' }],
-
     'li-dashboard': { label: 'li-dashboard', props: { iframe: '../dashboard/index.html' } },
     dashboard: [{ label: 'index', url: url + '/dashboard' }],
+    
+    'li-layout-grid': { label: 'li-layout-grid' },
+    'layout-grid': [{ label: 'index', url: url + '/layout-grid' }],
 
     'li-layout-scheme': { label: 'li-scheme-designer', props: { iframe: '../layout-scheme/index-3.html' } },
     'layout-scheme': [{ label: 'demo-1', url: url + '/layout-scheme' },

@@ -34,7 +34,7 @@ customElements.define('li-tabulator', class LiTabulator extends LiElement {
     firstUpdated() {
         super.firstUpdated();
         this.hidden = true;
-        this.$table = new Tabulator(this.$id.table, this.options);
+        this.$table = new Tabulator(this.$id('table'), this.options);
         setTimeout(() => {
             this.hidden = false;
         }, 300);

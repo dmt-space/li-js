@@ -13,7 +13,6 @@ customElements.define('li-db-cell', class LiDbCell extends LiElement {
             iconOpen: { type: String, default: 'flip-to-front' },
             iconSettings: { type: String, default: 'settings' },
             hideIcons: { type: String, default: '' },
-            width: { type: String, default: '260px' },
             liSize: { type: Number, default: 28, local: true }
         }
     }
@@ -29,12 +28,17 @@ customElements.define('li-db-cell', class LiDbCell extends LiElement {
 
     static get styles() {
         return css`
+            :host {
+                width: 100%;
+            }
             .db-cell {
-                display:flex;
+                display: flex;
+                flex: 1;
                 align-items: center;
-                justify-content: stretch;
+                justify-content: center;
                 border: 1px solid lightgray;
                 background: whitesmoke;
+                /* margin: 1px; */
             }
             .label {
                 white-space: nowrap;
@@ -46,7 +50,7 @@ customElements.define('li-db-cell', class LiDbCell extends LiElement {
 
     render() {
         return html`
-            <div class="db-cell" @click="${this._tap}" style="width: ${this.width};">
+            <div class="db-cell" @click="${this._tap}">
                 <li-button id="btn1" class="label" name="${this.icon}" label="${this.label}" width="auto" style="flex:1;" textAlign="left" borderColor="lightgray" border="0" size="${this.liSize}"></li-button>
                 ${!this.iconOpen ? html`` : html`
                     <li-button id="btn2" name="${this.iconOpen}" fill="lightgray" border="0"></li-button>
