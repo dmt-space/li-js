@@ -79,7 +79,7 @@ customElements.define('li-tester-cell', class LiTesterCell extends LiElement {
     }
 
     updated() {
-        if (this.type === 'checkbox') this.$id.input.checked = this.value;
+        if (this.type === 'checkbox') this.$id('input').checked = this.value;
     }
 
     _change(e) {
@@ -87,7 +87,7 @@ customElements.define('li-tester-cell', class LiTesterCell extends LiElement {
     }
 
     _tap(e) {
-        let el = this.$id.input;
+        let el = this.$id('input');
         this.value = this.type === 'checkbox' ? el.checked : e.target.className ? e.target.innerText : el.value;
         LI.fire(document, "dropdownDataChange", { target: this, value: this.value });
     }

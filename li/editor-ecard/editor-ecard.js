@@ -11,7 +11,7 @@ customElements.define('li-editor-ecard', class LiEditorECard extends LiElement {
     }
 
     get card() {
-        return this.$refs?.editor?.contentDocument?.card;
+        return this.$refs('editor')?.contentDocument?.card;
     }
 
     static get styles() {

@@ -37,7 +37,7 @@
                     for (let i = 0; i < this.cols; i++)
                         for (let j = 0; j < this.rows; j++)
                             this.grid[i][j] = Math.floor(Math.random() * 2);
-                    this.canvas = this.$id.canvas;
+                    this.canvas = this.$id('canvas');
                     this.ctx = this.canvas.getContext('2d');
                     this.draw();
                 }

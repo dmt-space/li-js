@@ -54,12 +54,12 @@ customElements.define('li-credit-calc', class LiDbCreditCalc extends LiElement {
 
     firstUpdated() {
         super.firstUpdated();
-        this._ca = new Cleave(this.$refs.creditAmount, {
+        this._ca = new Cleave(this.$refs('creditAmount'), {
             numeral: true,
             delimiter: ' ',
             numeralPositiveOnly: true
         });
-        this._dt = new Cleave(this.$refs.date, {
+        this._dt = new Cleave(this.$refs('date'), {
             date: true,
             datePattern: ['Y', 'm', 'd'],
             delimiter: '-'
@@ -172,9 +172,9 @@ customElements.define('li-credit-calc', class LiDbCreditCalc extends LiElement {
 
     _calc() {
         let S = this.creditAmount = Number(this._ca.getRawValue());
-        this.loanInterest = Number(this.$refs.loanInterest.value);
+        this.loanInterest = Number(this.$refs('loanInterest').value);
         let p =  this.loanInterest / 12 / 100;
-        let n = this.timeCredit = Number(this.$refs.timeCredit.value);
+        let n = this.timeCredit = Number(this.$refs('timeCredit').value);
 
         let mp = S * p / (1 - Math.pow(1 + p, -n));
         this.monthlyPayment = _inf(mp);
@@ -185,7 +185,7 @@ customElements.define('li-credit-calc', class LiDbCreditCalc extends LiElement {
         this._dataYears = {};
         this._dataMonth = [];
         let prev = 0;
-        let d = this.$refs.date.value ? new Date(this.$refs.date.value) : this.date || new Date();
+        let d = this.$refs('date').value ? new Date(this.$refs('date').value) : this.date || new Date();
         this.date  = d.toLocaleDateString('fr-CA', { year: 'numeric', month: '2-digit', day: '2-digit' });
         for (let i = 0; i < n; i++) {
             let data = {};

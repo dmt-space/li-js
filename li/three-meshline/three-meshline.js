@@ -39,7 +39,7 @@ customElements.define('li-three-meshline', class LiThreeMeshline extends LiEleme
     firstUpdated() {
         super.firstUpdated();
         window.addEventListener('resize', () => this.onWindowResize());
-        this.container = this.$id.canvas;
+        this.container = this.$id('canvas');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, .1, 1000);
         this.camera.position.set(100, 10, 0);

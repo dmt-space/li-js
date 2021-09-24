@@ -21,7 +21,7 @@ customElements.define('li-app', class LiApp extends LiElement {
                     <li-button size=28 name="help-outline" fill="gray" style="padding:2px" br="none:50%"></li-button>
                 </div>
                 <div slot="app-left" style="padding-left:4px;">
-                    <li-db-panel></li-db-panel>
+                    <li-db-panel width="400px"></li-db-panel>
                 </div>
                 <div slot="app-right" style="padding-right:4px;display:flex;flex-direction:column; align-items: left; justify-content: center">
                     <li-button width="auto"></li-button>

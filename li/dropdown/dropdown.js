@@ -250,7 +250,7 @@ customElements.define('li-dropdown', class LiDropdown extends LiElement {
         Object.keys(size).forEach(k => size[k] += 'px');
         this._steps = [];
         this.size = { ...{}, ...size };
-        this.$id.modal.style.display = this.align === 'modal' ? 'block' : 'none';
+        this.$id('modal').style.display = this.align === 'modal' ? 'block' : 'none';
         return size;
     }
     _keyup(e) {

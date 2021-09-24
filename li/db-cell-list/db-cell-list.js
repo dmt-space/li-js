@@ -5,25 +5,29 @@ import '../db-cell/db-cell.js';
 customElements.define('li-db-cell-list', class LiDbCellList extends LiElement {
     static get properties() {
         return {
-            list: { type: Array, default: [] }
+            list: { type: Array, default: [] },
+            width: { type: String, default: 'auto' }
         }
     }
 
     static get styles() {
         return css`
-                .db-list {
-                    display:flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    border: 1px solid lightgray;
-                }
+            .db-list {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: stretch;
+                border: 1px solid lightgray;
+                flex: 1;
+                /* padding: 2px; */
+                background-color: #eeeeee;
+            }
         `;
     }
 
     render() {
         return html`
-            <div class="db-list">
+            <div class="db-list" style="width: ${this.width}">
                 ${this.list.map(i => html`<li-db-cell icon="${i.icon}" label="${i.label}" action="${i.action}" .callback="${i.callback}" hideIcons="${i.hideIcons}"></li-db-cell>`)}
             </div>
         `;

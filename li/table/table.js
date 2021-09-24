@@ -90,13 +90,13 @@ customElements.define('li-table', class extends LiElement {
         return (this._data?.rows?.length || 0) * this._rowHeight + 1;
     }
     get _left() {
-        return this.$id?.container?.scrollLeft || 0;
+        return this.$id('container')?.scrollLeft || 0;
     }
     get _visibleRowCount() {
-        return Math.round(this.$id?.container?.clientHeight / this._rowHeight || 0);
+        return Math.round(this.$id('container')?.clientHeight / this._rowHeight || 0);
     }
     get _hasScroll() {
-        return this.$id?.main?.scrollHeight;
+        return this.$id('main')?.scrollHeight;
     }
 
     constructor() {
@@ -107,7 +107,7 @@ customElements.define('li-table', class extends LiElement {
     connectedCallback() {
         super.connectedCallback();
         window.addEventListener('resize', this.__resizeColumns = this.__resizeColumns || this._resizeColumns.bind(this));
-        this.listen('scrollTo', (e) => this.$id?.container?.scrollTo(0, this.$id.container.scrollTop += e.detail * this._rowHeight));
+        this.listen('scrollTo', (e) => this.$id('container')?.scrollTo(0, this.$id('container').scrollTop += e.detail * this._rowHeight));
         this._lastTop = this._top = this._lastLeft = this._scrollTop = 0;
     }
     disconnectedCallback() {
@@ -126,7 +126,7 @@ customElements.define('li-table', class extends LiElement {
                 this._resizeColumns();
                 setTimeout(() => {
                     requestAnimationFrame(() => {
-                        this.$id.table?.setAttribute('ready', true);
+                        this.$id('table')?.setAttribute('ready', true);
                         this.ready = true;
                     });
                 }, 100);
@@ -140,7 +140,7 @@ customElements.define('li-table', class extends LiElement {
                 if (this.action.scrollToEnd) {
                     setTimeout(() => {
                         this.selected = this._data.rows[this._data.rows.length - 1];
-                        this.$id?.container?.scrollTo(0, this.$id.container.scrollTop += 1_000_000_000);
+                        this.$id('container')?.scrollTo(0, this.$id('container').scrollTop += 1_000_000_000);
                     }, 50);
                 }
             }
@@ -179,7 +179,7 @@ customElements.define('li-table', class extends LiElement {
     }
     _resizeColumns() {
         this.left = this._left;
-        this.maxWidth = this.$id?.main?.offsetWidth - (this._hasScroll ? 4 : 0);
+        this.maxWidth = this.$id('main')?.offsetWidth - (this._hasScroll ? 4 : 0);
         let length = this.data?.columns?.length,
             left = 0;
         this.data?.columns?.forEach(i => {

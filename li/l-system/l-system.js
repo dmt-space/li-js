@@ -42,14 +42,13 @@ customElements.define('li-l-system', class LiLSystem extends LiElement {
 
     constructor() {
         super();
-        // this.constructor.elementProperties.get('name').list = Object.keys(data) || [];
-        this.constructor._classProperties.get('name').list = Object.keys(data) || [];
+        (this.constructor.elementProperties || this.constructor._classProperties).get('name').list = Object.keys(data) || [];
     }
 
     firstUpdated() {
         super.firstUpdated();
         this._sign = 1;
-        this.canvas = this.$refs.canvas;
+        this.canvas = this.$refs('canvas');
         this.ctx = this.canvas.getContext('2d');
         this._location = window.location.href;
         this._symbolsDefault = this.symbols;

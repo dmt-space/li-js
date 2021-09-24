@@ -61,7 +61,7 @@ customElements.define('li-tester', class LiTester extends LiElement {
     async _tap(e, key) {
         if (this.component)
             this.removeChild(this.component);
-        if (!this._wasRemoved) this.$refs.main.removeChild(this.$id.slot);
+        if (!this._wasRemoved) this.$refs('main').removeChild(this.$id('slot'));
         this._wasRemoved = true
         let el = e.target.label2 || e.target.label;
         this._focused = key;
