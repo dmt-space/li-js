@@ -4,7 +4,6 @@ import './src/ace.js'
 let url = import.meta.url;
 
 customElements.define('li-editor-ace', class LiAceEditor extends LiElement {
-
     static get styles() {
         return css`
             ::-webkit-scrollbar { width: 4px; height: 4px; }
@@ -12,20 +11,9 @@ customElements.define('li-editor-ace', class LiAceEditor extends LiElement {
             ::-webkit-scrollbar-thumb { background-color: gray; }
         `;
     }
-
     render() {
         return html`
-            <style>
-                #host {
-                    width:100%;
-                }
-                #editor {
-                    height: 400px;
-                }
-            </style>
-            <div id="host">
-                <div id="editor"></div>
-            </div>
+            <div id="editor"></div>
         `
     }
 
@@ -63,55 +51,9 @@ customElements.define('li-editor-ace', class LiAceEditor extends LiElement {
                     'tomorrow_night_bright', 'tomorrow_night_eighties', 'twilight', 'vibrant_ink', 'xcode'
                 ]
             },
-            options: {
-                type: Object,
-                default: {
-                    // mode: 'ace/mode/html',
-                    // theme: 'ace/theme/chrome', // 'solarized_light',
-                    highlightActiveLine: true,
-                    highlightSelectedWord: true,
-                    readOnly: false,
-                    cursorStyle: 'slim', // "ace" | "slim" | "smooth" | "wide"
-                    //mergeUndoDeltas: false | true | "always"
-                    //behavioursEnabled: boolean,
-                    //wrapBehavioursEnabled: boolean,
-                    autoScrollEditorIntoView: true,
-                    copyWithEmptySelection: false,
-                    useSoftTabs: false,
-                    navigateWithinSoftTabs: false,
-                    enableMultiselect: true,
-                    hScrollBarAlwaysVisible: false,
-                    vScrollBarAlwaysVisible: false,
-                    highlightGutterLine: false,
-                    animatedScroll: true,
-                    showInvisibles: false,
-                    showPrintMargin: true,
-                    printMarginColumn: 80,
-                    //printMargin: false | number
-                    fadeFoldWidgets: false,
-                    showFoldWidgets: true,
-                    showLineNumbers: true,
-                    showGutter: true,
-                    displayIndentGuides: true,
-                    fontSize: 20,
-                    //fontFamily: css font-family value
-                    maxLines: 40,
-                    minLines: 40,
-                    //scrollPastEnd: number | boolean // number of page sizes to scroll after document end (typical values are 0, 0.5, and 1)
-                    fixedWidthGutter: false,
-                    firstLineNumber: 1,
-                    //overwrite: boolean,
-                    //newLineMode: "auto" | "unix" | "windows"
-                    useWorker: false,
-                    //useSoftTabs: boolean,
-                    //tabSize: number,
-                    wrap: true,
-                    foldStyle: 'markbeginend' //"markbegin" | "markbeginend" | "manual",
-                }
-            }
+            options: { type: Object, default: {} }
         }
     }
-
     get value() {
         return this.editor?.getValue();
     }
@@ -120,6 +62,56 @@ customElements.define('li-editor-ace', class LiAceEditor extends LiElement {
         this.editor.session.selection.clearSelection();
     }
 
+    constructor() {
+        super();
+        this.options = icaro({
+            // mode: 'ace/mode/html',
+            // theme: 'ace/theme/chrome', // 'solarized_light',
+            highlightActiveLine: true,
+            highlightSelectedWord: true,
+            readOnly: false,
+            cursorStyle: 'slim', // "ace" | "slim" | "smooth" | "wide"
+            //mergeUndoDeltas: false | true | "always"
+            //behavioursEnabled: boolean,
+            //wrapBehavioursEnabled: boolean,
+            autoScrollEditorIntoView: true,
+            copyWithEmptySelection: false,
+            useSoftTabs: false,
+            navigateWithinSoftTabs: false,
+            enableMultiselect: true,
+            hScrollBarAlwaysVisible: false,
+            vScrollBarAlwaysVisible: false,
+            highlightGutterLine: false,
+            animatedScroll: true,
+            showInvisibles: false,
+            showPrintMargin: true,
+            printMarginColumn: 80,
+            //printMargin: false | number
+            fadeFoldWidgets: false,
+            showFoldWidgets: true,
+            showLineNumbers: true,
+            showGutter: true,
+            displayIndentGuides: true,
+            fontSize: 20,
+            //fontFamily: css font-family value
+            maxLines: Infinity,
+            minLines: 50,
+            //scrollPastEnd: number | boolean // number of page sizes to scroll after document end (typical values are 0, 0.5, and 1)
+            fixedWidthGutter: false,
+            firstLineNumber: 1,
+            //overwrite: boolean,
+            //newLineMode: "auto" | "unix" | "windows"
+            useWorker: false,
+            //useSoftTabs: boolean,
+            //tabSize: number,
+            wrap: true,
+            foldStyle: 'markbeginend' //"markbegin" | "markbeginend" | "manual",
+        })
+        this.options.listen((e) => {
+            this.editor.setOptions(this.options);
+            this.$update();
+        })
+    }
     firstUpdated() {
         super.firstUpdated();
         ace.config.set('basePath', url.replace('editor-ace.js', 'src/'));
@@ -131,7 +123,6 @@ customElements.define('li-editor-ace', class LiAceEditor extends LiElement {
         this.value = this.src;
         this.$update();
     }
-
     updated(changedProperties) {
         if (this.editor) {
             if (changedProperties.has('src')) {
@@ -144,10 +135,6 @@ customElements.define('li-editor-ace', class LiAceEditor extends LiElement {
             }
             if (changedProperties.has('mode')) {
                 this.editor.getSession().setMode('ace/mode/' + this.mode);
-                this.$update();
-            }
-            if (changedProperties.has('options')) {
-                this.editor.setOptions(this.options);
                 this.$update();
             }
         }
