@@ -75,11 +75,13 @@
         t4.data.options = {
             // width: 1200,
             //headerVertical: true,
+            rowHeight: 36,
             headerColor: `hsla(320, 50%, 50%, .1)`,
             footerColor: `hsla(320, 50%, 50%, .1)`,
             // headerHidden: true,
             footerHidden: true,
             // disableResizeColumns: true
+            footerService: true,
         }
 
         t1.data.rows = [];
@@ -110,7 +112,7 @@
             );
         }
         t4.data.rows = [];
-        for (let i = 0; i < 100; i++) {
+        for (let i = 0; i < 1000; i++) {
             t4.data.rows.push(
                 {
                     c1: 'row-' + i + ', col-001', c2: 'row-' + i + ', col-002',
