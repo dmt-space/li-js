@@ -29,14 +29,15 @@ customElements.define('li-db-cell', class LiDbCell extends LiElement {
     static get styles() {
         return css`
             :host {
-                width: 100%;
+                width: -webkit-fill-available;
+                flex: 1;
             }
             .db-cell {
                 display: flex;
                 flex: 1;
                 align-items: center;
                 justify-content: center;
-                border: 1px solid lightgray;
+                box-shadow: 0 0 0 1px lightgray;
                 background: whitesmoke;
                 /* margin: 1px; */
             }
@@ -51,12 +52,12 @@ customElements.define('li-db-cell', class LiDbCell extends LiElement {
     render() {
         return html`
             <div class="db-cell" @click="${this._tap}">
-                <li-button id="btn1" class="label" name="${this.icon}" label="${this.label}" width="auto" style="flex:1;" textAlign="left" borderColor="lightgray" border="0" size="${this.liSize}"></li-button>
+                <li-button id="btn1" class="label" name="${this.icon}" label="${this.label}" width="auto" style="flex:1;" textAlign="left" border=0></li-button>
                 ${!this.iconOpen ? html`` : html`
-                    <li-button id="btn2" name="${this.iconOpen}" fill="lightgray" border="0"></li-button>
+                    <li-button id="btn2" name="${this.iconOpen}" border=0></li-button>
                 `}
                 ${!this.iconSettings ? html`` : html`
-                    <li-button id="btn3" name="${this.iconSettings}" fill="lightgray" border="0"></li-button>
+                    <li-button id="btn3" name="${this.iconSettings}" border=0></li-button>
                 `}
             </div>
         `;
