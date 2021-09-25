@@ -17,10 +17,11 @@ customElements.define('li-db-cell-list', class LiDbCellList extends LiElement {
                 flex-direction: column;
                 align-items: center;
                 justify-content: stretch;
-                border: 1px solid lightgray;
+                border: 1px solid gray;
                 flex: 1;
-                /* padding: 2px; */
+                padding: 2px;
                 background-color: #eeeeee;
+                box-sizing: border-box;
             }
         `;
     }
