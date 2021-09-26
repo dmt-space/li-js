@@ -25,9 +25,8 @@ customElements.define('li-property-grid', class LiPropertyGrid extends LiElement
 
     firstUpdated() {
         super.firstUpdated();
-        this.$listen('dblClick', () => {
-            if (!this.$$.dblClick) return;
-            this.focused = this.$$.dblClick.value;
+        this.listen('dblClick', (e) => {
+            this.focused = e.detail;
             this.isShowFocused = true;
             this.getData();
         })
@@ -322,7 +321,7 @@ customElements.define('li-property-tree', class LiPropertyTree extends LiElement
         }
     }
     _dblclick(e, item) {
-        this.$fire('dblClick', item);
+        this.fire('dblClick', item);
     }
     async _openDropdown(e, i, idx) {
         try {
