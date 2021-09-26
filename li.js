@@ -194,33 +194,21 @@ export class LiElement extends LitElement {
     }
 
     $update(property, value) { LI.$update.call(this, property, value) }
-    _ev(event) { return event + '-' + (this.partid || this.id || '') }
     $listen(event, fn) {
-        let ev = this._ev(event);
-        if (!this.$$) {
-            this._initBus();
-            this.$$.update.listen(this.fnUpdate);
-        }
-        if (this.$$[ev] === undefined || !this.$$[ev].listen)
-            this.$$[ev] = icaro({ count: 0 });
-        this.$$[ev].listen(fn);
-        this.listen(event); //, () => {});
+        if (!event) return;
+        LI.$$[event] = LI.$$[event] || icaro({ count: 0 });
+        LI.$$[event].listen(fn || this.fnListen);
     }
     $unlisten(event, fn) {
-        let ev = this._ev(event);
-        if (this.$$[ev])
-            this.$$[ev].unlisten(fn);
-        this.unlisten(event, fn);
+        if (!event || !LI.$$[event]) return;
+        LI.$$[event].unlisten(fn|| this.fnListen);
+        LI.$$[event] = undefined;
     }
     $fire(event, value) {
-        let ev = this._ev(event);
-        if (event && this.$$ && ev) {
-            this.$$[ev] = this.$$[ev] || icaro({ count: 0 });
-            this.$$[ev].value = undefined;
-            this.$$[ev].value = value;
-            ++this.$$[ev].count;
-        }
-        this.fire(event, value);
+        if (!event) return;
+        LI.$$[event] = LI.$$[event] || icaro({ count: 0 });
+        LI.$$[event].value = value;
+        ++LI.$$[event].count;
     }
 
     fnListen = (e) => console.log('...fire ', this.localName, e?.type, e?.detail);
