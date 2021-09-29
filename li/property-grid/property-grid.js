@@ -318,6 +318,7 @@ customElements.define('li-property-tree', class LiPropertyTree extends LiElement
         if (i && i.key in i.obj) {
             if (e.target.type === 'checkbox') i.obj[i.key] = e.target.checked;
             else i.obj[i.key] = e.target.value;
+            this.$fire('changedInPropertyGrid');
         }
     }
     _dblclick(e, item) {
