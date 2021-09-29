@@ -1,18 +1,20 @@
 export const foodList = {
   options: {
     lazy: true,
-    // headerHidden: true,
+    readonly: true,
+    headerHidden: false,
+    headerColor: `hsla(60, 80%, 70%, .1)`,
+    headerHeight: 36,
     headerService: true,
     headerServiceText: 'calorie table',
     footerHidden: true,
-    footerService: true,
-    footerServiceTotal: true,
-    // footerServiceText: 'footer service panel',
-    headerHeight: 36,
+    footerColor: `hsla(60, 80%, 70%, .1)`,
     rowHeight: 36,
+    footerService: true,
+    footerServiceText: '...',
+    footerServiceTotal: true,
     searchColumns: ['category', 'name'],
     actions: ['dblClickTableCell'],
-    readonly: true
   },
   columns: [
     { name: '_idx', label: '№', width: 50 },

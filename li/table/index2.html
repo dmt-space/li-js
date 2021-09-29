@@ -1,4 +1,6 @@
 <script type="module" src="./table.js"></script>
+<script type="module" src="../property-grid/property-grid.js"></script>
+<script type="module" src="../layout-app/layout-app.js"></script>
 
 <style>
     html,
@@ -14,17 +16,24 @@
     }
 </style>
 
-<div style="display: flex; align-items: center; justify-content: space-around; flex-wrap: wrap;height: 100%">
-    <div style="width: 90%; height: 90%;position: relative;">
-        <li-table id="t1" $partid="t1"></li-table>
-    </div>
-</div>
+<body style="margin:0">
+    <li-layout-app hide="lb" id="app">
+        <div slot="app-top">Сalorie table</div>
+        <div slot="app-main">
+            <li-table id="tb" $partid="t1"></li-table>
+        </div>
+        <div slot="app-right">
+            <li-property-grid id="pg" label="Table options"></li-property-grid>
+        </div>
+    </li-layout-app>
+</body>
 
 <script type="module">
     import { foodList } from '../diary/food.js';
 
     setTimeout(() => {
-        t1.data = foodList;
+        tb.data = foodList;
+        pg.io = foodList.options;
     }, 300);
 
 </script>

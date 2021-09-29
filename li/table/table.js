@@ -103,6 +103,7 @@ customElements.define('li-table', class extends LiElement {
         super();
         this.lazy = { step: 40, start: 0, end: 80, max: 80, scroll: 1 };
         this._data = {};
+        this.$listen('changedInPropertyGrid', () => this.$update());
     }
     connectedCallback() {
         super.connectedCallback();
@@ -335,7 +336,10 @@ customElements.define('li-table-panel-row', class extends LiElement {
 
             ${this.type === 'bottom' && this.data?.options?.footerHidden || this.type === 'top' && this.data?.options?.headerHidden ? html`` : html`
             <div class="panel ${this.type}" style="left: ${-this.left}; height: ${this.data?.options?.headerHeight ? this.data?.options?.headerHeight : 'auto'}">
-                <div style="display: flex; background-color:${this.data?.options?.footerColor || '#eee'}">
+                <div style="display: flex; background-color:${
+                        (this.type === 'bottom' && this.data?.options?.footerColor)
+                        || (this.type === 'top' && this.data?.options?.headerColor)
+                        || '#eee'}">
                     ${this.data?.columns?.map(i => html`
                         <div style="width: ${i._width < 16 ? 16 : i._width}; min-height: ${this._columnMinHeight}">
                             <li-table-panel-cell .column="${i}" type=${this.type}></li-table-panel-cell>
