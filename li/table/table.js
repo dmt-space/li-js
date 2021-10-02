@@ -160,7 +160,7 @@ customElements.define('li-table', class extends LiElement {
         this._data.rows = this.data.rows.filter(i => {
             if (!i._deleted) {
                 let ok = false;
-                if (search) this.data.options.searchColumns.forEach(j => ok = ok || i[j]?.toLowerCase().includes(search));
+                if (search) this.data.options.searchColumns.forEach(j => ok = ok || (i[j] + '')?.toLowerCase().includes(search));
                 if (!search || (search && ok)) {
                     i._idx = ++idx;
                     if (sum) this.data.options.sum.forEach(j => this._data.sum[j] += Number(i[j]) || 0);
