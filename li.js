@@ -100,9 +100,12 @@ export class LiElement extends LitElement {
         super.disconnectedCallback();
     }
     _initBus() {
-        if (this.$partid || !this.$$ && (this.$properties.get('_partid') || this.__saves || !this.$root || this.__locals || this.__globals)) {
-            if (this.$$?.update) this.$$.update.unlisten(this.fnUpdate);
-            this._partid = this.$partid || this._partid || this.id || this.$ulid || this.localName;
+        if (this.$partid || this.$properties.get('$partid') || (!this.$$ && (this.$properties.get('_partid') || this.__saves || !this.$root || this.__locals || this.__globals))) {
+            this._partid = this.$partid || this._partid || this.id || this.$ulid;
+            if (this.$properties.get('$partid'))
+                this.$partid = this._partid;
+            if (this.$$?.update)
+                this.$$.update.unlisten(this.fnUpdate);
             if (!LI._$$[this._partid]) {
                 LI._$$[this._partid] = { _$$: {}, _$$: {} };
                 LI._$$[this._partid]._$$ = icaro({});
@@ -132,7 +135,7 @@ export class LiElement extends LitElement {
         }
     }
     get partid() { return this._PARTID || this.$partid || this.$root?.partid || this._partid || undefined }
-    get $$() { return this.partid && LI._$$[this.partid] && LI._$$[this.partid]['_$$'] ? LI._$$[this.partid]['_$$'] : undefined }
+    get $$() { return LI._$$?.[this.partid]?.['_$$'] ? LI._$$[this.partid]['_$$'] : undefined }
     get $root() { return this.getRootNode().host; }
     get _saveFileName() { return ((this.id || this.partid || this.localName.replace('li-', '')) + '.saves') }
     $(v) { return this.$$[v].value }
@@ -197,7 +200,7 @@ export class LiElement extends LitElement {
     }
     $unlisten(event, fn) {
         if (!event || !LI.$$[event]) return;
-        LI.$$[event].unlisten(fn|| this.fnListen);
+        LI.$$[event].unlisten(fn || this.fnListen);
         LI.$$[event] = undefined;
     }
     $fire(event, value) {
