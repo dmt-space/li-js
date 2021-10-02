@@ -124,38 +124,38 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                     ` : html``}
                     ${this._mainView?.name !== 'eating' ? html`` : html`
                         <div class="container-split" style="display: flex; flex-direction: column"> 
-                            <li-table $partid="table-eating" id="table-eating" .data="${this._data}" style="height: 48%"></li-table>
+                            <li-table id="table-eating" .data="${this._data}" style="height: 48%"></li-table>
                             <div style="display: flex">
                             <div @click=${e => this._eating = '001'} style="cursor: pointer; color:${`hsla(${this._idx * this.step}, 50%, 50%, 1)`}; font-size: 24px; text-decoration: ${this._eating !== '002' ? 'underline' : ''}">избранное</div>
                             <div style="flex:1"></div>
                             <div @click=${e => this._eating = '002'} style="cursor: pointer; color:${`hsla(${this._idx * this.step}, 50%, 50%, 1)`}; font-size: 24px; text-decoration: ${this._eating === '002' ? 'underline' : ''}">таблица калорийности</div>
                             </div>
                             ${this._eating !== '002' ? html`
-                                <li-table $partid="table-favorites" id="table-favorites" style="height: 48%" .data="${{
+                                <li-table id="table-favorites" style="height: 48%" .data="${{
                                     columns: sets.favorites.columns,
                                     options: sets.favorites.options,
                                     rows: sets.favorites.rows
                                 }}"></li-table>
                             ` : html`
-                                <li-table $partid="table-ecalorie" id="table-ecalorie" style="height: 48%" .data="${foodList}"></li-table>
+                                <li-table id="table-ecalorie" style="height: 48%" .data="${foodList}"></li-table>
                             `}
                         </div>
                     `}
                     ${this._mainView?.name !== 'favorites' ? html`` : html`
                         <div class="container-split" style="display: flex; flex-direction: column"> 
-                            <li-table $partid="table-favorites" id="table-favorites" .data="${this._data}" style="height: 48%"></li-table>
+                            <li-table id="table-favorites" .data="${this._data}" style="height: 48%"></li-table>
                             <div style="color:${`hsla(${this._idx * this.step}, 50%, 50%, 1)`}; font-size: 24px; text-decoration: underline;">таблица калорийности</div>
-                            <li-table $partid="table-fcalorie" id="table-fcalorie" .data="${foodList}" style="height: 48%"></li-table>
+                            <li-table id="table-fcalorie" .data="${foodList}" style="height: 48%"></li-table>
                         </div>
                     `}
                     ${!['water', 'walking', 'sport', 'dream'].includes(this._mainView?.name) ? html`` : html`
                         <div class="container">
-                            <li-table .$partid=${'table-' + this._mainView?.name} id=${'table-' + this._mainView?.name} .data="${this._data}"></li-table>
+                            <li-table id=${'table-' + this._mainView?.name} .data="${this._data}"></li-table>
                         </div>
                     `}
                     ${this._mainView?.name !== 'weighing' ? html`` : html`
                         <div class="container"> 
-                            <li-table $partid="table-weighing" id="table-weighing" .data="${this._data}"></li-table>
+                            <li-table id="table-weighing" .data="${this._data}"></li-table>
                         </div>
                     `}
                     ${this._mainView?.name !== 'measurements' ? html`` : html`
@@ -183,12 +183,12 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                             <li-button name="close" title="delete row" fill="${`hsla(${this._idx * this.step}, 50%, 50%, 1)`}" back="${`hsla(${this._idx * this.step}, 50%, 50%, .1)`}"></li-button>
                         </div>
                         <div class="container">
-                            <li-table $partid="table-measurements" id="table-measurements" .data="${this._data}"></li-table>
+                            <li-table id="table-measurements" .data="${this._data}"></li-table>
                         </div>
                     `}
                     ${this._mainView?.name !== 'calorie' ? html`` : html`
                         <div class="container-split"> 
-                            <li-table $partid="table-calorie" id="table-calorie" .data="${foodList}"></li-table>
+                            <li-table id="table-calorie" .data="${foodList}"></li-table>
                         </div>
                     `}
                     ${this._mainView?.name !== 'wiki' ? html`` : html`
