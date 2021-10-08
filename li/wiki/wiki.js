@@ -751,6 +751,7 @@ customElements.define('li-wiki', class LiWiki extends LiElement {
             e.preventDefault();
             this._widthL = this._widthL + e.movementX;
             this._widthL = this._widthL <= 0 ? 0 : this._widthL >= this.$id('main')?.offsetWidth ? this.$id('main').offsetWidth : this._widthL;
+            this.fire('resize');
         } else if (this._action === 'set-box-height') {
             this._itemBox.h = this._itemBox.h + e.movementY;
             this._itemBox.h = this._itemBox.h > 0 ? this._itemBox.h : 0;
