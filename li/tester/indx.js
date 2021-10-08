@@ -236,6 +236,12 @@ export const indx = {
     },
     'editor-html': [{ label: 'index', url: url + '/editor-html' }],
 
+    'li-run-html': {
+        label: 'li-run-html', props: {
+            src: `<style> body { background: repeating-radial-gradient(transparent 0, transparent 40%, white 40%, white 41%) center center/2em 2em, lightgray } } </style>` }
+    },
+    'run-html': [{ label: 'index', url: url + '/run-html' }],
+
     'li-viewer-md': { label: 'li-viewer-md', props: { src: url + '/viewer-md/sample.md' } },
     'viewer-md': [{ label: 'index', url: url + '/viewer-md' }],
 
