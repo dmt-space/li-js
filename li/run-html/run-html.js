@@ -75,6 +75,7 @@ customElements.define('li-run-html', class LiRunHTML extends LiElement {
         if (this._action = 'splitter-move') {
             this._widthL = this._widthL + e.movementX;
             this._widthL = this._widthL <= 0 ? 0 : this._widthL >= this.$id('main')?.offsetWidth ? this.$id('main').offsetWidth : this._widthL;
+            this.fire('resize');
         }
     }
 })
