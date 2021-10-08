@@ -11,7 +11,7 @@ customElements.define('li-editor-iframe', class LiEditorIFrame extends LiElement
     }
 
     get value() {
-        return this.editor.getValue() || undefined;
+        return this.editor?.getValue() || undefined;
     }
     set value(v) {
         this.editor.setValue(v || '', -1);
