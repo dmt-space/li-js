@@ -1,6 +1,8 @@
 import { LiElement, html, css } from '../../li.js';
 
 import '../editor-iframe/editor-iframe.js';
+import '../button/button.js';
+import { LZString } from '../../lib/lz-string/lz-string.js';
 
 customElements.define('li-run-html', class LiRunHTML extends LiElement {
     static get properties() {
@@ -16,8 +18,9 @@ customElements.define('li-run-html', class LiRunHTML extends LiElement {
             ::-webkit-scrollbar-track { background: lightgray; }
             ::-webkit-scrollbar-thumb { background-color: gray; }
             #main {
+                position: relative;
                 display: flex;
-                height: 100%;
+                height: calc(100% - 28px);
                 color: #505050;
             }
             .main-panel {
@@ -38,14 +41,25 @@ customElements.define('li-run-html', class LiRunHTML extends LiElement {
             .iframe-pe {
                 pointer-events: none;
             }
+            .btns {
+                display: flex;
+                flex-direction: row-reverse;
+                align-items: center;
+            }
         `;
     }
 
     render() {
         return html`
+            <div class="btns">
+                <li-button name="filter-2" @click="${() => this._resize(this.$id('main').offsetWidth)}" style="margin-right:8px" border="none"></li-button>
+                <li-button name="more-vert" @click="${() => this._resize(this.$id('main').offsetWidth / 2)}" style="margin-right:4px" border="none"></li-button>
+                <li-button name="filter-1" @click="${() => this._resize(0)}" style="margin-right:4px" border="none"></li-button>
+                <li-button name="launch" @click=${this._open} title="open in new window" style="margin-right:8px" border="none"></li-button>
+            </div>
             <div id="main">
                 <div class="main-panel" style="width:${this._widthL}px">
-                    <li-editor-iframe id="editor" @change=${() => this.$update()} .src=${this.src}></li-editor-iframe>
+                    <li-editor-iframe id="editor" @change=${() => this.$update()}></li-editor-iframe>
                 </div>
                 <div class="splitter ${this._action === 'splitter-move' ? 'splitter-move' : ''}" @pointerdown="${this._pointerdown}"></div>
                 <div class="main-panel" style="flex: 1">
@@ -53,6 +67,18 @@ customElements.define('li-run-html', class LiRunHTML extends LiElement {
                 </div>
             </div>
         `
+    }
+
+    firstUpdated() {
+        super.firstUpdated();
+        this._location = window.location.href;
+        const _s = this._location.split('?')[1];
+        const int = setInterval(() => {
+            if (this.$id('editor').editor) {
+                this.$id('editor').value = _s ? LZString.decompressFromEncodedURIComponent(_s) : this.src;
+                clearInterval(int);
+            }
+        }, 100);
     }
 
     _pointerdown(e) {
@@ -77,5 +103,16 @@ customElements.define('li-run-html', class LiRunHTML extends LiElement {
             this._widthL = this._widthL <= 0 ? 0 : this._widthL >= this.$id('main')?.offsetWidth ? this.$id('main').offsetWidth : this._widthL;
             this.fire('resize');
         }
+    }
+    _open() {
+        let url = this.$url.replace('run-html.js', '#?') + LZString.compressToEncodedURIComponent(this.$id('editor')?.value);
+        window.open(url, '_blank').focus();
+    }
+    _resize(v) {
+        this._widthL = v;
+        requestAnimationFrame(() => {
+            this.fire('resize');
+            this.$update();
+        });
     }
 })

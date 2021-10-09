@@ -14,4 +14,21 @@
     }
 </style>
 
-<li-run-html id="run-html" src="&lt;style> body { background: repeating-radial-gradient(transparent 0, transparent 40%, white 40%, white 41%) center center/2em 2em, lightgray } } &lt;/style>"></li-run-html>
+<li-run-html id="run_html"></li-run-html>
+
+<script>
+    let src = `
+<style>
+    body {
+        background-color: white;
+        background-size: 100px 100px, 100px 100px, 10px 10px, 10px 10px;
+        background-image: 
+            linear-gradient(gray 1px, transparent 0), 
+            linear-gradient(90deg, gray 1px, transparent 0),
+            linear-gradient(lightgray 1px, transparent 0),
+            linear-gradient(90deg, lightgray 1px, transparent 0);
+    }
+</style>
+`
+    if (!window.location.href.includes('?')) run_html.src = src;
+</script>
