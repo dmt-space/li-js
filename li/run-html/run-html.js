@@ -52,9 +52,9 @@ customElements.define('li-run-html', class LiRunHTML extends LiElement {
     render() {
         return html`
             <div class="btns">
-                <li-button name="filter-2" @click="${() => this._resize(this.$id('main').offsetWidth)}" style="margin-right:8px" border="none"></li-button>
+                <li-button name="filter-2" @click="${() => this._resize(0)}" style="margin-right:8px" border="none"></li-button>
                 <li-button name="more-vert" @click="${() => this._resize(this.$id('main').offsetWidth / 2)}" style="margin-right:4px" border="none"></li-button>
-                <li-button name="filter-1" @click="${() => this._resize(0)}" style="margin-right:4px" border="none"></li-button>
+                <li-button name="filter-1" @click="${() => this._resize(this.$id('main').offsetWidth)}" style="margin-right:4px" border="none"></li-button>
                 <li-button name="launch" @click=${this._open} title="open in new window" style="margin-right:8px" border="none"></li-button>
             </div>
             <div id="main">
