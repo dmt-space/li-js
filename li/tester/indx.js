@@ -378,4 +378,7 @@ export const indx = {
 
     'li-diary': { label: 'li-diary', props: { iframe: '../diary/index.html' } },
     'diary': [{ label: 'index', url: url + '/diary' }],
+
+    'li-lzstring': { label: 'li-lzstring', props: { iframe: '../lzstring/index.html' } },
+    'lzstring': [{ label: 'index', url: url + '/lzstring/index.html' }],
 }
