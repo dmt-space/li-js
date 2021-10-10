@@ -4,14 +4,7 @@ import '../editor-iframe/editor-iframe.js';
 import '../button/button.js';
 import { LZString } from '../../lib/lz-string/lz-string.js';
 
-customElements.define('li-run-html', class LiRunHTML extends LiElement {
-    static get properties() {
-        return {
-            _widthL: { type: Number, default: 600, save: true },
-            src: { type: String, default: '' }
-        }
-    }
-
+customElements.define('li-live-html', class LiLiveHTML extends LiElement {
     static get styles() {
         return css`
             ::-webkit-scrollbar { width: 4px; height: 4px; }
@@ -69,11 +62,20 @@ customElements.define('li-run-html', class LiRunHTML extends LiElement {
         `
     }
 
+    static get properties() {
+        return {
+            _widthL: { type: Number, default: 600, save: true },
+            src: { type: String, default: '' },
+            lzs: { type: String, default: '' }
+        }
+    }
+
     firstUpdated() {
         super.firstUpdated();
-        this._location = window.location.href;
-        const _s = this._location.split('?')[1];
         const int = setInterval(() => {
+            this._location = window.location.href;
+            let _s = this._location.split('?')[1];
+            _s = _s || this.lzs;
             if (this.$id('editor').editor) {
                 this.$id('editor').value = _s ? LZString.decompressFromEncodedURIComponent(_s) : this.src;
                 clearInterval(int);
@@ -105,7 +107,7 @@ customElements.define('li-run-html', class LiRunHTML extends LiElement {
         }
     }
     _open() {
-        let url = this.$url.replace('run-html.js', '#?') + LZString.compressToEncodedURIComponent(this.$id('editor')?.value);
+        let url = this.$url.replace('live-html.js', '#?') + LZString.compressToEncodedURIComponent(this.$id('editor')?.value);
         window.open(url, '_blank').focus();
     }
     _resize(v) {

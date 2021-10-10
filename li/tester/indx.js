@@ -236,11 +236,11 @@ export const indx = {
     },
     'editor-html': [{ label: 'index', url: url + '/editor-html' }],
 
-    'li-run-html': {
-        label: 'li-run-html', props: {
-            src: `<style> body { background: repeating-radial-gradient(transparent 0, transparent 40%, white 40%, white 41%) center center/2em 2em, lightgray } } </style>` }
+    'li-live-html': {
+        label: 'li-live-html', props: {
+            lzs: `DwZwLgngNgpgfAKAJACMD2ATCACA3s1AQwGMBrAcwCc0BXAOwwFoBLAW0PJgC5sCkpmdGIUqMqhDMxh0wACgAsAVgwxyAGmwBiGDuwAmRQFINYSoTogADiOlh9Rk2YvXKt7AHYHWnTA9ftugCMAAzBhgCUanwCQiJiZpK2CsqqGgG+BsbYAO4AFsxgGV55Bb6eWel+FT7YIWHhANwEKCQU1PRMlmggBcxodDzBlgAe2EPDGorj2FMjTUhEZFS0DIw9AF7ctaEj2+MN2IdHh8gAvgjAAPTg0PAI98CSAG7YN7AAvABExGhQaJQ8VwYA4AM36YDWzE2PAAzHoRp9EPxmIwBE8YIxcmBWFBsAAFVxPKTZC6XZ6IIA` }
     },
-    'run-html': [{ label: 'index', url: url + '/run-html' }, { label: 'index2', url: url + '/run-html/index-2.html' }],
+    'live-html': [{ label: 'index', url: url + '/live-html' }, { label: 'index2', url: url + '/live-html/index-2.html' }],
 
     'li-viewer-md': { label: 'li-viewer-md', props: { src: url + '/viewer-md/sample.md' } },
     'viewer-md': [{ label: 'index', url: url + '/viewer-md' }],
