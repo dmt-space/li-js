@@ -4,7 +4,6 @@ import '../button/button.js';
 import { LZString } from '../../lib/lz-string/lz-string.js';
 
 customElements.define('li-lzstring', class lzString extends LiElement {
-
     static get styles() {
         return css`
             .panel {
@@ -32,7 +31,10 @@ customElements.define('li-lzstring', class lzString extends LiElement {
             <div style="display: flex;">
                 <div class="panel">
                     <div class="btns">
-                        <a href="https://pieroxy.net/blog/pages/lz-string/index.html" target="_blank">lz-string:</a>
+                        <div style="display: flex; justify-content: space-between; padding: 2px;">
+                            <a href="https://pieroxy.net/blog/pages/lz-string/index.html" target="_blank">lz-string:</a>
+                            <label>length = ${this.$id('txt1')?.value.length || 0}</label>
+                        </div>
                         ${this.comm.map(i => html`
                             <li-button width="auto" .back="${!i.includes('deco') ? 'lightyellow' : '#FFF5EE'}">
                                 <span style="padding: 4px" @click=${() => this._lzString(i, 'txt1', 'txt2')} class="${this._focused_txt1 === i ? 'focused' : ''}">
@@ -41,13 +43,15 @@ customElements.define('li-lzstring', class lzString extends LiElement {
                             </li-button>
                         `)}
                         <li-button name="close" @click=${() => { this._focused_txt1  = this.$id('txt1').value = ''; this.$update() }}></li-button>
-                        <label>length = ${this.$id('txt1')?.value.length || 0}</label>
                     </div>
                     <textarea class="txtarea" id="txt1" @input=${() => this.$update()}></textarea>
                 </div>
                 <div class="panel">
                     <div class="btns">
-                        <a href="https://github.com/pieroxy/lz-string/" target="_blank">lz-string:</a>
+                        <div style="display: flex; justify-content: space-between; padding: 2px;">
+                            <a href="https://github.com/pieroxy/lz-string/" target="_blank">lz-string:</a>
+                            <label>length = ${this.$id('txt2')?.value.length || 0}</label>
+                        </div>
                         ${this.comm.map(i => html`
                             <li-button width="auto" .back="${!i.includes('deco') ? 'lightyellow' : '#FFF5EE'}">
                                 <span style="padding: 4px" @click=${() => this._lzString(i, 'txt2', 'txt1')} class="${this._focused_txt2 === i ? 'focused' : ''}">
@@ -56,7 +60,6 @@ customElements.define('li-lzstring', class lzString extends LiElement {
                             </li-button>
                         `)}
                         <li-button name="close" @click=${() => { this._focused_txt2 = this.$id('txt2').value = ''; this.$update() }}></li-button>
-                        <label>length = ${this.$id('txt2')?.value.length || 0}</label>
                     </div>
                     <textarea class="txtarea" id="txt2"></textarea>
                 </div>
@@ -68,9 +71,9 @@ customElements.define('li-lzstring', class lzString extends LiElement {
     static get properties() {
         return {
             comm: {
-                type: Array, default: ['compress', 'decompress', 'compressToUTF16', 'decompressToUTF16',
-                    'compressToBase64', 'decompressToBase64', 'compressToEncodedURIComponent', 'decompressToEncodedURIComponent',
-                    'compressToUint8Array', 'decompressToUint8Array', 'js-encodeURIComponent', 'js-decodeURIComponent']
+                type: Array, default: ['compress', 'decompress', 'compressToUTF16', 'decompressFromUTF16',
+                    'compressToBase64', 'decompressFromBase64', 'compressToEncodedURIComponent', 'decompressFromEncodedURIComponent',
+                    'encodeURIComponent - JS', 'decodeURIComponent - JS']
             },
             _focused_txt1: { type: String },
             _focused_txt2: { type: String }
@@ -80,17 +83,18 @@ customElements.define('li-lzstring', class lzString extends LiElement {
     _lzString(_comm, _in, _out) {
         if (!this.$id(_in).value) return;
         this['_focused_' + _in] = _comm;
-        this['_focused_' + _out] = _comm.startsWith('de') ? _comm.replace('de', '') : 'de' + _comm;
-        // console.log('_focused_' + _in + ' = ' + this['_focused_' + _in], '_focused_' + _out + ' = ' + this['_focused_' + _out]);
-        try {
-            if (_comm.includes('js-')) {
-                this.$id(_out).value = _comm === 'js-encodeURIComponent' ? encodeURIComponent(this.$id(_in).value) : decodeURIComponent(this.$id(_in).value);
+        if (this['_focused_' + _in] === 'encodeURIComponent - JS') this['_focused_' + _out] = 'decodeURIComponent - JS';
+        else if (this['_focused_' + _in] === 'decodeURIComponent - JS') this['_focused_' + _out] = 'encodeURIComponent - JS';
+        else this['_focused_' + _out] = _comm.startsWith('de') ? _comm.replace('de', '').replace('From', 'To') : 'de' + _comm.replace('To', 'From');
+         try {
+            if (_comm.includes('- JS')) {
+                this.$id(_out).value = _comm === 'encodeURIComponent - JS' ? encodeURIComponent(this.$id(_in).value) : decodeURIComponent(this.$id(_in).value);
             } else {
                 this.$id(_out).value = LZString[_comm](this.$id(_in).value);
             }
         } catch (error) {
             this.$id(_out).value = 'error...';
-            //console.log(error);
+            console.log(error);
         }
         this.$update();
     }
