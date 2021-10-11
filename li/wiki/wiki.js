@@ -711,7 +711,7 @@ customElements.define('li-wiki', class LiWiki extends LiElement {
         })
         rows.shift();
         const data = {
-            options: { 
+            options: {
                 // lazy: true, 
                 headerService: true,
                 headerServiceText: 'sort by last add',
@@ -720,7 +720,7 @@ customElements.define('li-wiki', class LiWiki extends LiElement {
                 footerServiceTotal: true,
                 // rowHeight: 40,
                 fontSize: '.9rem',
-                searchColumns: ['name'] 
+                searchColumns: ['name']
             },
             columns: [{ label: '№', name: '_idx', width: 50 }, { label: 'articles', name: 'name', textAlign: 'left', showTitle: true }],
             rows: rows
@@ -860,6 +860,12 @@ customElements.define('li-wiki-box', class LiWikiBox extends LiElement {
                         @drop="${() => this._itemBox = undefined}">
                     ${(this.idx || 0) + 1 + '. ' + this.item?.label}
                     <div style="flex:1"></div>
+                    ${this.item?.label === 'iframe' ? html`
+                        <div style="display: flex">
+                            <li-button class="btn" name="launch" @click=${this._liveHTML} title="liveHTML" size="20"></li-button>
+                            <div style="width:8px"></div>
+                        </div>
+                    ` : html``}
                     <li-button class="btn" name="delete" title="delete box" @click="${this._deleteBox}" size="20"></li-button>
                     <div style="width:8px"></div>
                     <li-button class="btn" name="expand-more" title="down" @click="${() => { this._stepMoveBox(1) }}" size="20"></li-button>
@@ -929,6 +935,10 @@ customElements.define('li-wiki-box', class LiWikiBox extends LiElement {
         let indx = this.selectedEditors.indexOf(this.item) + shadowOffset;
         this.selectedEditors.splice(indx, 0, itm[0]);
         this.$update();
+    }
+    _liveHTML() {
+        let url = this.$url.replace('wiki-box/wiki-box.js', 'live-html/#?') + LZString.compressToEncodedURIComponent(this.item.value);
+        window.open(url, '_blank').focus();
     }
 });
 
