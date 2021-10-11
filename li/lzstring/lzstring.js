@@ -10,15 +10,12 @@ customElements.define('li-lzstring', class lzString extends LiElement {
                 display: flex; 
                 flex-direction: column;
                 height: 100vh; 
-                max-width: 50vw;
             }
             .txtarea {
                 flex: 1;
                 margin: 2px;
                 padding: 2px;
                 border: 1px solid lightgray;
-                width: 50vw;
-                height: calc(100vh - 6px);
             }
             .focused {
                 color: red;
