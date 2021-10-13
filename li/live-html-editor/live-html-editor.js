@@ -56,7 +56,7 @@ customElements.define('li-live-html-editor', class LiLiveHTMLEditor extends LiEl
                 </div>
                 <div class="splitter ${this._action === 'splitter-move' ? 'splitter-move' : ''}" @pointerdown="${this._pointerdown}"></div>
                 <div class="main-panel" style="flex: 1; height: calc(100vh - 38px)">
-                    <iframe class="${this._action === 'splitter-move' ? 'iframe-pe' : ''}" .srcdoc=${this.$id('editor')?.value || ''} style="width: 100%; border: none; height: calc(100vh - 38px)"></iframe>
+                    <iframe id="iframe" class="${this._action === 'splitter-move' ? 'iframe-pe' : ''}" .srcdoc=${this.$id('editor')?.value || ''} style="width: 100%; border: none; height: calc(100vh - 38px)" .hidden=${!this._ready}></iframe>
                 </div>
             </div>
         `
@@ -66,7 +66,8 @@ customElements.define('li-live-html-editor', class LiLiveHTMLEditor extends LiEl
         return {
             _widthL: { type: Number, default: 0 },
             src: { type: String, default: '' },
-            lzs: { type: String, default: '' }
+            lzs: { type: String, default: '' },
+            _ready: { type: Boolean }
         }
     }
 
@@ -80,6 +81,10 @@ customElements.define('li-live-html-editor', class LiLiveHTMLEditor extends LiEl
                 this.$id('editor').value = _s ? LZString.decompressFromEncodedURIComponent(_s) : this.src;
                 clearInterval(int);
                 this.$update();
+                setTimeout(() => {
+                    this.$id('iframe').contentDocument.body.innerHTML = cssIframe + this.$id('iframe').contentDocument.body.innerHTML;
+                    this._ready = true;
+                }, 300);
             }
         }, 100);
     }
@@ -119,3 +124,15 @@ customElements.define('li-live-html-editor', class LiLiveHTMLEditor extends LiEl
         });
     }
 })
+
+const cssIframe = `
+
+<style>
+    body { font-family: Roboto, Noto, sans-serif; line-height: 1.5; }
+    ::-webkit-scrollbar { width: 6px;  height: 6px; }
+    ::-webkit-scrollbar-track { -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3); }
+    ::-webkit-scrollbar-thumb { border-radius: 3px; background: rgba(0,0,0,0.2); -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.2); }
+    ::-webkit-scrollbar-thumb:hover { background: gray; width: 16px; }
+</style>
+
+`
