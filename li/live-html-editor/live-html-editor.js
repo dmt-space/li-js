@@ -108,7 +108,7 @@ customElements.define('li-live-html-editor', class LiLiveHTMLEditor extends LiEl
         }
     }
     _open() {
-        let url = this.$url.replace('live-html-editor.js', '#?') + LZString.compressToEncodedURIComponent(this.$id('editor')?.value);
+        let url = this.$url.replace('live-html-editor.js', 'index.html#?') + LZString.compressToEncodedURIComponent(this.$id('editor')?.value);
         window.open(url, '_blank').focus();
     }
     _resize(v) {
