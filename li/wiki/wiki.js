@@ -137,6 +137,7 @@ customElements.define('li-wiki', class LiWiki extends LiElement {
             <li-layout-app hide="r" @drop="${this._clearAction}">
                 <div slot="app-top" class="header">
                     <div style="flex:1"></div>${this.dbName}<div style="flex:1"></div>
+                    <li-button size="26" id="launch" name="launch" @click="${this._liveHTMLEditor}" style="margin-right:8px" border="none"></li-button>
                     <li-button size="26" id="s06" name="filter-1" @click="${this._settings}" style="margin-right:4px" border="none"></li-button>
                     <li-button size="26" id="s00" name="more-vert" @click="${this._settings}" style="margin-right:4px" border="none"></li-button>
                     <li-button size="26" id="s01" name="filter-2" @click="${this._settings}" style="margin-right:8px" border="none"></li-button>
@@ -258,6 +259,12 @@ customElements.define('li-wiki', class LiWiki extends LiElement {
                 </div>
             </li-layout-app>
         `;
+    }
+    _liveHTMLEditor() {
+        let src = '';
+        (this.selectedEditors.filter(i => !i._deleted && i.show) || []).map(i => src += src + (this.htmlValue || i.value || ''));
+        let url = this.$url.replace('wiki/wiki.js', 'live-html-editor/#?') + LZString.compressToEncodedURIComponent(src);
+        window.open(url, '_blank').focus();
     }
     async fnSelected(e) {
         this._itemBox = this._expandedBox = undefined;
