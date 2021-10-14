@@ -77,14 +77,12 @@ customElements.define('li-editor-html', class LiEditorHTML extends LiElement {
     }
     render() {
         return html`
-                <div ref="editor" ?hidden="${this._showSource}"></div>
-                <div ?hidden="${!this._showSource}">
-                    <li-button name="refresh" size="14"                       
-                        @click="${() => { this._showSource = false; this.editor.content.innerHTML = this.ace.getValue() }}"></li-button>
-                    <li-editor-ace ref="ace"></li-editor-ace>
-                </div>
-                
-
+            <div ref="editor" ?hidden="${this._showSource}"></div>
+            <div ?hidden="${!this._showSource}">
+                <li-button name="refresh" size="14"                       
+                    @click="${() => { this._showSource = false; this.editor.content.innerHTML = this.ace.getValue() }}"></li-button>
+                <li-editor-ace ref="ace"></li-editor-ace>
+            </div>
         `
     }
 
@@ -124,7 +122,7 @@ customElements.define('li-editor-html', class LiEditorHTML extends LiElement {
 
             this.editor = pell.init({
                 element: this.$refs('editor'),
-                onChange: () => { if (this.item) this.item.value = this.value; this.$update() },
+                onChange: () => { if (this.item) this.item.value = this.value; this.fire('change'); this.$update(); },
                 actions: [
                     'bold',
                     'italic',
