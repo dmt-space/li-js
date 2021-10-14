@@ -59,8 +59,8 @@ customElements.define('li-live-wysiwyg', class LiLiveWysiwyg extends LiElement {
                     <li-editor-html id="editor" @change=${() => this.$update()}></li-editor-html>
                 </div>
                 <div class="splitter ${this._action === 'splitter-move' ? 'splitter-move' : ''}" @pointerdown="${this._pointerdown}"></div>
-                <div class="main-panel ${this._widthL >= this.$id('main')?.offsetWidth ? 'hidden' : ''}" style="flex: 1; height: calc(100vh - 38px); max-height: calc(100vh - 38px)">
-                    <iframe id="iframe" class="${this._action === 'splitter-move' ? 'iframe-pe' : ''}" .srcdoc=${this.$id('editor')?.value || ''} style="width: 100%; border: none; height: calc(100vh - 38px); max-height: calc(100vh - 38px)" .hidden=${!this._ready}></iframe>
+                <div class="main-panel ${this._widthL >= this.$id('main')?.offsetWidth ? 'hidden' : ''}" style="flex: 1;">
+                    <iframe id="iframe" class="${this._action === 'splitter-move' ? 'iframe-pe' : ''}" .srcdoc=${this.$id('editor')?.value || ''} style="width: 100%; border: none;" .hidden=${!this._ready}></iframe>
                 </div>
             </div>
         `
