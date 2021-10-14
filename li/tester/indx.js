@@ -236,6 +236,12 @@ export const indx = {
     },
     'editor-html': [{ label: 'index', url: url + '/editor-html' }],
 
+    'li-live-wysiwyg': {
+        label: 'li-live-wysiwyg', props: {
+            src: '<h1 style="color: red;">li-live-html-editor with Preview</h1>' }
+    },
+    'live-wysiwyg': [{ label: 'index', url: url + '/live-wysiwyg' }, { label: 'index2', url: url + '/live-wysiwyg/index-2.html' }],
+
     'li-live-html': {
         label: 'li-live-html', props: {
             lzs: `DwZwLgngNgpgfAKAJACMD2ATCACA3s1AQwGMBrAcwCc0BXAOwwFoBLAW0PJgC5sCkpmdGIUqMqhDMxh0wACgAsAVgwxyAGmwBiGDuwAmRQFINYSoTogADiOlh9Rk2YvXKt7AHYHWnTA9ftugCMAAzBhgCUanwCQiJiZpK2CsqqGgG+BsbYAO4AFsxgGV55Bb6eWel+FT7YIWHhANwEKCQU1PRMlmggBcxodDzBlgAe2EPDGorj2FMjTUhEZFS0DIw9AF7ctaEj2+MN2IdHh8gAvgjAAPTg0PAI98CSAG7YN7AAvABExGhQaJQ8VwYA4AM36YDWzE2PAAzHoRp9EPxmIwBE8YIxcmBWFBsAAFVxPKTZC6XZ6IIA` }

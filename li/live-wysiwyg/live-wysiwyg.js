@@ -4,7 +4,7 @@ import '../editor-html/editor-html.js';
 import '../button/button.js';
 import { LZString } from '../../lib/lz-string/lz-string.js';
 
-customElements.define('li-live-wisywyg', class LiLiveWisywyg extends LiElement {
+customElements.define('li-live-wysiwyg', class LiLiveWysiwyg extends LiElement {
     static get styles() {
         return css`
             ::-webkit-scrollbar { width: 4px; height: 4px; }
@@ -117,7 +117,7 @@ customElements.define('li-live-wisywyg', class LiLiveWisywyg extends LiElement {
         }
     }
     _open() {
-        let url = this.$url.replace('live-wisywyg.js', 'index.html#?') + LZString.compressToEncodedURIComponent(this.$id('editor')?.value);
+        let url = this.$url.replace('live-wysiwyg.js', 'index.html#?') + LZString.compressToEncodedURIComponent(this.$id('editor')?.value);
         window.open(url, '_blank').focus();
     }
     _resize(v) {
