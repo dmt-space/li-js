@@ -39,6 +39,9 @@ customElements.define('li-live-html', class LiLiveHTML extends LiElement {
                 flex-direction: row-reverse;
                 align-items: center;
             }
+            .hidden {
+                display: none;
+            }
         `;
     }
 
@@ -49,13 +52,14 @@ customElements.define('li-live-html', class LiLiveHTML extends LiElement {
                 <li-button name="more-vert" @click="${() => this._resize(this.$id('main').offsetWidth / 2)}" style="margin-right:4px" border="none"></li-button>
                 <li-button name="filter-1" @click="${() => this._resize(this.$id('main').offsetWidth)}" style="margin-right:4px" border="none"></li-button>
                 <li-button name="launch" @click=${this._open} title="open in new window" style="margin-right:8px" border="none"></li-button>
+                <label style="margin-right: auto; padding-left: 4px; color: gray">li-live-html Preview</label>
             </div>
             <div id="main">
-                <div class="main-panel" style="width:${this._widthL}px">
+                <div class="main-panel ${this._widthL <= 0 ? 'hidden' : ''}" style="width:${this._widthL}px">
                     <li-editor-iframe id="editor" @change=${() => this.$update()}></li-editor-iframe>
                 </div>
                 <div class="splitter ${this._action === 'splitter-move' ? 'splitter-move' : ''}" @pointerdown="${this._pointerdown}"></div>
-                <div class="main-panel" style="flex: 1">
+                <div class="main-panel ${this._widthL >= this.$id('main')?.offsetWidth ? 'hidden' : ''}" style="flex: 1">
                     <iframe class="${this._action === 'splitter-move' ? 'iframe-pe' : ''}" .srcdoc=${this.$id('editor')?.value || ''} style="width: 100%; border: none; height: 100%"></iframe>
                 </div>
             </div>
@@ -79,6 +83,7 @@ customElements.define('li-live-html', class LiLiveHTML extends LiElement {
             if (this.$id('editor').editor) {
                 this.$id('editor').value = _s ? LZString.decompressFromEncodedURIComponent(_s) : this.src;
                 clearInterval(int);
+                this.$update();
             }
         }, 100);
     }

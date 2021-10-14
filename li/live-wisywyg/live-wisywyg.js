@@ -4,7 +4,7 @@ import '../editor-html/editor-html.js';
 import '../button/button.js';
 import { LZString } from '../../lib/lz-string/lz-string.js';
 
-customElements.define('li-live-html-editor', class LiLiveHTMLEditor extends LiElement {
+customElements.define('li-live-wisywyg', class LiLiveWisywyg extends LiElement {
     static get styles() {
         return css`
             ::-webkit-scrollbar { width: 4px; height: 4px; }
@@ -39,6 +39,9 @@ customElements.define('li-live-html-editor', class LiLiveHTMLEditor extends LiEl
                 flex-direction: row-reverse;
                 align-items: center;
             }
+            .hidden {
+                display: none;
+            }
         `;
     }
 
@@ -49,13 +52,14 @@ customElements.define('li-live-html-editor', class LiLiveHTMLEditor extends LiEl
                 <li-button name="more-vert" @click="${() => this._resize(this.$id('main').offsetWidth / 2)}" style="margin-right:4px" border="none"></li-button>
                 <li-button name="filter-1" @click="${() => this._resize(this.$id('main').offsetWidth)}" style="margin-right:4px" border="none"></li-button>
                 <li-button name="launch" @click=${this._open} title="open in new window" style="margin-right:8px" border="none"></li-button>
+                <label style="margin-right: auto; padding-left: 4px; color: gray">li-live-wisywyg Preview</label>
             </div>
             <div id="main">
-                <div class="main-panel" style="width:${this._widthL}px">
+                <div class="main-panel ${this._widthL <= 0 ? 'hidden' : ''}" style="width:${this._widthL}px">
                     <li-editor-html id="editor" @change=${() => this.$update()}></li-editor-html>
                 </div>
                 <div class="splitter ${this._action === 'splitter-move' ? 'splitter-move' : ''}" @pointerdown="${this._pointerdown}"></div>
-                <div class="main-panel" style="flex: 1; height: calc(100vh - 38px)">
+                <div class="main-panel ${this._widthL >= this.$id('main')?.offsetWidth ? 'hidden' : ''}" style="flex: 1; height: calc(100vh - 38px)">
                     <iframe id="iframe" class="${this._action === 'splitter-move' ? 'iframe-pe' : ''}" .srcdoc=${this.$id('editor')?.value || ''} style="width: 100%; border: none; height: calc(100vh - 38px)" .hidden=${!this._ready}></iframe>
                 </div>
             </div>
@@ -113,7 +117,7 @@ customElements.define('li-live-html-editor', class LiLiveHTMLEditor extends LiEl
         }
     }
     _open() {
-        let url = this.$url.replace('live-html-editor.js', 'index.html#?') + LZString.compressToEncodedURIComponent(this.$id('editor')?.value);
+        let url = this.$url.replace('live-wisywyg.js', 'index.html#?') + LZString.compressToEncodedURIComponent(this.$id('editor')?.value);
         window.open(url, '_blank').focus();
     }
     _resize(v) {
