@@ -93,11 +93,11 @@ customElements.define('li-live-html', class LiLiveHTML extends LiElement {
     _change() {
         LI.debounce('_change', () => {
             this.src = cssIframe + this.$id('editor').value;
-            requestAnimationFrame(() => {
+            setTimeout(() => {
                 this.$id('iframe').contentDocument.body.innerHTML = cssIframe + this.$id('iframe').contentDocument.body.innerHTML;
                 this.$update;
                 this._ready = true;
-            });
+            }, 300);
         }, 500);
     }
     _pointerdown(e) {
