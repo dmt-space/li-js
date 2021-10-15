@@ -56,11 +56,11 @@ customElements.define('li-live-html', class LiLiveHTML extends LiElement {
             </div>
             <div id="main">
                 <div class="main-panel ${this._widthL <= 0 ? 'hidden' : ''}" style="width:${this._widthL}px">
-                    <li-editor-iframe id="editor" @change=${() => this.$update()}></li-editor-iframe>
+                    <li-editor-iframe id="editor" @change=${() => this._change()}></li-editor-iframe>
                 </div>
                 <div class="splitter ${this._action === 'splitter-move' ? 'splitter-move' : ''}" @pointerdown="${this._pointerdown}"></div>
                 <div class="main-panel ${this._widthL >= this.$id('main')?.offsetWidth ? 'hidden' : ''}" style="flex: 1">
-                    <iframe class="${this._action === 'splitter-move' ? 'iframe-pe' : ''}" .srcdoc=${this.$id('editor')?.value || ''} style="width: 100%; border: none; height: 100%"></iframe>
+                    <iframe id="iframe" class="${this._action === 'splitter-move' ? 'iframe-pe' : ''}" .srcdoc=${this.src || ''} style="width: 100%; border: none; height: -webkit-fill-available" .hidden=${!this._ready}></iframe>
                 </div>
             </div>
         `
@@ -70,7 +70,8 @@ customElements.define('li-live-html', class LiLiveHTML extends LiElement {
         return {
             _widthL: { type: Number, default: 600, save: true },
             src: { type: String, default: '' },
-            lzs: { type: String, default: '' }
+            lzs: { type: String, default: '' },
+            _ready: { type: Boolean }
         }
     }
 
@@ -81,13 +82,24 @@ customElements.define('li-live-html', class LiLiveHTML extends LiElement {
             let _s = this._location.split('?')[1];
             _s = _s || this.lzs;
             if (this.$id('editor').editor) {
+                this.$id('editor').editor.setTheme('ace/theme/cobalt');
                 this.$id('editor').value = _s ? LZString.decompressFromEncodedURIComponent(_s) : this.src;
                 clearInterval(int);
-                this.$update();
+                this._change();
             }
         }, 100);
     }
 
+    _change() {
+        LI.debounce('_change', () => {
+            this.src = cssIframe + this.$id('editor').value;
+            requestAnimationFrame(() => {
+                this.$id('iframe').contentDocument.body.innerHTML = cssIframe + this.$id('iframe').contentDocument.body.innerHTML;
+                this.$update;
+                this._ready = true;
+            });
+        }, 500);
+    }
     _pointerdown(e) {
         e.stopPropagation();
         e.preventDefault();
@@ -123,3 +135,13 @@ customElements.define('li-live-html', class LiLiveHTML extends LiElement {
         });
     }
 })
+
+const cssIframe = `
+<style>
+    body { font-family: Roboto, Noto, sans-serif; line-height: 1.5; }
+    ::-webkit-scrollbar { width: 4px;  height: 4px; }
+    ::-webkit-scrollbar-track { -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3); }
+    ::-webkit-scrollbar-thumb { border-radius: 3px; background: rgba(0,0,0,0.2); -webkit-box-shadow: inset 0 0 3px rgba(0,0,0,0.2); }
+    ::-webkit-scrollbar-thumb:hover { background: gray; width: 12px; }</style>
+</style>
+`
