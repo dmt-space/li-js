@@ -92,11 +92,11 @@ customElements.define('li-live-wysiwyg', class LiLiveWysiwyg extends LiElement {
     _change() {
         LI.debounce('_change', () => {
             this.src = cssIframe + this.$id('editor').value;
-            setTimeout(() => {
-                this.$id('iframe').contentDocument.body.innerHTML = cssIframe + this.$id('iframe').contentDocument.body.innerHTML;
+            //setTimeout(() => {
+                //this.$id('iframe').contentDocument.body.innerHTML = cssIframe + this.$id('iframe').contentDocument.body.innerHTML;
                 this.$update;
                 this._ready = true;
-            }, 300);
+            //}, 300);
         }, 500);
     }
     _pointerdown(e) {
