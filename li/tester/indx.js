@@ -355,7 +355,7 @@ export const indx = {
     'life': [{ label: 'life (canvas opt2)', url: url + '/life/index-on-canvas.html' },
     { label: 'life (svg opt2)', url: url + '/life/index-on-svg.html' }, { label: 'life (svg opt1)', url: url + '/life' }],
 
-    'li-life-webgl': { label: 'Games of Life (webgl)' },
+    'li-life-webgl': { label: 'Games of Life (webgl)', props: { id: 'life-webgl-tester' } },
     'life-webgl': [{ label: 'index', url: url + '/life-webgl' }],
 
     'li-tetris': { label: 'TETRIS', props: { iframe: '../tetris/index.html' } },

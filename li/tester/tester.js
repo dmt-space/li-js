@@ -10,11 +10,12 @@ customElements.define('li-tester', class LiTester extends LiElement {
     static get properties() {
         return {
             label: { type: String, default: '' },
-            component: { type: Object, default: undefined }
+            component: { type: Object, default: undefined },
+            _focused: { type: String, default: '', save: true }
         }
     }
 
-    get localName() {
+    get _localName() {
         return this.component?.localName || 'li-tester'
     }
 
@@ -31,7 +32,7 @@ customElements.define('li-tester', class LiTester extends LiElement {
         return html`
             <li-layout-app sides="300,300" fill="#9f731350" id="li-layout-app-tester">
                 <div slot="app-top">
-                    <div>${this.localName}</div>
+                    <div>${this._localName}</div>
                 </div>
                 <div slot="app-main" ref="main">
                     <slot @slotchange=${this.slotchange} id="slot"></slot>
@@ -47,9 +48,16 @@ customElements.define('li-tester', class LiTester extends LiElement {
                         )}</div>`}`
                 )}
                 </div>
-                <li-property-grid slot="app-right" id="li-layout-app-tester" .io=${this.component} label="${this.localName}"></li-property-grid>
+                <li-property-grid slot="app-right" id="li-layout-app-tester" .io=${this.component} label="${this._localName}"></li-property-grid>
             </li-layout-app>
         `;
+    }
+
+    firstUpdated() {
+        super.firstUpdated();
+        if (this._focused) {
+            this._tap(null, this._focused);
+        }
     }
 
     slotchange(updateComponent = false) {
@@ -63,7 +71,7 @@ customElements.define('li-tester', class LiTester extends LiElement {
             this.removeChild(this.component);
         if (!this._wasRemoved) this.$refs('main').removeChild(this.$id('slot'));
         this._wasRemoved = true
-        let el = e.target.label2 || e.target.label;
+        let el = e?.target.label2 || e?.target.label || key;
         this._focused = key;
         let props = { ...indx[el].props, _partid: this.partid };
         if (props.iframe && props.iframe !== 'noiframe') {
