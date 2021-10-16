@@ -390,4 +390,7 @@ export const indx = {
 
     'li-lzstring': { label: 'li-lzstring', props: { iframe: '../lzstring/index.html' } },
     'lzstring': [{ label: 'index', url: url + '/lzstring/index.html' }],
+
+    'li-webgl-box': { label: 'li-webgl-box' },
+    'webgl-box': [{ label: 'index', url: url + '/webgl-box/index.html' }],
 }
