@@ -41,12 +41,12 @@ customElements.define('li-tester', class LiTester extends LiElement {
                 <div slot="app-left" style="padding-left:4px;display:flex;flex-direction:column; align-items: left; justify-content: center">
                     ${Object.keys(indx).map(key => html`
                         ${key.startsWith('li-') ?
-                        html`<li-button style="border-radius:4px" .indx="${indx[key]}" .label2="${key}" label="${indx[key].label}" width="auto" @click="${(e)=>this._tap(e, key)}"
-                            back="${this._focused===key?'#d0d0d0':''}"></li-button>` :
-                        html`<div style="display: flex;font-size:10px;flex-wrap:wrap">${indx[key].map(i =>
-                            html`<li-button height="12" border="none" padding="2px" .indx="${i}" label="${i.label}" width="auto" @click="${this._openUrl}"></li-button>`
-                        )}</div>`}`
-                )}
+                html`<li-button style="border-radius:4px" .indx="${indx[key]}" .label2="${key}" label="${indx[key].label}" width="auto" @click="${(e) => this._tap(e, key)}"
+                            back="${this._focused === key ? '#d0d0d0' : ''}"></li-button>` :
+                html`<div style="display: flex;font-size:10px;flex-wrap:wrap">${indx[key].map(i =>
+                    html`<li-button height="12" border="none" padding="2px" .indx="${i}" label="${i.label}" width="auto" @click="${this._openUrl}"></li-button>`
+                )}</div>`}`
+        )}
                 </div>
                 <li-property-grid slot="app-right" id="li-layout-app-tester" .io=${this.component} label="${this._localName}"></li-property-grid>
             </li-layout-app>
@@ -55,6 +55,7 @@ customElements.define('li-tester', class LiTester extends LiElement {
 
     firstUpdated() {
         super.firstUpdated();
+        this._focused = this._focused === 'li-tester' ? '' : this._focused;
         if (this._focused) {
             this._tap(null, this._focused);
         }
