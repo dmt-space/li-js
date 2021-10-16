@@ -47,22 +47,29 @@ customElements.define('li-live-wysiwyg', class LiLiveWysiwyg extends LiElement {
 
     render() {
         return html`
-            <div class="btns">
-                <li-button name="filter-2" @click="${() => this._resize(0)}" style="margin-right:8px" border="none"></li-button>
-                <li-button name="more-vert" @click="${() => this._resize(this.$id('main').offsetWidth / 2)}" style="margin-right:4px" border="none"></li-button>
-                <li-button name="filter-1" @click="${() => this._resize(this.$id('main').offsetWidth)}" style="margin-right:4px" border="none"></li-button>
-                <li-button name="launch" @click=${this._open} title="open in new window" style="margin-right:8px" border="none"></li-button>
-                <label style="margin-right: auto; padding-left: 4px; color: gray">li-live-wisywyg Preview</label>
-            </div>
-            <div id="main">
-                <div class="main-panel ${this._widthL <= 0 ? 'hidden' : ''}" style="width:${this._widthL}px">
-                    <li-editor-html id="editor" @change=${() => this._change()}></li-editor-html>
+            ${this._full ? html`
+                <div id="main" style="height: 100%;">
+                    <iframe id="iframe" .srcdoc=${this.src || ''} style="width: 100%; border: none; height: -webkit-fill-available;"></iframe>
                 </div>
-                <div class="splitter ${this._action === 'splitter-move' ? 'splitter-move' : ''}" @pointerdown="${this._pointerdown}"></div>
-                <div class="main-panel ${this._widthL >= this.$id('main')?.offsetWidth ? 'hidden' : ''}" style="flex: 1;">
-                    <iframe id="iframe" class="${this._action === 'splitter-move' ? 'iframe-pe' : ''}" .srcdoc=${this.src || ''} style="width: 100%; border: none; height: -webkit-fill-available;" .hidden=${!this._ready}></iframe>
+            ` : html`
+                <div class="btns">
+                    <li-button name="filter-2" @click="${() => this._resize(0)}" style="margin-right:8px" border="none"></li-button>
+                    <li-button name="more-vert" @click="${() => this._resize(this.$id('main').offsetWidth / 2)}" style="margin-right:4px" border="none"></li-button>
+                    <li-button name="filter-1" @click="${() => this._resize(this.$id('main').offsetWidth)}" style="margin-right:4px" border="none"></li-button>
+                    <li-button name="launch" @click=${this._open} title="open in new window" style="margin-right:8px" border="none"></li-button>
+                    <li-button name="fullscreen" @click=${this._openFull} size="32" title="open in new window" style="margin-right:4px" border="none"></li-button>
+                    <label style="margin-right: auto; padding-left: 4px; color: gray">li-live-wisywyg Preview</label>
                 </div>
-            </div>
+                <div id="main">
+                    <div class="main-panel ${this._widthL <= 0 ? 'hidden' : ''}" style="width:${this._widthL}px">
+                        <li-editor-html id="editor" @change=${() => this._change()}></li-editor-html>
+                    </div>
+                    <div class="splitter ${this._action === 'splitter-move' ? 'splitter-move' : ''}" @pointerdown="${this._pointerdown}"></div>
+                    <div class="main-panel ${this._widthL >= this.$id('main')?.offsetWidth ? 'hidden' : ''}" style="flex: 1;">
+                        <iframe id="iframe" class="${this._action === 'splitter-move' ? 'iframe-pe' : ''}" .srcdoc=${this.src || ''} style="width: 100%; border: none; height: -webkit-fill-available;" .hidden=${!this._ready}></iframe>
+                    </div>
+                </div>
+            `}
         `
     }
 
@@ -71,17 +78,24 @@ customElements.define('li-live-wysiwyg', class LiLiveWysiwyg extends LiElement {
             _widthL: { type: Number, default: 0 },
             src: { type: String, default: '' },
             lzs: { type: String, default: '' },
-            _ready: { type: Boolean }
+            _ready: { type: Boolean },
+            _full: { type: Boolean, default: true }
         }
     }
 
     firstUpdated() {
         super.firstUpdated();
+        this._location = window.location.href;
+        let _s = this._location.split('?')[1];
+        let arr = _s ? _s.split('&') : [];
+        _s = arr[0] || this.lzs;
+        this._full = arr[1]?.includes('_full');
         const int = setInterval(() => {
-            this._location = window.location.href;
-            let _s = this._location.split('?')[1];
-            _s = _s || this.lzs;
-            if (this.$id('editor').editor) {
+            if (this._full) {
+                this.src = _s ? LZString.decompressFromEncodedURIComponent(_s) : this.src;
+                clearInterval(int);
+                this._change();
+            } else if (this.$id('editor')?.editor) {
                 this.$id('editor').value = _s ? LZString.decompressFromEncodedURIComponent(_s) : this.src;
                 clearInterval(int);
                 this._change();
@@ -91,12 +105,10 @@ customElements.define('li-live-wysiwyg', class LiLiveWysiwyg extends LiElement {
 
     _change() {
         LI.debounce('_change', () => {
-            this.src = cssIframe + this.$id('editor').value;
-            //setTimeout(() => {
-                //this.$id('iframe').contentDocument.body.innerHTML = cssIframe + this.$id('iframe').contentDocument.body.innerHTML;
-                this.$update;
-                this._ready = true;
-            //}, 300);
+            if (!this._full)
+                this.src = cssIframe + this.$id('editor').value;
+            this.$update;
+            this._ready = true;
         }, 500);
     }
     _pointerdown(e) {
@@ -124,6 +136,10 @@ customElements.define('li-live-wysiwyg', class LiLiveWysiwyg extends LiElement {
     }
     _open() {
         let url = this.$url.replace('live-wysiwyg.js', 'index.html#?') + LZString.compressToEncodedURIComponent(this.$id('editor')?.value);
+        window.open(url, '_blank').focus();
+    }
+    _openFull() {
+        let url = this.$url.replace('live-wysiwyg.js', 'index.html#?') + LZString.compressToEncodedURIComponent(this.$id('editor')?.value) + '&_full';
         window.open(url, '_blank').focus();
     }
     _resize(v) {
