@@ -13,7 +13,7 @@ customElements.define('li-life-webgl', class LiLifeWebGL extends LiElement {
                 width: 100%;
                 height:  100%;
                 border: 0.1em solid #111;
-
+                cursor: pointer;
                 image-rendering: crisp-edges;
                 image-rendering: pixelated;
             }
@@ -51,10 +51,11 @@ customElements.define('li-life-webgl', class LiLifeWebGL extends LiElement {
         gl = canvas.getContext("webgl2");
         texture = document.createElement("canvas");
         tx = texture.getContext("webgl2");
-        this.$id('i1').value = speed_factor = this.speed_factor;
-        this.$id('i2').value = precision = this.precision;
+        this.$id('i1').value = speed_factor = this.speed_factor || 3;
+        this.$id('i2').value = precision = this.precision || 0.25;
         initialize_game_of_life();
         canvas.addEventListener("click", reset_game_of_life);
+        reset_game_of_life();
     }
 
     updated(changedProperties) {
