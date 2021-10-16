@@ -101,7 +101,7 @@ export class LiElement extends LitElement {
     }
     _initBus() {
         if (this.$partid || this.$properties.get('$partid') || (!this.$$ && (this.$properties.get('_partid') || this.__saves || !this.$root || this.__locals || this.__globals))) {
-            this._partid = this.$partid || this._partid || this.id || this.$ulid;
+            this._partid = this.$partid || this._partid || this.id || this.localName;
             if (this.$properties.get('$partid'))
                 this.$partid = this._partid;
             if (this.$$?.update)
