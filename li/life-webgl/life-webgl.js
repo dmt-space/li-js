@@ -38,19 +38,36 @@ customElements.define('li-life-webgl', class LiLifeWebGL extends LiElement {
         `;
     }
 
+    static get properties() {
+        return {
+            speed_factor: { type: Number, default: 3, save: true },
+            precision: { type: Number, default: 0.25, save: true },
+        }
+    }
+
     firstUpdated() {
         super.firstUpdated();
         canvas = this.$id("game_of_life");
         gl = canvas.getContext("webgl2");
         texture = document.createElement("canvas");
         tx = texture.getContext("webgl2");
+        this.$id('i1').value = speed_factor = this.speed_factor;
+        this.$id('i2').value = precision = this.precision;
         initialize_game_of_life();
         canvas.addEventListener("click", reset_game_of_life);
     }
 
+    updated(changedProperties) {
+        if ((changedProperties.has('speed_factor') && this.speed_factor) || (changedProperties.has('precision') && this.precision)) {
+            this.$id('i1').value = speed_factor = this.speed_factor;
+            this.$id('i2').value = precision = this.precision;
+            initialize_game_of_life();
+        }
+    }
     _change() {
-        speed_factor = this.$id('i1').value;
-        precision = this.$id('i2').value;
+        this.speed_factor = speed_factor = this.$id('i1').value;
+        this.precision = precision = this.$id('i2').value;
+        this.$update();
         console.log(speed_factor, precision);
         initialize_game_of_life();
     }

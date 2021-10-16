@@ -213,12 +213,14 @@ customElements.define('li-valuta', class LiValuta extends LiElement {
         let startDate = this.startDate.split('-').reverse().join('/');
         let endDate = this.endDate.split('-').reverse().join('/');
 
-        let json = await fetch(`https://cors.bridged.cc/https://www.cbr-xml-daily.ru/daily_json.js`);
+        let json = await fetch(`https://www.cbr-xml-daily.ru/daily_json.js`);
+        //let json = await fetch(`https://cors.bridged.cc/https://www.cbr-xml-daily.ru/daily_json.js`);
         this._rates = await json.json();
         this.focusedValute = this.focusedValute || this._rates.Valute[this.startValute];
 
         const res = await fetch(`
-https://cors.bridged.cc/https://www.cbr.ru/scripts/XML_dynamic.asp?date_req1=${startDate}&date_req2=${endDate}&VAL_NM_RQ=${this.focusedValute?.ID}`);
+https://www.cbr.ru/scripts/XML_dynamic.asp?date_req1=${startDate}&date_req2=${endDate}&VAL_NM_RQ=${this.focusedValute?.ID}`);
+//https://cors.bridged.cc/https://www.cbr.ru/scripts/XML_dynamic.asp?date_req1=${startDate}&date_req2=${endDate}&VAL_NM_RQ=${this.focusedValute?.ID}`);
         const xml = await res.text();
         const XmlNode = new DOMParser().parseFromString(xml, 'text/xml');
         this._period = this.xmlToJson(XmlNode);
