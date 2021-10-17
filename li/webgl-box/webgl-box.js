@@ -31,7 +31,7 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
     constructor() {
         super();
         this.drag = false;
-        this.dX = this.dY = this.time_old = this.THETA = this.PHI = 0;
+        this.dX = this.dY = this.timeOld = this.THETA = this.PHI = 0;
     }
 
     firstUpdated() {
@@ -51,24 +51,24 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
         this.setupWebGL();
         this.animate(0);
     }
-    
+
     initShaders() {
-        this.shader_vertex = this.get_shader(shader_vertex_source, this.gl.VERTEX_SHADER, "VERTEX");
-        this.shader_fragment = this.get_shader(shader_fragment_source, this.gl.FRAGMENT_SHADER, "FRAGMENT");
-        this.shader_programm = this.gl.createProgram();
-        this.gl.attachShader(this.shader_programm, this.shader_vertex);
-        this.gl.attachShader(this.shader_programm, this.shader_fragment);
-        this.gl.linkProgram(this.shader_programm);
-        this._Pmatrix = this.gl.getUniformLocation(this.shader_programm, "Pmatrix");
-        this._Vmatrix = this.gl.getUniformLocation(this.shader_programm, "Vmatrix");
-        this._Mmatrix = this.gl.getUniformLocation(this.shader_programm, "Mmatrix");
-        this._color = this.gl.getAttribLocation(this.shader_programm, "color");
-        this._position = this.gl.getAttribLocation(this.shader_programm, "position");
+        const shaderVertex = this.getShader(shaderVertexSource, this.gl.VERTEX_SHADER, "VERTEX");
+        const shaderFragment = this.getShader(shaderFragmentSource, this.gl.FRAGMENT_SHADER, "FRAGMENT");
+        const shaderProgramm = this.gl.createProgram();
+        this.gl.attachShader(shaderProgramm, shaderVertex);
+        this.gl.attachShader(shaderProgramm, shaderFragment);
+        this.gl.linkProgram(shaderProgramm);
+        this._Pmatrix = this.gl.getUniformLocation(shaderProgramm, "Pmatrix");
+        this._Vmatrix = this.gl.getUniformLocation(shaderProgramm, "Vmatrix");
+        this._Mmatrix = this.gl.getUniformLocation(shaderProgramm, "Mmatrix");
+        this._color = this.gl.getAttribLocation(shaderProgramm, "color");
+        this._position = this.gl.getAttribLocation(shaderProgramm, "position");
         this.gl.enableVertexAttribArray(this._color);
         this.gl.enableVertexAttribArray(this._position);
-        this.gl.useProgram(this.shader_programm);
+        this.gl.useProgram(shaderProgramm);
     }
-    get_shader(source, type, typeString) {
+    getShader(source, type, typeString) {
         const shader = this.gl.createShader(type);
         this.gl.shaderSource(shader, source);
         this.gl.compileShader(shader);
@@ -79,7 +79,7 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
         return shader;
     }
     initBuffers() {
-        const cube_vertex = [
+        const cubeVertex = [
             -1, -1, -1, 1, 1, 0,
             1, -1, -1, 1, 1, 0,
             1, 1, -1, 1, 1, 0,
@@ -110,7 +110,7 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
             1, 1, 1, 0, 1, 0,
             1, 1, -1, 0, 1, 0
         ];
-        const cube_faces = [
+        const cubeFaces = [
             0, 1, 2,
             0, 2, 3,
 
@@ -131,10 +131,10 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
         ];
         this.CUBE_VERTEX = this.gl.createBuffer();
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.CUBE_VERTEX);
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(cube_vertex), this.gl.STATIC_DRAW);
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(cubeVertex), this.gl.STATIC_DRAW);
         this.CUBE_FACES = this.gl.createBuffer();
         this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.CUBE_FACES);
-        this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(cube_faces), this.gl.STATIC_DRAW);
+        this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(cubeFaces), this.gl.STATIC_DRAW);
     }
     setupWebGL() {
         this.PROJMATRIX = LIBS.get_projection(40, this.canvas.width / this.canvas.height, 1, 100);
@@ -149,7 +149,7 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
         this.gl.clearDepth(1.0);
     }
     animate(time) {
-        let dt = time - this.time_old;
+        let dt = time - this.timeOld;
         if (!this.drag) {
             this.dX *= this.amortization, this.dY *= this.amortization;
             this.THETA += this.dX;
@@ -158,7 +158,7 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
         LIBS.set_I4(this.MOVEMATRIX);
         LIBS.rotateY(this.MOVEMATRIX, this.THETA);
         LIBS.rotateX(this.MOVEMATRIX, this.PHI);
-        this.time_old = time;
+        this.timeOld = time;
 
         this.gl.viewport(0.0, 0.0, this.canvas.width, this.canvas.height);
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
@@ -180,7 +180,7 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
     }
     mouseDown(e) {
         this.drag = true;
-        this.old_x = e.pageX, this.old_y = e.pageY;
+        this.oldX = e.pageX, this.oldY = e.pageY;
         e.preventDefault();
         return false;
     }
@@ -189,16 +189,16 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
     }
     mouseMove(e) {
         if (!this.drag) return false;
-        this.dX = (e.pageX - this.old_x) * 2 * Math.PI / this.canvas.width;
-        this.dY = (e.pageY - this.old_y) * 2 * Math.PI / this.canvas.height;
+        this.dX = (e.pageX - this.oldX) * 2 * Math.PI / this.canvas.width;
+        this.dY = (e.pageY - this.oldY) * 2 * Math.PI / this.canvas.height;
         this.THETA += this.dX;
         this.PHI += this.dY;
-        this.old_x = e.pageX, this.old_y = e.pageY;
+        this.oldX = e.pageX, this.oldY = e.pageY;
         e.preventDefault();
     }
 })
 
-const shader_vertex_source = `
+const shaderVertexSource = `
 attribute vec3 position;
 uniform mat4 Pmatrix;
 uniform mat4 Vmatrix;
@@ -206,16 +206,18 @@ uniform mat4 Mmatrix;
 attribute vec3 color;
 varying vec3 vColor;
 void main(void) {
-gl_Position = Pmatrix*Vmatrix*Mmatrix*vec4(position, 1.);
-vColor=color;
-}`
+    gl_Position = Pmatrix*Vmatrix*Mmatrix*vec4(position, 1.);
+    vColor=color;
+}
+`
 
-const shader_fragment_source = `
+const shaderFragmentSource = `
 precision mediump float;
 varying vec3 vColor;
 void main(void) {
-gl_FragColor = vec4(vColor, 1.);
-}`
+    gl_FragColor = vec4(vColor, 1.);
+}
+`
 
 const LIBS = {
     degToRad: (angle) => {
