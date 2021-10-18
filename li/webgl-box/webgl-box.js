@@ -151,7 +151,8 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
     animate(time) {
         let dt = time - this.timeOld;
         if (!this.drag) {
-            this.dX *= this.amortization, this.dY *= this.amortization;
+            this.dX *= this.amortization;
+            this.dY *= this.amortization;
             this.THETA += this.dX;
             this.PHI += this.dY;
         }
@@ -180,7 +181,8 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
     }
     mouseDown(e) {
         this.drag = true;
-        this.oldX = e.pageX, this.oldY = e.pageY;
+        this.oldX = e.pageX;
+        this.oldY = e.pageY;
         e.preventDefault();
         return false;
     }
@@ -193,7 +195,8 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
         this.dY = (e.pageY - this.oldY) * 2 * Math.PI / this.canvas.height;
         this.THETA += this.dX;
         this.PHI += this.dY;
-        this.oldX = e.pageX, this.oldY = e.pageY;
+        this.oldX = e.pageX;
+        this.oldY = e.pageY;
         e.preventDefault();
     }
 })
