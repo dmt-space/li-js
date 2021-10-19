@@ -1,5 +1,7 @@
 import { LiElement, html, css } from '../../li.js';
 
+import * as _h4 from '../../lib/webgl/helper4.js';
+
 customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
     static get styles() {
         return css`
@@ -24,160 +26,168 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
 
     static get properties() {
         return {
-            amortization: { type: Number, default: 0.95 }
+            numParticles: { type: Number, default: 200 },
+            pointSize: { type: Number, default: 5 },
+            maxNumParticles: { type: Number, default: 500 },
+            amortization: { type: Number, default: 0.95 },
+            zTranslation: { type: Number, default: -3.5 },
+            hideBorder: { type: Boolean, default: false }
         }
     }
-
+    get numColors() {
+        return this.vertexColors.length;
+    }
+    get numVertices() {
+        return this.vertices.length * 3;
+    }
     constructor() {
         super();
         this.drag = false;
-        this.dX = this.dY = this.timeOld = this.THETA = this.PHI = 0;
+        this.dX = this.dY = this.THETA = this.PHI = 0;
+        this.vertices = [
+            _h4.vec4(-1.1, -1.1, 1.1, 1.0),
+            _h4.vec4(-1.1, 1.1, 1.1, 1.0),
+            _h4.vec4(1.1, 1.1, 1.1, 1.0),
+            _h4.vec4(1.1, -1.1, 1.1, 1.0),
+            _h4.vec4(-1.1, -1.1, -1.1, 1.0),
+            _h4.vec4(-1.1, 1.1, -1.1, 1.0),
+            _h4.vec4(1.1, 1.1, -1.1, 1.0),
+            _h4.vec4(1.1, -1.1, -1.1, 1.0)
+        ];
+        this.vertexColors = [
+            _h4.vec4(1.0, 1.0, 1.0, 1.0),  // white
+            _h4.vec4(1.0, 0.5, 0.0, 1.0),  // orange
+            _h4.vec4(1.0, 0.0, 0.0, 1.0),  // red
+            _h4.vec4(1.0, 1.0, 0.0, 1.0),  // yellow
+            _h4.vec4(0.0, 1.0, 0.0, 1.0),  // green
+            _h4.vec4(0.0, 0.0, 1.0, 1.0),  // blue
+            _h4.vec4(1.0, 0.0, 1.0, 1.0),  // magenta
+            _h4.vec4(1.0, 0.5, 0.0, 1.0),  // orange
+            _h4.vec4(0.0, 1.0, 1.0, 1.0)   // cyan
+        ];
     }
 
     firstUpdated() {
         super.firstUpdated();
 
         this.canvas = this.$id('canvas');
-        this.canvas.width = window.innerWidth / 2 - 6;
-        this.canvas.height = window.innerHeight / 2 - 6;
-        try {
-            this.gl = this.canvas.getContext("webgl", { antialias: true });
-        } catch (e) {
-            console.log("You are not webgl compatible :(");
-            return false;
-        }
+        this.gl = this.canvas.getContext("webgl");
+        this.gl.viewportWidth = this.canvas.width = window.innerWidth;
+        this.gl.viewportHeight = this.canvas.height = window.innerHeight;
         this.initShaders();
         this.initBuffers();
-        this.setupWebGL();
-        this.animate(0);
+        this.initData();
+        this.animate();
     }
 
     initShaders() {
-        const shaderVertex = this.getShader(shaderVertexSource, this.gl.VERTEX_SHADER, "VERTEX");
-        const shaderFragment = this.getShader(shaderFragmentSource, this.gl.FRAGMENT_SHADER, "FRAGMENT");
-        const shaderProgramm = this.gl.createProgram();
-        this.gl.attachShader(shaderProgramm, shaderVertex);
-        this.gl.attachShader(shaderProgramm, shaderFragment);
-        this.gl.linkProgram(shaderProgramm);
-        this._Pmatrix = this.gl.getUniformLocation(shaderProgramm, "Pmatrix");
-        this._Vmatrix = this.gl.getUniformLocation(shaderProgramm, "Vmatrix");
-        this._Mmatrix = this.gl.getUniformLocation(shaderProgramm, "Mmatrix");
-        this._color = this.gl.getAttribLocation(shaderProgramm, "color");
-        this._position = this.gl.getAttribLocation(shaderProgramm, "position");
-        this.gl.enableVertexAttribArray(this._color);
-        this.gl.enableVertexAttribArray(this._position);
-        this.gl.useProgram(shaderProgramm);
+        const shaderVertexSource = `
+attribute vec4 vPosition;
+attribute vec4 vColor;
+varying vec4 fColor;
+uniform mat4 modelViewMatrix;
+uniform mat4 projectionMatrix;
+uniform float pointSize;
+void main() 
+{
+    gl_Position = projectionMatrix * modelViewMatrix * vPosition;
+    fColor = vColor;
+    gl_PointSize = pointSize;
+} 
+`
+        const shaderFragmentSource = `
+precision mediump float;
+varying vec4 fColor;
+void main()
+{
+    gl_FragColor = fColor;
+}
+`
+        this.shaderProgram = this.gl.createProgram();
+        const fragmentShader = this.getShader(this.gl.FRAGMENT_SHADER, shaderFragmentSource);
+        const vertexShader = this.getShader(this.gl.VERTEX_SHADER, shaderVertexSource);
+        this.gl.attachShader(this.shaderProgram, vertexShader);
+        this.gl.attachShader(this.shaderProgram, fragmentShader);
+        this.gl.linkProgram(this.shaderProgram);
+        this.gl.useProgram(this.shaderProgram);
     }
-    getShader(source, type, typeString) {
+    getShader(type, source) {
         const shader = this.gl.createShader(type);
         this.gl.shaderSource(shader, source);
         this.gl.compileShader(shader);
-        if (!this.gl.getShaderParameter(shader, this.gl.COMPILE_STATUS)) {
-            console.log("ERROR IN " + typeString + " SHADER : " + this.gl.getShaderInfoLog(shader));
-            return false;
-        }
         return shader;
     }
     initBuffers() {
-        const cubeVertex = [
-            -1, -1, -1, 1, 1, 0,
-            1, -1, -1, 1, 1, 0,
-            1, 1, -1, 1, 1, 0,
-            -1, 1, -1, 1, 1, 0,
+        this.cBufferId = this.gl.createBuffer();
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.cBufferId);
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, 16 * (this.maxNumParticles + this.numVertices), this.gl.STATIC_DRAW);
 
-            -1, -1, 1, 0, 0, 1,
-            1, -1, 1, 0, 0, 1,
-            1, 1, 1, 0, 0, 1,
-            -1, 1, 1, 0, 0, 1,
+        this.vColor = this.gl.getAttribLocation(this.shaderProgram, "vColor");
+        this.gl.vertexAttribPointer(this.vColor, 4, this.gl.FLOAT, false, 0, 0);
+        this.gl.enableVertexAttribArray(this.vColor);
 
-            -1, -1, -1, 0, 1, 1,
-            -1, 1, -1, 0, 1, 1,
-            -1, 1, 1, 0, 1, 1,
-            -1, -1, 1, 0, 1, 1,
+        this.vBufferId = this.gl.createBuffer();
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vBufferId);
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, 16 * (this.maxNumParticles + this.numVertices), this.gl.STATIC_DRAW);
 
-            1, -1, -1, 1, 0, 0,
-            1, 1, -1, 1, 0, 0,
-            1, 1, 1, 1, 0, 0,
-            1, -1, 1, 1, 0, 0,
-
-            -1, -1, -1, 1, 0, 1,
-            -1, -1, 1, 1, 0, 1,
-            1, -1, 1, 1, 0, 1,
-            1, -1, -1, 1, 0, 1,
-
-            -1, 1, -1, 0, 1, 0,
-            -1, 1, 1, 0, 1, 0,
-            1, 1, 1, 0, 1, 0,
-            1, 1, -1, 0, 1, 0
-        ];
-        const cubeFaces = [
-            0, 1, 2,
-            0, 2, 3,
-
-            4, 5, 6,
-            4, 6, 7,
-
-            8, 9, 10,
-            8, 10, 11,
-
-            12, 13, 14,
-            12, 14, 15,
-
-            16, 17, 18,
-            16, 18, 19,
-
-            20, 21, 22,
-            20, 22, 23
-        ];
-        this.CUBE_VERTEX = this.gl.createBuffer();
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.CUBE_VERTEX);
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(cubeVertex), this.gl.STATIC_DRAW);
-        this.CUBE_FACES = this.gl.createBuffer();
-        this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.CUBE_FACES);
-        this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(cubeFaces), this.gl.STATIC_DRAW);
+        this.vPosition = this.gl.getAttribLocation(this.shaderProgram, "vPosition");
+        this.gl.vertexAttribPointer(this.vPosition, 4, this.gl.FLOAT, false, 0, 0);
+        this.gl.enableVertexAttribArray(this.vPosition);
     }
-    setupWebGL() {
-        this.PROJMATRIX = LIBS.get_projection(40, this.canvas.width / this.canvas.height, 1, 100);
-        this.MOVEMATRIX = LIBS.get_I4();
-        this.VIEWMATRIX = LIBS.get_I4();
-        LIBS.translateX(this.VIEWMATRIX, 0);
-        LIBS.translateY(this.VIEWMATRIX, 0);
-        LIBS.translateZ(this.VIEWMATRIX, -6);
-        this.gl.enable(this.gl.DEPTH_TEST);
-        this.gl.depthFunc(this.gl.LEQUAL);
-        this.gl.clearColor(0.0, 0.0, 0.0, 0.0);
-        this.gl.clearDepth(1.0);
+    initData() {
+        this.particleSystem = [];
+        for (var i = 0; i < this.maxNumParticles; i++) {
+            this.particleSystem.push(this.particle());
+        }
+        for (var i = 0; i < this.numParticles; i++) {
+            this.particleSystem[i].mass = 1.0;
+            this.particleSystem[i].color = this.vertexColors[i % this.numColors];
+            for (var j = 0; j < 3; j++) {
+                this.particleSystem[i].position[j] = 2.0 * Math.random() - 1.0;
+            }
+            this.particleSystem[i].position[3] = 1.0;
+        }
     }
-    animate(time) {
-        let dt = time - this.timeOld;
+    animate() {
         if (!this.drag) {
             this.dX *= this.amortization;
             this.dY *= this.amortization;
             this.THETA += this.dX;
             this.PHI += this.dY;
         }
-        LIBS.set_I4(this.MOVEMATRIX);
-        LIBS.rotateY(this.MOVEMATRIX, this.THETA);
-        LIBS.rotateX(this.MOVEMATRIX, this.PHI);
-        this.timeOld = time;
-
-        this.gl.viewport(0.0, 0.0, this.canvas.width, this.canvas.height);
+        this._recalc();
+        if (!this.hideBorder) {
+            for (var i = 0; i < 6; i++) this.gl.drawArrays(this.gl.LINE_LOOP, i * 4, 4);
+        }
+        this.gl.drawArrays(this.gl.POINTS, this.numVertices, this.numParticles);
+        requestAnimationFrame(() => this.animate());
+    }
+    _recalc() {
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+        this.gl.viewportWidth = this.canvas.width = window.innerWidth;
+        this.gl.viewportHeight = this.canvas.height = window.innerHeight;
+        this.gl.viewport(0, 0, this.gl.viewportWidth, this.gl.viewportHeight);
+        this.colorsArray = [];
+        this.pointsArray = [];
+        this.colorCube();
+        for (var i = 0; i < this.numParticles; i++) {
+            this.pointsArray.push(this.particleSystem[i].position);
+            this.colorsArray.push(this.particleSystem[i].color);
+        }
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.cBufferId);
+        this.gl.bufferSubData(this.gl.ARRAY_BUFFER, 0, _h4.flatten(this.colorsArray));
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vBufferId);
+        this.gl.bufferSubData(this.gl.ARRAY_BUFFER, 0, _h4.flatten(this.pointsArray));
 
-        this.gl.uniformMatrix4fv(this._Pmatrix, false, this.PROJMATRIX);
-        this.gl.uniformMatrix4fv(this._Vmatrix, false, this.VIEWMATRIX);
-        this.gl.uniformMatrix4fv(this._Mmatrix, false, this.MOVEMATRIX);
+        this.modelViewMatrix = _h4.create();
+        this.projectionMatrix = _h4.perspectiveMatrix(1, this.gl.viewportWidth / this.gl.viewportHeight, .01, 100.0);
+        _h4.translate(this.modelViewMatrix, this.modelViewMatrix, [0, 0, this.zTranslation]);
+        _h4.rotate(this.modelViewMatrix, this.modelViewMatrix, this.THETA, [0, 1, 0]);
+        _h4.rotate(this.modelViewMatrix, this.modelViewMatrix, this.PHI, [1, 0, 0]);
 
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.CUBE_VERTEX);
-        this.gl.vertexAttribPointer(this._position, 3, this.gl.FLOAT, false, 4 * (3 + 3), 0);
-        this.gl.vertexAttribPointer(this._color, 3, this.gl.FLOAT, false, 4 * (3 + 3), 3 * 4);
-
-        this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.CUBE_FACES);
-        this.gl.drawElements(this.gl.TRIANGLES, 6 * 2 * 3, this.gl.UNSIGNED_SHORT, 0);
-
-        this.gl.flush();
-
-        requestAnimationFrame(() => this.animate(dt));
+        this.gl.uniformMatrix4fv(this.gl.getUniformLocation(this.shaderProgram, "modelViewMatrix"), false, _h4.flatten(this.modelViewMatrix));
+        this.gl.uniformMatrix4fv(this.gl.getUniformLocation(this.shaderProgram, "projectionMatrix"), false, _h4.flatten(this.projectionMatrix));
+        this.gl.uniform1f(this.gl.getUniformLocation(this.shaderProgram, "pointSize"), this.pointSize);
     }
     mouseDown(e) {
         this.drag = true;
@@ -199,96 +209,30 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
         this.oldY = e.pageY;
         e.preventDefault();
     }
+    particle() {
+        var p = {};
+        p.color = _h4.vec4(0, 0, 0, 1);
+        p.position = _h4.vec4(0, 0, 0, 1);
+        p.velocity = _h4.vec4(0, 0, 0, 0);
+        p.mass = 1;
+        return p;
+    }
+    quad(a, b, c, d) {
+        this.pointsArray.push(this.vertices[a]);
+        this.colorsArray.push(this.vertexColors[0]);
+        this.pointsArray.push(this.vertices[b]);
+        this.colorsArray.push(this.vertexColors[0]);
+        this.pointsArray.push(this.vertices[c]);
+        this.colorsArray.push(this.vertexColors[0]);
+        this.pointsArray.push(this.vertices[d]);
+        this.colorsArray.push(this.vertexColors[0]);
+    }
+    colorCube() {
+        this.quad(1, 0, 3, 2);
+        this.quad(2, 3, 7, 6);
+        this.quad(3, 0, 4, 7);
+        this.quad(6, 5, 1, 2);
+        this.quad(4, 5, 6, 7);
+        this.quad(5, 4, 0, 1);
+    }
 })
-
-const shaderVertexSource = `
-attribute vec3 position;
-uniform mat4 Pmatrix;
-uniform mat4 Vmatrix;
-uniform mat4 Mmatrix;
-attribute vec3 color;
-varying vec3 vColor;
-void main(void) {
-    gl_Position = Pmatrix*Vmatrix*Mmatrix*vec4(position, 1.);
-    vColor=color;
-}
-`
-
-const shaderFragmentSource = `
-precision mediump float;
-varying vec3 vColor;
-void main(void) {
-    gl_FragColor = vec4(vColor, 1.);
-}
-`
-
-const LIBS = {
-    degToRad: (angle) => {
-        return (angle * Math.PI / 180);
-    },
-    get_projection: (angle, a, zMin, zMax) => {
-        const tan = Math.tan(LIBS.degToRad(0.5 * angle)),
-            A = -(zMax + zMin) / (zMax - zMin),
-            B = (-2 * zMax * zMin) / (zMax - zMin);
-
-        return [
-            0.5 / tan, 0, 0, 0,
-            0, 0.5 * a / tan, 0, 0,
-            0, 0, A, -1,
-            0, 0, B, 0
-        ];
-    },
-    get_I4: () => {
-        return [
-            1, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1
-        ];
-    },
-    set_I4: (m) => {
-        m[0] = 1, m[1] = 0, m[2] = 0, m[3] = 0,
-            m[4] = 0, m[5] = 1, m[6] = 0, m[7] = 0,
-            m[8] = 0, m[9] = 0, m[10] = 1, m[11] = 0,
-            m[12] = 0, m[13] = 0, m[14] = 0, m[15] = 1;
-    },
-    rotateX: (m, angle) => {
-        const c = Math.cos(angle);
-        const s = Math.sin(angle);
-        const mv1 = m[1], mv5 = m[5], mv9 = m[9];
-        m[1] = m[1] * c - m[2] * s;
-        m[5] = m[5] * c - m[6] * s;
-        m[9] = m[9] * c - m[10] * s;
-
-        m[2] = m[2] * c + mv1 * s;
-        m[6] = m[6] * c + mv5 * s;
-        m[10] = m[10] * c + mv9 * s;
-    },
-    rotateY: (m, angle) => {
-        const c = Math.cos(angle);
-        const s = Math.sin(angle);
-        const mv0 = m[0], mv4 = m[4], mv8 = m[8];
-        m[0] = c * m[0] + s * m[2];
-        m[4] = c * m[4] + s * m[6];
-        m[8] = c * m[8] + s * m[10];
-
-        m[2] = c * m[2] - s * mv0;
-        m[6] = c * m[6] - s * mv4;
-        m[10] = c * m[10] - s * mv8;
-    },
-    rotateZ: (m, angle) => {
-        const c = Math.cos(angle);
-        const s = Math.sin(angle);
-        const mv0 = m[0], mv4 = m[4], mv8 = m[8];
-        m[0] = c * m[0] - s * m[1];
-        m[4] = c * m[4] - s * m[5];
-        m[8] = c * m[8] - s * m[9];
-
-        m[1] = c * m[1] + s * mv0;
-        m[5] = c * m[5] + s * mv4;
-        m[9] = c * m[9] + s * mv8;
-    },
-    translateX: (m, t) => { m[12] += t },
-    translateY: (m, t) => { m[13] += t },
-    translateZ: (m, t) => { m[14] += t }
-}
