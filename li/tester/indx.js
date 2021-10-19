@@ -394,6 +394,6 @@ export const indx = {
     'li-webgl-box': { label: 'li-webgl-box', props: { iframe: '../webgl-box/index.html' } },
     'webgl-box': [{ label: 'index', url: url + '/webgl-box/index.html' }],
 
-    'li-webgl-box2': { label: 'li-webgl-box2', props: { iframe: '../webgl-box2/index.html' } },
-    'webgl-box2': [{ label: 'index', url: url + '/webgl-box2/index.html' }],
+    'li-webgl-box4': { label: 'li-webgl-box4', props: { iframe: '../webgl-box4/index.html' } },
+    'webgl-box4': [{ label: 'index', url: url + '/webgl-box4/index.html' }],
 }
