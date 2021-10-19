@@ -27,7 +27,7 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
     static get properties() {
         return {
             numParticles: { type: Number, default: 200 },
-            pointSize: { type: Number, default: 5 },
+            pointSize: { type: Number, default: 4 },
             maxNumParticles: { type: Number, default: 500 },
             amortization: { type: Number, default: 0.95 },
             zTranslation: { type: Number, default: -3.5 },
@@ -164,8 +164,6 @@ void main()
     }
     _recalc() {
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
-        this.gl.viewportWidth = this.canvas.width = window.innerWidth;
-        this.gl.viewportHeight = this.canvas.height = window.innerHeight;
         this.gl.viewport(0, 0, this.gl.viewportWidth, this.gl.viewportHeight);
         this.colorsArray = [];
         this.pointsArray = [];
