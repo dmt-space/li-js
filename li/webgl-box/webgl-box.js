@@ -28,15 +28,15 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
             pointSize: { type: Number, default: 4 },
             amortization: { type: Number, default: 0.95 },
             zTranslation: { type: Number, default: -3.5 },
-            hideBorder: { type: Boolean, default: false },
+            showBorder: { type: Boolean, default: true },
             size: { type: Number, default: 4 },
         }
     }
     get numColors() {
         return this.vertexColors.length;
     }
-    get numVertices() {
-        return this.vertices.length * 3;
+    get numCubeVertices() {
+        return this.cubeVertices.length * 3;
     }
     get numParticles() {
         return (this.size + 1) * (this.size + 1) * (this.size + 1);
@@ -48,7 +48,7 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
         super();
         this.drag = false;
         this.dX = this.dY = this.THETA = this.PHI = 0;
-        this.vertices = [
+        this.cubeVertices = [
             vec4(-1.0, -1.0, 1.0, 1.0),
             vec4(-1.0, 1.0, 1.0, 1.0),
             vec4(1.0, 1.0, 1.0, 1.0),
@@ -90,11 +90,11 @@ attribute vec4 vPosition;
 attribute vec4 vColor;
 varying vec4 fColor;
 uniform mat4 modelViewMatrix;
-uniform mat4 projectionMatrix;
+uniform mat4 perspectiveMatrix;
 uniform float pointSize;
 void main() 
 {
-    gl_Position = projectionMatrix * modelViewMatrix * vPosition;
+    gl_Position = perspectiveMatrix * modelViewMatrix * vPosition;
     fColor = vColor;
     gl_PointSize = pointSize;
 } 
@@ -124,19 +124,17 @@ void main()
     initBuffers() {
         this.cBufferId = this.gl.createBuffer();
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.cBufferId);
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, 16 * (this.maxNumParticles + this.numVertices), this.gl.STATIC_DRAW);
-
-        this.vColor = this.gl.getAttribLocation(this.shaderProgram, "vColor");
-        this.gl.vertexAttribPointer(this.vColor, 4, this.gl.FLOAT, false, 0, 0);
-        this.gl.enableVertexAttribArray(this.vColor);
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, 16 * (this.maxNumParticles + this.numCubeVertices), this.gl.STATIC_DRAW);
+        const vColor = this.gl.getAttribLocation(this.shaderProgram, "vColor");
+        this.gl.vertexAttribPointer(vColor, 4, this.gl.FLOAT, false, 0, 0);
+        this.gl.enableVertexAttribArray(vColor);
 
         this.vBufferId = this.gl.createBuffer();
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vBufferId);
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, 16 * (this.maxNumParticles + this.numVertices), this.gl.STATIC_DRAW);
-
-        this.vPosition = this.gl.getAttribLocation(this.shaderProgram, "vPosition");
-        this.gl.vertexAttribPointer(this.vPosition, 4, this.gl.FLOAT, false, 0, 0);
-        this.gl.enableVertexAttribArray(this.vPosition);
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, 16 * (this.maxNumParticles + this.numCubeVertices), this.gl.STATIC_DRAW);
+        const vPosition = this.gl.getAttribLocation(this.shaderProgram, "vPosition");
+        this.gl.vertexAttribPointer(vPosition, 4, this.gl.FLOAT, false, 0, 0);
+        this.gl.enableVertexAttribArray(vPosition);
     }
     initParticle() {
         this.particleSystem = [];
@@ -180,10 +178,9 @@ void main()
             this.PHI += this.dY;
         }
         this._recalc();
-        if (!this.hideBorder) {
+        if (this.showBorder)
             for (var i = 0; i < 6; i++) this.gl.drawArrays(this.gl.LINE_LOOP, i * 4, 4);
-        }
-        this.gl.drawArrays(this.gl.POINTS, this.numVertices, this.numParticles);
+        this.gl.drawArrays(this.gl.POINTS, this.numCubeVertices, this.numParticles);
         requestAnimationFrame(() => this.animate());
     }
     _recalc() {
@@ -191,7 +188,7 @@ void main()
         this.gl.viewport(0, 0, this.gl.viewportWidth, this.gl.viewportHeight);
         this.colorsArray = [];
         this.pointsArray = [];
-        this.colorCube();
+        this.makeCube();
         for (var i = 0; i < this.numParticles; i++) {
             this.pointsArray.push(this.particleSystem[i].position);
             this.colorsArray.push(this.particleSystem[i].color);
@@ -201,14 +198,14 @@ void main()
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vBufferId);
         this.gl.bufferSubData(this.gl.ARRAY_BUFFER, 0, flatten(this.pointsArray));
 
-        this.modelViewMatrix = create();
-        this.projectionMatrix = perspectiveMatrix(1, this.gl.viewportWidth / this.gl.viewportHeight, .01, 100.0);
-        translate(this.modelViewMatrix, this.modelViewMatrix, [0, 0, this.zTranslation]);
-        rotate(this.modelViewMatrix, this.modelViewMatrix, this.THETA, [0, 1, 0]);
-        rotate(this.modelViewMatrix, this.modelViewMatrix, this.PHI, [1, 0, 0]);
+        const modelViewMatrix = create();
+        const perspectiveMatrix = createPerspectiveMatrix(1, this.gl.viewportWidth / this.gl.viewportHeight, .01, 100.0);
+        translate(modelViewMatrix, modelViewMatrix, [0, 0, this.zTranslation]);
+        rotate(modelViewMatrix, modelViewMatrix, this.THETA, [0, 1, 0]);
+        rotate(modelViewMatrix, modelViewMatrix, this.PHI, [1, 0, 0]);
 
-        this.gl.uniformMatrix4fv(this.gl.getUniformLocation(this.shaderProgram, "modelViewMatrix"), false, flatten(this.modelViewMatrix));
-        this.gl.uniformMatrix4fv(this.gl.getUniformLocation(this.shaderProgram, "projectionMatrix"), false, flatten(this.projectionMatrix));
+        this.gl.uniformMatrix4fv(this.gl.getUniformLocation(this.shaderProgram, "modelViewMatrix"), false, flatten(modelViewMatrix));
+        this.gl.uniformMatrix4fv(this.gl.getUniformLocation(this.shaderProgram, "perspectiveMatrix"), false, flatten(perspectiveMatrix));
         this.gl.uniform1f(this.gl.getUniformLocation(this.shaderProgram, "pointSize"), this.pointSize);
     }
     mouseDown(e) {
@@ -242,35 +239,23 @@ void main()
         p.mass = 1;
         return p;
     }
-    quad(a, b, c, d) {
-        this.pointsArray.push(this.vertices[a]);
-        this.colorsArray.push(this.vertexColors[0]);
-        this.pointsArray.push(this.vertices[b]);
-        this.colorsArray.push(this.vertexColors[0]);
-        this.pointsArray.push(this.vertices[c]);
-        this.colorsArray.push(this.vertexColors[0]);
-        this.pointsArray.push(this.vertices[d]);
-        this.colorsArray.push(this.vertexColors[0]);
-    }
-    colorCube() {
-        this.quad(1, 0, 3, 2);
-        this.quad(2, 3, 7, 6);
-        this.quad(3, 0, 4, 7);
-        this.quad(6, 5, 1, 2);
-        this.quad(4, 5, 6, 7);
-        this.quad(5, 4, 0, 1);
+    makeCube() {
+        [
+            1, 0, 3, 2,
+            2, 3, 7, 6,
+            3, 0, 4, 7,
+            6, 5, 1, 2,
+            4, 5, 6, 7,
+            5, 4, 0, 1
+        ].forEach(i => {
+            this.pointsArray.push(this.cubeVertices[i]);
+            this.colorsArray.push(this.vertexColors[0]);
+        })
     }
 })
 
-const ARRAY_TYPE = typeof Float32Array !== "undefined" ? Float32Array : Array;
-function _argumentsToArray(args) {
-    return [].concat.apply([], Array.prototype.slice.apply(args));
-}
-function radians(degrees) {
-    return degrees * Math.PI / 180.0;
-}
 function vec4() {
-    let result = _argumentsToArray(arguments);
+    let result = [].concat.apply([], Array.prototype.slice.apply(arguments));
     switch (result.length) {
         case 0: result.push(0.0);
         case 1: result.push(0.0);
@@ -300,7 +285,7 @@ function flatten(v) {
             floats[i] = v[i];
     return floats;
 }
-function perspectiveMatrix(fieldOfViewInRadians, aspectRatio, near, far) {
+function createPerspectiveMatrix(fieldOfViewInRadians, aspectRatio, near, far) {
     const f = 1.0 / Math.tan(fieldOfViewInRadians / 2);
     const rangeInv = 1 / (near - far);
     return [
@@ -311,29 +296,8 @@ function perspectiveMatrix(fieldOfViewInRadians, aspectRatio, near, far) {
     ];
 }
 function create() {
-    const out = new ARRAY_TYPE(16);
-    if (ARRAY_TYPE != Float32Array) {
-        out[1] = 0; out[2] = 0; out[3] = 0; out[4] = 0;
-        out[6] = 0; out[7] = 0; out[8] = 0; out[9] = 0;
-        out[11] = 0; out[12] = 0; out[13] = 0; out[14] = 0;
-    }
+    const out = new Float32Array(16);
     out[0] = 1; out[5] = 1; out[10] = 1; out[15] = 1;
-    return out;
-}
-function perspective(out, fovy, aspect, near, far) {
-    const f = 1.0 / Math.tan(fovy / 2);
-    out[0] = f / aspect; out[1] = 0; out[2] = 0; out[3] = 0;
-    out[4] = 0; out[5] = f; out[6] = 0; out[7] = 0;
-    out[8] = 0; out[9] = 0; out[11] = -1;
-    out[12] = 0; out[13] = 0; out[15] = 0;
-    if (far != null && far !== Infinity) {
-        const nf = 1 / (near - far);
-        out[10] = (far + near) * nf;
-        out[14] = 2 * far * near * nf;
-    } else {
-        out[10] = -1;
-        out[14] = -2 * near;
-    }
     return out;
 }
 function translate(out, a, v) {
@@ -360,8 +324,8 @@ function translate(out, a, v) {
     }
     return out;
 }
-const EPSILON = 0.000001;
 function rotate(out, a, rad, axis) {
+    const EPSILON = 0.000001;
     let x = axis[0], y = axis[1], z = axis[2];
     let len = Math.hypot(x, y, z);
     let s, c, t;
