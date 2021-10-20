@@ -4,7 +4,7 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
     static get styles() {
         return css`
             :host {
-                position: relative;
+                display: flex;
                 width: 100%;
                 height: 100%;
             }
@@ -13,7 +13,7 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
 
     render() {
         return html`
-            <canvas id='canvas' style='position: absolute; background-color: black; width: 100%; height: 100%; touch-action: none;'
+            <canvas id='canvas' style='flex: 1; width: 100%; height: 100%; touch-action: none;'
                 @pointerdown=${this.mouseDown}
                 @pointerup=${this.mouseUp}
                 @pointerout=${this.mouseUp}
@@ -165,29 +165,32 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
         requestAnimationFrame(() => this.animate());
     }
     _recalc() {
-        this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
-        this.gl.viewport(0, 0, this.gl.viewportWidth, this.gl.viewportHeight);
+        const gl = this.gl;
+        gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+
         this.colorsArray = [];
         this.pointsArray = [];
-        this.makeGridBorder();
-        for (var i = 0; i < this.numGridParticles; i++) {
+        this.initGridBorder();
+        for (let i = 0; i < this.numGridParticles; i++) {
             this.pointsArray.push(this.particleSystem[i].position);
             this.colorsArray.push(this.particleSystem[i].color);
         }
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.cBufferId);
-        this.gl.bufferSubData(this.gl.ARRAY_BUFFER, 0, new Float32Array(this.colorsArray.flat()));
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vBufferId);
-        this.gl.bufferSubData(this.gl.ARRAY_BUFFER, 0, new Float32Array(this.pointsArray.flat()));
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.cBufferId);
+        gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(this.colorsArray.flat()));
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vBufferId);
+        gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(this.pointsArray.flat()));
 
         const mvMatrix = modelViewMatrix();
-        const pMatrix = perspectiveMatrix(1, this.gl.viewportWidth / this.gl.viewportHeight, .01, 100.0);
+        const pMatrix = perspectiveMatrix(1, gl.viewportWidth / gl.viewportHeight, .01, 1000.0);
         translate(mvMatrix, mvMatrix, [0, 0, this.zTranslation]);
         rotate(mvMatrix, mvMatrix, this.THETA, [0, 1, 0]);
         rotate(mvMatrix, mvMatrix, this.PHI, [1, 0, 0]);
 
-        this.gl.uniformMatrix4fv(this.gl.getUniformLocation(this.shaderProgram, "mvMatrix"), false, mvMatrix);
-        this.gl.uniformMatrix4fv(this.gl.getUniformLocation(this.shaderProgram, "pMatrix"), false, pMatrix);
-        this.gl.uniform1f(this.gl.getUniformLocation(this.shaderProgram, "vPointSize"), this.gridPointSize);
+        gl.uniformMatrix4fv(gl.getUniformLocation(this.shaderProgram, "mvMatrix"), false, mvMatrix);
+        gl.uniformMatrix4fv(gl.getUniformLocation(this.shaderProgram, "pMatrix"), false, pMatrix);
+        gl.uniform1f(gl.getUniformLocation(this.shaderProgram, "vPointSize"), this.gridPointSize);
     }
     mouseDown(e) {
         this.drag = true;
@@ -212,7 +215,7 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
     mouseWheel(e) {
         this.zTranslation += e.deltaY / (this.offsetHeight / 2);
     }
-    makeGridBorder() {
+    initGridBorder() {
         [
             1, 0, 3, 2,
             2, 3, 7, 6,
