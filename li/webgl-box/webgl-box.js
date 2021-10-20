@@ -92,12 +92,12 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
                 attribute vec4 vPosition;
                 attribute vec4 vColor;
                 varying vec4 fColor;
-                uniform mat4 modelViewMatrix;
-                uniform mat4 perspectiveMatrix;
+                uniform mat4 mvMatrix;
+                uniform mat4 pMatrix;
                 uniform float gridPointSize;
                 void main() 
                 {
-                    gl_Position = perspectiveMatrix * modelViewMatrix * vPosition;
+                    gl_Position = pMatrix * mvMatrix * vPosition;
                     fColor = vColor;
                     gl_PointSize = gridPointSize;
                 } 
@@ -105,11 +105,15 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
             FRAGMENT_SHADER: `
                 precision mediump float;
                 varying vec4 fColor;
+                vec2 center = vec2(0.5, 0.5);
                 void main()
                 {
+                    if (distance(center, gl_PointCoord) > 0.5) {
+                        discard;
+                    }
                     gl_FragColor = fColor;
                 }
-        `
+            `
         }
         this.gl.shaderSource(shader, shaders[type]);
         this.gl.compileShader(shader);
@@ -175,14 +179,14 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vBufferId);
         this.gl.bufferSubData(this.gl.ARRAY_BUFFER, 0, new Float32Array(this.pointsArray.flat()));
 
-        const modelViewMatrix = createMatrix();
-        const perspectiveMatrix = createPerspectiveMatrix(1, this.gl.viewportWidth / this.gl.viewportHeight, .01, 100.0);
-        translate(modelViewMatrix, modelViewMatrix, [0, 0, this.zTranslation]);
-        rotate(modelViewMatrix, modelViewMatrix, this.THETA, [0, 1, 0]);
-        rotate(modelViewMatrix, modelViewMatrix, this.PHI, [1, 0, 0]);
+        const mvMatrix = modelViewMatrix();
+        const pMatrix = perspectiveMatrix(1, this.gl.viewportWidth / this.gl.viewportHeight, .01, 100.0);
+        translate(mvMatrix, mvMatrix, [0, 0, this.zTranslation]);
+        rotate(mvMatrix, mvMatrix, this.THETA, [0, 1, 0]);
+        rotate(mvMatrix, mvMatrix, this.PHI, [1, 0, 0]);
 
-        this.gl.uniformMatrix4fv(this.gl.getUniformLocation(this.shaderProgram, "modelViewMatrix"), false, modelViewMatrix);
-        this.gl.uniformMatrix4fv(this.gl.getUniformLocation(this.shaderProgram, "perspectiveMatrix"), false, perspectiveMatrix);
+        this.gl.uniformMatrix4fv(this.gl.getUniformLocation(this.shaderProgram, "mvMatrix"), false, mvMatrix);
+        this.gl.uniformMatrix4fv(this.gl.getUniformLocation(this.shaderProgram, "pMatrix"), false, pMatrix);
         this.gl.uniform1f(this.gl.getUniformLocation(this.shaderProgram, "gridPointSize"), this.gridPointSize);
     }
     mouseDown(e) {
@@ -223,7 +227,7 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
     }
 })
 
-function createPerspectiveMatrix(fieldOfViewInRadians, aspectRatio, near, far) {
+function perspectiveMatrix(fieldOfViewInRadians, aspectRatio, near, far) {
     const f = 1.0 / Math.tan(fieldOfViewInRadians / 2);
     const rangeInv = 1 / (near - far);
     return [
@@ -233,7 +237,7 @@ function createPerspectiveMatrix(fieldOfViewInRadians, aspectRatio, near, far) {
         0, 0, near * far * rangeInv * 2, 0
     ];
 }
-function createMatrix() {
+function modelViewMatrix() {
     const out = new Float32Array(16);
     out[0] = 1; out[5] = 1; out[10] = 1; out[15] = 1;
     return out;
