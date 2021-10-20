@@ -79,13 +79,13 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
 
     makeProgram() {
         const program = this.gl.createProgram();
-        this.gl.attachShader(program, this.getShader('VERTEX_SHADER'));
-        this.gl.attachShader(program, this.getShader('FRAGMENT_SHADER'));
+        this.gl.attachShader(program, this.initShader('VERTEX_SHADER'));
+        this.gl.attachShader(program, this.initShader('FRAGMENT_SHADER'));
         this.gl.linkProgram(program);
         this.gl.useProgram(program);
         this.shaderProgram = program;
     }
-    getShader(type) {
+    initShader(type) {
         const shader = this.gl.createShader(this.gl[type]);
         const shaders = {
             VERTEX_SHADER: `
@@ -94,12 +94,12 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
                 varying vec4 fColor;
                 uniform mat4 mvMatrix;
                 uniform mat4 pMatrix;
-                uniform float gridPointSize;
+                uniform float vPointSize;
                 void main() 
                 {
                     gl_Position = pMatrix * mvMatrix * vPosition;
                     fColor = vColor;
-                    gl_PointSize = gridPointSize;
+                    gl_PointSize = vPointSize;
                 } 
             `,
             FRAGMENT_SHADER: `
@@ -187,7 +187,7 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
 
         this.gl.uniformMatrix4fv(this.gl.getUniformLocation(this.shaderProgram, "mvMatrix"), false, mvMatrix);
         this.gl.uniformMatrix4fv(this.gl.getUniformLocation(this.shaderProgram, "pMatrix"), false, pMatrix);
-        this.gl.uniform1f(this.gl.getUniformLocation(this.shaderProgram, "gridPointSize"), this.gridPointSize);
+        this.gl.uniform1f(this.gl.getUniformLocation(this.shaderProgram, "vPointSize"), this.gridPointSize);
     }
     mouseDown(e) {
         this.drag = true;
