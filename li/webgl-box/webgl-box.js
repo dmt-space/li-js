@@ -49,14 +49,14 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
         this.drag = false;
         this.dX = this.dY = this.THETA = this.PHI = 0;
         this.vertices = [
-            vec4(-1.1, -1.1, 1.1, 1.0),
-            vec4(-1.1, 1.1, 1.1, 1.0),
-            vec4(1.1, 1.1, 1.1, 1.0),
-            vec4(1.1, -1.1, 1.1, 1.0),
-            vec4(-1.1, -1.1, -1.1, 1.0),
-            vec4(-1.1, 1.1, -1.1, 1.0),
-            vec4(1.1, 1.1, -1.1, 1.0),
-            vec4(1.1, -1.1, -1.1, 1.0)
+            vec4(-1.0, -1.0, 1.0, 1.0),
+            vec4(-1.0, 1.0, 1.0, 1.0),
+            vec4(1.0, 1.0, 1.0, 1.0),
+            vec4(1.0, -1.0, 1.0, 1.0),
+            vec4(-1.0, -1.0, -1.0, 1.0),
+            vec4(-1.0, 1.0, -1.0, 1.0),
+            vec4(1.0, 1.0, -1.0, 1.0),
+            vec4(1.0, -1.0, -1.0, 1.0)
         ];
         this.vertexColors = [
             vec4(1.0, 1.0, 1.0, 1.0),  // white
