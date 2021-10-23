@@ -26,7 +26,7 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
     static get properties() {
         return {
             showGrid: { type: Boolean, default: true },
-            gridSize: { type: Number, default: 10 },
+            gridSize: { type: Number, default: 11 },
             gridPointSize: { type: Number, default: 1 },
             gridColor: { type: String, default: '0, 0, 1, 0.1' },
             showBorder: { type: Boolean, default: true },
@@ -155,10 +155,10 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
         info._attributes = ['aVertexPosition'];
         info.draw = (gl, sh) => {
             sh.count = sh.count || 0;
-            sh.count += 0.01;
+            sh.count -= 0.01;
             const uModelViewMatrix = modelViewMatrix();
             const uProjectionMatrix = perspectiveMatrix(1, gl.viewportWidth / gl.viewportHeight, .01, 1000.0);
-            translate(uModelViewMatrix, uModelViewMatrix, [0, 0, this.zTranslation - 7]);
+            translate(uModelViewMatrix, uModelViewMatrix, [0, 0, this.zTranslation]);
             rotate(uModelViewMatrix, uModelViewMatrix, this.THETA, [0, 1, 0]);
             rotate(uModelViewMatrix, uModelViewMatrix, this.PHI + sh.count, [1, 0, 0]);
             gl.uniformMatrix4fv(gl.getUniformLocation(sh.program, "uModelViewMatrix"), false, uModelViewMatrix);
