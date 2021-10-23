@@ -50,8 +50,9 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
         this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
         this.shapes = [];
-        if (this.showGrid) this.initGrid();
-        if (this.showBorder) this.initBorder();
+        if (this.showGrid) this.initGrid(this.gl, this.shapes, this.gridSize);
+        if (this.showBorder) this.initBorder(this.gl, this.shapes);
+        this.initCone(this.gl, this.shapes);
         this.draw();
     }
 
@@ -76,14 +77,13 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
 
         this.shapes.forEach(sh => {
             gl.useProgram(sh.program);
-            sh.buffers.forEach(bf => {
-                gl.bindVertexArray(bf.vbo);
-                gl.bindBuffer(gl.ARRAY_BUFFER, bf.vertexBuffer);
-            })
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, sh.indexBuffer);
+            gl.bindVertexArray(sh.vao);
+
             gl.uniformMatrix4fv(gl.getUniformLocation(sh.program, "uModelViewMatrix"), false, uModelViewMatrix);
             gl.uniformMatrix4fv(gl.getUniformLocation(sh.program, "uProjectionMatrix"), false, uProjectionMatrix);
+
             sh.draw(gl, sh);
+
             gl.bindVertexArray(null);
             gl.bindBuffer(gl.ARRAY_BUFFER, null);
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
@@ -113,49 +113,89 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
             e.preventDefault();
         }
     }
-    initGrid() {
-        const info = { name: 'grid' };
-        info.program = createProgram(this.gl, 'vs_Grid', 'fs_Grid');
-        if (!info.program) return null;
-        this.shapes.push(info);
-        let pointsArray = [];
-        const size = this.gridSize;
+    initGrid(gl, shapes, size) {
+        const info = { name: 'cone', size: 3, vertexShader: 'vs_Grid', fragmentShader: 'fs_Grid' };
+        info._vertices = [];
         for (let x = -size; x <= size; x += 2)
             for (let y = -size; y <= size; y += 2)
                 for (let z = -size; z <= size; z += 2)
-                    pointsArray.push([x / size, y / size, z / size]);
-        info.indicesArray = [];
-        for (let i = 0; i < (pointsArray.length); i++) info.indicesArray.push(i);
-        info.dataBuffers = [{ attribName: 'aVertexPosition', vertices: pointsArray.flat(), size: 3 }];
-
-        initBuffers(this.gl, info);
+                    info._vertices.push(...[x / size, y / size, z / size]);
+        info._indices = [];
+        for (let i = 0; i < (info._vertices.length / 3); i++) info._indices.push(i);
+        info._attributes = ['aVertexPosition'];
         info.draw = (gl, sh) => {
             gl.uniform1f(gl.getUniformLocation(sh.program, "uPointSize"), this.gridPointSize);
             gl.uniform4fv(gl.getUniformLocation(sh.program, "uPointColor"), this.gridColor.split(','));
             gl.drawElements(gl.POINTS, sh.indices.length, gl.UNSIGNED_SHORT, 0);
         }
+        initInfo(gl, shapes, info);
     }
-    initBorder() {
-        const info = { name: 'border' };
-        info.program = createProgram(this.gl, 'vs_Grid', 'fs_Border');
-        if (!info.program) return null;
-        this.shapes.push(info);
-        const pointsArray = [
+    initBorder(gl, shapes) {
+        const info = { name: 'cone', size: 3, vertexShader: 'vs_Grid', fragmentShader: 'fs_Border' };
+        info._vertices = [
             -1, -1, 1, -1, 1, 1, 1, 1, 1, 1, -1, 1, -1, -1, 1,
             -1, -1, -1, -1, 1, -1, 1, 1, -1, 1, -1, -1, 1, -1, 1,
             -1, 1, 1, -1, 1, -1, 1, 1, 1, 1, 1, -1, -1, -1, -1, 1, -1, -1,
         ]
-        info.dataBuffers = [{ attribName: 'aVertexPosition', vertices: pointsArray.flat(), size: 3 }];
-
-        initBuffers(this.gl, info);
+        info._attributes = ['aVertexPosition'];
         info.draw = (gl, sh) => {
             gl.uniform4fv(gl.getUniformLocation(sh.program, "uPointColor"), this.borderColor.split(','));
-            gl.drawArrays(this.gl.LINE_STRIP, 0, 10);
-            gl.drawArrays(this.gl.LINES, 10, 6);
+            gl.drawArrays(gl.LINE_STRIP, 0, 10);
+            gl.drawArrays(gl.LINES, 10, 6);
         }
+        initInfo(gl, shapes, info);
+    }
+    initCone(gl, shapes) {
+        const info = { name: 'cone', size: 3, vertexShader: 'vs_Cone', fragmentShader: 'fs_Cone' };
+        info._vertices = [
+            0.5, 0, 0, -0.5, 1, 0, -0.5, 0.809017, 0.587785, -0.5, 0.309017, 0.951057, -0.5, -0.309017, 0.951057, -0.5, -0.809017, 0.587785,
+            -0.5, -1, 0, -0.5, -0.809017, -0.587785, -0.5, -0.309017, -0.951057, -0.5, 0.309017, -0.951057, -0.5, 0.809017, -0.587785
+        ];
+        info._indices = [0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5, 0, 5, 6, 0, 6, 7, 0, 7, 8, 0, 8, 9, 0, 9, 10, 0, 10, 1];
+        info._attributes = ['aVertexPosition'];
+        info.draw = (gl, sh) => {
+            sh.count = sh.count || 0;
+            sh.count += 0.01;
+            const uModelViewMatrix = modelViewMatrix();
+            const uProjectionMatrix = perspectiveMatrix(1, gl.viewportWidth / gl.viewportHeight, .01, 1000.0);
+            translate(uModelViewMatrix, uModelViewMatrix, [0, 0, this.zTranslation - 7]);
+            rotate(uModelViewMatrix, uModelViewMatrix, this.THETA, [0, 1, 0]);
+            rotate(uModelViewMatrix, uModelViewMatrix, this.PHI + sh.count, [1, 0, 0]);
+            gl.uniformMatrix4fv(gl.getUniformLocation(sh.program, "uModelViewMatrix"), false, uModelViewMatrix);
+            gl.uniformMatrix4fv(gl.getUniformLocation(sh.program, "uProjectionMatrix"), false, uProjectionMatrix);
+            gl.drawElements(gl.LINE_LOOP, sh.indices.length, gl.UNSIGNED_SHORT, 0);
+        }
+        initInfo(gl, shapes, info);
     }
 })
 
+const initInfo = (gl, shapes, info) => {
+    info.program = createProgram(gl, info.vertexShader, info.fragmentShader);
+    if (!info.program) return null;
+    shapes.push(info);
+
+    info.vao = gl.createVertexArray();
+    gl.bindVertexArray(info.vao);
+
+    info.vbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, info.vbo);
+    info.vertices = new Float32Array(info._vertices);
+    gl.bufferData(gl.ARRAY_BUFFER, info.vertices, gl.STATIC_DRAW);
+    (info._attributes || []).forEach(i => {
+        info[i] = gl.getAttribLocation(info.program, i);
+        gl.vertexAttribPointer(info[i], info.size || 3, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(info[i]);
+    })
+
+    info.ibo = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, info.ibo);
+    info.indices = new Uint16Array(info._indices);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, info.indices, gl.STATIC_DRAW);
+
+    gl.bindVertexArray(null);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+}
 const createProgram = (gl, vertexShader = 'v_shader', fragmentShader = 'f_shader') => {
     const program = gl.createProgram();
     gl.attachShader(program, initShader(gl, vertexShader));
@@ -208,36 +248,23 @@ const shaders = {
         void main(void) {
             fragColor = fColor;
         }
-    `
-}
-const initBuffers = (gl, info) => {
-    info?.dataBuffers?.forEach(i => {
-        info.buffers = info.buffers || [];
-        const inf = { attribName: i.attribName };
-        info.buffers.push(inf);
-
-        inf.vbo = gl.createVertexArray();
-        gl.bindVertexArray(inf.vbo);
-
-        inf.vertexBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, inf.vertexBuffer);
-        inf.vertices = new Float32Array(i.vertices);
-        gl.bufferData(gl.ARRAY_BUFFER, inf.vertices, gl.STATIC_DRAW);
-        inf.attribLocation = gl.getAttribLocation(info.program, i.attribName);
-        gl.vertexAttribPointer(inf.attribLocation, i.size || 3, gl.FLOAT, false, 0, 0);
-        gl.enableVertexAttribArray(inf.attribLocation);
-
-        if (!info.indexBuffer) {
-            info.indexBuffer = gl.createBuffer();
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, info.indexBuffer);
-            info.indices = new Uint16Array(info.indicesArray);
-            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, info.indices, gl.STATIC_DRAW);
+    `,
+    vs_Cone: `#version 300 es
+        precision mediump float;
+        uniform mat4 uModelViewMatrix;
+        uniform mat4 uProjectionMatrix;
+        in vec3 aVertexPosition;
+        void main(void) {
+            gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(aVertexPosition, 1.0);
         }
-
-        gl.bindVertexArray(null);
-        gl.bindBuffer(gl.ARRAY_BUFFER, null);
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
-    })
+    `,
+    fs_Cone: `#version 300 es
+        precision mediump float;
+        out vec4 fragColor;
+        void main(void) {
+            fragColor = vec4(0.0, 1.0, 0.0, 1.0);
+        }
+    `,
 }
 
 function perspectiveMatrix(fieldOfViewInRadians, aspectRatio, near, far) {
