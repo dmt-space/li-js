@@ -25,172 +25,70 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
 
     static get properties() {
         return {
-            gridSize: { type: Number, default: 5 },
-            gridPointSize: { type: Number, default: 4 },
-            gridPointColor: { type: String, default: '1, 1, 1, 1' },
             showGrid: { type: Boolean, default: true },
-            showGridBorder: { type: Boolean, default: true },
+            gridSize: { type: Number, default: 10 },
+            gridPointSize: { type: Number, default: 1 },
+            gridColor: { type: String, default: '0, 0, 1, 0.1' },
+            showBorder: { type: Boolean, default: true },
+            borderColor: { type: String, default: '0, 0, 1, 1' },
             zTranslation: { type: Number, default: -3.5 },
             amortization: { type: Number, default: 0.95 }
         }
     }
-    get numColors() { return this.vertexColors.length }
-    get numCubeVertices() { return this.cubeVertices.length * 3 }
-    get numGridParticles() { return this.showGrid ? (this.gridSize + 1) * (this.gridSize + 1) * (this.gridSize + 1) : 0 }
-
     constructor() {
         super();
         this.drag = false;
         this.dX = this.dY = this.THETA = this.PHI = 0;
-        this.cubeVertices = [
-            [-1.0, -1.0, 1.0, 1.0],
-            [-1.0, 1.0, 1.0, 1.0],
-            [1.0, 1.0, 1.0, 1.0],
-            [1.0, -1.0, 1.0, 1.0],
-            [-1.0, -1.0, -1.0, 1.0],
-            [-1.0, 1.0, -1.0, 1.0],
-            [1.0, 1.0, -1.0, 1.0],
-            [1.0, -1.0, -1.0, 1.0]
-        ];
-        this.vertexColors = [
-            [1.0, 1.0, 1.0, 1.0],  // white
-            [1.0, 0.5, 0.0, 1.0],  // orange
-            [1.0, 0.0, 0.0, 1.0],  // red
-            [1.0, 1.0, 0.0, 1.0],  // yellow
-            [0.0, 1.0, 0.0, 1.0],  // green
-            [0.0, 0.0, 1.0, 1.0],  // blue
-            [1.0, 0.0, 1.0, 1.0],  // magenta
-            [1.0, 0.5, 0.0, 1.0],  // orange
-            [0.0, 1.0, 1.0, 1.0]   // cyan
-        ];
     }
 
     firstUpdated() {
         super.firstUpdated();
         this.canvas = this.$id('canvas');
-        this.gl = this.canvas.getContext("webgl");
+        this.gl = this.canvas.getContext("webgl2");
         this.gl.viewportWidth = this.canvas.width = window.innerWidth;
         this.gl.viewportHeight = this.canvas.height = window.innerHeight;
-        this.makeProgram();
-        this.initBuffers();
-        this.initGridParticles();
-        this.animate();
+        this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
+
+        this.shapes = [];
+        if (this.showGrid) this.initGrid();
+        if (this.showBorder) this.initBorder();
+        this.draw();
     }
 
-    makeProgram() {
-        const program = this.gl.createProgram();
-        this.gl.attachShader(program, this.initShader('VERTEX_SHADER'));
-        this.gl.attachShader(program, this.initShader('FRAGMENT_SHADER'));
-        this.gl.linkProgram(program);
-        this.gl.useProgram(program);
-        this.shaderProgram = program;
-    }
-    initShader(type) {
-        const shader = this.gl.createShader(this.gl[type]);
-        const shaders = {
-            VERTEX_SHADER: `
-                attribute vec4 vPosition;
-                attribute vec4 vColor;
-                varying vec4 fColor;
-                uniform mat4 mvMatrix;
-                uniform mat4 pMatrix;
-                uniform float vPointSize;
-                void main() 
-                {
-                    gl_Position = pMatrix * mvMatrix * vPosition;
-                    fColor = vColor;
-                    gl_PointSize = vPointSize;
-                } 
-            `,
-            FRAGMENT_SHADER: `
-                precision mediump float;
-                varying vec4 fColor;
-                vec2 center = vec2(0.5, 0.5);
-                void main()
-                {
-                    if (distance(center, gl_PointCoord) > 0.5) {
-                        discard;
-                    }
-                    gl_FragColor = fColor;
-                }
-            `
-        }
-        this.gl.shaderSource(shader, shaders[type]);
-        this.gl.compileShader(shader);
-        return shader;
-    }
-    initBuffers() {
-        this.cBufferId = this.gl.createBuffer();
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.cBufferId);
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, 16 * (this.numGridParticles + this.numCubeVertices), this.gl.STATIC_DRAW);
-        const vColor = this.gl.getAttribLocation(this.shaderProgram, "vColor");
-        this.gl.vertexAttribPointer(vColor, 4, this.gl.FLOAT, false, 0, 0);
-        this.gl.enableVertexAttribArray(vColor);
-
-        this.vBufferId = this.gl.createBuffer();
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vBufferId);
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, 16 * (this.numGridParticles + this.numCubeVertices), this.gl.STATIC_DRAW);
-        const vPosition = this.gl.getAttribLocation(this.shaderProgram, "vPosition");
-        this.gl.vertexAttribPointer(vPosition, 4, this.gl.FLOAT, false, 0, 0);
-        this.gl.enableVertexAttribArray(vPosition);
-    }
-    initGridParticles() {
-        this.particleSystem = [];
-        if (this.showGrid) {
-            const size = this.gridSize;
-            for (let x = -size; x <= size; x += 2) {
-                for (let y = -size; y <= size; y += 2) {
-                    for (let z = -size; z <= size; z += 2) {
-                        this.particleSystem.push({
-                            color: this.gridPointColor.split(','),
-                            position: [x / size, y / size, z / size, 1],
-                            size: 1
-                        });
-                    }
-                }
-            }
-        }
-    }
-    animate() {
+    draw() {
         if (!this.drag) {
             this.dX *= this.amortization;
             this.dY *= this.amortization;
             this.THETA += this.dX;
             this.PHI += this.dY;
         }
-        this._recalc();
-        if (this.showGridBorder)
-            for (var i = 0; i < 6; i++) this.gl.drawArrays(this.gl.LINE_LOOP, i * 4, 4);
-        this.gl.drawArrays(this.gl.POINTS, this.numCubeVertices, this.numGridParticles);
-        requestAnimationFrame(() => this.animate());
-    }
-    _recalc() {
+
         const gl = this.gl;
-        gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
-        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-        this.colorsArray = [];
-        this.pointsArray = [];
-        this.initGridBorder();
-        for (let i = 0; i < this.numGridParticles; i++) {
-            this.pointsArray.push(this.particleSystem[i].position);
-            this.colorsArray.push(this.particleSystem[i].color);
-        }
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.cBufferId);
-        gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(this.colorsArray.flat()));
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.vBufferId);
-        gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(this.pointsArray.flat()));
+        const uModelViewMatrix = modelViewMatrix();
+        const uProjectionMatrix = perspectiveMatrix(1, gl.viewportWidth / gl.viewportHeight, .01, 1000.0);
+        translate(uModelViewMatrix, uModelViewMatrix, [0, 0, this.zTranslation]);
+        rotate(uModelViewMatrix, uModelViewMatrix, this.THETA, [0, 1, 0]);
+        rotate(uModelViewMatrix, uModelViewMatrix, this.PHI, [1, 0, 0]);
 
-        const mvMatrix = modelViewMatrix();
-        const pMatrix = perspectiveMatrix(1, gl.viewportWidth / gl.viewportHeight, .01, 1000.0);
-        translate(mvMatrix, mvMatrix, [0, 0, this.zTranslation]);
-        rotate(mvMatrix, mvMatrix, this.THETA, [0, 1, 0]);
-        rotate(mvMatrix, mvMatrix, this.PHI, [1, 0, 0]);
-
-        gl.uniformMatrix4fv(gl.getUniformLocation(this.shaderProgram, "mvMatrix"), false, mvMatrix);
-        gl.uniformMatrix4fv(gl.getUniformLocation(this.shaderProgram, "pMatrix"), false, pMatrix);
-        gl.uniform1f(gl.getUniformLocation(this.shaderProgram, "vPointSize"), this.gridPointSize);
+        this.shapes.forEach(sh => {
+            gl.useProgram(sh.program);
+            sh.buffers.forEach(bf => {
+                gl.bindVertexArray(bf.vbo);
+                gl.bindBuffer(gl.ARRAY_BUFFER, bf.vertexBuffer);
+            })
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, sh.indexBuffer);
+            gl.uniformMatrix4fv(gl.getUniformLocation(sh.program, "uModelViewMatrix"), false, uModelViewMatrix);
+            gl.uniformMatrix4fv(gl.getUniformLocation(sh.program, "uProjectionMatrix"), false, uProjectionMatrix);
+            sh.draw(gl, sh);
+            gl.bindVertexArray(null);
+            gl.bindBuffer(gl.ARRAY_BUFFER, null);
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+        })
+        requestAnimationFrame(() => this.draw());
     }
     mouseDown(e) {
         this.drag = true;
@@ -200,6 +98,9 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
     }
     mouseUp(e) {
         this.drag = false;
+    }
+    mouseWheel(e) {
+        this.zTranslation += e.deltaY / (this.offsetHeight / 2);
     }
     mouseMove(e) {
         if (this.drag) {
@@ -212,23 +113,132 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
             e.preventDefault();
         }
     }
-    mouseWheel(e) {
-        this.zTranslation += e.deltaY / (this.offsetHeight / 2);
+    initGrid() {
+        const info = { name: 'grid' };
+        info.program = createProgram(this.gl, 'vs_Grid', 'fs_Grid');
+        if (!info.program) return null;
+        this.shapes.push(info);
+        let pointsArray = [];
+        const size = this.gridSize;
+        for (let x = -size; x <= size; x += 2)
+            for (let y = -size; y <= size; y += 2)
+                for (let z = -size; z <= size; z += 2)
+                    pointsArray.push([x / size, y / size, z / size]);
+        info.indicesArray = [];
+        for (let i = 0; i < (pointsArray.length); i++) info.indicesArray.push(i);
+        info.dataBuffers = [{ attribName: 'aVertexPosition', vertices: pointsArray.flat(), size: 3 }];
+
+        initBuffers(this.gl, info);
+        info.draw = (gl, sh) => {
+            gl.uniform1f(gl.getUniformLocation(sh.program, "uPointSize"), this.gridPointSize);
+            gl.uniform4fv(gl.getUniformLocation(sh.program, "uPointColor"), this.gridColor.split(','));
+            gl.drawElements(gl.POINTS, sh.indices.length, gl.UNSIGNED_SHORT, 0);
+        }
     }
-    initGridBorder() {
-        [
-            1, 0, 3, 2,
-            2, 3, 7, 6,
-            3, 0, 4, 7,
-            6, 5, 1, 2,
-            4, 5, 6, 7,
-            5, 4, 0, 1
-        ].forEach(i => {
-            this.pointsArray.push(this.cubeVertices[i]);
-            this.colorsArray.push(this.vertexColors[0]);
-        })
+    initBorder() {
+        const info = { name: 'border' };
+        info.program = createProgram(this.gl, 'vs_Grid', 'fs_Border');
+        if (!info.program) return null;
+        this.shapes.push(info);
+        const pointsArray = [
+            -1, -1, 1, -1, 1, 1, 1, 1, 1, 1, -1, 1, -1, -1, 1,
+            -1, -1, -1, -1, 1, -1, 1, 1, -1, 1, -1, -1, 1, -1, 1,
+            -1, 1, 1, -1, 1, -1, 1, 1, 1, 1, 1, -1, -1, -1, -1, 1, -1, -1,
+        ]
+        info.dataBuffers = [{ attribName: 'aVertexPosition', vertices: pointsArray.flat(), size: 3 }];
+
+        initBuffers(this.gl, info);
+        info.draw = (gl, sh) => {
+            gl.uniform4fv(gl.getUniformLocation(sh.program, "uPointColor"), this.borderColor.split(','));
+            gl.drawArrays(this.gl.LINE_STRIP, 0, 10);
+            gl.drawArrays(this.gl.LINES, 10, 6);
+        }
     }
 })
+
+const createProgram = (gl, vertexShader = 'v_shader', fragmentShader = 'f_shader') => {
+    const program = gl.createProgram();
+    gl.attachShader(program, initShader(gl, vertexShader));
+    gl.attachShader(program, initShader(gl, fragmentShader));
+    gl.linkProgram(program);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+        console.error('Could not create program');
+        return null;
+    }
+    gl.useProgram(program);
+    return program;
+}
+const initShader = (gl, name) => {
+    const type = name.startsWith('vs_') ? 'VERTEX_SHADER' : 'FRAGMENT_SHADER';
+    const shader = gl.createShader(gl[type]);
+    gl.shaderSource(shader, shaders[name].trim());
+    gl.compileShader(shader);
+    return shader;
+}
+const shaders = {
+    vs_Grid: `#version 300 es
+        precision mediump float;
+        uniform mat4 uModelViewMatrix;
+        uniform mat4 uProjectionMatrix;
+        uniform float uPointSize;
+        uniform vec4 uPointColor;
+        in vec3 aVertexPosition;
+        out vec4 fColor;
+        void main(void) {
+            gl_Position = vec4(aVertexPosition, 1.0);
+            gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(aVertexPosition, 1.0);
+            fColor = uPointColor;
+            gl_PointSize = uPointSize;
+        } 
+    `,
+    fs_Grid: `#version 300 es
+        precision mediump float;
+        in vec4 fColor;
+        out vec4 fragColor;
+        void main(void) {
+            if (length(gl_PointCoord - vec2(0.5)) > 0.5)
+                discard;
+            fragColor = fColor;
+        }
+    `,
+    fs_Border: `#version 300 es
+        precision mediump float;
+        in vec4 fColor;
+        out vec4 fragColor;
+        void main(void) {
+            fragColor = fColor;
+        }
+    `
+}
+const initBuffers = (gl, info) => {
+    info?.dataBuffers?.forEach(i => {
+        info.buffers = info.buffers || [];
+        const inf = { attribName: i.attribName };
+        info.buffers.push(inf);
+
+        inf.vbo = gl.createVertexArray();
+        gl.bindVertexArray(inf.vbo);
+
+        inf.vertexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, inf.vertexBuffer);
+        inf.vertices = new Float32Array(i.vertices);
+        gl.bufferData(gl.ARRAY_BUFFER, inf.vertices, gl.STATIC_DRAW);
+        inf.attribLocation = gl.getAttribLocation(info.program, i.attribName);
+        gl.vertexAttribPointer(inf.attribLocation, i.size || 3, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(inf.attribLocation);
+
+        if (!info.indexBuffer) {
+            info.indexBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, info.indexBuffer);
+            info.indices = new Uint16Array(info.indicesArray);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, info.indices, gl.STATIC_DRAW);
+        }
+
+        gl.bindVertexArray(null);
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+    })
+}
 
 function perspectiveMatrix(fieldOfViewInRadians, aspectRatio, near, far) {
     const f = 1.0 / Math.tan(fieldOfViewInRadians / 2);
@@ -272,8 +282,7 @@ function translate(out, a, v) {
 function rotate(out, a, rad, axis) {
     const EPSILON = 0.000001;
     let x = axis[0], y = axis[1], z = axis[2],
-        len = Math.hypot(x, y, z),
-        s, c, t,
+        len = Math.hypot(x, y, z), s, c, t,
         a00, a01, a02, a03,
         a10, a11, a12, a13,
         a20, a21, a22, a23,
@@ -302,7 +311,6 @@ function rotate(out, a, rad, axis) {
     out[9] = a01 * b20 + a11 * b21 + a21 * b22;
     out[10] = a02 * b20 + a12 * b21 + a22 * b22;
     out[11] = a03 * b20 + a13 * b21 + a23 * b22;
-    if (a !== out)
-        out[12] = a[12]; out[13] = a[13]; out[14] = a[14]; out[15] = a[15];
+    if (a !== out) out[12] = a[12]; out[13] = a[13]; out[14] = a[14]; out[15] = a[15];
     return out;
 }
