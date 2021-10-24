@@ -50,8 +50,8 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
         this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
         this.shapes = [];
-        if (this.showGrid) this.initGrid(this.gl, this.shapes, this.gridSize);
-        if (this.showBorder) this.initBorder(this.gl, this.shapes);
+        if (this.showGrid) this.initGrid(this.gl, this.shapes, this.gridSize, this.gridPointSize, this.gridColor);
+        if (this.showBorder) this.initCube(this.gl, this.shapes, 1.0, this.borderColor);
         this.initCone(this.gl, this.shapes);
         this.draw();
     }
@@ -75,14 +75,14 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
         rotate(uModelViewMatrix, uModelViewMatrix, this.THETA, [0, 1, 0]);
         rotate(uModelViewMatrix, uModelViewMatrix, this.PHI, [1, 0, 0]);
 
-        this.shapes.forEach(sh => {
-            gl.useProgram(sh.program);
-            gl.bindVertexArray(sh.vao);
+        this.shapes.forEach(inf => {
+            gl.useProgram(inf.program);
+            gl.bindVertexArray(inf.vao);
 
-            gl.uniformMatrix4fv(gl.getUniformLocation(sh.program, "uModelViewMatrix"), false, uModelViewMatrix);
-            gl.uniformMatrix4fv(gl.getUniformLocation(sh.program, "uProjectionMatrix"), false, uProjectionMatrix);
+            gl.uniformMatrix4fv(gl.getUniformLocation(inf.program, "uModelViewMatrix"), false, uModelViewMatrix);
+            gl.uniformMatrix4fv(gl.getUniformLocation(inf.program, "uProjectionMatrix"), false, uProjectionMatrix);
 
-            sh.draw(gl, sh);
+            inf.draw(gl, inf);
 
             gl.bindVertexArray(null);
             gl.bindBuffer(gl.ARRAY_BUFFER, null);
@@ -113,8 +113,8 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
             e.preventDefault();
         }
     }
-    initGrid(gl, shapes, size) {
-        const info = { name: 'cone', size: 3, vertexShader: 'vs_Grid', fragmentShader: 'fs_Grid' };
+    initGrid(gl, shapes, size, pointSize, gridColor) {
+        const info = { name: 'cone', size: 3, vertexShader: 'vs_Grid', fragmentShader: 'fs_Grid', pointSize, gridColor };
         info._vertices = [];
         for (let x = -size; x <= size; x += 2)
             for (let y = -size; y <= size; y += 2)
@@ -123,25 +123,21 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
         info._indices = [];
         for (let i = 0; i < (info._vertices.length / 3); i++) info._indices.push(i);
         info._attributes = ['aVertexPosition'];
-        info.draw = (gl, sh) => {
-            gl.uniform1f(gl.getUniformLocation(sh.program, "uPointSize"), this.gridPointSize);
-            gl.uniform4fv(gl.getUniformLocation(sh.program, "uPointColor"), this.gridColor.split(','));
-            gl.drawElements(gl.POINTS, sh.indices.length, gl.UNSIGNED_SHORT, 0);
+        info.draw = (gl, inf) => {
+            gl.uniform1f(gl.getUniformLocation(inf.program, "uPointSize"), inf.pointSize);
+            gl.uniform4fv(gl.getUniformLocation(inf.program, "uPointColor"), inf.gridColor.split(','));
+            gl.drawElements(gl.POINTS, inf.indices.length, gl.UNSIGNED_SHORT, 0);
         }
         initInfo(gl, shapes, info);
     }
-    initBorder(gl, shapes) {
-        const info = { name: 'cone', size: 3, vertexShader: 'vs_Grid', fragmentShader: 'fs_Border' };
-        info._vertices = [
-            -1, -1, 1, -1, 1, 1, 1, 1, 1, 1, -1, 1, -1, -1, 1,
-            -1, -1, -1, -1, 1, -1, 1, 1, -1, 1, -1, -1, 1, -1, 1,
-            -1, 1, 1, -1, 1, -1, 1, 1, 1, 1, 1, -1, -1, -1, -1, 1, -1, -1,
-        ]
+    initCube(gl, shapes, sz = 1.0, borderColor) {
+        const info = { name: 'cone', size: 3, vertexShader: 'vs_Grid', fragmentShader: 'fs_Border', borderColor };
+        info._vertices = [ -sz, -sz, sz, -sz, sz, sz, sz, sz, sz, sz, -sz, sz, -sz, -sz, -sz, -sz, sz, -sz, sz, sz, -sz, sz, -sz, -sz];
+        info._indices = [0, 1, 1, 2, 2, 3, 3, 0, 0, 4, 4, 5, 5, 6, 6, 7, 7, 4, 1, 5, 2, 6, 3, 7];
         info._attributes = ['aVertexPosition'];
-        info.draw = (gl, sh) => {
-            gl.uniform4fv(gl.getUniformLocation(sh.program, "uPointColor"), this.borderColor.split(','));
-            gl.drawArrays(gl.LINE_STRIP, 0, 10);
-            gl.drawArrays(gl.LINES, 10, 6);
+        info.draw = (gl, inf) => {
+            gl.uniform4fv(gl.getUniformLocation(inf.program, "uPointColor"), inf.borderColor.split(','));
+            gl.drawElements(gl.LINES, inf.indices.length, gl.UNSIGNED_SHORT, 0);
         }
         initInfo(gl, shapes, info);
     }
@@ -153,17 +149,17 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
         ];
         info._indices = [0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5, 0, 5, 6, 0, 6, 7, 0, 7, 8, 0, 8, 9, 0, 9, 10, 0, 10, 1];
         info._attributes = ['aVertexPosition'];
-        info.draw = (gl, sh) => {
-            sh.count = sh.count || 0;
-            sh.count -= 0.01;
+        info.draw = (gl, inf) => {
+            inf.count = inf.count || 0;
+            inf.count -= 0.01;
             const uModelViewMatrix = modelViewMatrix();
             const uProjectionMatrix = perspectiveMatrix(1, gl.viewportWidth / gl.viewportHeight, .01, 1000.0);
             translate(uModelViewMatrix, uModelViewMatrix, [0, 0, this.zTranslation]);
             rotate(uModelViewMatrix, uModelViewMatrix, this.THETA, [0, 1, 0]);
-            rotate(uModelViewMatrix, uModelViewMatrix, this.PHI + sh.count, [1, 0, 0]);
-            gl.uniformMatrix4fv(gl.getUniformLocation(sh.program, "uModelViewMatrix"), false, uModelViewMatrix);
-            gl.uniformMatrix4fv(gl.getUniformLocation(sh.program, "uProjectionMatrix"), false, uProjectionMatrix);
-            gl.drawElements(gl.LINE_LOOP, sh.indices.length, gl.UNSIGNED_SHORT, 0);
+            rotate(uModelViewMatrix, uModelViewMatrix, this.PHI + inf.count, [1, 0, 0]);
+            gl.uniformMatrix4fv(gl.getUniformLocation(inf.program, "uModelViewMatrix"), false, uModelViewMatrix);
+            gl.uniformMatrix4fv(gl.getUniformLocation(inf.program, "uProjectionMatrix"), false, uProjectionMatrix);
+            gl.drawElements(gl.LINE_LOOP, inf.indices.length, gl.UNSIGNED_SHORT, 0);
         }
         initInfo(gl, shapes, info);
     }
