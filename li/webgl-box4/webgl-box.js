@@ -24,7 +24,7 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
 
     static get properties() {
         return {
-            amortization: { type: Number, default: 0.95 }
+            amortization: { type: Number, default: 1 }
         }
     }
 
