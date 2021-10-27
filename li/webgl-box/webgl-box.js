@@ -26,13 +26,16 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
     static get properties() {
         return {
             showGrid: { type: Boolean, default: true },
-            gridSize: { type: Number, default: 11 },
-            gridPointSize: { type: Number, default: 1 },
-            gridColor: { type: String, default: '0, 0, 1, 0.1' },
+            gridSize: { type: Number, default: 5 },
+            gridPointSize: { type: Number, default: 2 },
+            gridColor: { type: String, default: '1, 1, 1, 1' },
             showBorder: { type: Boolean, default: true },
-            borderColor: { type: String, default: '0, 0, 1, 1' },
+            borderColor: { type: String, default: '0.1, 0.1, 0.1, 0.9' },
+            showLink: { type: Boolean, default: true },
+            linkColor: { type: String, default: '0.5, 0.5, 0.5, 0.9' },
             zTranslation: { type: Number, default: -3.5 },
-            amortization: { type: Number, default: 0.95 }
+            amortization: { type: Number, default: 1 },
+            enableDraw: { type: Boolean, default: true },
         }
     }
     constructor() {
@@ -50,12 +53,29 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
         this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
         this.shapes = [];
-        if (this.showGrid) this.initGrid(this.gl, this.shapes, this.gridSize, this.gridPointSize, this.gridColor);
-        if (this.showBorder) this.initCube(this.gl, this.shapes, 1.0, this.borderColor);
-        this.initCone(this.gl, this.shapes);
-        this.draw();
+
+        setTimeout(() => {
+            this.clearGL(this.gl);
+
+            this.initGrid(this);
+            if (this.showBorder) this.initBorder(this);
+            this.initData(this);
+
+            this.draw();
+        }, 300);
+
     }
 
+    clearGL(gl) {
+        gl.viewportWidth = gl.canvas.width = window.innerWidth;
+        gl.viewportHeight = gl.canvas.height = window.innerHeight;
+        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        gl.enable(gl.DEPTH_TEST);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        gl.enable(gl.POLYGON_OFFSET_FILL);
+        gl.polygonOffset(1.0, 1.0);
+    }
     draw() {
         if (!this.drag) {
             this.dX *= this.amortization;
@@ -65,12 +85,10 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
         }
 
         const gl = this.gl;
-        gl.clearColor(0.0, 0.0, 0.0, 1.0);
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+        this.clearGL(gl);
 
         const uModelViewMatrix = modelViewMatrix();
-        const uProjectionMatrix = perspectiveMatrix(1, gl.viewportWidth / gl.viewportHeight, .01, 1000.0);
+        const uProjectionMatrix = perspectiveMatrix(1, gl.viewportWidth / gl.viewportHeight, 1, 2000.0);
         translate(uModelViewMatrix, uModelViewMatrix, [0, 0, this.zTranslation]);
         rotate(uModelViewMatrix, uModelViewMatrix, this.THETA, [0, 1, 0]);
         rotate(uModelViewMatrix, uModelViewMatrix, this.PHI, [1, 0, 0]);
@@ -82,13 +100,14 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
             gl.uniformMatrix4fv(gl.getUniformLocation(inf.program, "uModelViewMatrix"), false, uModelViewMatrix);
             gl.uniformMatrix4fv(gl.getUniformLocation(inf.program, "uProjectionMatrix"), false, uProjectionMatrix);
 
-            inf.draw(gl, inf);
+            inf.draw();
 
             gl.bindVertexArray(null);
             gl.bindBuffer(gl.ARRAY_BUFFER, null);
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
         })
-        requestAnimationFrame(() => this.draw());
+        if (this.enableDraw || this.drag)
+            this._draw = requestAnimationFrame(() => this.draw());
     }
     mouseDown(e) {
         this.drag = true;
@@ -113,53 +132,183 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
             e.preventDefault();
         }
     }
-    initGrid(gl, shapes, size, pointSize, gridColor) {
-        const info = { name: 'cone', size: 3, vertexShader: 'vs_Grid', fragmentShader: 'fs_Grid', pointSize, gridColor };
+    initGrid(s = this) {
+        const gl = s.gl, shapes = s.shapes, _size = s.data?._size || s.data?.size || s.gridSize,
+            pointSize = s.gridPointSize, gridColor = s.gridColor, showGrid = s.showGrid;
+        const info = { name: 'grid', size: 3, vertexShader: 'vs_Grid', fragmentShader: 'fs_Grid', pointSize, gridColor };
+        let size, _z, _x, _y, endPoint;
+        if (typeof _size === 'number') {
+            size = _size - 1;
+            size <= 1 ? 2 : size;
+            _x = _z = _y = size;
+            endPoint = _size * _size * _size - 1;
+        } else {
+            _x = _size.x - 1;
+            _y = _size.y - 1;
+            _z = _size.z - 1;
+            endPoint = _size.x * _size.y * _size.z - 1;
+        }
+        s._size = { x: _x, y: _y, z: _z, endPoint };
+        s._map = new Map();
+        let i = 0;
         info._vertices = [];
-        for (let x = -size; x <= size; x += 2)
-            for (let y = -size; y <= size; y += 2)
-                for (let z = -size; z <= size; z += 2)
-                    info._vertices.push(...[x / size, y / size, z / size]);
-        info._indices = [];
-        for (let i = 0; i < (info._vertices.length / 3); i++) info._indices.push(i);
-        info._attributes = ['aVertexPosition'];
-        info.draw = (gl, inf) => {
-            gl.uniform1f(gl.getUniformLocation(inf.program, "uPointSize"), inf.pointSize);
-            gl.uniform4fv(gl.getUniformLocation(inf.program, "uPointColor"), inf.gridColor.split(','));
-            gl.drawElements(gl.POINTS, inf.indices.length, gl.UNSIGNED_SHORT, 0);
-        }
-        initInfo(gl, shapes, info);
-    }
-    initCube(gl, shapes, sz = 1.0, borderColor) {
-        const info = { name: 'cone', size: 3, vertexShader: 'vs_Grid', fragmentShader: 'fs_Border', borderColor };
-        info._vertices = [ -sz, -sz, sz, -sz, sz, sz, sz, sz, sz, sz, -sz, sz, -sz, -sz, -sz, -sz, sz, -sz, sz, sz, -sz, sz, -sz, -sz];
-        info._indices = [0, 1, 1, 2, 2, 3, 3, 0, 0, 4, 4, 5, 5, 6, 6, 7, 7, 4, 1, 5, 2, 6, 3, 7];
-        info._attributes = ['aVertexPosition'];
-        info.draw = (gl, inf) => {
-            gl.uniform4fv(gl.getUniformLocation(inf.program, "uPointColor"), inf.borderColor.split(','));
-            gl.drawElements(gl.LINES, inf.indices.length, gl.UNSIGNED_SHORT, 0);
-        }
-        initInfo(gl, shapes, info);
-    }
-    initCone(gl, shapes) {
-        const info = { name: 'cone', size: 3, vertexShader: 'vs_Cone', fragmentShader: 'fs_Cone' };
-        info._vertices = [
-            0.5, 0, 0, -0.5, 1, 0, -0.5, 0.809017, 0.587785, -0.5, 0.309017, 0.951057, -0.5, -0.309017, 0.951057, -0.5, -0.809017, 0.587785,
-            -0.5, -1, 0, -0.5, -0.809017, -0.587785, -0.5, -0.309017, -0.951057, -0.5, 0.309017, -0.951057, -0.5, 0.809017, -0.587785
+        let _pointSize = pointSize;
+        let _pointColor = gridColor.split(',');
+        for (let z = _z; z >= -_z; z -= 2)
+            for (let y = _y; y >= -_y; y -= 2)
+                for (let x = -_x; x <= _x; x += 2) {
+                    s._map.set(i, { x: x / _x, y: y / _y, z: z / _z });
+                    if (showGrid)
+                        info._vertices.push(...[x / _x, y / _y, z / _z], ..._pointColor, _pointSize); // stride = 3 + + 4 + 1 = (xyz) + (rgba) + s = 8
+                    i++;
+                }
+        if (!showGrid) return;
+        let stride = 8;
+        info._attributes = [
+            { name: 'aVertexPosition', size: 3, stride, offset: 0 },
+            { name: 'aPointColor', size: 4, stride, offset: 3 },
+            { name: 'aPointSize', size: 1, stride, offset: 7 }
         ];
-        info._indices = [0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5, 0, 5, 6, 0, 6, 7, 0, 7, 8, 0, 8, 9, 0, 9, 10, 0, 10, 1];
-        info._attributes = ['aVertexPosition'];
-        info.draw = (gl, inf) => {
-            inf.count = inf.count || 0;
-            inf.count -= 0.01;
-            const uModelViewMatrix = modelViewMatrix();
-            const uProjectionMatrix = perspectiveMatrix(1, gl.viewportWidth / gl.viewportHeight, .01, 1000.0);
-            translate(uModelViewMatrix, uModelViewMatrix, [0, 0, this.zTranslation]);
-            rotate(uModelViewMatrix, uModelViewMatrix, this.THETA, [0, 1, 0]);
-            rotate(uModelViewMatrix, uModelViewMatrix, this.PHI + inf.count, [1, 0, 0]);
-            gl.uniformMatrix4fv(gl.getUniformLocation(inf.program, "uModelViewMatrix"), false, uModelViewMatrix);
-            gl.uniformMatrix4fv(gl.getUniformLocation(inf.program, "uProjectionMatrix"), false, uProjectionMatrix);
-            gl.drawElements(gl.LINE_LOOP, inf.indices.length, gl.UNSIGNED_SHORT, 0);
+        info.draw = () => {
+            gl.drawArrays(gl.POINTS, 0, info._vertices.length / stride);
+        }
+        initInfo(gl, shapes, info);
+    }
+    initBorder(s = this, sz = 1.0) {
+        const gl = s.gl, shapes = this.shapes, borderColor = s.borderColor;
+        const info = { name: 'border', size: 3, vertexShader: 'vs_Border', fragmentShader: 'fs_Border', borderColor };
+        info._vertices = [-sz, -sz, sz, -sz, sz, sz, sz, sz, sz, sz, -sz, sz, -sz, -sz, -sz, -sz, sz, -sz, sz, sz, -sz, sz, -sz, -sz];
+        info._indices = [0, 1, 1, 2, 2, 3, 3, 0, 0, 4, 4, 5, 5, 6, 6, 7, 7, 4, 1, 5, 2, 6, 3, 7];
+        info._attributes = [{ name: 'aVertexPosition', size: 3, stride: 0, offset: 0 },];
+        info.draw = () => {
+            gl.uniform4fv(gl.getUniformLocation(info.program, "uPointColor"), info.borderColor.split(','));
+            gl.drawElements(gl.LINES, info.indices.length, gl.UNSIGNED_SHORT, 0);
+        }
+        initInfo(gl, shapes, info);
+    }
+    initData(s = this) {
+        const gl = s.gl, shapes = s.shapes, pointSize = s.gridPointSize, gridColor = s.gridColor, showGrid = s.showGrid,
+            brain = s.brain, data = s.data || {}, showLink = s.showLink, linkColor = s.linkColor, _map = s._map;
+        const info = { name: 'points', size: 3, vertexShader: 'vs_Grid', fragmentShader: 'fs_Grid', pointSize, gridColor };
+        const _usedPoints = new Set();
+        const _usedLines = new Set();
+        info._vertices = [];
+        const _lines = [];
+        const _wlines = [];
+        let _pointSize = pointSize;
+        let _pointColor = [];
+        if (showGrid) {
+            info._vertices.push(-1, 1, 1, ...[0, 1, 0, 1], 8); // startPoint
+            info._vertices.push(1, -1, -1, ...[1, 0, 0, 1], 8); // endPoint
+        }
+        if (brain) {
+            (brain.neurons || []).forEach(i => {
+                // console.log(i)
+                _usedPoints.add(i.id);
+                _pointSize = i.size || pointSize;
+                _pointColor = gridColor.split(',');
+                if (_map.has(i.id)) {
+                    const coor = _map.get(i.id);
+                    info._vertices.push(coor.x, coor.y, coor.z, ..._pointColor, _pointSize);
+                }
+            })
+        } else {
+            Object.keys(data || {}).forEach(k => {
+                const s = _map.get(+k);
+                if (!s) return;
+                if (typeof +k === 'number' && !_usedPoints.has(+k)) {
+                    _usedPoints.add(k);
+                    const _pointSize = data[k].size || data.neuronSize || pointSize;
+                    const _pointColor = data[k].color || gridColor.split(',');
+                    info._vertices.push(s.x, s.y, s.z, ..._pointColor, _pointSize);
+                }
+                Object.keys(data[k] || {}).forEach(i => {
+                    if (typeof +i === 'number') {
+                        const p = _map.get(+i);
+                        if (p) {
+                            if (!_usedPoints.has(+i)) {
+                                _usedPoints.add(i);
+                                const _pointSize = data[k][i].size || data[k].size || data.neuronSize || pointSize;
+                                const _pointColor = data[k][i]?.color || data[k].color || gridColor.split(',');
+                                info._vertices.push(p.x, p.y, p.z, ..._pointColor, _pointSize);
+                            }
+                            if (!_usedLines.has(k + '-' + i)) {
+                                _usedLines.add(k + '-' + i);
+                                const width = data[k][i].w || data[k][i];
+                                const color = data[k][i].color || data[k].color || data.color || linkColor;
+                                if (width > 0)
+                                    _wlines.push({ x: s.x, y: s.y, z: s.z, x1: p.x, y1: p.y, z1: p.z, color, width });
+                                else
+                                    _lines.push(s.x, s.y, s.z, p.x, p.y, p.z);
+                            }
+                        }
+                    }
+                })
+            })
+        }
+
+        let stride = 8;
+        info._attributes = [
+            { name: 'aVertexPosition', size: 3, stride, offset: 0 },
+            { name: 'aPointColor', size: 4, stride, offset: 3 },
+            { name: 'aPointSize', size: 1, stride, offset: 7 }
+        ];
+        info.draw = () => {
+            gl.drawArrays(gl.POINTS, 0, info._vertices.length / stride);
+        }
+        initInfo(gl, shapes, info);
+
+        if (showLink && _lines?.length) {
+            const _lineInfo = { ...{}, ...info };
+            _lineInfo._vertices = _lines
+            _lineInfo.name = 'links';
+            _lineInfo.size = 3;
+            _lineInfo.vertexShader = 'vs_Border';
+            _lineInfo.fragmentShader = 'fs_Border';
+            _lineInfo._attributes = [{ name: 'aVertexPosition', size: 3, stride: 0, offset: 0 }];
+            _lineInfo.draw = () => {
+                gl.uniform4fv(gl.getUniformLocation(_lineInfo.program, "uPointColor"), linkColor.split(','));
+                gl.drawArrays(gl.LINES, 0, _lineInfo._vertices.length / 2);
+            }
+            initInfo(gl, shapes, _lineInfo);
+        }
+        if (_wlines?.length) {
+            this.initLines(gl, shapes, _wlines);
+        }
+    }
+    initLines(gl, shapes, _wlines, NumSides = 12) {
+        const info = { name: 'lines', size: 3, vertexShader: 'vs_Line', fragmentShader: 'fs_Line', NumSides };
+        info._vertices = [];
+        let cyl_vertices;
+        const buildVertices = (i) => {
+            let x, y, angle = 0;
+            const inc = Math.PI * 2.0 / NumSides;
+            cyl_vertices = new Array(NumSides * 2);
+            for (let i_side = 0; i_side < NumSides; i_side++) {
+                x = i.width * Math.cos(angle);
+                y = i.width * Math.sin(angle);
+                cyl_vertices[i_side] = [i.x + x, i.y + y, i.z];
+                cyl_vertices[i_side + NumSides] = [i.x1 + x, i.y1 + y, i.z1];
+                angle += inc;
+            }
+        }
+        const quad = (a, b, c, d, color) => {
+            let indices = [a, b, c, a, c, d];
+            for (let i = 0; i < indices.length; ++i)
+                info._vertices.push(...cyl_vertices[indices[i]], ...color);
+        }
+        (_wlines || []).forEach(i => {
+            buildVertices(i);
+            for (let i_side = 0; i_side < NumSides - 1; i_side++)
+                quad(i_side + 1, i_side, NumSides + i_side, NumSides + i_side + 1, i.color);
+            quad(0, NumSides - 1, 2 * NumSides - 1, NumSides, i.color);
+        })
+        info._attributes = [
+            { name: 'aPosition', size: 3, stride: 7, offset: 0 },
+            { name: 'aPointColor', size: 4, stride: 7, offset: 3 }
+        ];
+        info.draw = () => {
+            gl.drawArrays(gl.TRIANGLES, 0, 6 * NumSides * info._vertices.length);
         }
         initInfo(gl, shapes, info);
     }
@@ -177,16 +326,19 @@ const initInfo = (gl, shapes, info) => {
     gl.bindBuffer(gl.ARRAY_BUFFER, info.vbo);
     info.vertices = new Float32Array(info._vertices);
     gl.bufferData(gl.ARRAY_BUFFER, info.vertices, gl.STATIC_DRAW);
+    info.FSIZE = info.vertices?.BYTES_PER_ELEMENT;
     (info._attributes || []).forEach(i => {
-        info[i] = gl.getAttribLocation(info.program, i);
-        gl.vertexAttribPointer(info[i], info.size || 3, gl.FLOAT, false, 0, 0);
-        gl.enableVertexAttribArray(info[i]);
+        info[i.name] = gl.getAttribLocation(info.program, i.name);
+        gl.vertexAttribPointer(info[i.name], i.size || 3, gl.FLOAT, false, info.FSIZE * (i.stride || 0), info.FSIZE * (i.offset || 0));
+        gl.enableVertexAttribArray(info[i.name]);
     })
 
-    info.ibo = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, info.ibo);
-    info.indices = new Uint16Array(info._indices);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, info.indices, gl.STATIC_DRAW);
+    if (info._indices) {
+        info.ibo = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, info.ibo);
+        info.indices = new Uint16Array(info._indices);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, info.indices, gl.STATIC_DRAW);
+    }
 
     gl.bindVertexArray(null);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
@@ -216,15 +368,14 @@ const shaders = {
         precision mediump float;
         uniform mat4 uModelViewMatrix;
         uniform mat4 uProjectionMatrix;
-        uniform float uPointSize;
-        uniform vec4 uPointColor;
         in vec3 aVertexPosition;
+        in vec4 aPointColor;
+        in float aPointSize;
         out vec4 fColor;
         void main(void) {
-            gl_Position = vec4(aVertexPosition, 1.0);
             gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(aVertexPosition, 1.0);
-            fColor = uPointColor;
-            gl_PointSize = uPointSize;
+            fColor = aPointColor;
+            gl_PointSize = aPointSize;
         } 
     `,
     fs_Grid: `#version 300 es
@@ -237,6 +388,21 @@ const shaders = {
             fragColor = fColor;
         }
     `,
+    vs_Border: `#version 300 es
+        precision mediump float;
+        uniform mat4 uModelViewMatrix;
+        uniform mat4 uProjectionMatrix;
+        uniform float uPointSize;
+        uniform vec4 uPointColor;
+        in vec3 aVertexPosition;
+        out vec4 fColor;
+        void main(void) {
+            gl_Position = vec4(aVertexPosition, 1.0);
+            gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(aVertexPosition, 1.0);
+            fColor = uPointColor;
+            gl_PointSize = uPointSize;
+        } 
+    `,
     fs_Border: `#version 300 es
         precision mediump float;
         in vec4 fColor;
@@ -245,22 +411,25 @@ const shaders = {
             fragColor = fColor;
         }
     `,
-    vs_Cone: `#version 300 es
-        precision mediump float;
+    vs_Line: `#version 300 es
         uniform mat4 uModelViewMatrix;
         uniform mat4 uProjectionMatrix;
-        in vec3 aVertexPosition;
-        void main(void) {
-            gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(aVertexPosition, 1.0);
+        in vec4 aPosition;
+        in vec4 aPointColor;
+        out vec4 fColor;
+        void main() {
+            fColor = aPointColor;
+            gl_Position = uProjectionMatrix * uModelViewMatrix * aPosition;
         }
     `,
-    fs_Cone: `#version 300 es
+    fs_Line: `#version 300 es
         precision mediump float;
+        in vec4 fColor;
         out vec4 fragColor;
         void main(void) {
-            fragColor = vec4(0.0, 1.0, 0.0, 1.0);
+            fragColor = fColor;
         }
-    `,
+    `
 }
 
 function perspectiveMatrix(fieldOfViewInRadians, aspectRatio, near, far) {
