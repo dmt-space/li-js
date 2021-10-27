@@ -228,8 +228,8 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
                         if (p) {
                             if (!_usedPoints.has(+i)) {
                                 _usedPoints.add(i);
-                                const _pointSize = data[k][i].size || data[k].size || data.neuronSize || pointSize;
-                                const _pointColor = data[k][i]?.color || data[k].color || gridColor.split(',');
+                                const _pointSize = data[k][i].size || data[i]?.size || data[k].size || data.neuronSize || pointSize;
+                                const _pointColor = data[k][i]?.color || data[i]?.color || data[k].color || gridColor.split(',');
                                 info._vertices.push(p.x, p.y, p.z, ..._pointColor, _pointSize);
                             }
                             if (!_usedLines.has(k + '-' + i)) {
