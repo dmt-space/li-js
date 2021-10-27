@@ -16,5 +16,20 @@
 </style>
 
 <div style="display: flex; flex: 1; margin: 2px; position: relative;">
-    <li-webgl-box id="gl-box1"></li-webgl-box>
+    <li-webgl-box id="wbgl"></li-webgl-box>
 </div>
+
+<script type="module">
+    wbgl.data =
+    {
+        //'size': 5,
+        'size': {x: 5, y: 5, z: 3},
+        'neuronSize': 12.0,
+        6: { 31: { w: 0.005, color: [1, 0, 0, 1] }, 33: 0, 41: 0.015, 43: 0, color: [0, 0, 1, 1], size: 24 },
+        8: { 31: 0, 33: 0, color: [1, 1, 0, 1], 41: 0, 43: 0 },
+        31: { 74: 0.001, 70: 0.001, color: [1, 1, 0, 1] },
+        33: { 74: 0.001, 70: 0.001, color: [0, 0, 1, 1] },
+        41: { 74: 0.001, 70: 0.001, color: [0, 1, 0, 1] },
+        43: { 74: 0.001, 70: 0.001, color: [0, 1, 0, 1] }
+    }
+</script>
