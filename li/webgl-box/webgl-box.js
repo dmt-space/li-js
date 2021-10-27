@@ -193,8 +193,8 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
         const _usedPoints = new Set();
         const _usedLines = new Set();
         info._vertices = [];
+        const _links = [];
         const _lines = [];
-        const _wlines = [];
         let _pointSize = pointSize;
         let _pointColor = [];
         if (showGrid) {
@@ -237,9 +237,9 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
                                 const width = data[k][i].w || data[k][i];
                                 const color = data[k][i].color || data[k].color || data.color || linkColor;
                                 if (width > 0)
-                                    _wlines.push({ x: s.x, y: s.y, z: s.z, x1: p.x, y1: p.y, z1: p.z, color, width });
+                                    _lines.push({ x: s.x, y: s.y, z: s.z, x1: p.x, y1: p.y, z1: p.z, color, width });
                                 else
-                                    _lines.push(s.x, s.y, s.z, p.x, p.y, p.z);
+                                    _links.push(s.x, s.y, s.z, p.x, p.y, p.z);
                             }
                         }
                     }
@@ -258,9 +258,9 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
         }
         initInfo(gl, shapes, info);
 
-        if (showLink && _lines?.length) {
+        if (showLink && _links?.length) {
             const _lineInfo = { ...{}, ...info };
-            _lineInfo._vertices = _lines
+            _lineInfo._vertices = _links
             _lineInfo.name = 'links';
             _lineInfo.size = 3;
             _lineInfo.vertexShader = 'vs_Border';
@@ -268,15 +268,15 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
             _lineInfo._attributes = [{ name: 'aVertexPosition', size: 3, stride: 0, offset: 0 }];
             _lineInfo.draw = () => {
                 gl.uniform4fv(gl.getUniformLocation(_lineInfo.program, "uPointColor"), linkColor.split(','));
-                gl.drawArrays(gl.LINES, 0, _lineInfo._vertices.length / 2);
+                gl.drawArrays(gl.LINES, 0, _lineInfo._vertices.length / 3);
             }
             initInfo(gl, shapes, _lineInfo);
         }
-        if (_wlines?.length) {
-            this.initLines(gl, shapes, _wlines);
+        if (_lines?.length) {
+            this.initLines(gl, shapes, _lines);
         }
     }
-    initLines(gl, shapes, _wlines, NumSides = 12) {
+    initLines(gl, shapes, _lines, NumSides = 4) {
         const info = { name: 'lines', size: 3, vertexShader: 'vs_Line', fragmentShader: 'fs_Line', NumSides };
         info._vertices = [];
         let cyl_vertices;
@@ -297,18 +297,18 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
             for (let i = 0; i < indices.length; ++i)
                 info._vertices.push(...cyl_vertices[indices[i]], ...color);
         }
-        (_wlines || []).forEach(i => {
+        (_lines || []).forEach(i => {
             buildVertices(i);
             for (let i_side = 0; i_side < NumSides - 1; i_side++)
                 quad(i_side + 1, i_side, NumSides + i_side, NumSides + i_side + 1, i.color);
             quad(0, NumSides - 1, 2 * NumSides - 1, NumSides, i.color);
         })
         info._attributes = [
-            { name: 'aPosition', size: 3, stride: 7, offset: 0 },
+            { name: 'aVertexPosition', size: 3, stride: 7, offset: 0 },
             { name: 'aPointColor', size: 4, stride: 7, offset: 3 }
         ];
         info.draw = () => {
-            gl.drawArrays(gl.TRIANGLES, 0, 6 * NumSides * info._vertices.length);
+            gl.drawArrays(gl.TRIANGLES, 0, info._vertices.length / 7);
         }
         initInfo(gl, shapes, info);
     }
@@ -414,12 +414,12 @@ const shaders = {
     vs_Line: `#version 300 es
         uniform mat4 uModelViewMatrix;
         uniform mat4 uProjectionMatrix;
-        in vec4 aPosition;
+        in vec3 aVertexPosition;
         in vec4 aPointColor;
         out vec4 fColor;
         void main() {
             fColor = aPointColor;
-            gl_Position = uProjectionMatrix * uModelViewMatrix * aPosition;
+            gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(aVertexPosition, 1.0);
         }
     `,
     fs_Line: `#version 300 es
@@ -506,3 +506,4 @@ function rotate(out, a, rad, axis) {
     if (a !== out) out[12] = a[12]; out[13] = a[13]; out[14] = a[14]; out[15] = a[15];
     return out;
 }
+ 
