@@ -135,7 +135,7 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
     initGrid(s = this) {
         const gl = s.gl, shapes = s.shapes, _size = s.data?._size || s.data?.size || s.gridSize,
             pointSize = s.gridPointSize, gridColor = s.gridColor, showGrid = s.showGrid;
-        const info = { name: 'grid', size: 3, vertexShader: 'vs_Grid', fragmentShader: 'fs_Grid', pointSize, gridColor };
+        const info = { name: 'grid', size: 3, vertexShader: 'vs_PointGrid', fragmentShader: 'fs_Point', pointSize, gridColor };
         let size, _z, _x, _y, endPoint;
         if (typeof _size === 'number') {
             size = _size - 1;
@@ -159,24 +159,22 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
                 for (let x = -_x; x <= _x; x += 2) {
                     s._map.set(i, { x: x / _x, y: y / _y, z: z / _z });
                     if (showGrid)
-                        info._vertices.push(...[x / _x, y / _y, z / _z], ..._pointColor, _pointSize); // stride = 3 + + 4 + 1 = (xyz) + (rgba) + s = 8
+                        info._vertices.push(x / _x, y / _y, z / _z); // stride = 3
                     i++;
                 }
         if (!showGrid) return;
-        let stride = 8;
-        info._attributes = [
-            { name: 'aVertexPosition', size: 3, stride, offset: 0 },
-            { name: 'aPointColor', size: 4, stride, offset: 3 },
-            { name: 'aPointSize', size: 1, stride, offset: 7 }
-        ];
+        let stride = 3;
+        info._attributes = [{ name: 'aVertexPosition', size: 3, stride, offset: 0 }];
         info.draw = () => {
+            gl.uniform1f(gl.getUniformLocation(info.program, "uPointSize"), pointSize);
+            gl.uniform4fv(gl.getUniformLocation(info.program, "uPointColor"), info.gridColor.split(','));
             gl.drawArrays(gl.POINTS, 0, info._vertices.length / stride);
         }
         initInfo(gl, shapes, info);
     }
     initBorder(s = this, sz = 1.0) {
         const gl = s.gl, shapes = this.shapes, borderColor = s.borderColor;
-        const info = { name: 'border', size: 3, vertexShader: 'vs_Border', fragmentShader: 'fs_Border', borderColor };
+        const info = { name: 'border', size: 3, vertexShader: 'vs_Line', fragmentShader: 'fs_Line', borderColor };
         info._vertices = [-sz, -sz, sz, -sz, sz, sz, sz, sz, sz, sz, -sz, sz, -sz, -sz, -sz, -sz, sz, -sz, sz, sz, -sz, sz, -sz, -sz];
         info._indices = [0, 1, 1, 2, 2, 3, 3, 0, 0, 4, 4, 5, 5, 6, 6, 7, 7, 4, 1, 5, 2, 6, 3, 7];
         info._attributes = [{ name: 'aVertexPosition', size: 3, stride: 0, offset: 0 },];
@@ -189,12 +187,12 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
     initData(s = this) {
         const gl = s.gl, shapes = s.shapes, pointSize = s.gridPointSize, gridColor = s.gridColor, showGrid = s.showGrid,
             brain = s.brain, data = s.data || {}, showLink = s.showLink, linkColor = s.linkColor, _map = s._map;
-        const info = { name: 'points', size: 3, vertexShader: 'vs_Grid', fragmentShader: 'fs_Grid', pointSize, gridColor };
+        const info = { name: 'points', size: 3, vertexShader: 'vs_Point', fragmentShader: 'fs_Point', pointSize, gridColor };
         const _usedPoints = new Set();
         const _usedLines = new Set();
         info._vertices = [];
         const _links = [];
-        const _lines = [];
+        const _fatLines = [];
         let _pointSize = pointSize;
         let _pointColor = [];
         if (showGrid) {
@@ -220,7 +218,7 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
                     _usedPoints.add(k);
                     const _pointSize = data[k].size || data.neuronSize || pointSize;
                     const _pointColor = data[k].color || gridColor.split(',');
-                    info._vertices.push(s.x, s.y, s.z, ..._pointColor, _pointSize);
+                    info._vertices.push(s.x, s.y, s.z, ..._pointColor, _pointSize); // stride = 3 + 4 + 1 = (xyz) + (rgba) + size = 8
                 }
                 Object.keys(data[k] || {}).forEach(i => {
                     if (typeof +i === 'number') {
@@ -237,7 +235,7 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
                                 const width = data[k][i].w || data[k][i];
                                 const color = data[k][i].color || data[k].color || data.color || linkColor;
                                 if (width > 0)
-                                    _lines.push({ x: s.x, y: s.y, z: s.z, x1: p.x, y1: p.y, z1: p.z, color, width });
+                                    _fatLines.push({ x: s.x, y: s.y, z: s.z, x1: p.x, y1: p.y, z1: p.z, color, width });
                                 else
                                     _links.push(s.x, s.y, s.z, p.x, p.y, p.z);
                             }
@@ -263,8 +261,8 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
             _lineInfo._vertices = _links
             _lineInfo.name = 'links';
             _lineInfo.size = 3;
-            _lineInfo.vertexShader = 'vs_Border';
-            _lineInfo.fragmentShader = 'fs_Border';
+            _lineInfo.vertexShader = 'vs_Line';
+            _lineInfo.fragmentShader = 'fs_Line';
             _lineInfo._attributes = [{ name: 'aVertexPosition', size: 3, stride: 0, offset: 0 }];
             _lineInfo.draw = () => {
                 gl.uniform4fv(gl.getUniformLocation(_lineInfo.program, "uPointColor"), linkColor.split(','));
@@ -272,12 +270,12 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
             }
             initInfo(gl, shapes, _lineInfo);
         }
-        if (_lines?.length) {
-            this.initLines(gl, shapes, _lines);
+        if (_fatLines?.length) {
+            this.initFatLines(gl, shapes, _fatLines);
         }
     }
-    initLines(gl, shapes, _lines, NumSides = 4) {
-        const info = { name: 'lines', size: 3, vertexShader: 'vs_Line', fragmentShader: 'fs_Line', NumSides };
+    initFatLines(gl, shapes, _fatLines, NumSides = 4) {
+        const info = { name: 'lines', size: 3, vertexShader: 'vs_LineFat', fragmentShader: 'fs_Line', NumSides };
         info._vertices = [];
         let cyl_vertices;
         const buildVertices = (i) => {
@@ -297,7 +295,7 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
             for (let i = 0; i < indices.length; ++i)
                 info._vertices.push(...cyl_vertices[indices[i]], ...color);
         }
-        (_lines || []).forEach(i => {
+        (_fatLines || []).forEach(i => {
             buildVertices(i);
             for (let i_side = 0; i_side < NumSides - 1; i_side++)
                 quad(i_side + 1, i_side, NumSides + i_side, NumSides + i_side + 1, i.color);
@@ -364,21 +362,35 @@ const initShader = (gl, name) => {
     return shader;
 }
 const shaders = {
-    vs_Grid: `#version 300 es
+    vs_Point: `#version 300 es
         precision mediump float;
         uniform mat4 uModelViewMatrix;
         uniform mat4 uProjectionMatrix;
         in vec3 aVertexPosition;
-        in vec4 aPointColor;
         in float aPointSize;
+        in vec4 aPointColor;
         out vec4 fColor;
         void main(void) {
             gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(aVertexPosition, 1.0);
-            fColor = aPointColor;
             gl_PointSize = aPointSize;
+            fColor = aPointColor;
         } 
     `,
-    fs_Grid: `#version 300 es
+    vs_PointGrid: `#version 300 es
+        precision mediump float;
+        uniform mat4 uModelViewMatrix;
+        uniform mat4 uProjectionMatrix;
+        uniform float uPointSize;
+        uniform vec4 uPointColor;
+        in vec3 aVertexPosition;
+        out vec4 fColor;
+        void main(void) {
+            gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(aVertexPosition, 1.0);
+            gl_PointSize = uPointSize;
+            fColor = uPointColor;
+        } 
+    `,
+    fs_Point: `#version 300 es
         precision mediump float;
         in vec4 fColor;
         out vec4 fragColor;
@@ -388,38 +400,28 @@ const shaders = {
             fragColor = fColor;
         }
     `,
-    vs_Border: `#version 300 es
+    vs_Line: `#version 300 es
         precision mediump float;
         uniform mat4 uModelViewMatrix;
         uniform mat4 uProjectionMatrix;
-        uniform float uPointSize;
         uniform vec4 uPointColor;
         in vec3 aVertexPosition;
         out vec4 fColor;
         void main(void) {
-            gl_Position = vec4(aVertexPosition, 1.0);
             gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(aVertexPosition, 1.0);
             fColor = uPointColor;
-            gl_PointSize = uPointSize;
         } 
     `,
-    fs_Border: `#version 300 es
+    vs_LineFat: `#version 300 es
         precision mediump float;
-        in vec4 fColor;
-        out vec4 fragColor;
-        void main(void) {
-            fragColor = fColor;
-        }
-    `,
-    vs_Line: `#version 300 es
         uniform mat4 uModelViewMatrix;
         uniform mat4 uProjectionMatrix;
         in vec3 aVertexPosition;
         in vec4 aPointColor;
         out vec4 fColor;
         void main() {
-            fColor = aPointColor;
             gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(aVertexPosition, 1.0);
+            fColor = aPointColor;
         }
     `,
     fs_Line: `#version 300 es
@@ -506,4 +508,3 @@ function rotate(out, a, rad, axis) {
     if (a !== out) out[12] = a[12]; out[13] = a[13]; out[14] = a[14]; out[15] = a[15];
     return out;
 }
- 
