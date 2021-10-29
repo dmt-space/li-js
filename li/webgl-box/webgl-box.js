@@ -19,6 +19,7 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
                 @pointerout=${this.mouseUp}
                 @pointermove=${this.mouseMove}
                 @mousewheel=${this.mouseWheel}
+                @dblclick=${() => this.animate = !this.animate}
             ></canvas>
         `;
     }
@@ -33,15 +34,20 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
             borderColor: { type: String, default: '0.1, 0.1, 0.1, 0.9' },
             showLink: { type: Boolean, default: true },
             linkColor: { type: String, default: '0.5, 0.5, 0.5, 0.9' },
-            zTranslation: { type: Number, default: -3.5 },
-            amortization: { type: Number, default: 1 },
+            amortization: { type: Number, default: 0.95 },
             enableDraw: { type: Boolean, default: true },
+            animate: { type: Boolean, default: true },
+            THETA: { type: Number, default: 0, save: true },
+            PHI: { type: Number, default: 0, save: true },
+            _moveX: { type: Number, default: 0, save: true },
+            _moveY: { type: Number, default: 0, save: true },
+            _moveZ: { type: Number, default: -3., save: true }
         }
     }
     constructor() {
         super();
         this.drag = false;
-        this.dX = this.dY = this.THETA = this.PHI = 0;
+        this.dX = this.dY = 0;
     }
 
     firstUpdated() {
@@ -64,6 +70,35 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
             this.draw();
         }, 300);
 
+        window.addEventListener('keydown', e => {
+            if (this.brain) {
+                const neurons = this.brain.inputs.filter(n => {
+                    return n.x === 0 && n.y === +e.key;
+                })
+                neurons?.forEach(neuron => {
+                    neuron.signal(neuron?.threshold * 2)
+                });
+            }
+            const shift = e.ctrlKey ? 0.01 : 0.1;
+            switch (e.keyCode) {
+                case 39:
+                    if (e.altKey) this.THETA = (this.THETA || 0) + shift;
+                    else this._moveX = (this._moveX || 0) + shift;
+                    break;
+                case 37:
+                    if (e.altKey) this.THETA = (this.THETA || 0) - shift;
+                    else this._moveX = (this._moveX || 0) - shift;
+                    break;
+                case 40:
+                    if (e.altKey) this.PHI = (this.PHI || 0) + shift;
+                    else this._moveY = (this._moveY || 0) - shift;
+                    break;
+                case 38:
+                    if (e.altKey) this.PHI = (this.PHI || 0) - shift;
+                    else this._moveY = (this._moveY || 0) + shift;
+                    break;
+            }
+        })
     }
 
     clearGL(gl) {
@@ -78,10 +113,10 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
     }
     draw() {
         if (!this.drag) {
-            this.dX *= this.amortization;
-            this.dY *= this.amortization;
-            this.THETA += this.dX;
-            this.PHI += this.dY;
+            this.dX *= this.animate ? 1 : this.amortization;
+            this.dY *= this.animate ? 1 : this.amortization;
+            this.THETA = (this.THETA || 0) + this.dX;
+            this.PHI = (this.PHI || 0) + this.dY;
         }
 
         const gl = this.gl;
@@ -89,9 +124,9 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
 
         const uModelViewMatrix = modelViewMatrix();
         const uProjectionMatrix = perspectiveMatrix(1, gl.viewportWidth / gl.viewportHeight, 1, 2000.0);
-        translate(uModelViewMatrix, uModelViewMatrix, [0, 0, this.zTranslation]);
-        rotate(uModelViewMatrix, uModelViewMatrix, this.THETA, [0, 1, 0]);
-        rotate(uModelViewMatrix, uModelViewMatrix, this.PHI, [1, 0, 0]);
+        translate(uModelViewMatrix, uModelViewMatrix, [this._moveX || 0, this._moveY || 0, this._moveZ || 0]);
+        rotate(uModelViewMatrix, uModelViewMatrix, this.THETA || 0, [0, 1, 0]);
+        rotate(uModelViewMatrix, uModelViewMatrix, this.PHI || 0, [1, 0, 0]);
 
         this.shapes.forEach(inf => {
             gl.useProgram(inf.program);
@@ -119,14 +154,14 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
         this.drag = false;
     }
     mouseWheel(e) {
-        this.zTranslation += e.deltaY / (this.offsetHeight / 2);
+        this._moveZ = (this._moveZ || 0) + e.deltaY / (this.offsetHeight / 2);
     }
     mouseMove(e) {
         if (this.drag) {
             this.dX = (e.pageX - this.oldX) * 2 * Math.PI / this.canvas.width;
             this.dY = (e.pageY - this.oldY) * 2 * Math.PI / this.canvas.height;
-            this.THETA += this.dX;
-            this.PHI += this.dY;
+            this.THETA = (this.THETA || 0) + this.dX;
+            this.PHI = (this.PHI || 0) + this.dY;
             this.oldX = e.pageX;
             this.oldY = e.pageY;
             e.preventDefault();
@@ -152,8 +187,6 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
         s._map = new Map();
         let i = 0;
         info._vertices = [];
-        let _pointSize = pointSize;
-        let _pointColor = gridColor.split(',');
         for (let z = _z; z >= -_z; z -= 2)
             for (let y = _y; y >= -_y; y -= 2)
                 for (let x = -_x; x <= _x; x += 2) {
@@ -188,62 +221,64 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
         const gl = s.gl, shapes = s.shapes, pointSize = s.gridPointSize, gridColor = s.gridColor, showGrid = s.showGrid,
             brain = s.brain, data = s.data || {}, showLink = s.showLink, linkColor = s.linkColor, _map = s._map;
         const info = { name: 'points', size: 3, vertexShader: 'vs_Point', fragmentShader: 'fs_Point', pointSize, gridColor };
-        const _usedPoints = new Set();
-        const _usedLines = new Set();
-        info._vertices = [];
-        const _links = [];
-        const _fatLines = [];
-        let _pointSize = pointSize;
-        let _pointColor = [];
-        if (showGrid) {
-            info._vertices.push(-1, 1, 1, ...[0, 1, 0, 1], 8); // startPoint
-            info._vertices.push(1, -1, -1, ...[1, 0, 0, 1], 8); // endPoint
-        }
-        if (brain) {
-            (brain.neurons || []).forEach(i => {
-                // console.log(i)
-                _usedPoints.add(i.id);
-                _pointSize = i.size || pointSize;
-                _pointColor = gridColor.split(',');
-                if (_map.has(i.id)) {
-                    const coor = _map.get(i.id);
-                    info._vertices.push(coor.x, coor.y, coor.z, ..._pointColor, _pointSize);
-                }
-            })
-        } else {
+        let _links, _fatLines;
+        const coords = (x, y, z) => [-z + 1, 1 - y, -x + 1];
+        const calc = () => {
+            const _usedPoints = new Set();
+            const _usedLines = new Set();
+            info._vertices = [];
+            _links = [];
+            _fatLines = [];
+            let _pointSize = pointSize;
+            let _pointColor = [];
+
+            if (showGrid) {
+                info._vertices.push(-1, 1, 1, ...[0, 1, 0, 1], 8); // startPoint
+                info._vertices.push(1, -1, -1, ...[1, 0, 0, 1], 8); // endPoint
+            }
             Object.keys(data || {}).forEach(k => {
-                const s = _map.get(+k);
-                if (!s) return;
-                if (typeof +k === 'number' && !_usedPoints.has(+k)) {
-                    _usedPoints.add(k);
-                    const _pointSize = data[k].size || data.neuronSize || pointSize;
-                    const _pointColor = data[k].color || gridColor.split(',');
-                    info._vertices.push(s.x, s.y, s.z, ..._pointColor, _pointSize); // stride = 3 + 4 + 1 = (xyz) + (rgba) + size = 8
-                }
-                Object.keys(data[k] || {}).forEach(i => {
-                    if (typeof +i === 'number') {
-                        const p = _map.get(+i);
-                        if (p) {
+                const p = _map.get(+k);
+                if (!p) return;
+                if (typeof +k === 'number') {
+                    let _pointSize, _pointColor;
+                    if (!_usedPoints.has(+k)) {
+                        _usedPoints.add(k);
+                        _pointSize = data[k].size || data.pointSize || pointSize;
+                        _pointColor = data[k].color || data.pointColor || gridColor.split(',');
+                        info._vertices.push(p.x, p.y, p.z, ..._pointColor, _pointSize); // stride = 3 + 4 + 1 = (xyz) + (rgba) + size = 8
+                    }
+                    (data[k].links || []).forEach(_i => {
+                        let c, w, i;
+                        if (typeof _i === 'object') {
+                            i = _i.p;
+                            c = _i.c ? [..._i.c] : null;
+                            w = _i.w;
+                        } else {
+                            i = _i;
+                        }
+                        const p2 = _map.get(+i);
+                        if (p2) {
+                            _pointSize = data[i]?.size || _pointSize || data.pointSize;
+                            _pointColor = data[i]?.color || _pointColor || data.color;
                             if (!_usedPoints.has(+i)) {
                                 _usedPoints.add(i);
-                                const _pointSize = data[k][i].size || data[i]?.size || data[k].size || data.neuronSize || pointSize;
-                                const _pointColor = data[k][i]?.color || data[i]?.color || data[k].color || gridColor.split(',');
-                                info._vertices.push(p.x, p.y, p.z, ..._pointColor, _pointSize);
+                                info._vertices.push(p2.x, p2.y, p2.z, ..._pointColor, _pointSize);
                             }
                             if (!_usedLines.has(k + '-' + i)) {
                                 _usedLines.add(k + '-' + i);
-                                const width = data[k][i].w || data[k][i];
-                                const color = data[k][i].color || data[k].color || data.color || linkColor;
+                                const width = w || data[k].width || (data[k].linkColor ? 0.001 : 0);
+                                const color = c || data[k].linkColor || _pointColor;
                                 if (width > 0)
-                                    _fatLines.push({ x: s.x, y: s.y, z: s.z, x1: p.x, y1: p.y, z1: p.z, color, width });
+                                    _fatLines.push({ x: p.x, y: p.y, z: p.z, x1: p2.x, y1: p2.y, z1: p2.z, color, width });
                                 else
-                                    _links.push(s.x, s.y, s.z, p.x, p.y, p.z);
+                                    _links.push(p.x, p.y, p.z, p2.x, p2.y, p2.z);
                             }
                         }
-                    }
-                })
+                    })
+                }
             })
         }
+        calc();
 
         let stride = 8;
         info._attributes = [
@@ -252,23 +287,29 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
             { name: 'aPointSize', size: 1, stride, offset: 7 }
         ];
         info.draw = () => {
+            calc();
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, info.vbo);
+            info.vertices = new Float32Array(info._vertices);
+            gl.bufferData(gl.ARRAY_BUFFER, info.vertices, gl['DYNAMIC_DRAW']);
+
             gl.drawArrays(gl.POINTS, 0, info._vertices.length / stride);
         }
-        initInfo(gl, shapes, info);
+        initInfo(gl, shapes, info, 'DYNAMIC_DRAW');
 
         if (showLink && _links?.length) {
-            const _lineInfo = { ...{}, ...info };
-            _lineInfo._vertices = _links
-            _lineInfo.name = 'links';
-            _lineInfo.size = 3;
-            _lineInfo.vertexShader = 'vs_Line';
-            _lineInfo.fragmentShader = 'fs_Line';
-            _lineInfo._attributes = [{ name: 'aVertexPosition', size: 3, stride: 0, offset: 0 }];
-            _lineInfo.draw = () => {
-                gl.uniform4fv(gl.getUniformLocation(_lineInfo.program, "uPointColor"), linkColor.split(','));
-                gl.drawArrays(gl.LINES, 0, _lineInfo._vertices.length / 3);
+            const _linkInfo = { ...{}, ...info };
+            _linkInfo._vertices = _links
+            _linkInfo.name = 'links';
+            _linkInfo.size = 3;
+            _linkInfo.vertexShader = 'vs_Line';
+            _linkInfo.fragmentShader = 'fs_Line';
+            _linkInfo._attributes = [{ name: 'aVertexPosition', size: 3, stride: 0, offset: 0 }];
+            _linkInfo.draw = () => {
+                gl.uniform4fv(gl.getUniformLocation(_linkInfo.program, "uPointColor"), linkColor.split(','));
+                gl.drawArrays(gl.LINES, 0, _linkInfo._vertices.length / 3);
             }
-            initInfo(gl, shapes, _lineInfo);
+            initInfo(gl, shapes, _linkInfo);
         }
         if (_fatLines?.length) {
             this.initFatLines(gl, shapes, _fatLines);
@@ -306,13 +347,17 @@ customElements.define('li-webgl-box', class LiWebGLBox extends LiElement {
             { name: 'aPointColor', size: 4, stride: 7, offset: 3 }
         ];
         info.draw = () => {
+            gl.bindBuffer(gl.ARRAY_BUFFER, info.vbo);
+            info.vertices = new Float32Array(info._vertices);
+            gl.bufferData(gl.ARRAY_BUFFER, info.vertices, gl['DYNAMIC_DRAW']);
+
             gl.drawArrays(gl.TRIANGLES, 0, info._vertices.length / 7);
         }
-        initInfo(gl, shapes, info);
+        initInfo(gl, shapes, info, 'DYNAMIC_DRAW');
     }
 })
 
-const initInfo = (gl, shapes, info) => {
+const initInfo = (gl, shapes, info, draw = 'STATIC_DRAW') => {
     info.program = createProgram(gl, info.vertexShader, info.fragmentShader);
     if (!info.program) return null;
     shapes.push(info);
@@ -323,7 +368,7 @@ const initInfo = (gl, shapes, info) => {
     info.vbo = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, info.vbo);
     info.vertices = new Float32Array(info._vertices);
-    gl.bufferData(gl.ARRAY_BUFFER, info.vertices, gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, info.vertices, gl[draw]);
     info.FSIZE = info.vertices?.BYTES_PER_ELEMENT;
     (info._attributes || []).forEach(i => {
         info[i.name] = gl.getAttribLocation(info.program, i.name);
@@ -335,7 +380,7 @@ const initInfo = (gl, shapes, info) => {
         info.ibo = gl.createBuffer();
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, info.ibo);
         info.indices = new Uint16Array(info._indices);
-        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, info.indices, gl.STATIC_DRAW);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, info.indices, gl[draw]);
     }
 
     gl.bindVertexArray(null);
