@@ -729,7 +729,7 @@ customElements.define('li-wiki', class LiWiki extends LiElement {
                 fontSize: '.9rem',
                 searchColumns: ['name']
             },
-            columns: [{ label: '№', name: '_idx', width: 50 }, { label: 'articles', name: 'name', textAlign: 'left', showTitle: true }],
+            columns: [{ label: '№', name: '$idx', width: 50 }, { label: 'articles', name: 'name', textAlign: 'left', showTitle: true }],
             rows: rows
         }
         this.sortArticles = data;
