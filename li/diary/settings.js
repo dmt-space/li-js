@@ -32,7 +32,7 @@ export const sets = {
             sum: ['num', 'prot', 'fats', 'carb', 'kcal']
         }, 
         columns: [
-            { name: '_idx', label: '№', width: 50 },
+            { name: '$idx', label: '№', width: 50 },
             { name: 'date', label: 'дата', width: 100 },
             { name: 'time', label: 'время', width: 100 },
             { name: 'eating', label: 'прием пищи', width: 140 },
@@ -53,7 +53,7 @@ export const sets = {
             sum: ['num']
         }, 
         columns: [
-            { name: '_idx', label: '№', width: 50 },
+            { name: '$idx', label: '№', width: 50 },
             { name: 'date', label: 'дата', width: 100 },
             { name: 'time', label: 'время приема' },
             { name: 'num', label: 'количество' },
@@ -68,7 +68,7 @@ export const sets = {
             sum: ['dur', 'dist', 'kcal']
         }, 
         columns: [
-            { name: '_idx', label: '№', width: 50 },
+            { name: '$idx', label: '№', width: 50 },
             { name: 'date', label: 'дата', width: 100 },
             { name: 'start', label: 'старт' },
             { name: 'dur', label: 'длительность' },
@@ -85,7 +85,7 @@ export const sets = {
             sum: ['dur', 'kcal']
         }, 
         columns: [
-            { name: '_idx', label: '№', width: 50 },
+            { name: '$idx', label: '№', width: 50 },
             { name: 'date', label: 'дата', width: 100 },
             { name: 'type', label: 'тип' },
             { name: 'start', label: 'старт' },
@@ -103,7 +103,7 @@ export const sets = {
             sum: ['dur', 'kcal']
         }, 
         columns: [
-            { name: '_idx', label: '№', width: 50 },
+            { name: '$idx', label: '№', width: 50 },
             { name: 'date', label: 'дата', width: 100 },
             { name: 'start', label: 'старт' },
             { name: 'dur', label: 'длительность' },
@@ -119,7 +119,7 @@ export const sets = {
             // footerHidden: true
         },
         columns: [
-            { name: '_idx', label: '№', width: 50 },
+            { name: '$idx', label: '№', width: 50 },
             { name: 'date', label: 'дата', width: 100 },
             { name: 'time', label: 'время измерения' },
             { name: 'val', label: 'вес' },
@@ -134,7 +134,7 @@ export const sets = {
             // footerHidden: true
         },
         columns: [
-            { name: '_idx', label: '№', width: 50 },
+            { name: '$idx', label: '№', width: 50 },
             { name: 'date', label: 'дата', width: 100 },
             { name: 'шея', label: 'шея' },
             { name: 'грудь', label: 'грудь' },
@@ -168,7 +168,7 @@ export const sets = {
             actions: ['dblClickTableCell']
         },
         columns: [
-            { name: '_idx', label: '№', width: 50 },
+            { name: '$idx', label: '№', width: 50 },
             { name: 'category', label: 'категория', width: 200 },
             { name: 'name', label: 'наименование', textAlign: 'left', showTitle: true },
             { name: 'num', label: 'кол', width: 50 },

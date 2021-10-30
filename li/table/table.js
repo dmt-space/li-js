@@ -54,7 +54,7 @@ customElements.define('li-table', class extends LiElement {
                         ${this._rows.map((row, idx) => html`
                             <li-table-row .row=${row} idx=${idx} style="box-sizing: border-box;
                                 position: ${this.data?.options?.lazy ? 'absolute' : 'relative'};
-                                top: ${this.data?.options?.lazy ? (row._idx - 1) * this._rowHeight + 'px' : ''}">
+                                top: ${this.data?.options?.lazy ? (row.$idx - 1) * this._rowHeight + 'px' : ''}">
                             </li-table-row>
                         `)}   
                     </div>
@@ -157,12 +157,12 @@ customElements.define('li-table', class extends LiElement {
             this.data.options._sum = {};
             this.data.options.sum.forEach(j => this._data.sum[j] = 0);
         }
-        this._data.rows = this.data.rows.filter(i => {
+        this._data.rows = this.data?.rows?.filter(i => {
             if (!i._deleted) {
                 let ok = false;
                 if (search) this.data.options.searchColumns.forEach(j => ok = ok || (i[j] + '')?.toLowerCase().includes(search));
                 if (!search || (search && ok)) {
-                    i._idx = ++idx;
+                    i.$idx = ++idx;
                     if (sum) this.data.options.sum.forEach(j => this._data.sum[j] += Number(i[j]) || 0);
                     return true;
                 }
@@ -172,11 +172,15 @@ customElements.define('li-table', class extends LiElement {
     }
     _deleteRow(row = this.selected) {
         if (!row) return;
-        const idx = row._idx === this._data.rows.length ? this._data.rows.length - 2 : row._idx;
+        const idx = row.$idx === this._data.rows.length ? this._data.rows.length - 2 : row.$idx;
         row._deleted = true;
         this.selected = this._data.rows[idx];
         this._setRows();
-
+        this.action = {
+            action: 'tableCellChanged',
+            ulid: this.$ulid,
+            row
+        }
     }
     _resizeColumns() {
         this.left = this._left;
@@ -337,9 +341,9 @@ customElements.define('li-table-panel-row', class extends LiElement {
             ${this.type === 'bottom' && this.data?.options?.footerHidden || this.type === 'top' && this.data?.options?.headerHidden ? html`` : html`
             <div class="panel ${this.type}" style="left: ${-this.left}; height: ${this.data?.options?.headerHeight ? this.data?.options?.headerHeight : 'auto'}">
                 <div style="display: flex; background-color:${
-                        (this.type === 'bottom' && this.data?.options?.footerColor)
-                        || (this.type === 'top' && this.data?.options?.headerColor)
-                        || '#eee'}">
+                    (this.type === 'bottom' && this.data?.options?.footerColor)
+                || (this.type === 'top' && this.data?.options?.headerColor)
+                || '#eee'}">
                     ${this.data?.columns?.map(i => html`
                         <div style="width: ${i._width < 16 ? 16 : i._width}; min-height: ${this._columnMinHeight}">
                             <li-table-panel-cell .column="${i}" type=${this.type}></li-table-panel-cell>
@@ -350,7 +354,7 @@ customElements.define('li-table-panel-row', class extends LiElement {
 
             ${this.type === 'bottom' && this.data?.options?.footerService ? html`
             <div class="service _bottom">
-                <div class="service-text">${this.data?.options?.footerServiceTotal ? 'total:' + this._data.rows.length : ''}</div>
+                <div class="service-text">${this.data?.options?.footerServiceTotal ? 'total:' + this._data?.rows?.length : ''}</div>
                 <div class="service-text">${this.data?.options?.footerServiceText || ''}</div>
                 <li-button name="chevron-left" width="auto" size=18 style="margin-left: auto" border='none' @click=${(e) => this.fire('scrollTo', -1_000_000_000)}></li-button>
                 <li-button size=18 width="auto" border='none' style="display: ${this._data?.rows?.length > 100_000 ? 'block' : 'none'}" @click=${(e) => this.fire('scrollTo', -100_000)}>-100 000</li-button>
@@ -449,7 +453,7 @@ customElements.define('li-table-panel-cell', class extends LiElement {
         return html`
             <div class="label" style="writing-mode: ${this.data?.options?.headerVertical && this.type === 'header' ? 'vertical-lr' : ''}">
                 ${this.type === 'top' && (this.column?.label || this.column?.name) || ''}
-                ${this.type === 'bottom' && this.column?.name === '_idx' ? this._data?.rows?.length : ''}
+                ${this.type === 'bottom' && this.column?.name === '$idx' ? this._data?.rows?.length : ''}
                 ${this.sum}
             </div>
             ${this.disableResize ? html`` : html`
@@ -575,7 +579,7 @@ customElements.define('li-table-cell', class extends LiElement {
         }
     }
     get readonly() {
-        return this.column.name === '_idx' || this.column?.readonly || this.data?.options?.readonly;
+        return this.column.name === '$idx' || this.column?.readonly || this.data?.options?.readonly;
     }
 
     updated(e) {
@@ -591,9 +595,16 @@ customElements.define('li-table-cell', class extends LiElement {
         if (!this.readonly) this.selected = true;
     }
     _chageValue(e) {
-        this.row[this.column.name] = e.target.value;
-        this.selected = false;
-        this._data._setRows();
+        if (this.row[this.column.name] !== e.target.value) {
+            this.row[this.column.name] = e.target.value;
+            this.selected = false;
+            this._data._setRows();
+            this.action = {
+                action: 'tableCellChanged',
+                ulid: this.$ulid,
+                row: this.row,
+            }
+        }
     }
     _dblClick(e) {
         this.action = undefined;

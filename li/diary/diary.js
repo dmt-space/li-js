@@ -88,7 +88,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                         <li-button name="create" title="diary" @click="${() => this.leftView = 'diary'}" ?toggled="${this.leftView === 'diary'}" toggledClass="ontoggled"></li-button>
                         <li-button name="settings" title="settings" @click="${() => this.leftView = 'settings'}" ?toggled="${this.leftView === 'settings'}" toggledClass="ontoggled"></li-button>
                         <div style="flex:1"></div>
-                        <li-button name="save" title="save" .fill="${this._needSave ? 'red' : ''}" .color="${this._needSave ? 'red' : 'gray'}"></li-button>
+                        <li-button name="save" title="save" .fill="${this._needSave ? 'red' : ''}" .color="${this._needSave ? 'red' : 'gray'}" @click=${this._save}></li-button>
                     </div>
                     <b class="lbl">${this.leftView}</b>
                     <div class="panel-in">
@@ -132,10 +132,10 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                             </div>
                             ${this._eating !== '002' ? html`
                                 <li-table id="table-favorites" style="height: 48%" .data="${{
-                                    columns: sets.favorites.columns,
-                                    options: sets.favorites.options,
-                                    rows: sets.favorites.rows
-                                }}"></li-table>
+                        columns: sets.favorites.columns,
+                        options: sets.favorites.options,
+                        rows: sets.favorites.rows
+                    }}"></li-table>
                             ` : html`
                                 <li-table id="table-ecalorie" style="height: 48%" .data="${foodList}"></li-table>
                             `}
@@ -207,7 +207,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
 
     static get properties() {
         return {
-            dbName: { type: String, default: 'my diary', save: true },
+            dbName: { type: String, default: 'my-diary', save: true },
             dbIP: { type: String, default: 'http://admin:54321@localhost:5984/', save: true },
             autoReplication: { type: Boolean, default: false, save: true },
             step: { type: Number, default: 35 },
@@ -219,8 +219,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             types: { type: Array },
             period: { type: Array, local: true },
             action: { type: Object, global: true },
-            _addItems: { type: Array, default: [] },
-            _delItems: { type: Array, default: [] },
+            _changedList: { type: Object },
             _eating: { type: String, default: '001' },
         }
     }
@@ -240,7 +239,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
         return this.period[1];
     }
     get _needSave() {
-        return this._addItems?.length || this._delItems?.length;
+        return this._changedList?.size;
     }
 
     connectedCallback() {
@@ -255,9 +254,23 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                 || this._mainView.name === 'favorites' && this.action.id === 'table-fcalorie')
                 && this.action.action === 'dblClickTableCell'
             ) {
-                this._addRow(this.action.row);
+                this._addRow(null, this.action.row);
+            }
+            if (this.action.action === 'tableCellChanged' && this.$ulid !== this.action.ulid) {
+                this._changedList = this._changedList || new Map();
+                this._changedList.set(this.action.row._id, this.action.row);
+                this.$update();
             }
         }
+    }
+    async firstUpdated() {
+        super.firstUpdated();
+        setTimeout(async () => {
+            this.dbLocal = new PouchDB(this.dbName);
+            this.dbRemote = new PouchDB(this.dbIP + this.dbName);
+            if (this.autoReplication) this.replicationHandler = this.dbLocal.sync(this.dbRemote, { live: true });
+            this.$update();
+        }, 100);
     }
 
     _autoReplication() {
@@ -265,37 +278,42 @@ customElements.define('li-diary', class LiDiary extends LiElement {
     }
 
     _setMainView(e, idx, i) {
+        e.target.toggled = this.mainView === i.label;
         if (this.mainView === i.label) return;
         this._mainView = undefined;
-        requestAnimationFrame(() => {
+        requestAnimationFrame(async () => {
             this._mainView = i;
             const mainView = i.label;
             const opts = {
                 headerColor: `hsla(${idx * this.step}, 50%, 50%, .1)`,
                 footerColor: `hsla(${idx * this.step}, 50%, 50%, .1)`,
             };
-            this._data = {};
+            const startkey = this._mainView.name + ':' + this._currentDate;
+            const endkey = this._mainView.name + ':' + this._currentDate;
+            const items = await this.dbLocal.allDocs({ include_docs: true, startkey, endkey: endkey + '\ufff0' });
+            const res = [];
+            items.rows.forEach(i => res.push(i.doc));
             if (sets[this._mainView.name]) {
+                this._data = {};
                 this._data.columns = sets[this._mainView.name].columns;
                 this._data.options = { ...(sets[this._mainView.name].options || {}), ...opts };
-                this._data.rows = sets[this._mainView.name].rows;
+                this._data.rows = res || sets[this._mainView.name].rows;
             }
             this.mainView = mainView;
-            e.target.toggled = this.mainView === mainView;
             this._idx = idx || 0;
             this.$update();
         });
     }
-    _addRow(row) {
+    _addRow(e, row) {
         this.action = undefined;
         const ulid = LI.ulid(),
             type = this._mainView.name,
-            _id = `${type}:${ulid}`,
-            created = LI.dates(new Date(this._currentDate));
+            created = LI.dates(new Date(this._currentDate)),
+            _id = `${type}:${created.short}:${ulid}`;
         let item = { _id, ulid, type, created, date: created.short };
-        if (row) item = { ...row,...item };
-        this._addItems = this._addItems || [];
-        this._addItems.push(item);
+        if (row) item = { ...row, ...item };
+        this._changedList = this._changedList || new Map();
+        this._changedList.set(_id, item);
         this._data.rows.push(item);
         this.action = {
             id: `table-${type}`,
@@ -310,5 +328,17 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             id: `table-${type}`,
             fn: '_deleteRow'
         }
+    }
+    async _save(){
+        const items = await this.dbLocal.allDocs({ keys: [...this._changedList.keys()], include_docs: true });
+        const res = [];
+        items.rows.map(i => {
+            const doc = this._changedList.get(i.key);
+            if (i.doc) i.doc = { ...i.doc, ...doc };
+            else if (!doc._deleted) i.doc = { ...doc };
+            if (i.doc) res.add(i.doc);
+        })
+        await this.dbLocal.bulkDocs(res);
+        this._changedList = new Map();
     }
 });

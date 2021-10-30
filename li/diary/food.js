@@ -17,7 +17,7 @@ export const foodList = {
     actions: ['dblClickTableCell'],
   },
   columns: [
-    { name: '_idx', label: '№', width: 50 },
+    { name: '$idx', label: '№', width: 50 },
     { name: 'category', label: 'категория', width: 200 },
     { name: 'name', label: 'наименование', textAlign: 'left', showTitle: true },
     { name: 'num', label: 'кол', width: 50 },
