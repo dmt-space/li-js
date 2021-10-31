@@ -157,13 +157,28 @@ customElements.define('li-table', class extends LiElement {
             this.data.options._sum = {};
             this.data.options.sum.forEach(j => this._data.sum[j] = 0);
         }
+        const sort = this.data.options.sortColumns;
+        if (sort?.length && this.data?.rows?.length) {
+            this.data.rows.forEach(i => {
+                i.$sort = '';
+                sort.forEach(s => i.$sort += (i[s] || '~'));
+            })
+            this.data.rows = this.data.rows.sort((a, b) => {
+                if (a.$sort > b.$sort) return 1;
+                if (a.$sort < b.$sort) return -1;
+                return 0;
+            });
+        }
         this._data.rows = this.data?.rows?.filter(i => {
             if (!i._deleted) {
                 let ok = false;
                 if (search) this.data.options.searchColumns.forEach(j => ok = ok || (i[j] + '')?.toLowerCase().includes(search));
                 if (!search || (search && ok)) {
                     i.$idx = ++idx;
-                    if (sum) this.data.options.sum.forEach(j => this._data.sum[j] += Number(i[j]) || 0);
+                    if (sum) this.data.options.sum.forEach(j => {
+                        const col = this.data?.columns?.find((e) => e.name === j);
+                        this._data.sum[j] += col?.calc?.(i) || Number(i[j]) || 0;
+                    })
                     return true;
                 }
             }
@@ -184,10 +199,11 @@ customElements.define('li-table', class extends LiElement {
     }
     _resizeColumns() {
         this.left = this._left;
-        this.maxWidth = this.$id('main')?.offsetWidth - (this._hasScroll ? 4 : 0);
-        let length = this.data?.columns?.length,
+        this.maxWidth = this.$id('table')?.offsetWidth - (this._hasScroll ? 4 : 0);
+        const columns = this.data._columns = this.data?.columns?.filter(i => !i.hidden) || [];
+        let length = columns.length,
             left = 0;
-        this.data?.columns?.forEach(i => {
+        columns.forEach(i => {
             if (i.width) {
                 length--;
                 left += i.width;
@@ -195,7 +211,7 @@ customElements.define('li-table', class extends LiElement {
         })
         let width = (this.maxWidth - left) / length;
         left = 0;
-        this.data?.columns?.map((i, idx) => {
+        columns.map((i, idx) => {
             i.idx = idx;
             i._width = i.width || width;
             left = i.left = left + i._width;
@@ -258,7 +274,7 @@ customElements.define('li-table-row', class extends LiElement {
     render() {
         return html` 
             <div class="row ${this._selected ? 'selected' : ''}" style="background-color: ${this._selected ? 'lightyellow' : this.idx % 2 ? '#f5f5f5' : 'white'}">
-                ${this.data?.columns?.map(c => html`
+                ${this.data?._columns?.map(c => html`
                     <li-table-cell .item="${this.row[c.name]}" .column="${c}" @click=${this._click} .row=${this.row}></li-table-cell>
                 `)}
             </div>        
@@ -340,11 +356,10 @@ customElements.define('li-table-panel-row', class extends LiElement {
 
             ${this.type === 'bottom' && this.data?.options?.footerHidden || this.type === 'top' && this.data?.options?.headerHidden ? html`` : html`
             <div class="panel ${this.type}" style="left: ${-this.left}; height: ${this.data?.options?.headerHeight ? this.data?.options?.headerHeight : 'auto'}">
-                <div style="display: flex; background-color:${
-                    (this.type === 'bottom' && this.data?.options?.footerColor)
+                <div style="display: flex; background-color:${(this.type === 'bottom' && this.data?.options?.footerColor)
                 || (this.type === 'top' && this.data?.options?.headerColor)
                 || '#eee'}">
-                    ${this.data?.columns?.map(i => html`
+                    ${this.data?._columns?.map(i => html`
                         <div style="width: ${i._width < 16 ? 16 : i._width}; min-height: ${this._columnMinHeight}">
                             <li-table-panel-cell .column="${i}" type=${this.type}></li-table-panel-cell>
                         </div>
@@ -555,13 +570,17 @@ customElements.define('li-table-cell', class extends LiElement {
                     @dblclick=${this._dblClick}
                     @click=${this._click}
                 >
-                ${this.selected ? html`` : html`${this.row[this.column.name] || ''}`}
-                ${!this.selected ? html`` : html`
-                    <input class="input" .value=${this.row[this.column.name] || ''}  style=${styleMap(this.styles)}
-                    @blur=${this._chageValue} 
-                    @change=${this._chageValue}
-                    
-                >
+                ${this.column.calc ? html`
+                        ${this._calc}
+                    ` : html`
+                    ${this.selected ? html`` : html`${this.row[this.column.name] || ''}`}
+                    ${!this.selected ? html`` : html`
+                        <input class="input" .value=${this.row[this.column.name] || ''}  style=${styleMap(this.styles)}
+                        @blur=${this._chageValue} 
+                        @change=${this._chageValue}
+                        
+                    >
+                    `}
                 `}
             </div>
         `
@@ -580,6 +599,11 @@ customElements.define('li-table-cell', class extends LiElement {
     }
     get readonly() {
         return this.column.name === '$idx' || this.column?.readonly || this.data?.options?.readonly;
+    }
+    get _calc() {
+        let res = this.column.calc(this.row);
+        if (+res) return (+res).toFixed(2);
+        return '';
     }
 
     updated(e) {

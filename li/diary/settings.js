@@ -1,7 +1,6 @@
 export const sets = {
     types: [
         { icon: 'dining', name: 'eating', label: 'еда' },
-        { icon: 'account-box', name: 'favorites', label: 'избранное' },
         { icon: 'water_drop', name: 'water', label: 'вода' },
         { icon: 'hiking', name: 'walking', label: 'шаги' },
         { icon: 'sports_volleyball', name: 'sport', label: 'спорт' },
@@ -9,6 +8,7 @@ export const sets = {
         { icon: 'monitor_weight', name: 'weighing', label: 'вес' },
         { icon: 'accessibility_new', name: 'measurements', label: 'измерения' },
         { icon: 'auto_stories', name: 'wiki', label: 'wiki', hideLabel: true },
+        { icon: 'account-box', name: 'favorites', label: 'избранное' },
         { icon: 'flatware', name: 'calorie', label: 'таблица калорийности' },
     ],
     measurementsPos: [
@@ -29,20 +29,26 @@ export const sets = {
     'wiki': [],
     'eating': {
         options: {
-            sum: ['num', 'prot', 'fats', 'carb', 'kcal']
+            sum: ['num2', 'prot2', 'fats2', 'carb2', 'kcal2'],
+            sortColumns: ['date', 'time']
         }, 
         columns: [
             { name: '$idx', label: '№', width: 50 },
             { name: 'date', label: 'дата', width: 100 },
-            { name: 'time', label: 'время', width: 100 },
+            { name: 'time', label: 'время / сорт', width: 100 },
             { name: 'eating', label: 'прием пищи', width: 140 },
             { name: 'name', label: 'наименование', textAlign: 'left', showTitle: true },
-            { name: 'num', label: 'кол', width: 50 },
-            { name: 'ed', label: 'изм', width: 50 },
-            { name: 'prot', label: 'б', width: 60 },
-            { name: 'fats', label: 'ж', width: 60 },
-            { name: 'carb', label: 'у', width: 60 },
-            { name: 'kcal', label: 'ккал', width: 60 },
+            { name: 'num', label: '_кол', width: 50, hidden: true },
+            { name: 'num2', label: 'кол', width: 50 },
+            { name: 'ed', label: 'изм', width: 50, readonly: true },
+            { name: 'prot', label: '_б', width: 60, hidden: true },
+            { name: 'prot2', label: 'б', width: 60, calc: (e) => (+e.prot) / (+e.num) * (+e.num2)  },
+            { name: 'fats', label: '_ж', width: 60, hidden: true },
+            { name: 'fats2', label: 'ж', width: 60, calc: (e) => (+e.fats) / (+e.num) * (+e.num2) },
+            { name: 'carb', label: '_у', width: 60, hidden: true },
+            { name: 'carb2', label: 'у', width: 60, calc: (e) => (+e.carb) / (+e.num) * (+e.num2) },
+            { name: 'kcal', label: '_ккал', width: 60, hidden: true },
+            { name: 'kcal2', label: 'ккал', width: 60, calc: (e) => (+e.kcal) / (+e.num) * (+e.num2) },
         ],
         rows: [
 
@@ -50,12 +56,13 @@ export const sets = {
     },
     'water': {
         options: {
-            sum: ['num']
+            sum: ['num'],
+            sortColumns: ['date', 'time']
         }, 
         columns: [
             { name: '$idx', label: '№', width: 50 },
             { name: 'date', label: 'дата', width: 100 },
-            { name: 'time', label: 'время приема' },
+            { name: 'time', label: 'время приема / сорт' },
             { name: 'num', label: 'количество' },
             { name: 'note', label: 'примечание' },
         ],
@@ -65,7 +72,8 @@ export const sets = {
     },
     'walking': {
         options: {
-            sum: ['dur', 'dist', 'kcal']
+            sum: ['dur', 'dist', 'kcal'],
+            sortColumns: ['date', 'start']
         }, 
         columns: [
             { name: '$idx', label: '№', width: 50 },
@@ -82,7 +90,8 @@ export const sets = {
     },
     'sport': {
         options: {
-            sum: ['dur', 'kcal']
+            sum: ['dur', 'kcal'],
+            sortColumns: ['date', 'start']
         }, 
         columns: [
             { name: '$idx', label: '№', width: 50 },
@@ -100,7 +109,8 @@ export const sets = {
     },
     'dream': {
         options: {
-            sum: ['dur', 'kcal']
+            sum: ['dur', 'kcal'],
+            sortColumns: ['date', 'start']
         }, 
         columns: [
             { name: '$idx', label: '№', width: 50 },
@@ -116,7 +126,8 @@ export const sets = {
     },
     'weighing': {
         options: {
-            // footerHidden: true
+            // footerHidden: true,
+            sortColumns: ['date', 'time']
         },
         columns: [
             { name: '$idx', label: '№', width: 50 },
@@ -131,7 +142,8 @@ export const sets = {
     },
     'measurements': {
         options: {
-            // footerHidden: true
+            // footerHidden: true,
+            sortColumns: ['date']
         },
         columns: [
             { name: '$idx', label: '№', width: 50 },
