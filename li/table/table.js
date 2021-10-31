@@ -275,7 +275,7 @@ customElements.define('li-table-row', class extends LiElement {
     }
     render() {
         return html` 
-            <div class="row ${this._selected ? 'selected' : ''}" style="background-color: ${this._selected ? 'lightyellow' : this.idx % 2 ? '#f5f5f5' : 'white'}">
+            <div class="row ${this._selected ? 'selected' : ''}" style="background-color: ${this._selected ? 'lightyellow' : this.idx % 2 ? '#f5f5f5' : 'white'}; box-sizing: border-box;">
                 ${this.data?._columns?.map(c => html`
                     <li-table-cell .item="${this.row[c.name]}" .column="${c}" @click=${this._click} .row=${this.row}></li-table-cell>
                 `)}
@@ -530,8 +530,12 @@ customElements.define('li-table-panel-cell', class extends LiElement {
 customElements.define('li-table-cell', class extends LiElement {
     static get styles() {
         return css`
-            .cell {
+            :host {
                 border-right: 1px solid lightgray;
+                box-sizing: border-box;
+            }
+            .cell {
+                /* border-right: 1px solid lightgray; */
                 background-color: transparent;
                 position: relative;
                 display: flex;
@@ -556,7 +560,7 @@ customElements.define('li-table-cell', class extends LiElement {
     }
     get styles() {
         return {
-            width: this.column?._width < 16 ? 16 : this.column?._width,
+            width: this.column?._width < 15 ? 15 : this.column?._width - 1,
             height: this.data?.options?.rowHeight ? this.data?.options?.rowHeight - 1 + 'px' : '100%',
             'max-height': this.data?.options?.rowHeight ? this.data?.options?.rowHeight - 1 + 'px' : '100%',
             'min-height': this.data?.options?.rowMinHeight ? this.data?.options?.rowMinHeight || 32 + 'px' : '32px',

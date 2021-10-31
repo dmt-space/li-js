@@ -135,7 +135,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                             ${this._eating !== '002' ? html`
                                 <li-table id="table-favorites" style="height: 48%" .data="${{
                         columns: sets.favorites.columns,
-                        options: sets.favorites.options,
+                        options: { ...sets.favorites.options, readonly: true },
                         rows: sets.favorites.rows
                     }}"></li-table>
                             ` : html`
