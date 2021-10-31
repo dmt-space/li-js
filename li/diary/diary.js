@@ -99,7 +99,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                             `)}
                         ` : this.leftView === 'settings' ? html`
                             <div style="display: flex; flex-direction: column; overflow: auto;">
-                                <div class="lbl" style="color:gray; opacity: 0.7">version: 0.1.0</div>
+                                <div class="lbl" style="color:gray; opacity: 0.7">version: 0.2.0</div>
                                 <div style="border-bottom:1px solid lightgray;width:100%;margin: 4px 0;"></div>
                                 <div style="display: flex"><div class="lbl" style="width: 100px">db name:</div><input class="inps" .value="${this.dbName}" @change="${this._setDbName}"></div>
                                 <div style="border-bottom:1px solid lightgray;width:100%;margin: 4px 0;"></div>
@@ -176,13 +176,12 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                         ${this._measurements.map((i, idx) => html`
                             <div style="position: absolute; top: ${idx * this.step + 34}px; left: 100px; color: gray; font-size: 10px; display: flex; align-items: center;">
                                 <div style="width: 120px; text-align: right;">${i.name}</div>  
-                                <input class="inpm" placeholder="0" style="width: 80px; text-align: center;">см
+                                <input class="inpm" placeholder="0" style="width: 80px; text-align: center;" .value=${i.val || ''} @change=${e => this._changeMeasurements(e, i)}>см
                             </div>
                         `)}
                         <div style="display: flex;">
-                            <li-button name="check" title="заполнить" fill="${`hsla(${this._idx * this.step}, 50%, 50%, 1)`}" back="${`hsla(${this._idx * this.step}, 50%, 50%, .1)`}"></li-button>
                             <li-button name="add" @click=${this._addRow} title="add new row" fill="${`hsla(${this._idx * this.step}, 50%, 50%, 1)`}" back="${`hsla(${this._idx * this.step}, 50%, 50%, .1)`}" style="margin-left: auto"></li-button>
-                            <li-button name="close" title="delete row" fill="${`hsla(${this._idx * this.step}, 50%, 50%, 1)`}" back="${`hsla(${this._idx * this.step}, 50%, 50%, .1)`}"></li-button>
+                            <li-button name="close" @click=${this._deleteRow} title="delete row" fill="${`hsla(${this._idx * this.step}, 50%, 50%, 1)`}" back="${`hsla(${this._idx * this.step}, 50%, 50%, .1)`}"></li-button>
                         </div>
                         <div class="container">
                             <li-table id="table-measurements" .data="${this._data}"></li-table>
@@ -247,6 +246,16 @@ customElements.define('li-diary', class LiDiary extends LiElement {
     constructor() {
         super();
         this._dbName = window.location.href.split('#')?.[1];
+        this.listen('tableRowSelect', (e) => {
+            if (this._mainView?.name === 'measurements' && e?.detail?.row) {
+                this._measurementsFocusedRow = e.detail;
+                this.measurements.forEach(i => i.val = this._measurementsFocusedRow.row[i.name] || '');
+            } else {
+                this._measurementsFocusedRow = undefined;
+                this.measurements.forEach(i => i.val = '');
+            }
+            this.$update();
+        })
     }
 
     connectedCallback() {
@@ -379,6 +388,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
         }
     }
     async _save() {
+        if (!this._changedList?.keys()) return
         const items = await this.dbLocal.allDocs({ keys: [...this._changedList.keys()], include_docs: true });
         const res = [];
         items.rows.map(i => {
@@ -388,10 +398,27 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                 delete doc._rev;
                 i.doc = { ...doc };
             }
+            const split = i.doc._id.split(':');
+            if (i.doc.date !== split[1]) {
+                let newDoc = { ...{}, ...i.doc };
+                i.doc._deleted = true;
+                delete newDoc._rev;
+                newDoc.ulid = LI.ulid();
+                newDoc._id = split[0] + ':' + newDoc.date + ':' + newDoc.ulid;
+                res.add(newDoc);
+            }
             if (i.doc) res.add(i.doc);
         })
         await this.dbLocal.bulkDocs(res);
         this._changedList = new Map();
         this._changedSet = new Set();
+        this._initMainView();
+    }
+    _changeMeasurements(e, i) {
+        i.val = e.target.value;
+        if (this._measurementsFocusedRow) {
+            this._measurementsFocusedRow.row[i.name] = i.val;
+            this._measurementsFocusedRow.update();
+        }
     }
 });

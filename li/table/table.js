@@ -142,6 +142,7 @@ customElements.define('li-table', class extends LiElement {
                     setTimeout(() => {
                         this.selected = this._data.rows[this._data.rows.length - 1];
                         this.$id('container')?.scrollTo(0, this.$id('container').scrollTop += 1_000_000_000);
+                        this.fire('tableRowSelect', { row: this.selected, update: () => this.$update() });
                     }, 50);
                 }
             }
@@ -196,6 +197,7 @@ customElements.define('li-table', class extends LiElement {
             ulid: this.$ulid,
             row
         }
+        this.fire('tableRowSelect', { row: this.selected, update: () => this.$update() });
     }
     _resizeColumns() {
         this.left = this._left;
@@ -299,7 +301,7 @@ customElements.define('li-table-row', class extends LiElement {
 
     _click(e) {
         this.selected = this.row;
-        this.fire('tableSelected', this.row);
+        this.fire('tableRowSelect', { row: this.row, update: () => this.$update() });
     }
 })
 

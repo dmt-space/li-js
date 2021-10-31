@@ -623,7 +623,7 @@ customElements.define('li-wiki', class LiWiki extends LiElement {
         super();
         this._dbName = window.location.href.split('#')?.[1];
         if (this._dbName) this.id = 'wiki_' + this._dbName;
-        this.listen('tableSelected', async e => {
+        this.listen('tableRowSelect', async e => {
             this.selectedArticle = e.detail;
             await this._setSelectedEditors();
             this.$update();
