@@ -97,7 +97,7 @@ customElements.define('li-table', class extends LiElement {
         return Math.round(this.$id('container')?.clientHeight / this._rowHeight || 0);
     }
     get _hasScroll() {
-        return this.$id('main')?.scrollHeight;
+        return this.$id('main')?.scrollHeight > this.$id('table').clientHeight;
     }
 
     constructor() {
@@ -163,7 +163,7 @@ customElements.define('li-table', class extends LiElement {
         if (sort?.length && this.data?.rows?.length) {
             this.data.rows.forEach(i => {
                 i.$sort = '';
-                sort.forEach(s => i.$sort += (i[s] || '~'));
+                sort.forEach(s => i.$sort += (i[s] || 'яяя'));
             })
             this.data.rows = this.data.rows.sort((a, b) => {
                 if (a.$sort > b.$sort) return 1;
@@ -202,7 +202,7 @@ customElements.define('li-table', class extends LiElement {
     }
     _resizeColumns() {
         this.left = this._left;
-        this.maxWidth = this.$id('table')?.offsetWidth - (this._hasScroll ? 4 : 0);
+        this.maxWidth = this.$id('table')?.offsetWidth - (this._hasScroll ? 6 : 2);
         const columns = this.data._columns = this.data?.columns?.filter(i => !i.hidden) || [];
         let length = columns.length,
             left = 0;
