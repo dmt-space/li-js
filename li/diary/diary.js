@@ -382,7 +382,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             type = this._mainView.name,
             created = LI.dates(new Date(this._currentDate)),
             _id = `${type}:${created.short}:${ulid}`;
-        let item = { _id, ulid, type, created, date: created.short };
+        let item = { _id, ulid, type, date: created.short };
         if (row) item = { ...row, ...item };
         this._changedList = this._changedList || new Map();
         this._changedList.set(_id, item);
@@ -413,6 +413,9 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                 i.doc = { ...doc };
             }
             const split = i.doc._id.split(':');
+            const toDelete = [];
+            Object.keys(i.doc).forEach(k => { if (k.startsWith('$')) toDelete.push(k) });
+            toDelete.forEach(k => delete i.doc[k]);
             if (i.doc.date !== split[1]) {
                 let newDoc = { ...{}, ...i.doc };
                 i.doc._deleted = true;
