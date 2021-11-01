@@ -86,6 +86,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                             ?toggled="${this.mainView === i.label}" fill="${`hsla(${idx * this.step}, 50%, 50%, 1)`}" border="none"></li-button>
                     `)}
                     <div style="flex:1"></div>${(this.dbName || 'my-diary') + this._periods}<div style="flex:1"></div>
+                    <li-button name="refresh" title="reset changes" @click=${this._resetChanges} style="margin-right: 8px;"></li-button>
                     <li-button name="save" title="save" .fill="${this._needSave ? 'red' : ''}" .color="${this._needSave ? 'red' : 'gray'}" @click=${this._save} style="margin-right: 8px;"></li-button>
                 </div>
                 <div slot="app-left" class="panel">
@@ -93,6 +94,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                         <li-button name="create" title="diary" @click="${() => this.leftView = 'diary'}" ?toggled="${this.leftView === 'diary'}" toggledClass="ontoggled"></li-button>
                         <li-button name="settings" title="settings" @click="${() => this.leftView = 'settings'}" ?toggled="${this.leftView === 'settings'}" toggledClass="ontoggled"></li-button>
                         <div style="flex:1"></div>
+                        <li-button name="refresh" title="reset changes" @click=${this._resetChanges}></li-button>
                         <li-button name="save" title="save" .fill="${this._needSave ? 'red' : ''}" .color="${this._needSave ? 'red' : 'gray'}" @click=${this._save}></li-button>
                     </div>
                     <b class="lbl">${this.leftView}</b>
@@ -272,14 +274,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
         this.measurements = sets.measurementsPos;
         this.types = sets.types;
         this._period = LI.icaro({});
-        this._period.listen((e) => {
-            // console.log(e);
-            // this._changedList = new Map();
-            this._changedSet = new Set();
-            if (this._mainView?.name === 'eating')
-                this._initMainView('favorites');
-            this._initMainView();
-        })
+        this._period.listen((e) => this._resetView);
     }
     updated(e) {
         if (e.has('action') && this.action) {
@@ -328,6 +323,16 @@ customElements.define('li-diary', class LiDiary extends LiElement {
         }
     }
 
+    _resetChanges() {
+        this._changedList = new Map();
+        this._resetView();
+    }
+    _resetView() {
+        this._changedSet = new Set();
+        if (this._mainView?.name === 'eating')
+            this._initMainView('favorites');
+        this._initMainView();
+    }
     _setMainView(e, idx, i) {
         e.target.toggled = this.mainView === i.label;
         if (this.mainView === i.label) return;
@@ -419,9 +424,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             if (i.doc) res.add(i.doc);
         })
         await this.dbLocal.bulkDocs(res);
-        this._changedList = new Map();
-        this._changedSet = new Set();
-        this._initMainView();
+        this._resetChanges();
     }
     _changeMeasurements(e, i) {
         i.val = e.target.value;
