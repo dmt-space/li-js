@@ -1,5 +1,6 @@
 import { LiElement, html, css, styleMap } from '../../li.js';
 import '../button/button.js';
+import '../rating/rating.js';
 
 customElements.define('li-table', class extends LiElement {
     static get styles() {
@@ -576,16 +577,20 @@ customElements.define('li-table-cell', class extends LiElement {
                     @dblclick=${this._dblClick}
                     @click=${this._click}
                 >
-                ${this.column.calc ? html`
-                        ${this._calc}
+                ${this.column.typeColumn === 'rating' ? html`
+                        <li-rating .value=${this.row[this.column.name]} @change=${this._changeValue}></li-rating>
                     ` : html`
-                    ${this.selected ? html`` : html`${this.row[this.column.name] || ''}`}
-                    ${!this.selected ? html`` : html`
-                        <input class="input" .value=${this.row[this.column.name] || ''}  style=${styleMap(this.styles)}
-                        @blur=${this._chageValue} 
-                        @change=${this._chageValue}
-                        
-                    >
+                    ${this.column.calc ? html`
+                            ${this._calc}
+                        ` : html`
+                        ${this.selected ? html`` : html`${this.row[this.column.name] || ''}`}
+                        ${!this.selected ? html`` : html`
+                            <input class="input" .value=${this.row[this.column.name] || ''}  style=${styleMap(this.styles)}
+                            @blur=${this._changeValue} 
+                            @change=${this._changeValue}
+                            
+                        >
+                        `}
                     `}
                 `}
             </div>
@@ -600,6 +605,7 @@ customElements.define('li-table-cell', class extends LiElement {
             _data: { type: Object, local: true },
             row: { type: Object },
             action: { type: Object, global: true },
+            _action: { type: Object, global: true },
             selected: { type: Boolean }
         }
     }
@@ -613,18 +619,18 @@ customElements.define('li-table-cell', class extends LiElement {
     }
 
     updated(e) {
-        if (e.has('action') && this.action && this.action.action === 'clearSelected' && this.$ulid !== this.action.ulid)
+        if (e.has('_action') && this._action && this._action.action === 'clearSelected' && this.$ulid !== this._action.ulid)
             this.selected = false;
     }
 
     _click() {
-        this.action = {
+        this._action = {
             action: 'clearSelected',
             ulid: this.$ulid
         }
         if (!this.readonly) this.selected = true;
     }
-    _chageValue(e) {
+    _changeValue(e) {
         if (this.row[this.column.name] !== e.target.value) {
             this.row[this.column.name] = e.target.value;
             this.selected = false;

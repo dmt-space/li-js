@@ -64,7 +64,7 @@ export const sets = {
             { name: 'date', label: 'дата', width: 100 },
             { name: 'time', label: 'время (*:*)', width: 100 },
             { name: 'num', label: 'количество (л)', width: 120 },
-            { name: 'note', label: 'примечание' },
+            { name: 'note', label: 'примечание', textAlign: 'left' },
         ],
         rows: [
 
@@ -105,7 +105,7 @@ export const sets = {
                     }
                 }
             },
-            { name: 'note', label: 'примечание' },
+            { name: 'note', label: 'примечание', textAlign: 'left' },
         ],
         rows: [
 
@@ -149,7 +149,7 @@ export const sets = {
                     }
                 }
             },
-            { name: 'note', label: 'примечание' },
+            { name: 'note', label: 'примечание', textAlign: 'left' },
         ],
         rows: [
 
@@ -157,7 +157,7 @@ export const sets = {
     },
     'dream': {
         options: {
-            sum: ['dur', 'kcal2'],
+            sum: ['dur', 'durH', 'kcal2'],
             sortColumns: ['date', 'start']
         },
         columns: [
@@ -165,6 +165,23 @@ export const sets = {
             { name: 'date', label: 'дата', width: 100 },
             { name: 'start', label: 'старт (*:*)', width: 100 },
             { name: 'end', label: 'окончание', width: 100 },
+            {
+                name: 'durH', label: 'время (ч)', width: 100,
+                calc: (e) => {
+                    if (!e.end || !e.start || e.end === e.start) return '';
+                    try {
+                        let s2 = e.end.split(':'), s1 = e.start.split(':');
+                        let res = (Number(s2[0]) * 60 + Number(s2[1]) - Number(s1[0]) * 60 - Number(s1[1])) / 60;
+                        if (res > 0) {
+                            return res;
+                        }
+                        res = (Number(23 - s1[0]) * 60 + Number(60 - s1[1]) + Number(s2[0]) * 60 + Number(s2[1])) / 60;
+                        return res;
+                    } catch (error) {
+                        return '';
+                    }
+                }
+            },
             {
                 name: 'dur', label: 'время (мин)', width: 100,
                 calc: (e) => {
@@ -193,7 +210,8 @@ export const sets = {
                     }
                 }
             },
-            { name: 'note', label: 'примечание' },
+            { name: 'rating', label: 'качество сна', typeColumn: 'rating', width: 120 },
+            { name: 'note', label: 'примечание', textAlign: 'left' },
         ],
         rows: [
 
@@ -209,7 +227,7 @@ export const sets = {
             { name: 'date', label: 'дата', width: 100 },
             { name: 'time', label: 'время (*:*)', width: 100  },
             { name: 'val', label: 'вес (кг)',  width: 100 },
-            { name: 'note', label: 'примечание' },
+            { name: 'note', label: 'примечание', textAlign: 'left' },
         ],
         rows: [
 
