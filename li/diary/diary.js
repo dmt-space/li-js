@@ -274,7 +274,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
         this.measurements = sets.measurementsPos;
         this.types = sets.types;
         this._period = LI.icaro({});
-        this._period.listen((e) => this._resetView);
+        this._period.listen(() => this._resetView());
     }
     updated(e) {
         if (e.has('action') && this.action) {
@@ -354,7 +354,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
         requestAnimationFrame(async () => {
             let res;
             this._changedSet = this._changedSet || new Set();
-            if (!this._changedSet.has(view) || !sets[view].rows.length) {
+            if (!this._changedSet.has(view) || !sets[view]?.rows.length) {
                 this._changedSet.add(view);
                 const startkey = view + ':' + (view === 'favorites' ? '' : this.period[0]);
                 const endkey = view + ':' + (view === 'favorites' ? '' : this._currentDate);
@@ -412,19 +412,21 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                 delete doc._rev;
                 i.doc = { ...doc };
             }
-            const split = i.doc._id.split(':');
-            const toDelete = [];
-            Object.keys(i.doc).forEach(k => { if (k.startsWith('$')) toDelete.push(k) });
-            toDelete.forEach(k => delete i.doc[k]);
-            if (i.doc.date !== split[1]) {
-                let newDoc = { ...{}, ...i.doc };
-                i.doc._deleted = true;
-                delete newDoc._rev;
-                newDoc.ulid = LI.ulid();
-                newDoc._id = split[0] + ':' + newDoc.date + ':' + newDoc.ulid;
-                res.add(newDoc);
+            if (i.doc) {
+                const toDelete = [];
+                Object.keys(i.doc).forEach(k => { if (k.startsWith('$')) toDelete.push(k) });
+                const split = i.doc._id.split(':');
+                toDelete.forEach(k => delete i.doc[k]);
+                if (i.doc.date !== split[1]) {
+                    let newDoc = { ...{}, ...i.doc };
+                    i.doc._deleted = true;
+                    delete newDoc._rev;
+                    newDoc.ulid = LI.ulid();
+                    newDoc._id = split[0] + ':' + newDoc.date + ':' + newDoc.ulid;
+                    res.add(newDoc);
+                }
+                res.add(i.doc);
             }
-            if (i.doc) res.add(i.doc);
         })
         await this.dbLocal.bulkDocs(res);
         this._resetChanges();
