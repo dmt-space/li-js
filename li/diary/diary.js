@@ -81,7 +81,12 @@ customElements.define('li-diary', class LiDiary extends LiElement {
         return html`
             <li-layout-app>
                 <div slot="app-top" class="header">
+                    ${!this.showButtons ? html`` : this.types.map((i, idx) => html`
+                        <li-button .name="${i.icon}" size="24" @click="${(e) => this._setMainView(e, idx, i)}" toggledClass="_white" 
+                            ?toggled="${this.mainView === i.label}" fill="${`hsla(${idx * this.step}, 50%, 50%, 1)`}" border="none"></li-button>
+                    `)}
                     <div style="flex:1"></div>${(this.dbName || 'my-diary') + this._periods}<div style="flex:1"></div>
+                    <li-button name="save" title="save" .fill="${this._needSave ? 'red' : ''}" .color="${this._needSave ? 'red' : 'gray'}" @click=${this._save} style="margin-right: 8px;"></li-button>
                 </div>
                 <div slot="app-left" class="panel">
                     <div style="display: flex; border-bottom: 1px solid lightgray;">
@@ -107,6 +112,9 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                                 <div style="display: flex"><div class="lbl" style="width: 100px">db ip:</div><input class="inps" .value="${this.dbIP}" @change="${this._setDbIP}"></div>
                                 <div style="display: flex; align-items: center;"><li-checkbox @change="${this._autoReplication}" .toggled="${this.autoReplication}"></li-checkbox>
                                     Auto replication local and remote db</div>
+                                <div style="border-bottom:1px solid lightgray;width:100%;margin: 4px 0;"></div>
+                                <div style="display: flex; align-items: center;"><li-checkbox @change="${() => this.showButtons = !this.showButtons}" .toggled="${this.showButtons}"></li-checkbox>
+                                    Show buttons in top</div>
                                 <div style="border-bottom:1px solid lightgray;width:100%;margin: 4px 0;"></div>
                             </div>
                         ` : html``}
@@ -222,6 +230,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             action: { type: Object, global: true },
             _changedList: { type: Object },
             _eating: { type: String, default: '001' },
+            showButtons: { type: Boolean, default: false, save: true }
         }
     }
 
