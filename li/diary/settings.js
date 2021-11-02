@@ -29,8 +29,11 @@ export const sets = {
     'wiki': [],
     'eating': {
         options: {
+            headerService: true,
+            headerServiceText: 'eating',
             sum: ['num2', 'prot2', 'fats2', 'carb2', 'kcal2'],
-            sortColumns: ['date', 'time']
+            sortColumns: ['date', 'time'],
+            searchColumns: ['date', 'time', 'eating'],
         },
         columns: [
             { name: '$idx', label: '№', width: 50 },
