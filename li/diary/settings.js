@@ -279,13 +279,13 @@ export const sets = {
             footerServiceTotal: true,
             headerHeight: 36,
             rowHeight: 36,
-            searchColumns: ['category', 'name', 'sort'],
+            searchColumns: ['category', 'name', 'sort', 'tags'],
             actions: ['dblClickTableCell'],
             sortColumns: ['sort']
         },
         columns: [
             { name: '$idx', label: '№', width: 50 },
-            { name: 'sort', label: 'сортировка', width: 140 },
+            { name: 'sort', label: 'категория (↑↓)', width: 140 },
             { name: 'category', label: 'категория', width: 200 },
             { name: 'name', label: 'наименование', textAlign: 'left', showTitle: true, minWidth: 200  },
             { name: 'num', label: 'кол', width: 50 },
@@ -294,6 +294,7 @@ export const sets = {
             { name: 'fats', label: 'ж', width: 60 },
             { name: 'carb', label: 'у', width: 60 },
             { name: 'kcal', label: 'ккал', width: 60 },
+            { name: 'tags', label: 'теги', textAlign: 'left', width: 140 },
         ],
         rows: [
 
