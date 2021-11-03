@@ -85,8 +85,12 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                         <li-button .name="${i.icon}" size="24" @click="${(e) => this._setMainView(e, idx, i)}" toggledClass="_white" 
                             ?toggled="${this.mainView === i.label}" fill="${`hsla(${idx * this.step}, 50%, 50%, 1)`}" border="none"></li-button>
                     `)}
-                    <div style="flex:1"></div>${(this.dbName || 'my-diary') + this._periods}<div style="flex:1"></div>
-                    <li-button name="refresh" title="reset changes" @click=${this._resetChanges} style="margin-right: 8px;"></li-button>
+                    <div style="flex:1"></div><div style="color: ${this._colorDay || 'gray'}">${(this.dbName || 'my-diary') + this._periods + this._dayView}</div><div style="flex:1"></div>
+                    ${['A', 'Y', 'Q', 'M', 'W', 'D'].map((i, idx) => html`
+                        <li-button size="20" @click="${(e) => this._setDayView(e, idx, i)}" color="${`hsla(${idx * 60}, 50%, 50%, 1)`}" 
+                            title=${this._dayViewArray[idx]} style="margin-left: 6px;">${i}</li-button>
+                    `)}
+                    <li-button name="refresh" title="reset changes" @click=${this._resetChanges} style="margin-left: 8px; margin-right: 8px;"></li-button>
                     <li-button name="save" title="save" .fill="${this._needSave ? 'red' : ''}" .color="${this._needSave ? 'red' : 'gray'}" @click=${this._save} style="margin-right: 8px;"></li-button>
                 </div>
                 <div slot="app-left" class="panel">
@@ -266,7 +270,8 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                 this.measurements.forEach(i => i.val = '');
             }
             this.$update();
-        })
+        });
+        this._dayViewArray = ['for all the time', 'in a year', 'for the quarter', 'per month', 'during the week', 'per day'];
     }
 
     connectedCallback() {
@@ -332,10 +337,27 @@ customElements.define('li-diary', class LiDiary extends LiElement {
         if (this._mainView?.name === 'eating')
             this._initMainView('favorites');
         this._initMainView();
+        this._colorDay = this._dayView = '';
+        this.update();
+    }
+    async _setDayView(ev, idx, i) {
+        if (!this._mainView?.name || this._idx > 6) return;
+        this._changedList = new Map();
+        this._dayView = ' - ' + i;
+        this._colorDay = `hsla(${idx * 60}, 50%, 50%, 1)`;
+        let d = new Date(this._currentDate);
+        let s = new Date(
+            new Date(d).getFullYear() - (i === 'A' ? 100 : i === 'Y' ? 1 : 0),
+            new Date(d).getMonth() - (i === 'Q' ? 3 : 0),
+            new Date(d).getDate() - (i === 'W' ? 7 : i === 'M' ? 31 : 0)
+        );
+        // console.log(this._mainView.name, LI.dates(s).short, LI.dates(d).short)
+        this._initMainView(this._mainView.name, LI.dates(s).short, LI.dates(d).short);
     }
     _setMainView(e, idx, i) {
         e.target.toggled = this.mainView === i.label;
         if (this.mainView === i.label) return;
+        this._colorDay = this._dayView = '';
         this._mainView = undefined;
         this._mainView = i;
         const mainView = i.label;
@@ -349,15 +371,15 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             this._initMainView('favorites');
         this._initMainView();
     }
-    _initMainView(view = this._mainView?.name) {
+    _initMainView(view = this._mainView?.name, startkey, endkey) {
         if (!view) return;
         requestAnimationFrame(async () => {
             let res;
             this._changedSet = this._changedSet || new Set();
-            if (!this._changedSet.has(view) || !sets[view]?.rows.length) {
+            if (!this._changedSet.has(view) || !sets[view]?.rows.length || startkey) {
                 this._changedSet.add(view);
-                const startkey = view + ':' + (view === 'favorites' ? '' : this.period[0]);
-                const endkey = view + ':' + (view === 'favorites' ? '' : this._currentDate);
+                startkey = view + ':' + (view === 'favorites' ? '' : startkey || this.period[0]);
+                endkey = view + ':' + (view === 'favorites' ? '' : endkey || this._currentDate);
                 const items = await this.dbLocal.allDocs({ include_docs: true, startkey, endkey: endkey + '\ufff0' });
                 res = [];
                 items.rows.forEach(i => res.push(i.doc));
@@ -429,7 +451,8 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             }
         })
         await this.dbLocal.bulkDocs(res);
-        this._resetChanges();
+        this._changedList = new Map();
+        // this._resetChanges();
     }
     _changeMeasurements(e, i) {
         i.val = e.target.value;
