@@ -29,18 +29,19 @@ export const sets = {
     'wiki': [],
     'eating': {
         options: {
+            // lazy: true,
             headerService: true,
             headerServiceText: 'eating',
             sum: ['num2', 'prot2', 'fats2', 'carb2', 'kcal2'],
             sortColumns: ['date', 'time'],
-            searchColumns: ['date', 'time', 'eating'],
+            searchColumns: ['date', 'time', 'eating', 'name', 'tags'],
         },
         columns: [
             { name: '$idx', label: '№', width: 50 },
             { name: 'date', label: 'дата', width: 100 },
             { name: 'time', label: 'время (*:*)', width: 100 },
             { name: 'eating', label: 'прием пищи', width: 140 },
-            { name: 'name', label: 'наименование', textAlign: 'left', showTitle: true },
+            { name: 'name', label: 'наименование', textAlign: 'left', showTitle: true, minWidth: 140 },
             { name: 'num', label: '_кол', width: 50, hidden: true },
             { name: 'num2', label: 'кол', width: 50 },
             { name: 'ed', label: 'изм', width: 50, readonly: true },
@@ -52,6 +53,7 @@ export const sets = {
             { name: 'carb2', label: 'у', width: 60, calc: (e) => (+e.carb) / (+e.num) * (+e.num2) },
             { name: 'kcal', label: '_ккал', width: 60, hidden: true },
             { name: 'kcal2', label: 'ккал', width: 60, calc: (e) => (+e.kcal) / (+e.num) * (+e.num2) },
+            { name: 'tags', label: 'теги', textAlign: 'left', width: 140 },
         ],
         rows: [
 
@@ -67,7 +69,7 @@ export const sets = {
             { name: 'date', label: 'дата', width: 100 },
             { name: 'time', label: 'время (*:*)', width: 100 },
             { name: 'num', label: 'количество (л)', width: 120 },
-            { name: 'note', label: 'примечание', textAlign: 'left' },
+            { name: 'note', label: 'примечание', textAlign: 'left', minWidth: 100 },
         ],
         rows: [
 
@@ -75,7 +77,7 @@ export const sets = {
     },
     'walking': {
         options: {
-            sum: ['dur', 'dist', 'kcal2'],
+            sum: ['dur', 'dist', 'kcal2', 'step'],
             sortColumns: ['date', 'start']
         },
         columns: [
@@ -95,6 +97,7 @@ export const sets = {
                     }
                 }
             },
+            { name: 'step', label: 'шаги', width: 60 },
             { name: 'dist', label: 'расстояние (км)', width: 120 },
             { name: 'kcal', label: 'ккал / мин', width: 100 },
             {
@@ -108,7 +111,7 @@ export const sets = {
                     }
                 }
             },
-            { name: 'note', label: 'примечание', textAlign: 'left' },
+            { name: 'note', label: 'примечание', textAlign: 'left', minWidth: 100 },
         ],
         rows: [
 
@@ -116,6 +119,9 @@ export const sets = {
     },
     'sport': {
         options: {
+            headerService: true,
+            headerServiceText: 'sport',
+            searchColumns: ['typeName', 'note'],
             sum: ['dur', 'kcal2'],
             sortColumns: ['date', 'start']
         },
@@ -152,7 +158,7 @@ export const sets = {
                     }
                 }
             },
-            { name: 'note', label: 'примечание', textAlign: 'left' },
+            { name: 'note', label: 'примечание', textAlign: 'left', minWidth: 100 },
         ],
         rows: [
 
@@ -214,7 +220,7 @@ export const sets = {
                 }
             },
             { name: 'rating', label: 'качество сна', typeColumn: 'rating', width: 120 },
-            { name: 'note', label: 'примечание', textAlign: 'left' },
+            { name: 'note', label: 'примечание', textAlign: 'left', minWidth: 100 },
         ],
         rows: [
 
@@ -230,7 +236,7 @@ export const sets = {
             { name: 'date', label: 'дата', width: 100 },
             { name: 'time', label: 'время (*:*)', width: 100  },
             { name: 'val', label: 'вес (кг)',  width: 100 },
-            { name: 'note', label: 'примечание', textAlign: 'left' },
+            { name: 'note', label: 'примечание', textAlign: 'left', minWidth: 100 },
         ],
         rows: [
 
@@ -280,7 +286,7 @@ export const sets = {
             { name: '$idx', label: '№', width: 50 },
             { name: 'sort', label: 'сортировка', width: 140 },
             { name: 'category', label: 'категория', width: 200 },
-            { name: 'name', label: 'наименование', textAlign: 'left', showTitle: true },
+            { name: 'name', label: 'наименование', textAlign: 'left', showTitle: true, minWidth: 140  },
             { name: 'num', label: 'кол', width: 50 },
             { name: 'ed', label: 'изм', width: 50 },
             { name: 'prot', label: 'б', width: 60 },

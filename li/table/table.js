@@ -55,7 +55,7 @@ customElements.define('li-table', class extends LiElement {
                         ${this._rows.map((row, idx) => html`
                             <li-table-row .row=${row} idx=${idx} style="box-sizing: border-box;
                                 position: ${this.data?.options?.lazy ? 'absolute' : 'relative'};
-                                top: ${this.data?.options?.lazy ? (row.$idx - 1) * this._rowHeight + 'px' : ''}">
+                                top: ${this.data?.options?.lazy ? (row.$idx - 1) * this._rowHeight + 'px' : 'unset'}">
                             </li-table-row>
                         `)}   
                     </div>
@@ -171,11 +171,16 @@ customElements.define('li-table', class extends LiElement {
                 return 0;
             });
         }
+        let s = search ? search.split(' ') : undefined;
         this._data.rows = this.data?.rows?.filter(i => {
             if (!i._deleted) {
                 let ok = false;
-                if (search) this.data.options.searchColumns.forEach(j => ok = ok || (i[j] + '')?.toLowerCase().includes(search));
-                if (!search || (search && ok)) {
+                if (s?.length) this.data.options.searchColumns.forEach(j => {
+                    s.some(v => {
+                        if (!ok && v && (i[j] + '')?.toLowerCase().includes(v.trim())) ok = true;
+                    })
+                });
+                if (!s?.length || (s?.length && ok)) {
                     i.$idx = ++idx;
                     if (sum) this.data.options.sum.forEach(j => {
                         const col = this.data?.columns?.find((e) => e.name === j);
@@ -259,28 +264,18 @@ customElements.define('li-table', class extends LiElement {
 customElements.define('li-table-row', class extends LiElement {
     static get styles() {
         return css`
-            .row {
+            :host {
                 position: relative;
                 display: flex;
-                border-bottom: 1px solid lightgray;
                 box-sizing: border-box;
-                cursor: pointer;
-            }
-            /* .row:not(.selected):hover {
-                border-bottom: 1px solid black;
-            } */
-            .row.selected {
-                border-bottom: 1px solid blue;
             }
         `;
     }
     render() {
         return html` 
-            <div class="row ${this._selected ? 'selected' : ''}" style="background-color: ${this._selected ? 'lightyellow' : this.idx % 2 ? '#f5f5f5' : 'white'}; box-sizing: border-box;">
-                ${this.data?._columns?.map(c => html`
-                    <li-table-cell .item="${this.row[c.name]}" .column="${c}" @click=${this._click} .row=${this.row}></li-table-cell>
-                `)}
-            </div>        
+            ${this.data?._columns?.map(c => html`
+                <li-table-cell .item="${this.row[c.name]}" .column="${c}" @click=${this._click} .row=${this.row} .selectedRow=${this._selected} .idx=${this.idx}></li-table-cell>
+            `)}
         `
     }
 
@@ -363,7 +358,8 @@ customElements.define('li-table-panel-row', class extends LiElement {
                 || (this.type === 'top' && this.data?.options?.headerColor)
                 || '#eee'}">
                     ${this.data?._columns?.map(i => html`
-                        <div style="width: ${i._width < 16 ? 16 : i._width}; min-height: ${this._columnMinHeight}">
+                        <div style="width: ${i._width < 16 ? 16 : i._width}; min-height: ${this._columnMinHeight};
+                            min-width: ${i.minWidth ? i.minWidth : this.data?.options?.minWidth ? this.data?.options?.minWidth : 15 + 'px'}">
                             <li-table-panel-cell .column="${i}" type=${this.type}></li-table-panel-cell>
                         </div>
                     `)}
@@ -532,11 +528,12 @@ customElements.define('li-table-cell', class extends LiElement {
     static get styles() {
         return css`
             :host {
-                border-right: 1px solid lightgray;
                 box-sizing: border-box;
+                position: relative;
+                cursor: pointer;
+                border-right: 1px solid lightgray;
             }
             .cell {
-                /* border-right: 1px solid lightgray; */
                 background-color: transparent;
                 position: relative;
                 display: flex;
@@ -545,7 +542,6 @@ customElements.define('li-table-cell', class extends LiElement {
                 overflow: hidden;
                 word-break: break-word;
                 outline: none;
-                /* padding: 2px; */
                 box-sizing: border-box;
             }
             .input {
@@ -561,18 +557,24 @@ customElements.define('li-table-cell', class extends LiElement {
     }
     get styles() {
         return {
+            'min-width': (this.column?.minWidth ? this.column?.minWidth : this.data?.options?.minWidth ? this.data?.options?.minWidth : 16) - 1 + 'px',
             width: this.column?._width < 15 ? 15 : this.column?._width - 1,
-            height: this.data?.options?.rowHeight ? this.data?.options?.rowHeight - 1 + 'px' : '100%',
-            'max-height': this.data?.options?.rowHeight ? this.data?.options?.rowHeight - 1 + 'px' : '100%',
+            height: this.data?.options?.rowHeight ? this.data?.options?.rowHeight + 'px' : '100%',
+            'max-height': this.data?.options?.rowHeight ? this.data?.options?.rowHeight + 'px' : '100%',
             'min-height': this.data?.options?.rowMinHeight ? this.data?.options?.rowMinHeight || 32 + 'px' : '32px',
             'text-align': this.column?.textAlign || 'center',
             'justify-content': this.column?.textAlign || 'center',
-            'font-size': this.column?.fontSize || this.data?.options?.fontSize || '1rem'
+            'font-size': this.column?.fontSize || this.data?.options?.fontSize || '1rem',
+            'background-color': this.selectedRow ? 'lightyellow' : this.idx % 2 ? '#f5f5f5' : 'white',
+            color: 'gray'
         }
+    }
+    get styles2() {
+        return { ...this.styles, 'border-bottom': this.selectedRow ? '1px solid blue' : '1px solid lightgray' }
     }
     render() {
         return html`
-            <div class="cell" style=${styleMap(this.styles)}
+            <div class="cell" style=${styleMap(this.styles2)}
                     .title=${this.column?.showTitle ? this.item : ''} 
                     @dblclick=${this._dblClick}
                     @click=${this._click}
@@ -582,14 +584,13 @@ customElements.define('li-table-cell', class extends LiElement {
                     ` : html`
                     ${this.column.calc ? html`
                             ${this._calc}
-                        ` : html`
+                    ` : html`
                         ${this.selected ? html`` : html`${this.row[this.column.name] || ''}`}
                         ${!this.selected ? html`` : html`
-                            <input class="input" .value=${this.row[this.column.name] || ''}  style=${styleMap(this.styles)}
-                            @blur=${this._changeValue} 
-                            @change=${this._changeValue}
-                            
-                        >
+                            <input class="input" .value=${this.row[this.column.name] || ''} style=${styleMap(this.styles)}
+                                @blur=${this._changeValue} 
+                                @change=${this._changeValue}     
+                            >
                         `}
                     `}
                 `}
@@ -606,7 +607,9 @@ customElements.define('li-table-cell', class extends LiElement {
             row: { type: Object },
             action: { type: Object, global: true },
             _action: { type: Object, global: true },
-            selected: { type: Boolean }
+            selected: { type: Boolean },
+            selectedRow: { type: Boolean },
+            idx: { type: Number }
         }
     }
     get readonly() {
