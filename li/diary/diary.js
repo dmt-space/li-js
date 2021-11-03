@@ -271,7 +271,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             }
             this.$update();
         });
-        this._dayViewArray = ['for all the time', 'in a year', 'for the quarter', 'per month', 'during the week', 'per day'];
+        this._dayViewArray = ['for all the time', 'in a year', 'for the quarter', 'per month', 'during the week', 'for the current day'];
     }
 
     connectedCallback() {
@@ -345,7 +345,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
         this._changedList = new Map();
         this._dayView = ' - ' + i;
         this._colorDay = `hsla(${idx * 60}, 50%, 50%, 1)`;
-        let d = new Date(this._currentDate);
+        let d = new Date();
         let s = new Date(
             new Date(d).getFullYear() - (i === 'A' ? 100 : i === 'Y' ? 1 : 0),
             new Date(d).getMonth() - (i === 'Q' ? 3 : 0),

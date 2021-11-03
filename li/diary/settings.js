@@ -29,7 +29,8 @@ export const sets = {
     'wiki': [],
     'eating': {
         options: {
-            // lazy: true,
+            lazy: true,
+            rowHeight: 36,
             headerService: true,
             headerServiceText: 'eating',
             sum: ['num2', 'prot2', 'fats2', 'carb2', 'kcal2'],
@@ -41,7 +42,7 @@ export const sets = {
             { name: 'date', label: 'дата', width: 100 },
             { name: 'time', label: 'время (*:*)', width: 100 },
             { name: 'eating', label: 'прием пищи', width: 140 },
-            { name: 'name', label: 'наименование', textAlign: 'left', showTitle: true, minWidth: 140 },
+            { name: 'name', label: 'наименование', textAlign: 'left', showTitle: true, minWidth: 200 },
             { name: 'num', label: '_кол', width: 50, hidden: true },
             { name: 'num2', label: 'кол', width: 50 },
             { name: 'ed', label: 'изм', width: 50, readonly: true },
@@ -286,7 +287,7 @@ export const sets = {
             { name: '$idx', label: '№', width: 50 },
             { name: 'sort', label: 'сортировка', width: 140 },
             { name: 'category', label: 'категория', width: 200 },
-            { name: 'name', label: 'наименование', textAlign: 'left', showTitle: true, minWidth: 140  },
+            { name: 'name', label: 'наименование', textAlign: 'left', showTitle: true, minWidth: 200  },
             { name: 'num', label: 'кол', width: 50 },
             { name: 'ed', label: 'изм', width: 50 },
             { name: 'prot', label: 'б', width: 60 },

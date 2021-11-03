@@ -557,11 +557,11 @@ customElements.define('li-table-cell', class extends LiElement {
     }
     get styles() {
         return {
-            'min-width': (this.column?.minWidth ? this.column?.minWidth : this.data?.options?.minWidth ? this.data?.options?.minWidth : 16) - 1 + 'px',
+            'min-width': (this.column?.minWidth || this.data?.options?.minWidth || 16) - 1 + 'px',
             width: this.column?._width < 15 ? 15 : this.column?._width - 1,
-            height: this.data?.options?.rowHeight ? this.data?.options?.rowHeight + 'px' : '100%',
-            'max-height': this.data?.options?.rowHeight ? this.data?.options?.rowHeight + 'px' : '100%',
-            'min-height': this.data?.options?.rowMinHeight ? this.data?.options?.rowMinHeight || 32 + 'px' : '32px',
+            height: this.data?.options?.rowHeight ? this.data?.options?.rowHeight + 'px' : this.data?.options?.lazy ? '32px' : '100%',
+            'max-height': this.data?.options?.rowHeight ? this.data?.options?.rowHeight + 'px' : this.data?.options?.lazy ? '32px' : '100%',
+            'min-height': (this.data?.options?.rowMinHeight || 32) + 'px',
             'text-align': this.column?.textAlign || 'center',
             'justify-content': this.column?.textAlign || 'center',
             'font-size': this.column?.fontSize || this.data?.options?.fontSize || '1rem',
@@ -582,18 +582,18 @@ customElements.define('li-table-cell', class extends LiElement {
                 ${this.column.typeColumn === 'rating' ? html`
                         <li-rating .value=${this.row[this.column.name]} @change=${this._changeValue}></li-rating>
                     ` : html`
-                    ${this.column.calc ? html`
+                        ${this.column.calc ? html`
                             ${this._calc}
-                    ` : html`
-                        ${this.selected ? html`` : html`${this.row[this.column.name] || ''}`}
-                        ${!this.selected ? html`` : html`
-                            <input class="input" .value=${this.row[this.column.name] || ''} style=${styleMap(this.styles)}
-                                @blur=${this._changeValue} 
-                                @change=${this._changeValue}     
-                            >
+                        ` : html`
+                            ${!this.selected ? html`${this.row[this.column.name] || ''}` : html``}
+                            ${this.selected ? html`
+                                <input class="input" .value=${this.row[this.column.name] || ''} style=${styleMap(this.styles)}
+                                    @blur=${this._changeValue} 
+                                    @change=${this._changeValue}
+                                >
+                            ` : html``}
                         `}
                     `}
-                `}
             </div>
         `
     }
