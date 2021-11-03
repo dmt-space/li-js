@@ -85,7 +85,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                         <li-button .name="${i.icon}" size="24" @click="${(e) => this._setMainView(e, idx, i)}" toggledClass="_white" 
                             ?toggled="${this.mainView === i.label}" fill="${`hsla(${idx * this.step}, 50%, 50%, 1)`}" border="none"></li-button>
                     `)}
-                    <div style="flex:1"></div><div style="color: ${this._colorDay || 'gray'}">${(this.dbName || 'my-diary') + this._periods + this._dayView}</div><div style="flex:1"></div>
+                    <div style="flex:1"></div><div style="color: ${this._dayColor}">${(this.dbName || 'my-diary') + this._periods + this._dayLabel}</div><div style="flex:1"></div>
                     ${['A', 'Y', 'Q', 'M', 'W', 'D'].map((i, idx) => html`
                         <li-button size="20" @click="${(e) => this._setDayView(e, idx, i)}" color="${`hsla(${idx * 60}, 50%, 50%, 1)`}" 
                             title=${this._dayViewArray[idx]} style="margin-left: 6px;">${i}</li-button>
@@ -257,6 +257,12 @@ customElements.define('li-diary', class LiDiary extends LiElement {
     get _needSave() {
         return this._changedList?.size;
     }
+    get _dayColor() {
+        return this._dayView?.get(this._mainView?.name)?.color || 'gray';
+    }
+    get _dayLabel() {
+        return this._dayView?.get(this._mainView?.name)?.label || '';
+    }
 
     constructor() {
         super();
@@ -336,15 +342,15 @@ customElements.define('li-diary', class LiDiary extends LiElement {
         this._changedSet = new Set();
         if (this._mainView?.name === 'eating')
             this._initMainView('favorites');
+        this._dayView = new Map();
         this._initMainView();
-        this._colorDay = this._dayView = '';
         this.update();
     }
     async _setDayView(ev, idx, i) {
         if (!this._mainView?.name || this._idx > 6) return;
         this._changedList = new Map();
-        this._dayView = ' - ' + i;
-        this._colorDay = `hsla(${idx * 60}, 50%, 50%, 1)`;
+        this._dayView = this._dayView || new Map();
+        this._dayView.set(this._mainView.name, { label: ' - ' + i, color: `hsla(${idx * 60}, 50%, 50%, 1)` });
         let d = new Date();
         let s = new Date(
             new Date(d).getFullYear() - (i === 'A' ? 100 : i === 'Y' ? 1 : 0),
@@ -353,11 +359,11 @@ customElements.define('li-diary', class LiDiary extends LiElement {
         );
         // console.log(this._mainView.name, LI.dates(s).short, LI.dates(d).short)
         this._initMainView(this._mainView.name, LI.dates(s).short, LI.dates(d).short);
+        this.$update();
     }
     _setMainView(e, idx, i) {
         e.target.toggled = this.mainView === i.label;
         if (this.mainView === i.label) return;
-        this._colorDay = this._dayView = '';
         this._mainView = undefined;
         this._mainView = i;
         const mainView = i.label;
