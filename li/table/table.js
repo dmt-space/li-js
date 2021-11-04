@@ -231,9 +231,13 @@ customElements.define('li-table', class extends LiElement {
         this.$update();
     }
     _scroll(e) {
-        if (this._lastLeft !== e.target.scrollLeft) {
+        if (!this._ticking && this._lastLeft !== e.target.scrollLeft) {
             this._lastLeft = e.target.scrollLeft;
-            requestAnimationFrame(() => this.left = this._container?.scrollLeft || 0);
+            requestAnimationFrame(() => {
+                this.left = this._container?.scrollLeft || 0
+                this._ticking = false;
+            });
+            this._ticking = true;
         } else if (this.data?.options?.lazy) {
             this.lazy.scroll = e.target.scrollTop - this._lastTop;
             this._lastTop = e.target.scrollTop;
