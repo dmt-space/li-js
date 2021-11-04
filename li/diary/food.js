@@ -22,10 +22,10 @@ export const foodList = {
     { name: 'name', label: 'наименование', textAlign: 'left', showTitle: true, minWidth: 200 },
     { name: 'num', label: 'кол', width: 50 },
     { name: 'ed', label: 'изм', width: 50 },
+    { name: 'kcal', label: 'ккал', width: 60 },
     { name: 'prot', label: 'б', width: 60 },
     { name: 'fats', label: 'ж', width: 60 },
     { name: 'carb', label: 'у', width: 60 },
-    { name: 'kcal', label: 'ккал', width: 60 },
     // { name: 'water', label: 'вода', width: 70 },
   ],
   rows: [
