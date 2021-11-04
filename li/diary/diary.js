@@ -155,11 +155,8 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                                 <div @click=${e => this._eating = '002'} style="cursor: pointer; color:${`hsla(${this._idx * this.step}, 50%, 50%, 1)`}; font-size: 24px; text-decoration: ${this._eating === '002' ? 'underline' : ''}">таблица калорийности</div>
                                 </div>
                                 ${this._eating !== '002' ? html`
-                                <li-table id="table-favorites" style="height: 48%" .data="${{
-                                    columns: sets.favorites.columns,
-                                    options: { ...sets.favorites.options, readonly: true },
-                                    rows: sets.favorites.rows
-                                }}"></li-table>` : html`
+                                    <li-table id="table-favorites" style="height: 48%" .data="${this._favoritesData}"></li-table>
+                                ` : html`
                                     <li-table id="table-ecalorie" style="height: 48%" .data="${foodList}"></li-table>
                                 `}
                             `}
@@ -407,6 +404,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                     sets[view].rows = this._data.rows = res || sets[view].rows;
                 } else {
                     sets[view].rows = res || sets[view].rows;
+                    this._favoritesData = view === 'favorites' ? sets[view] : this._favoritesData;
                 }
             }
             this.$update();

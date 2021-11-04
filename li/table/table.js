@@ -165,7 +165,7 @@ customElements.define('li-table', class extends LiElement {
             this.data.options._sum = {};
             this.data.options.sum.forEach(j => this._data.sum[j] = 0);
         }
-        const sort = this.data.options.sortColumns;
+        const sort = this.data?.options?.sortColumns;
         if (sort?.length && this.data?.rows?.length) {
             this.data.rows.forEach(i => {
                 i.$sort = '';

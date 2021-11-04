@@ -285,7 +285,7 @@ export const sets = {
         },
         columns: [
             { name: '$idx', label: '№', width: 50 },
-            { name: 'sort', label: 'категория (↑↓)', width: 140 },
+            { name: 'sort', label: 'категория (↑↓)', width: 200 },
             { name: 'category', label: 'категория', width: 200 },
             { name: 'name', label: 'наименование', textAlign: 'left', showTitle: true, minWidth: 200  },
             { name: 'num', label: 'кол', width: 50 },
