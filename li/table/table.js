@@ -49,7 +49,7 @@ customElements.define('li-table', class extends LiElement {
         return html`
             <div id="table">
                 <li-table-service-panel type="top"></li-table-service-panel>
-                <li-table-panel-row class="panel top" type="top" style="transform: translate(${-this.left}px, 0px)"></li-table-panel-row>
+                <li-table-panel-row class="panel top" type="top" style="transform: translate(${-this.left}px, 0px)" .left=${this.left} ._shift=${this._shift}></li-table-panel-row>
                 ${this.data?.options?.headerHidden && !this.data?.options?.headerService ? html`` : html`<div style="border-top:1px solid gray; height: 1px;"></div>`}
                 <div id="container" @scroll=${this._scroll}>
                     <div id="main" style="width: ${this.maxWidth}px; height: ${this.data?.options?.lazy ? this._tableHeight + 'px' : 'unset'}">
@@ -62,7 +62,7 @@ customElements.define('li-table', class extends LiElement {
                     </div>
                 </div>
                 ${this.data?.options?.footerHidden && !this.data?.options?.footerService ? html`` : html`<div style="border-bottom:1px solid gray; height: 1px;"></div>`}
-                <li-table-panel-row class="panel bottom" type="bottom" style="transform: translate(${-this.left}px, 0px)"></li-table-panel-row>
+                <li-table-panel-row class="panel bottom" type="bottom" style="transform: translate(${-this.left}px, 0px)" .left=${this.left} ._shift=${this._shift}></li-table-panel-row>
                 <li-table-service-panel type="bottom"></li-table-service-panel>
             </div>
         `
@@ -95,8 +95,11 @@ customElements.define('li-table', class extends LiElement {
     get _visibleRowCount() {
         return Math.round(this.$id('container')?.clientHeight / this._rowHeight || 0);
     }
+    get _shift() {
+        return this.$id('main')?.scrollHeight > this.$id('table')?.scrollHeight ? 5 : 1;
+    }
     get maxWidth() {
-        return this.$id('container')?.offsetWidth - (this.$id('main')?.scrollHeight > this.$id('table')?.scrollHeight ? 4 : 1);
+        return this.$id('container')?.offsetWidth - this._shift;
     }
 
     constructor() {
@@ -359,42 +362,61 @@ customElements.define('li-table-service-panel', class extends LiElement {
 customElements.define('li-table-panel-row', class extends LiElement {
     static get styles() {
         return css`
-            .panel {
+            :host {
                 position: relative;
                 display: flex;
                 box-sizing: border-box;
             }
+            .fixed {
+                position: sticky;
+                z-index: 9;
+            }
+            .left {
+                left: 0;
+            }
+            .right {
+                border-left: 1px solid lightgray;
+            }
         `;
+    }
+    _cells(_class, _type, _filter) {
+        return html`
+            ${this.data?._columns?.filter((i => (_filter ? i[_filter] : (!i.fixedLeft && !i.fixedRight))) || []).map(i => html`
+                <div class=${_class} style="
+                    width: ${i._width < 16 ? 16 : i._width}; 
+                    min-height: ${this.data?.options?.columnMinHeight || this.data?.options?.columnMinHeight || 32};
+                    min-width: ${i.minWidth ? i.minWidth : this.data?.options?.minWidth ? this.data?.options?.minWidth : 15 + 'px'};
+                    background-color: ${this.type === 'bottom' && this.data?.options?.footerColor || this.type === 'top' && this.data?.options?.headerColor || '#eee'};"
+                >
+                    <li-table-panel-cell .column="${i}" type=${this.type}></li-table-panel-cell>
+                </div>
+            `)}
+        `
     }
     render() {
         return html`
+            <style>
+                .fixed { transform: translate(${this.left || 0}px, 0px) !important; }
+                .right { right: ${this._shift - 1}; }
+            </style>
             ${this.type === 'bottom' && this.data?.options?.footerHidden || this.type === 'top' && this.data?.options?.headerHidden ? html`` : html`
-            <div class="panel ${this.type}" style="height: ${this.data?.options?.headerHeight ? this.data?.options?.headerHeight : 'auto'}">
-                <div style="display: flex; background-color:${(this.type === 'bottom' && this.data?.options?.footerColor)
-                || (this.type === 'top' && this.data?.options?.headerColor)
-                || '#eee'}">
-                    ${this.data?._columns?.map(i => html`
-                        <div style="width: ${i._width < 16 ? 16 : i._width}; min-height: ${this._columnMinHeight};
-                            min-width: ${i.minWidth ? i.minWidth : this.data?.options?.minWidth ? this.data?.options?.minWidth : 15 + 'px'}">
-                            <li-table-panel-cell .column="${i}" type=${this.type}></li-table-panel-cell>
-                        </div>
-                    `)}
+                <div style="height: ${this.data?.options?.headerHeight ? this.data?.options?.headerHeight : 'auto'}; display: flex;">
+                    ${this._cells('fixed left', 'left', 'fixedLeft')}
+                    ${this._cells()}
+                    ${this._cells('fixed right', 'right', 'fixedRight')}
                 </div>
-            </div>`}
+            `}
         `
     }
 
     static get properties() {
         return {
             type: { type: String },
-            data: { type: Object, local: true }
+            data: { type: Object, local: true },
+            left: { type: Number }, _shift: { type: Number }, _style: { type: Object }
         }
     }
-    get _columnMinHeight() {
-        return this.data?.options?.columnMinHeight || this.data?.options?.columnMinHeight || 32;
-    }
 })
-
 
 customElements.define('li-table-panel-cell', class extends LiElement {
     static get styles() {
@@ -508,12 +530,29 @@ customElements.define('li-table-row', class extends LiElement {
                 display: flex;
                 box-sizing: border-box;
             }
+            .left {
+                position: sticky;
+                left: 0;
+                z-index: 9;
+            }
+            .right {
+                position: sticky;
+                right: 0;
+                z-index: 9;
+                border-left: 1px solid lightgray;
+            }
         `;
     }
     render() {
         return html` 
-            ${this.data?._columns?.map(c => html`
+            ${this.data?._columns?.filter(i => i.fixedLeft).map(c => html`
+                <li-table-cell class="left" .item="${this.row[c.name]}" .column="${c}" @click=${this._click} .row=${this.row} .selectedRow=${this._selected} .idx=${this.idx}></li-table-cell>
+            `)}
+            ${this.data?._columns?.filter(i => !i.fixedLeft && !i.fixedRight).map(c => html`
                 <li-table-cell .item="${this.row[c.name]}" .column="${c}" @click=${this._click} .row=${this.row} .selectedRow=${this._selected} .idx=${this.idx}></li-table-cell>
+            `)}
+            ${this.data?._columns?.filter(i => i.fixedRight).map(c => html`
+                <li-table-cell class="right" .item="${this.row[c.name]}" .column="${c}" @click=${this._click} .row=${this.row} .selectedRow=${this._selected} .idx=${this.idx}></li-table-cell>
             `)}
         `
     }
