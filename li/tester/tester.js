@@ -11,7 +11,8 @@ customElements.define('li-tester', class LiTester extends LiElement {
         return {
             label: { type: String, default: '' },
             component: { type: Object, default: undefined },
-            _focused: { type: String, default: '', save: true }
+            _focused: { type: String, default: '', save: true },
+            _tabs: { type: String, default: 'apps', save: true }
         }
     }
 
@@ -24,6 +25,7 @@ customElements.define('li-tester', class LiTester extends LiElement {
             :host {
                 color: gray;
                 font-family: Arial;
+                position: relative;
             }
         `;
     }
@@ -38,15 +40,21 @@ customElements.define('li-tester', class LiTester extends LiElement {
                     <slot @slotchange=${this.slotchange} id="slot"></slot>
                     <slot name="app-test"></slot>
                 </div>
-                <div slot="app-left" style="padding-left:4px;display:flex;flex-direction:column; align-items: left; justify-content: center">
-                    ${Object.keys(indx).map(key => html`
-                        ${key.startsWith('li-') ?
-                html`<li-button style="border-radius:4px" .indx="${indx[key]}" .label2="${key}" label="${indx[key].label}" width="auto" @click="${(e) => this._tap(e, key)}"
-                            back="${this._focused === key ? '#d0d0d0' : ''}"></li-button>` :
-                html`<div style="display: flex;font-size:10px;flex-wrap:wrap">${indx[key].map(i =>
-                    html`<li-button height="12" border="none" padding="2px" .indx="${i}" label="${i.label}" width="auto" @click="${this._openUrl}"></li-button>`
-                )}</div>`}`
-        )}
+                <div slot="app-left" style="display: flex; flex-direction: column;">
+                    <div style="display: flex; flex-wrap: wrap; width: 100%; border-bottom: 1px solid gray; margin-bottom: 8px; padding: 2px; position: sticky; top: 0; background-color: lightyellow; justify-content: left">    
+                        <li-button name="apps" width="70" @click=${() => this._tabs = 'apps'} back=${this._tabs === 'apps' ? '#e0e0e0' : ''}>Apps</li-button>
+                        <li-button name="extension" width="70" @click=${() => this._tabs = 'demo'} back=${this._tabs === 'demo' ? '#e0e0e0' : ''}>Demo</li-button>
+                        <li-button name="settings" width="144" @click=${() => this._tabs = 'comp'} back=${this._tabs === 'comp' ? '#e0e0e0' : ''}>Components</li-button>
+                    </div>
+                    <div style="padding-left:4px;display:flex;flex-direction:column; align-items: left; justify-content: center; overflow: auto">
+                        ${Object.keys(indx).map(key => indx[key].type !== this._tabs ? html`` : html`
+                            <li-button style="border-radius:4px" .indx=${indx[key]} .label2="${key}" label=${indx[key].label} width="auto" @click=${(e) => this._tap(e, key)}
+                                back=${this._focused === key ? '#e0e0e0' : ''}></li-button>
+                            <div style="display: flex;font-size:10px;flex-wrap:wrap">${indx[key.replace('li-', '')].map(i => html`
+                                <li-button height="12" border="none" padding="2px" .indx=${i} label=${i.label} width="auto" @click=${this._openUrl}></li-button>`)}
+                            </div>  
+                        `)}
+                    </div>
                 </div>
                 <li-property-grid slot="app-right" id="li-layout-app-tester" .io=${this.component} label="${this._localName}"></li-property-grid>
             </li-layout-app>
