@@ -11,7 +11,7 @@ export { unsafeHTML } from 'https://unpkg.com/lit@2.0.0/directives/unsafe-html.j
 // export { css, unsafeCSS } from './lib/lit/min/lit-element.js';
 // export { html, svg, classMap, styleMap, unsafeHTML, unsafeSVG } from './lib/lit/min/lit-html.js';
 
-import { ulid, decodeTime } from './lib/ulid/ulid.js';
+import { ulid, decodeTime, monotonicFactory } from './lib/ulid/ulid.js';
 import './lib/icaro/icaro.js';
 
 const urlLI = import.meta.url;
@@ -225,12 +225,13 @@ _$temp.debounces = new Map();
 class CLI {
     constructor() {
         this.ulid = ulid;
+        this.ulidm = monotonicFactory();
         this.icaro = icaro;
         this.$url = urlLI;
-        this._notify = false;
-        this._changed = false;
-        this._icaro = false;
-        this._$update = false;
+        // this._notify = false;
+        // this._changed = false;
+        // this._icaro = false;
+        // this._$update = false;
     }
     get _$$() { return __$$._$$; }
     get $$() { return __$$.$$; }
