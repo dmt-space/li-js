@@ -10,9 +10,16 @@ customElements.define('li-dma', class LiDma extends LiElement {
         return css`
             :host {
                 display: flex;
+                flex-direction: column;
                 flex-wrap: wrap;
                 width: 100%;
                 padding: 8px;
+                box-sizing: border-box;
+            }
+            .container {
+                display: flex;
+                flex-wrap: wrap;
+                width: 100%;
                 box-sizing: border-box;
             }
             label {
@@ -28,47 +35,55 @@ customElements.define('li-dma', class LiDma extends LiElement {
 
     render() {
         return html`
-            <img src="dma.png" style="max-width: 100%; padding: 8px; fLex: .5; border: 1px solid lightgray; margin: 4px; justif-content: center; box-sizing: border-box">
-            <div style="display: flex; flex: 1; flex-direction: column">
-                <label style="font-weight: 600;">Входные данные:</label>
-                <div style="display: flex; flex-direction: column; flex: 1; border: 1px solid lightgray; margin: 2px;  min-width: 240px">
-                    <label>Внутренний диаметр (дюйм):</label>
-                    <input id="d1" .value=${this._d1} type="number" @change=${this._input} @blur=${this._input}>
-                    <label>Внешний диаметр (дюйм):</label>
-                    <input id="d2" .value=${this._d2} type="number" @change=${this._input} @blur=${this._input}>
-                    <label>Внутренний диаметр (${this.edIzm}):</label>
-                    <input id="d3" .value=${this._d3} type="number" @change=${this._input} @blur=${this._input}>
-                    <label>Внешний диаметр (${this.edIzm}):</label>
-                    <input id="d4" .value=${this._d4} type="number" @change=${this._input} @blur=${this._input}>
-                    <div style="display: flex; align-items: center;">
-                        <li-checkbox title="мм" .toggled=${this.edIzm === 'мм'} @change=${this._checked}></li-checkbox>мм
-                        <li-checkbox title="см" .toggled=${this.edIzm === 'см'} @change=${this._checked}></li-checkbox>см
+            <div class="container">
+                <img src="dma.png" style="max-width: 100%; padding: 8px; fLex: .5; border: 1px solid lightgray; margin: 4px; justif-content: center; box-sizing: border-box">
+                <div style="display: flex; flex: 1; flex-direction: column">
+                    <label style="font-weight: 600;">Входные данные:</label>
+                    <div style="display: flex; flex-direction: column; flex: 1; border: 1px solid lightgray; margin: 2px;  min-width: 240px">
+                        <label>Внутренний диаметр (дюйм):</label>
+                        <input id="d1" .value=${this._d1} type="number" @change=${this._input} @blur=${this._input}>
+                        <label>Внешний диаметр (дюйм):</label>
+                        <input id="d2" .value=${this._d2} type="number" @change=${this._input} @blur=${this._input}>
+                        <label>Внутренний диаметр (${this.edIzm}):</label>
+                        <input id="d3" .value=${this._d3} type="number" @change=${this._input} @blur=${this._input}>
+                        <label>Внешний диаметр (${this.edIzm}):</label>
+                        <input id="d4" .value=${this._d4} type="number" @change=${this._input} @blur=${this._input}>
+                        <div style="display: flex; align-items: center;">
+                            <li-checkbox title="мм" .toggled=${this.edIzm === 'мм'} @change=${this._checked}></li-checkbox>мм
+                            <li-checkbox title="см" .toggled=${this.edIzm === 'см'} @change=${this._checked}></li-checkbox>см
+                        </div>
+                        <div style="display: flex; align-items: center;">
+                            <li-checkbox id="ratio" .toggled=${this.ratio} @change=${this._checked}></li-checkbox>Внешний / внутренний = 3.326
+                        </div>
+                        <label>Диаметр провода с изоляцией (мм):</label>
+                        <input id="d0" .value=${this.d0} type="number" @change=${this._input} @blur=${this._input}>
+                        <label>Марка провода:</label>
+                        <input .value=${this.type} @change=${e => this.type = e.target.value}>
                     </div>
-                    <div style="display: flex; align-items: center;">
-                        <li-checkbox id="ratio" .toggled=${this.ratio} @change=${this._checked}></li-checkbox>Внешний / внутренний = 3.326
+                </div>
+                <div style="display: flex; flex: 1; flex-direction: column">
+                    <label style="font-weight: 600;">Расчетные данные:</label>
+                    <div style="display: flex; flex-direction: column; flex: 1; border: 1px solid lightgray; margin: 2px; min-width: 240px">
+                        <label>Количество витков (пара):</label>
+                        <input .value=${this._turn} readonly>
+                        <label>Длина 1-го провода* (м):</label>
+                        <input .value=${this._length} readonly>
+                        <label style="font-size: 14px">* - без учета отводов</label>
                     </div>
-                    <label>Диаметр провода с изоляцией (мм):</label>
-                    <input id="d0" .value=${this.d0} type="number" @change=${this._input} @blur=${this._input}>
-                    <label>Марка провода:</label>
-                    <input .value=${this.type} @change=${e => this.type = e.target.value}>
+                    <label style="font-weight: 600;">Результаты измерений:</label>
+                    <div style="display: flex; flex-direction: column; flex: 1; border: 1px solid lightgray; margin: 2px; min-width: 240px">
+                        <label>Частота (кгц):</label>
+                        <input>
+                        <label>Автор:</label>
+                        <input .value=${this.author}>
+                        <li-button width="100%" style="flex: 1; margin: 6px;">Добавить в таблицу</li-button>
+                    </div>
                 </div>
             </div>
-            <div style="display: flex; flex: 1; flex-direction: column">
-                <label style="font-weight: 600;">Расчетные данные:</label>
-                <div style="display: flex; flex-direction: column; flex: 1; border: 1px solid lightgray; margin: 2px; min-width: 240px">
-                    <label>Количество витков (пара):</label>
-                    <input .value=${this._turn} readonly>
-                    <label>Длина 1-го провода (м):</label>
-                    <input .value=${this._length} readonly>
-                </div>
-                <label style="font-weight: 600;">Результаты измерений:</label>
-                <div style="display: flex; flex-direction: column; flex: 1; border: 1px solid lightgray; margin: 2px; min-width: 240px">
-                    <label>Частота (кгц):</label>
-                    <input>
-                    <label>Автор:</label>
-                    <input .value=${this.author}>
-                    <li-button width="100%" style="flex: 1; margin: 6px;">Добавить в таблицу</li-button>
-                </div>
+            <div style="display: flex; flex: 1; padding: 4px">
+                <li-button width="60" title="импортировать таблицу">Import</li-button>
+                <li-button width="60" title="экспортировать таблицу">Export</li-button>
+                <li-button width="60" title="удалить выбранную строку в таблице" style="margin-left: auto">Delete</li-button>
             </div>
             <li-table .data=${this.data}></li-table>
         `;
@@ -94,13 +109,17 @@ customElements.define('li-dma', class LiDma extends LiElement {
 
             ],
             columns: [
-                { label: '№', name: '$idx', width: 60 },
-                { label: 'col-001', name: 'c1', width: 150 },
-                { label: 'col-002', name: 'c2', width: 250 },
-                { label: 'col-003', name: 'c3' },
-                { label: 'col-004', name: 'c4' },
-                { label: 'col-005', name: 'c5', width: 120 },
-                { label: '', name: '' },
+                { name: '$idx', label: '№', width: 60 },
+                { name: 'frequency', label: 'Частота (кГц)', width: 100 },
+                { name: 'd3', label: 'Внутр.D', width: 80 },
+                { name: 'd4', label: 'Внеш.D', width: 80 },
+                { name: 'edIzm', label: 'Ед.Изм', width: 70 },
+                { name: 'd0', label: 'Провод (мм)', width: 100 },
+                { name: 'type', label: 'Марка', width: 100 },
+                { name: 'turn', label: 'Кол.витков', width: 90 },
+                { name: 'length', label: 'Длина (м)', width: 100 },
+                { name: 'date', label: 'Дата', width: 150 },
+                { name: 'note', label: 'Примечание', minWidth: 100 },
             ]
         }
     }
@@ -121,20 +140,11 @@ customElements.define('li-dma', class LiDma extends LiElement {
     }
     get _length() {
         const pi = 3.14159265359;
-        let l = 0;
-        for (let i = 0; i < this._turn; i += this.d0) {
-
+        let l = 0, d = this.d3;
+        for (let i = 0; i <= this._turn; i++) {
+            l = l + pi * (d + i * this.d0 * 4);
         }
-    }
-
-    connectedCallback() {
-        super.connectedCallback();
-
-    }
-
-    firstUpdated() {
-        super.firstUpdated();
-
+        return (l / 1000).toFixed(3);
     }
 
     _checked(e) {
