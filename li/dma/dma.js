@@ -3,6 +3,7 @@ import { LiElement, html, css } from '../../li.js';
 import '../checkbox/checkbox.js';
 import '../button/button.js';
 import '../table/table.js';
+import '../../lib/pouchdb/pouchdb.js';
 
 customElements.define('li-dma', class LiDma extends LiElement {
 
@@ -73,38 +74,58 @@ customElements.define('li-dma', class LiDma extends LiElement {
                     <label style="font-weight: 600;">Результаты измерений:</label>
                     <div style="display: flex; flex-direction: column; flex: 1; border: 1px solid lightgray; margin: 2px; min-width: 240px">
                         <label>Частота (кгц):</label>
-                        <input>
+                        <input .value=${this.frequency} @change=${e => this.frequency = e.target.value}>
                         <label>Автор:</label>
-                        <input .value=${this.author}>
-                        <li-button width="100%" style="flex: 1; margin: 6px;">Добавить в таблицу</li-button>
+                        <input .value=${this.author} @change=${e => this.author = e.target.value}>
+                        <li-button id="add" width="100%" style="flex: 1; margin: 6px;" @click=${this._tap}>Добавить в таблицу</li-button>
                     </div>
                 </div>
             </div>
             <div style="display: flex; flex: 1; padding: 4px">
-                <li-button width="60" title="импортировать таблицу">Import</li-button>
-                <li-button width="60" title="экспортировать таблицу">Export</li-button>
-                <li-button width="60" title="удалить выбранную строку в таблице" style="margin-left: auto">Delete</li-button>
+                <li-button id="import" width="60" title="импортировать таблицу" @click=${this._tap}>Import</li-button>
+                <li-button id="export" width="60" title="экспортировать таблицу" @click=${this._tap}>Export</li-button>
+                <li-button id="refresh" name="refresh" title="отменить изменения" style="margin-left: auto" @click=${this._tap}></li-button>
+                <li-button id="delete" name="close" title="удалить выбранную строку в таблице" @click=${this._tap}></li-button>
+                <li-button id="save" name="save" title="сохранить" .fill="${this._needSave ? 'red' : ''}" .color="${this._needSave ? 'red' : 'gray'}" @click=${this._tap}></li-button>
             </div>
-            <li-table .data=${this.data}></li-table>
+            <li-table id="dma-table" .data=${this.data}></li-table>
         `;
     }
 
     static get properties() {
         return {
+            dbName: { type: String, default: 'dma', save: true },
             d1: { type: Number, default: 1, save: true },
             d2: { type: Number, default: 9, save: true },
             d3: { type: Number, default: 25.4, save: true },
             d4: { type: Number, default: 228.6, save: true },
             d0: { type: Number, default: 1, save: true },
-            turn: { type: Number, default: 0, save: true },
             edIzm: { type: String, default: 'мм', save: true },
             type: { type: String, default: '', save: true },
             ratio: { type: Boolean, default: false, save: true },
             author: { type: String, default: 'user', save: true },
+            frequency: { type: String, default: '', save: true },
+            action: { type: Object, global: true },
+            _changedList: { type: Object },
+        }
+    }
+    get row() {
+        return {
+            frequency: this.frequency,
+            d3: this.d3,
+            d4: this.d4,
+            edIzm: this.edIzm,
+            d0: this.d0,
+            type: this.type,
+            turn: this._turn,
+            length: this._length,
+            date: LI.dates(new Date()).short,
+            _id: 'dma:' + LI.ulid()
         }
     }
     get data() {
-        return {
+        if (this._data) return this._data;
+        this._data = {
             options: [
 
             ],
@@ -120,8 +141,10 @@ customElements.define('li-dma', class LiDma extends LiElement {
                 { name: 'length', label: 'Длина (м)', width: 100 },
                 { name: 'date', label: 'Дата', width: 150 },
                 { name: 'note', label: 'Примечание', minWidth: 100 },
-            ]
+            ],
+            rows: this._rows || []
         }
+        return this._data;
     }
     get _d1() {
         return Number(this.d1).toFixed(3);
@@ -145,6 +168,32 @@ customElements.define('li-dma', class LiDma extends LiElement {
             l = l + pi * (d + i * this.d0 * 4);
         }
         return (l / 1000).toFixed(3);
+    }
+    get _needSave() {
+        return this._changedList?.size;
+    }
+
+    firstUpdated() {
+        super.firstUpdated();
+        this._changedList = new Map();
+        this.listen('tableRowSelect', (e) => {
+            this._focusedRow = e.detail.row;
+            this.$update();
+        });
+        setTimeout(async () => {
+            this._dbName = window.location.href.split('#')?.[1];
+            this.dbName = this._dbName || this.dbName || 'dma';
+            this.dbLocal = new PouchDB(this.dbName);
+            this._loadAll();
+        }, 100);
+    }
+
+    async _loadAll() {
+        this._rows = [];
+        let items = await this.dbLocal.allDocs({ include_docs: true });
+        items.rows.forEach(i => this._rows.push(i.doc));
+        this._data = undefined;
+        this.$update();
     }
 
     _checked(e) {
@@ -218,6 +267,44 @@ customElements.define('li-dma', class LiDma extends LiElement {
                 break;
         }
         this._step = false;
+        this.$update();
+    }
+    async _tap(e) {
+        this._changedList = this._changedList || new Map();
+        switch (e.target.id) {
+            case 'add':
+                let row = this.row;
+                this._changedList.set(row._id, row);
+                this._data.rows.push(row);
+                this.$id('dma-table')._setRows();
+                break;
+            case 'delete':
+                if (this._focusedRow) {
+                    this._focusedRow._deleted = true;
+                    this._changedList.set(this._focusedRow._id, this._focusedRow);
+                    this.action = undefined;
+                    this.action = {
+                        id: `dma-table`,
+                        fn: '_deleteRow'
+                    }
+                }
+                break;
+            case 'save':
+                if (this._changedList?.size) {
+                    const res = [];
+                    this._changedList.forEach(i => res.push(i));
+                    await this.dbLocal.bulkDocs(res);
+                    this._loadAll();
+                    this._changedList = new Map();
+                }
+                break;
+            case 'refresh':
+                this._loadAll();
+                this._changedList = new Map();
+                break;
+            default:
+                break;
+        }
         this.$update();
     }
 });
