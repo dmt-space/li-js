@@ -13,7 +13,7 @@ customElements.define('li-dma', class LiDma extends LiElement {
                 display: flex;
                 flex-direction: column;
                 flex-wrap: wrap;
-                width: 100%;
+                width: calc(100% - 2px);
                 padding: 8px;
                 box-sizing: border-box;
             }
@@ -37,10 +37,10 @@ customElements.define('li-dma', class LiDma extends LiElement {
     render() {
         return html`
             <div class="container">
-                <img src="dma.png" style="max-width: 100%; padding: 8px; fLex: .5; border: 1px solid lightgray; margin: 4px; justif-content: center; box-sizing: border-box">
+                <img src="dma.png" style="max-width: 100%; padding: 8px; flex: .5; border: 1px solid lightgray; margin: auto; justif-content: center; box-sizing: border-box">
                 <div style="display: flex; flex: 1; flex-direction: column">
                     <label style="font-weight: 600;">Входные данные:</label>
-                    <div style="display: flex; flex-direction: column; flex: 1; border: 1px solid lightgray; margin: 2px;  min-width: 240px">
+                    <div style="display: flex; flex-direction: column; flex: 1; border: 1px solid lightgray; margin: 2px;">
                         <label>Внутренний диаметр (дюйм):</label>
                         <input id="d1" .value=${this._d1} type="number" @change=${this._input} @blur=${this._input}>
                         <label>Внешний диаметр (дюйм):</label>
@@ -64,9 +64,9 @@ customElements.define('li-dma', class LiDma extends LiElement {
                 </div>
                 <div style="display: flex; flex: 1; flex-direction: column">
                     <label style="font-weight: 600;">Расчетные данные:</label>
-                    <div style="display: flex; flex-direction: column; flex: 1; border: 1px solid lightgray; margin: 2px; min-width: 240px">
+                    <div style="display: flex; flex-direction: column; flex: 1; border: 1px solid lightgray; margin: 2px;">
                         <label>Количество витков (пара):</label>
-                        <input .value=${this._turn} readonly>
+                        <input .value=${this._turn || ''} readonly>
                         <label>Длина 1-го провода* (м):</label>
                         <input .value=${this._length} readonly>
                         <label style="font-size: 14px">* - без учета отводов</label>
@@ -74,21 +74,24 @@ customElements.define('li-dma', class LiDma extends LiElement {
                     <label style="font-weight: 600;">Результаты измерений:</label>
                     <div style="display: flex; flex-direction: column; flex: 1; border: 1px solid lightgray; margin: 2px; min-width: 240px">
                         <label>Частота (кгц):</label>
-                        <input .value=${this.frequency} @change=${e => this.frequency = e.target.value}>
+                        <input .value=${this.frequency || ''} @change=${e => this.frequency = e.target.value}>
                         <label>Автор:</label>
-                        <input .value=${this.author} @change=${e => this.author = e.target.value}>
+                        <input .value=${this.author || ''} @change=${e => this.author = e.target.value}>
                         <li-button id="add" width="100%" style="flex: 1; margin: 6px;" @click=${this._tap}>Добавить в таблицу</li-button>
                     </div>
                 </div>
             </div>
             <div style="display: flex; flex: 1; padding: 4px">
-                <li-button id="import" width="60" title="импортировать таблицу" @click=${this._tap}>Import</li-button>
-                <li-button id="export" width="60" title="экспортировать таблицу" @click=${this._tap}>Export</li-button>
+                ${this.data?.rows?.length ? html`
+                    <li-button id="export" width="200" @click=${this._tap}>Экспортировать таблицу</li-button>
+                ` : html``}
                 <li-button id="refresh" name="refresh" title="отменить изменения" style="margin-left: auto" @click=${this._tap}></li-button>
                 <li-button id="delete" name="close" title="удалить выбранную строку в таблице" @click=${this._tap}></li-button>
                 <li-button id="save" name="save" title="сохранить" .fill="${this._needSave ? 'red' : ''}" .color="${this._needSave ? 'red' : 'gray'}" @click=${this._tap}></li-button>
             </div>
             <li-table id="dma-table" .data=${this.data}></li-table>
+            <label>Импортирование таблицы:</label>
+            <input type="file" id="import" @change=${this._tap}/>
         `;
     }
 
@@ -112,14 +115,15 @@ customElements.define('li-dma', class LiDma extends LiElement {
     get row() {
         return {
             frequency: this.frequency,
-            d3: this.d3,
-            d4: this.d4,
+            d3: this._d3,
+            d4: this._d4,
             edIzm: this.edIzm,
             d0: this.d0,
             type: this.type,
             turn: this._turn,
             length: this._length,
             date: LI.dates(new Date()).short,
+            author: this.author,
             _id: 'dma:' + LI.ulid()
         }
     }
@@ -139,8 +143,10 @@ customElements.define('li-dma', class LiDma extends LiElement {
                 { name: 'type', label: 'Марка', width: 100 },
                 { name: 'turn', label: 'Кол.витков', width: 90 },
                 { name: 'length', label: 'Длина (м)', width: 100 },
-                { name: 'date', label: 'Дата', width: 150 },
-                { name: 'note', label: 'Примечание', minWidth: 100 },
+                { name: 'date', label: 'Дата', width: 120 },
+                { name: 'author', label: 'Автор', width: 120 },
+                { name: 'rating', label: 'Оценка', typeColumn: 'rating', width: 120 },
+                { name: 'note', label: 'Примечание', minWidth: 100, textAlign: 'left' },
             ],
             rows: this._rows || []
         }
@@ -173,6 +179,15 @@ customElements.define('li-dma', class LiDma extends LiElement {
         return this._changedList?.size;
     }
 
+    updated(e) {
+        if (e.has('action') && this.action) {
+            if (this.action.action === 'tableCellChanged' && this.$ulid !== this.action.ulid && this.action.row?._id) {
+                this._changedList = this._changedList || new Map();
+                this._changedList.set(this.action.row._id, this.action.row);
+                this.$update();
+            }
+        }
+    }
     firstUpdated() {
         super.firstUpdated();
         this._changedList = new Map();
@@ -301,6 +316,34 @@ customElements.define('li-dma', class LiDma extends LiElement {
             case 'refresh':
                 this._loadAll();
                 this._changedList = new Map();
+                break;
+            case 'export':
+                const content = new Blob([JSON.stringify(this.data.rows)], { type: 'text/plain' });
+                const a = document.createElement("a");
+                const file = new Blob([content], { type: 'text/plain' });
+                a.href = URL.createObjectURL(file);
+                a.download = this.dbName + '.json';
+                a.click();
+                break;
+            case 'import':
+                if (window.confirm(`Do you really want rewrite current Database ?`)) {
+                    let file = e.target.files[0];
+                    if (file) {
+                        await this.dbLocal.destroy(async (err, response) => {
+                            if (err) return console.log(err);
+                            else console.log("Local Database Deleted");
+                        });
+                        const reader = new FileReader();
+                        reader.onload = async ({ target: { result } }) => {
+                            result = JSON.parse(result);
+                            result.map(i => { if (i._rev) delete i._rev });
+                            this.dbLocal = new PouchDB(this.dbName);
+                            await this.dbLocal.bulkDocs(result, { new_edits: true }, (...args) => { this.$update(); console.log('DONE', args) });
+                            setTimeout(() => document.location.reload(), 500);
+                        };
+                        reader.readAsText(file);
+                    }
+                }
                 break;
             default:
                 break;
