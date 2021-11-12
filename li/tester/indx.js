@@ -258,6 +258,9 @@ export const indx = {
     'li-credit-calc': { type: 'apps', label: 'Кредитный калькулятор', props: { iframe: '../credit-calc/index.html' } },
     'credit-calc': [{ label: 'index', url: url + '/credit-calc' }],
 
+    'li-dma': { type: 'apps', label: 'Расчёт DMA' },
+    'dma': [{ label: 'index', url: url + '/dma' }],
+
     'li-tetris': { type: 'apps', label: 'TETRIS', props: { iframe: '../tetris/index.html' } },
     'tetris': [{ label: 'index', url: url + '/tetris' }],
 
