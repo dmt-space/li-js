@@ -9,7 +9,7 @@ customElements.define('li-dma', class LiDma extends LiElement {
 
     static get styles() {
         return css`
-            :host {
+            .dma {
                 display: flex;
                 flex-direction: column;
                 flex-wrap: wrap;
@@ -36,67 +36,73 @@ customElements.define('li-dma', class LiDma extends LiElement {
 
     render() {
         return html`
-            <div class="container">
-                <img src="dma.png" style="max-width: 100%; padding: 8px; flex: .5; border: 1px solid lightgray; margin: auto; justif-content: center; box-sizing: border-box">
-                <div style="display: flex; flex: 1; flex-direction: column">
-                    <label style="font-weight: 600;">Входные данные:</label>
-                    <div style="display: flex; flex-direction: column; flex: 1; border: 1px solid lightgray; margin: 2px;">
-                        <label>Внутренний диаметр (дюйм):</label>
-                        <input id="d1" .value=${this._d1} type="number" @change=${this._input} @blur=${this._input}>
-                        <label>Внешний диаметр (дюйм):</label>
-                        <input id="d2" .value=${this._d2} type="number" @change=${this._input} @blur=${this._input}>
-                        <label>Внутренний диаметр (${this.edIzm}):</label>
-                        <input id="d3" .value=${this._d3} type="number" @change=${this._input} @blur=${this._input}>
-                        <label>Внешний диаметр (${this.edIzm}):</label>
-                        <input id="d4" .value=${this._d4} type="number" @change=${this._input} @blur=${this._input}>
-                        <div style="display: flex; align-items: center;">
-                            <li-checkbox title="мм" .toggled=${this.edIzm === 'мм'} @change=${this._checked}></li-checkbox>мм
-                            <li-checkbox title="см" .toggled=${this.edIzm === 'см'} @change=${this._checked}></li-checkbox>см
+            <div class="dma">
+                <div class="container">
+                    <div style="max-width: 90%; padding: 8px; flex-direction: column; margin: auto;">
+                        <div style="display: flex; align-items: center"><label style="font-size: 20px; font-weight: 600;">Расчёт DMA</label><label style="font-size: 12px;">(ver 1.0.0)</label></div>
+                        <img src="../dma/dma.png" style="max-width: 100%; padding: 8px; flex: 1; border: 1px solid lightgray; margin: auto; justif-content: center">
+                    </div>
+                    <div style="display: flex; flex: 1; flex-direction: column">
+                        <label style="font-weight: 600;">Входные данные:</label>
+                        <div style="display: flex; flex-direction: column; flex: 1; border: 1px solid lightgray; margin: 2px;">
+                            <label>Внутренний диаметр (дюйм):</label>
+                            <input id="d1" .value=${this._d1 || ''} type="number" @change=${this._input} @blur=${this._input}>
+                            <label>Внешний диаметр (дюйм):</label>
+                            <input id="d2" .value=${this._d2 || ''} type="number" @change=${this._input} @blur=${this._input}>
+                            <label>Внутренний диаметр (${this.edIzm}):</label>
+                            <input id="d3" .value=${this._d3 || ''} type="number" @change=${this._input} @blur=${this._input}>
+                            <label>Внешний диаметр (${this.edIzm}):</label>
+                            <input id="d4" .value=${this._d4 || ''} type="number" @change=${this._input} @blur=${this._input}>
+                            <div style="display: flex; align-items: center;">
+                                <li-checkbox title="мм" .toggled=${this.edIzm === 'мм'} @change=${this._checked}></li-checkbox>мм
+                                <li-checkbox title="см" .toggled=${this.edIzm === 'см'} @change=${this._checked}></li-checkbox>см
+                            </div>
+                            <div style="display: flex; align-items: center;">
+                                <li-checkbox id="ratio" .toggled=${this.ratio} @change=${this._checked}></li-checkbox>Внешний / внутренний = 3.326
+                            </div>
+                            <label>Диаметр провода с изоляцией (мм):</label>
+                            <input id="d0" .value=${this.d0 || ''} type="number" @change=${this._input} @blur=${this._input} step=".01">
+                            <label>Марка провода:</label>
+                            <input .value=${this.type || ''} @change=${e => this.type = e.target.value}>
                         </div>
-                        <div style="display: flex; align-items: center;">
-                            <li-checkbox id="ratio" .toggled=${this.ratio} @change=${this._checked}></li-checkbox>Внешний / внутренний = 3.326
+                    </div>
+                    <div style="display: flex; flex: 1; flex-direction: column">
+                        <label style="font-weight: 600;">Расчетные данные:</label>
+                        <div style="display: flex; flex-direction: column; flex: 1; border: 1px solid lightgray; margin: 2px;">
+                            <label>Количество витков (пара):</label>
+                            <input .value=${this._turn || ''} readonly>
+                            <label>Длина 1-го провода* (м):</label>
+                            <input .value=${this._length || ''} readonly>
+                            <label style="font-size: 14px">* - без учета отводов</label>
                         </div>
-                        <label>Диаметр провода с изоляцией (мм):</label>
-                        <input id="d0" .value=${this.d0} type="number" @change=${this._input} @blur=${this._input}>
-                        <label>Марка провода:</label>
-                        <input .value=${this.type} @change=${e => this.type = e.target.value}>
+                        <label style="font-weight: 600;">Результаты измерений:</label>
+                        <div style="display: flex; flex-direction: column; flex: 1; border: 1px solid lightgray; margin: 2px; min-width: 240px">
+                            <label>Частота (кгц):</label>
+                            <input .value=${this.frequency || ''}  type="number" @change=${e => this.frequency = e.target.value}>
+                            <label>Автор:</label>
+                            <input .value=${this.author || ''} @change=${e => this.author = e.target.value}>
+                            <li-button id="add" width="100%" style="flex: 1; margin: 6px;" @click=${this._tap} back="#E5E5E5">Добавить в таблицу</li-button>
+                        </div>
                     </div>
                 </div>
-                <div style="display: flex; flex: 1; flex-direction: column">
-                    <label style="font-weight: 600;">Расчетные данные:</label>
-                    <div style="display: flex; flex-direction: column; flex: 1; border: 1px solid lightgray; margin: 2px;">
-                        <label>Количество витков (пара):</label>
-                        <input .value=${this._turn || ''} readonly>
-                        <label>Длина 1-го провода* (м):</label>
-                        <input .value=${this._length} readonly>
-                        <label style="font-size: 14px">* - без учета отводов</label>
-                    </div>
-                    <label style="font-weight: 600;">Результаты измерений:</label>
-                    <div style="display: flex; flex-direction: column; flex: 1; border: 1px solid lightgray; margin: 2px; min-width: 240px">
-                        <label>Частота (кгц):</label>
-                        <input .value=${this.frequency || ''} @change=${e => this.frequency = e.target.value}>
-                        <label>Автор:</label>
-                        <input .value=${this.author || ''} @change=${e => this.author = e.target.value}>
-                        <li-button id="add" width="100%" style="flex: 1; margin: 6px;" @click=${this._tap}>Добавить в таблицу</li-button>
-                    </div>
+                <div style="display: flex; flex: 1; padding: 4px 0; max-width: 100%; overflow: hidden">
+                    <li-button for="import" width="140" back="#E5E5E5" @click=${() => {this.$id('import').click()}}>Импорт таблицы</li-button>
+                    <input id="import" type="file" id="import" @change=${this._tap} style="display: none"/>
+                    ${this.data?.rows?.length ? html`
+                        <li-button id="export" width="140" @click=${this._tap} back="#E5E5E5">Экспорт таблицы</li-button>
+                    ` : html``}
+                    <li-button id="refresh" name="refresh" title="отменить изменения" style="margin-left: auto" @click=${this._tap} back="#E5E5E5"></li-button>
+                    <li-button id="delete" name="close" title="удалить выбранную строку в таблице" @click=${this._tap} back="#E5E5E5"></li-button>
+                    <li-button id="save" name="save" title="сохранить" .fill="${this._needSave ? 'red' : ''}" .color="${this._needSave ? 'red' : 'gray'}" @click=${this._tap} back="#E5E5E5"></li-button>
                 </div>
+                <li-table id="dma-table" .data=${this.data}></li-table>
             </div>
-            <div style="display: flex; flex: 1; padding: 4px">
-                ${this.data?.rows?.length ? html`
-                    <li-button id="export" width="200" @click=${this._tap}>Экспортировать таблицу</li-button>
-                ` : html``}
-                <li-button id="refresh" name="refresh" title="отменить изменения" style="margin-left: auto" @click=${this._tap}></li-button>
-                <li-button id="delete" name="close" title="удалить выбранную строку в таблице" @click=${this._tap}></li-button>
-                <li-button id="save" name="save" title="сохранить" .fill="${this._needSave ? 'red' : ''}" .color="${this._needSave ? 'red' : 'gray'}" @click=${this._tap}></li-button>
-            </div>
-            <li-table id="dma-table" .data=${this.data}></li-table>
-            <label>Импортирование таблицы:</label>
-            <input type="file" id="import" @change=${this._tap}/>
         `;
     }
 
     static get properties() {
         return {
+            id: { type: String, default: 'li-dma' },
             dbName: { type: String, default: 'dma', save: true },
             d1: { type: Number, default: 1, save: true },
             d2: { type: Number, default: 9, save: true },
@@ -326,23 +332,21 @@ customElements.define('li-dma', class LiDma extends LiElement {
                 a.click();
                 break;
             case 'import':
-                if (window.confirm(`Do you really want rewrite current Database ?`)) {
-                    let file = e.target.files[0];
-                    if (file) {
-                        await this.dbLocal.destroy(async (err, response) => {
-                            if (err) return console.log(err);
-                            else console.log("Local Database Deleted");
-                        });
-                        const reader = new FileReader();
-                        reader.onload = async ({ target: { result } }) => {
-                            result = JSON.parse(result);
-                            result.map(i => { if (i._rev) delete i._rev });
-                            this.dbLocal = new PouchDB(this.dbName);
-                            await this.dbLocal.bulkDocs(result, { new_edits: true }, (...args) => { this.$update(); console.log('DONE', args) });
-                            setTimeout(() => document.location.reload(), 500);
-                        };
-                        reader.readAsText(file);
-                    }
+                const _file = e.target.files[0];
+                if (_file && window.confirm(`${_file.name} - Do you really want rewrite current Database?`)) {
+                    await this.dbLocal.destroy(async (err, response) => {
+                        if (err) return console.log(err);
+                        else console.log("Local Database Deleted");
+                    });
+                    const reader = new FileReader();
+                    reader.onload = async ({ target: { result } }) => {
+                        result = JSON.parse(result);
+                        result.map(i => { if (i._rev) delete i._rev });
+                        this.dbLocal = new PouchDB(this.dbName);
+                        await this.dbLocal.bulkDocs(result, { new_edits: true }, (...args) => { this.$update(); console.log('DONE', args) });
+                        setTimeout(() => document.location.reload(), 500);
+                    };
+                    reader.readAsText(_file);
                 }
                 break;
             default:
