@@ -77,7 +77,7 @@ customElements.define('li-editor-monaco', class LiMonaco extends LiElement {
             automaticLayout: true,
             lineNumbersMinChars: 3,
             mouseWheelZoom: true,
-            fontSize: 20,
+            fontSize: 16,
             minimap: { enabled: true },
             wordWrap: true,
             // wordWrap: 'wordWrapColumn',
@@ -101,7 +101,7 @@ customElements.define('li-editor-monaco', class LiMonaco extends LiElement {
                 this.item.value = this.value;
                 this.$update();
             }
-            this.fire('change');
+            this.fire('change', { value: this.value });
         });
         this.$update();
     }

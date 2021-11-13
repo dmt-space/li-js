@@ -283,6 +283,13 @@ export const indx = {
         }
     },
     'live-html': [{ label: 'index', url: url + '/live-html' }, { label: 'index2', url: url + '/live-html/index-2.html' }],
+    
+    'li-live-html-monaco': {
+        type: 'apps', label: 'li-live-html-monaco', props: {
+            lzs: `DwZwLgngNgpgfAKAJACMD2ATCACA3s1AQwGMBrAcwCc0BXAOwwFoBLAW0PJgC5sCkpmdGIUqMqhDMxh0wACgAsAVgwxyAGmwBiGDuwAmRQFINYSoTogADiOlh9Rk2YvXKt7AHYHWnTA9ftugCMAAzBhgCUanwCQiJiZpK2CsqqGgG+BsbYAO4AFsxgGV55Bb6eWel+FT7YIWHhANwEKCQU1PRMlmggBcxodDzBlgAe2EPDGorj2FMjTUhEZFS0DIw9AF7ctaEj2+MN2IdHh8gAvgjAAPTg0PAI98CSAG7YN7AAvABExGhQaJQ8FBQGgwA4AM36YDWzE2PAAzHoRp9EPxmIwBE8YIxcmBWFBGKx+iQ0NgAAquJ5SbIXS7POBAA`
+        }
+    },
+    'live-html-monaco': [{ label: 'index', url: url + '/live-html-monaco' }, { label: 'index2', url: url + '/live-html-monaco/index-2.html' }],
 
     'li-lzstring': { type: 'apps', label: 'li-lzstring', props: { iframe: '../lzstring/index.html' } },
     'lzstring': [{ label: 'index', url: url + '/lzstring/index.html' }],
@@ -292,6 +299,8 @@ export const indx = {
 
     'li-tester': { type: 'apps', label: 'li-tester' },
     'tester': [{ label: 'index', url: url + '/tester' }, { label: 'index2', url: url + '/tester/index-2.html' }],
+
+
 
 
 
