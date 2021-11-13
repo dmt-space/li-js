@@ -178,6 +178,9 @@ export const indx = {
     'li-editor-ace': { type: 'comp', label: 'li-editor-ace', props: { theme: 'dracula', mode: 'javascript', src: 'console.log(this.properties) // description' } },
     'editor-ace': [{ label: 'index', url: url + '/editor-ace' }],
 
+    'li-editor-monaco': { type: 'comp', label: 'li-editor-monaco', props: { src: 'console.log(this.properties) // description' } },
+    'editor-monaco': [{ label: 'index', url: url + '/editor-monaco' }],
+
     'li-editor-html': {
         type: 'comp', label: 'li-editor-html', props: {
             src: `
