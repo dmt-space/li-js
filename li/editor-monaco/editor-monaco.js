@@ -3,24 +3,12 @@ import { LiElement, html, css } from '../../li.js';
 import { m as monaco } from '../editor-monaco/monaco/index.js';
 import '../editor-monaco/monaco/monaco-editor-font-face.js';
 
-let url = import.meta.url;
-
-const workersDir = new URL('monaco/workers/', url)
-self.MonacoEnvironment = {
-    getWorkerUrl: function(moduleId, label) {
-        switch (label) {
-            case 'json':
-                return `${workersDir}json.worker.js`
-            case 'css':
-                return `${workersDir}css.worker.js`
-            case 'html':
-                return `${workersDir}html.worker.js`
-            case 'typescript':
-            case 'javascript':
-                return `${workersDir}ts.worker.js`
-            default:
-                return `${workersDir}editor.worker.js`
-        }
+window.MonacoEnvironment = {
+    getWorkerUrl: function(workerId, label) {
+        return `data: text/javascript; charset=utf-8, ${encodeURIComponent(`
+            self.MonacoEnvironment = { baseUrl: 'https://unpkg.com/monaco-editor@latest/min/' };
+            importScripts('https://unpkg.com/monaco-editor@latest/min/vs/base/worker/workerMain.js');`
+        )}`;
     }
 }
 
