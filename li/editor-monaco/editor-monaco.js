@@ -12,6 +12,8 @@ window.MonacoEnvironment = {
     }
 }
 
+const workersDir = new URL('monaco/', import.meta.url)
+
 customElements.define('li-editor-monaco', class LiMonaco extends LiElement {
     static get styles() {
         return css`
@@ -33,7 +35,7 @@ customElements.define('li-editor-monaco', class LiMonaco extends LiElement {
     }
     render() {
         return html`
-            <link rel="stylesheet" href="../editor-monaco/monaco/style.css"/>
+            <link rel="stylesheet" href="${workersDir}/style.css"/>
             <div id="editor"></div>
         `
     }
