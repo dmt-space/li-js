@@ -1,7 +1,7 @@
 import { LiElement, html, css } from '../../li.js';
 
 import '../layout-app/layout-app.js';
-import '../layout-tree/layout-tree.js';
+import '../tree/tree.js';
 import '../button/button.js';
 import '../checkbox/checkbox.js';
 
@@ -90,7 +90,7 @@ customElements.define('li-base-tree', class LiBaseTree extends LiElement {
             <div style="display: flex; border-bottom: 1px solid lightgray;padding: 4px 0;">
                 Tree ...
             </div>
-            <li-layout-tree .item=${this.item} allowEdit allowCheck></li-layout-tree>
+            <li-tree .item=${this.item} allowEdit allowCheck></li-tree>
         `;
     }
 
