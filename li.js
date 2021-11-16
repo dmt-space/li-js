@@ -70,7 +70,7 @@ export class LiElement extends LitElement {
         if (this.$$ && this.__saves) {
             this.__saves.forEach(i => {
                 const v = JSON.parse(localStorage.getItem(this._saveFileName));
-                if (v) this.$$[i] = this.$$[i] = this[i] = v[this.localName + '.' + i];
+                if (v) this.$$[i] = this[i] = v[this.localName + '.' + i] !== undefined ? v[this.localName + '.' + i] : this[i];
             });
             this.__enableSave = true;
         }
