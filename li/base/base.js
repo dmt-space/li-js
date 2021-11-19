@@ -46,7 +46,8 @@ customElements.define('li-base', class LiBase extends LiElement {
                     {
                         localDB: 'li-base',
                         remoteDB: 'http://admin:54321@localhost:5984/',
-                        replicate: false
+                        replicate: false,
+                        hide: false
                     }
                 ]
             },
@@ -117,7 +118,7 @@ customElements.define('li-base-tree', class LiBaseTree extends LiElement {
                 <li-button name="library-add" title="add new" size="20"></li-button>
             </div>
             ${(this.dbs || []).map((i, idx) => html`
-                ${i.localDB ? html`
+                ${i.localDB && !i.hide ? html`
                     <div class="row">
                         ${i.localDB}
                     </div>
@@ -184,20 +185,20 @@ customElements.define('li-base-settings', class LiBaseSettings extends LiElement
             ${(this.dbs || []).map((i, idx) => html`
                     <div @click=${e => this._selectRow(e, idx)} style="cursor: pointer; background-color: ${this._sIdx === idx ? 'lightyellow' : 'white'}">
                         <div class="row">
-                            <div style="width: 100px; color: ${i.replicate ? 'red' : ''}">local db:</div>
+                            <div style="width: 100px; color: ${i.replicate ? 'red' : ''}; opacity: ${i.hide ? .3: 1}">local db:</div>
                             <input class="localDB" .value="${i.localDB || ''}" @change="${e => this._setDB(e, i, idx)}">
                         </div>
                         ${this._sIdx === idx ? html`
                             <div class="row" style="border: none;">
-                                remote db:
-                                <div style="flex: 1"></div>
-                                replicate
                                 <li-checkbox class="replicate" @change="${e => this._setDB(e, i, idx)}" .toggled="${i.replicate}"></li-checkbox>
+                                replicate to remote db:
                             </div>
                             <div class="row" style="border: none;">
                                 <input class="remoteDB" .value="${i.remoteDB || ''}" @change="${e => this._setDB(e, i, idx)}">
                             </div>
                             <div class="row">
+                                <li-checkbox class="hide" @change="${e => this._setDB(e, i, idx)}" .toggled="${i.hide}"></li-checkbox>
+                                hide
                                 <div style="flex: 1"></div>
                                 <li-button name="file-upload" rotate="180" title="export db" size="19" @click=${this._btnClick}></li-button>
                                 <li-button name="file-download" title="import db" size="20" @click=${this._btnClick}></li-button>
@@ -258,6 +259,9 @@ customElements.define('li-base-settings', class LiBaseSettings extends LiElement
                 break;
             case 'replicate':
                 this.dbs[idx].replicate = e.target.toggled;
+                break;
+            case 'hide':
+                this.dbs[idx].hide = e.target.toggled;
                 break;
         }
         this.dbs = [...[], ...this.dbs];
