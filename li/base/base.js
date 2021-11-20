@@ -1,10 +1,11 @@
 import { LiElement, html, css } from '../../li.js';
 
 import '../layout-app/layout-app.js';
-import '../tree/tree.js';
 import '../button/button.js';
 import '../checkbox/checkbox.js';
 import '../../lib/pouchdb/pouchdb.js';
+import './lib/base-tree.js';
+import { ChangesMap, LIITEM } from './lib/base-cls.js';
 
 customElements.define('li-base', class LiBase extends LiElement {
     static get styles() {
@@ -42,34 +43,52 @@ customElements.define('li-base', class LiBase extends LiElement {
         return {
             id: { type: String, default: 'li-base' },
             sets: { type: Object, save: true, local: true, default: { version: 'version: 0.0.1', } },
-            dbs: {
-                type: Array, save: true, local: true, default: [
-                    {
-                        name: 'li-base',
-                        path: 'http://admin:54321@localhost:5984/',
-                        replicate: false,
-                        hide: false
-                    }
-                ]
-            },
+            dbsList: { type: Array, local: true },
             dbsMap: { type: Object, local: true },
             _lPanel: { type: String, default: 'tree', save: true, local: true },
-            _data: { type: Object, default: {}, local: true }
+            _data: { type: Object, default: {}, local: true },
+            selectedRow: { type: Object, global: true },
         }
     }
 
     async firstUpdated() {
         super.firstUpdated();
         this._data = { greateDB: (map, db) => this.greateDB(map, db) }
+        const setsDB = new PouchDB('li-base-local-sets');
+        try {
+            this._data.generalSets = await setsDB.get('_local/generalSets');
+        } catch (err) { }
+        if (!this._data.generalSets?.dbsList) {
+            const sets = {
+                _id: '_local/generalSets',
+                dbsList: [{
+                    label: 'li-base',
+                    name: 'li-base-default',
+                    path: 'http://admin:54321@localhost:5984/',
+                    replicate: false,
+                    hide: false,
+                    expanded: false
+                }]
+            }
+            await setsDB.put(sets);
+        }
+        this._data.generalSets = await setsDB.get('_local/generalSets');
+        this._data.saveGeneralSets = async () => {
+            let sets = await setsDB.get('_local/generalSets')
+            this._data.generalSets._rev = sets._rev;
+            await setsDB.put(this._data.generalSets);
+        }
+        this.dbsList = this._data.generalSets.dbsList;
         this.dbsMap ||= new Map();
-        this.dbs.forEach(db => this.greateDB(this.dbsMap, db));
+        this.dbsList.forEach(db => this.greateDB(this.dbsMap, db));
     }
+
     greateDB(map, db) {
         if (!db?.name) return;
         let local;
         if (!map.has(db.name)) {
             local = new PouchDB(db.name);
-            map.set(db.name, { local })
+            map.set(db.name, { local, changesMap: new ChangesMap(local) })
         }
         local ||= map.get(db.name);
         if (db.path) {
@@ -96,10 +115,10 @@ customElements.define('li-base-lpanel', class LiBaseLPanel extends LiElement {
                 <li-button name="settings" title="settings" ?toggled=${this._lPanel === 'settings'} toggledClass="ontoggled" @click=${this._click}></li-button>
                 <div style="flex:1"></div>
                 <li-button name="refresh" title="reset changes"></li-button>
-                <li-button name="save" title="save"></li-button>
+                <li-button name="save" title="save" @click=${this._click} .fill="${this._needSave ? 'red' : ''}" .color="${this._needSave ? 'red' : 'gray'}"></li-button>
             </div>
             <div style="padding: 2px 4px;">
-                ${this._lPanel === 'tree' ? html`<li-base-tree></li-base-tree>` : html``}
+                ${this._lPanel === 'tree' ? html`<li-base-data></li-base-data>` : html``}
                 ${this._lPanel === 'settings' ? html`<li-base-settings></li-base-settings>` : html``}
             </div>
         `;
@@ -112,21 +131,40 @@ customElements.define('li-base-lpanel', class LiBaseLPanel extends LiElement {
         }
     }
 
+    get _needSave() {
+        let size = 0;
+        this.dbsMap?.forEach((value, key, map) => size += value.changesMap.size);
+        return size > 0;
+    }
+
     _click(e) {
-        this._lPanel = e.target.title
+        const title = e.target.title;
+        switch (title) {
+            case 'save':
+                this.dbsMap?.forEach(async (value, key, map) => await value.changesMap.save());
+                setTimeout(() => this.$update(), 100);
+                return;
+        }
+        this._lPanel = title;
     }
 })
 
-customElements.define('li-base-tree', class LiBaseTree extends LiElement {
+customElements.define('li-base-data', class LiBaseData extends LiElement {
     static get styles() {
         return css`
-            .row {
+            .db-row {
                 display: flex;
                 align-items: center;
                 border-bottom: 1px solid lightgray;
-                padding: 4px 0;
                 min-height: 20px;
                 cursor: pointer;
+            }
+            .db-row:hover {
+                filter: brightness(.9);
+            }
+            .selected {
+                background-color: papayawhip;
+                /* box-shadow: inset 0 -2px 0 0 lightblue */
             }
         `;
     }
@@ -143,13 +181,15 @@ customElements.define('li-base-tree', class LiBaseTree extends LiElement {
                 <div style="flex: 1"></div>
                 <li-button name="cached" title="clear deleted" size="20"></li-button>
                 <li-button name="delete" title="delete" size="20"></li-button>
-                <li-button name="library-add" title="add new" size="20"></li-button>
+                <li-button name="library-add" title="add new" size="20" @click=${this._btnClick}></li-button>
             </div>
-            ${(this.dbs || []).map((i, idx) => html`
+            ${(this.dbsList || []).map((i, idx) => html`
                 ${i.name && !i.hide ? html`
-                    <div class="row">
-                        ${i.name}
+                    <div class="db-row ${this._selectedDBName === i.name ? 'selected' : undefined}" @click=${e => this._selectRow(e, i)} style="display: flex; ">
+                        <li-button back="transparent" title="expand" name="chevron-right" border="0" toggledClass="right90" .toggled="${i.expanded}" @click=${e => this._btnClick(e, i)}></li-button>
+                        <label style="color: orange;">${i.label || i.name}</label>
                     </div>
+                    ${i.expanded ? html`<li-base-tree .item=${this._db(i.name)?.items || {}}></li-base-tree>` : html``}
                 ` : html``}
             `)}
         `;
@@ -157,15 +197,88 @@ customElements.define('li-base-tree', class LiBaseTree extends LiElement {
 
     static get properties() {
         return {
-            dbs: { type: Array, local: true },
+            dbsList: { type: Array, local: true },
             dbsMap: { type: Object, local: true },
             sets: { type: Object, local: true },
             _lPanel: { type: String, default: 'tree', local: true },
-            _selected: { type: Boolean },
+            _selectedDBName: { type: String },
+            _selectedDB: { type: Object, default: undefined },
+            selectedRow: { type: Object, global: true },
             _star: { type: String, default: '' }
         }
     }
 
+    firstUpdated() {
+        super.firstUpdated();
+        this.listen('selectedBaseTreeRow', async e => {
+            // this._selectedDBName = e.detail.dbName;
+            // const db = e.detail;
+            // if (!db) return;
+            // db.items ||= [];
+            // if (!db.items.length) {
+            //     const items = await db.allDocs({ include_docs: true, startkey: db.ulid, endkey: db.ulid + '\ufff0' });
+            //     items.rows.forEach(i => new LIITEM(db, this.selectedRow, i.doc))
+            // }
+            // if (db.items.length) db.expanded = true;
+            // this.$update();
+        })
+        setTimeout(() => {
+            this.dbsList.forEach(async i => {
+                if (i.expanded && this._db(i.name)) {
+                    const db = this._db(i.name);
+                    db.items ||= [];
+                    if (!db.items.length) {
+                        const items = await db.local.allDocs({ include_docs: true, startkey: i.name, endkey: i.name + '\ufff0' });
+                        items.rows.forEach(i => new LIITEM(db, undefined, i.doc));
+                    }
+                }
+            })
+            this.$update;
+        }, 0);
+
+        this.$update();
+
+    }
+
+    _db(name = this._selectedDBName) {
+        return this.dbsMap?.get(name);
+    }
+    async _selectRow(e, i) {
+        this._selectedDB = i;
+        this._selectedDBName = i.name;
+        this.selectedRow = undefined;
+        const db = this._db();
+        db.items ||= [];
+        if (!db.items.length) {
+            const items = await db.local.allDocs({ include_docs: true, startkey: i.name, endkey: i.name + '\ufff0' });
+            items.rows.forEach(i => new LIITEM(db, this.selectedRow, i.doc))
+        }
+        this.$update();
+    }
+    _btnClick(e, i) {
+        const title = e.target.title;
+        const db = this._db();
+        switch (title) {
+            case 'add new':
+                if (db) {
+                    this.selectedRow = this.selectedRow instanceof LIITEM ? this.selectedRow : undefined;
+                    this._selectedDB.expanded = true;
+                    const _id = (this.selectedRow?.ulid || this._selectedDBName) + ':' + LI.ulid();
+                    const parent = this.selectedRow?._id || this._selectedDBName;
+                    const litem = new LIITEM(db, this.selectedRow, { _id, parent });
+                    db.changesMap.set(litem);
+                    this.$update();
+                    console.log(litem);
+                }
+                break;
+            case 'expand':
+                i.expanded = !i.expanded;
+                break;
+
+            default:
+                break;
+        }
+    }
 })
 
 customElements.define('li-base-settings', class LiBaseSettings extends LiElement {
@@ -176,7 +289,7 @@ customElements.define('li-base-settings', class LiBaseSettings extends LiElement
             }
             input {
                 border: none;
-                border-bottom: 1px solid gray; 
+                /* border-bottom: 1px solid gray;  */
                 outline: none; 
                 width: 100%; 
                 color:gray; 
@@ -204,20 +317,21 @@ customElements.define('li-base-settings', class LiBaseSettings extends LiElement
             <div class="row" style="color:gray; opacity: 0.7">${this.sets?.version}</div>
             <div class="line"></div>
             <div class="row">
-                used databases [${this.dbs.length}]:
+                used databases [${this.dbsList?.length}]:
                 <div style="flex: 1"></div>
-                ${this.dbs?.length > 1 && this._sIdx > 0 ? html`
+                ${this.dbsList?.length > 1 && this._sIdx > 0 ? html`
                     <li-button name="remove" title="remove db" size="20" @click=${this._btnClick}></li-button>
                 ` : html``}
                 <li-button name="add" title="add db" size="20" @click=${this._btnClick}></li-button>
             </div>
-            ${(this.dbs || []).map((i, idx) => html`
+            ${(this.dbsList || []).map((i, idx) => html`
                     <div @click=${e => this._selectRow(e, idx)} style="cursor: pointer; background-color: ${this._sIdx === idx ? 'lightyellow' : 'white'}">
                         <div class="row">
-                            <div style="width: 100px; color: ${i.replicate ? 'red' : ''}; opacity: ${i.hide ? .3 : 1}">local db:</div>
-                            <input class="name" .value="${i.name || ''}" @change="${e => this._setDB(e, i, idx)}">
+                            <div style="width: 100px; color: ${i.replicate ? 'red' : ''}; opacity: ${i.hide ? .3 : 1}">label:</div>
+                            <input class="label" .value="${i.label || ''}" @change="${e => this._setDB(e, i, idx)}">
                         </div>
                         ${this._sIdx === idx ? html`
+                            <div style="color: lightgray; border-bottom: 1px solid lightgray; font-size: 12px;padding: 4px;">${i.name}</div>
                             <div class="row" style="border: none;">
                                 <li-checkbox class="replicate" @change="${e => this._setDB(e, i, idx)}" .toggled="${i.replicate}"></li-checkbox>
                                 replicate to remote db:
@@ -244,7 +358,7 @@ customElements.define('li-base-settings', class LiBaseSettings extends LiElement
     static get properties() {
         return {
             sets: { type: Object, local: true },
-            dbs: { type: Array, local: true },
+            dbsList: { type: Array, local: true },
             dbsMap: { type: Object, local: true },
             _sIdx: { type: Number, default: -1 },
             _sName: { type: String, default: '' },
@@ -253,7 +367,7 @@ customElements.define('li-base-settings', class LiBaseSettings extends LiElement
     }
 
     _selectRow(e, idx) {
-        this._sName = this.dbs[idx]?.name || '';
+        this._sName = this.dbsList[idx]?.name || '';
         if (e.srcElement.localName !== 'input' && !e.srcElement.localName.startsWith('li-')) {
             this._sIdx = this._sIdx === idx ? -1 : idx;
         } else {
@@ -262,13 +376,14 @@ customElements.define('li-base-settings', class LiBaseSettings extends LiElement
     }
     _btnClick(e, idx = this._sIdx) {
         const src = e.target.name;
-        const db = this.dbs[idx];
+        const db = this.dbsList[idx];
         const map = this.dbsMap ||= new Map();
         switch (src) {
             case 'add':
-                const _db = { path: this.dbs[0].path };
-                this.dbs.splice(this.dbs.length, 0, _db);
-                this._sIdx = this.dbs.length - 1;
+                const _db = { path: this.dbsList[0].path, name: 'li-base-' + LI.ulid().toLowerCase(), hide: true };
+                this.dbsList.splice(this.dbsList.length, 0, _db);
+                this._sIdx = this.dbsList.length - 1;
+                this._data.greateDB(map, db)
                 break;
             case 'remove':
                 if (this._sIdx !== 0) {
@@ -282,25 +397,24 @@ customElements.define('li-base-settings', class LiBaseSettings extends LiElement
                         });
                         map.delete(db.name);
                     }
-                    this.dbs.splice(idx, 1);
-                    this._sIdx = this._sIdx > this.dbs.length - 1 ? this.dbs.length - 1 : this._sIdx;
+                    this.dbsList.splice(idx, 1);
+                    this._sIdx = this._sIdx > this.dbsList.length - 1 ? this.dbsList.length - 1 : this._sIdx;
                 }
                 break;
         }
-        this.dbs = [...[], ...this.dbs];
+        // this.dbsList = [...[], ...this.dbsList];
+        this._data.saveGeneralSets();
         this.$update();
     }
     _setDB(e, i, idx) {
         const src = e.target.className;
-        const val = e.target.value;
-        const db = this.dbs[idx];
+        const val = e.target.value || '';
+        const db = this.dbsList[idx];
         const map = this.dbsMap ||= new Map();
         switch (src) {
-            case 'name':
-                if (val) {
-                    db.name = val;
-                    this._data.greateDB(map, db)
-                }
+            case 'label':
+                db.label = val;
+                // this._data.greateDB(map, db)
                 break;
             case 'path':
                 if (db.name && val) {
@@ -328,10 +442,11 @@ customElements.define('li-base-settings', class LiBaseSettings extends LiElement
                 }
                 break;
             case 'hide':
-                this.dbs[idx].hide = val;
+                db.hide = e.target.toggled;
                 break;
         }
-        this.dbs = [...[], ...this.dbs];
+        // this.dbsList = [...[], ...this.dbsList];
+        this._data.saveGeneralSets();
         this.$update();
     }
 })
