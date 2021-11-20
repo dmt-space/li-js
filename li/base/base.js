@@ -4,6 +4,7 @@ import '../layout-app/layout-app.js';
 import '../tree/tree.js';
 import '../button/button.js';
 import '../checkbox/checkbox.js';
+import '../../lib/pouchdb/pouchdb.js';
 
 customElements.define('li-base', class LiBase extends LiElement {
     static get styles() {
@@ -44,14 +45,40 @@ customElements.define('li-base', class LiBase extends LiElement {
             dbs: {
                 type: Array, save: true, local: true, default: [
                     {
-                        localDB: 'li-base',
-                        remoteDB: 'http://admin:54321@localhost:5984/',
+                        name: 'li-base',
+                        path: 'http://admin:54321@localhost:5984/',
                         replicate: false,
                         hide: false
                     }
                 ]
             },
+            dbsMap: { type: Object, local: true },
             _lPanel: { type: String, default: 'tree', save: true, local: true },
+            _data: { type: Object, default: {}, local: true }
+        }
+    }
+
+    async firstUpdated() {
+        super.firstUpdated();
+        this._data = { greateDB: (map, db) => this.greateDB(map, db) }
+        this.dbsMap ||= new Map();
+        this.dbs.forEach(db => this.greateDB(this.dbsMap, db));
+    }
+    greateDB(map, db) {
+        if (!db?.name) return;
+        let local;
+        if (!map.has(db.name)) {
+            local = new PouchDB(db.name);
+            map.set(db.name, { local })
+        }
+        local ||= map.get(db.name);
+        if (db.path) {
+            const remote = new PouchDB(db.path + db.name);
+            map.get(db.name).remote = remote;
+            if (db.replicate) {
+                const handler = local.sync(remote, { live: true });
+                map.get(db.name).handler = handler;
+            }
         }
     }
 })
@@ -80,6 +107,7 @@ customElements.define('li-base-lpanel', class LiBaseLPanel extends LiElement {
 
     static get properties() {
         return {
+            dbsMap: { type: Object, local: true },
             _lPanel: { type: String, default: 'tree', local: true },
         }
     }
@@ -118,9 +146,9 @@ customElements.define('li-base-tree', class LiBaseTree extends LiElement {
                 <li-button name="library-add" title="add new" size="20"></li-button>
             </div>
             ${(this.dbs || []).map((i, idx) => html`
-                ${i.localDB && !i.hide ? html`
+                ${i.name && !i.hide ? html`
                     <div class="row">
-                        ${i.localDB}
+                        ${i.name}
                     </div>
                 ` : html``}
             `)}
@@ -130,6 +158,7 @@ customElements.define('li-base-tree', class LiBaseTree extends LiElement {
     static get properties() {
         return {
             dbs: { type: Array, local: true },
+            dbsMap: { type: Object, local: true },
             sets: { type: Object, local: true },
             _lPanel: { type: String, default: 'tree', local: true },
             _selected: { type: Boolean },
@@ -185,8 +214,8 @@ customElements.define('li-base-settings', class LiBaseSettings extends LiElement
             ${(this.dbs || []).map((i, idx) => html`
                     <div @click=${e => this._selectRow(e, idx)} style="cursor: pointer; background-color: ${this._sIdx === idx ? 'lightyellow' : 'white'}">
                         <div class="row">
-                            <div style="width: 100px; color: ${i.replicate ? 'red' : ''}; opacity: ${i.hide ? .3: 1}">local db:</div>
-                            <input class="localDB" .value="${i.localDB || ''}" @change="${e => this._setDB(e, i, idx)}">
+                            <div style="width: 100px; color: ${i.replicate ? 'red' : ''}; opacity: ${i.hide ? .3 : 1}">local db:</div>
+                            <input class="name" .value="${i.name || ''}" @change="${e => this._setDB(e, i, idx)}">
                         </div>
                         ${this._sIdx === idx ? html`
                             <div class="row" style="border: none;">
@@ -194,7 +223,7 @@ customElements.define('li-base-settings', class LiBaseSettings extends LiElement
                                 replicate to remote db:
                             </div>
                             <div class="row" style="border: none;">
-                                <input class="remoteDB" .value="${i.remoteDB || ''}" @change="${e => this._setDB(e, i, idx)}">
+                                <input class="path" .value="${i.path || ''}" @change="${e => this._setDB(e, i, idx)}">
                             </div>
                             <div class="row">
                                 <li-checkbox class="hide" @change="${e => this._setDB(e, i, idx)}" .toggled="${i.hide}"></li-checkbox>
@@ -216,13 +245,15 @@ customElements.define('li-base-settings', class LiBaseSettings extends LiElement
         return {
             sets: { type: Object, local: true },
             dbs: { type: Array, local: true },
+            dbsMap: { type: Object, local: true },
             _sIdx: { type: Number, default: -1 },
-            _sName: { type: String, default: '' }
+            _sName: { type: String, default: '' },
+            _data: { type: Object, default: {}, local: true }
         }
     }
 
     _selectRow(e, idx) {
-        this._sName = this.dbs[idx]?.localDB || '';
+        this._sName = this.dbs[idx]?.name || '';
         if (e.srcElement.localName !== 'input' && !e.srcElement.localName.startsWith('li-')) {
             this._sIdx = this._sIdx === idx ? -1 : idx;
         } else {
@@ -231,14 +262,26 @@ customElements.define('li-base-settings', class LiBaseSettings extends LiElement
     }
     _btnClick(e, idx = this._sIdx) {
         const src = e.target.name;
+        const db = this.dbs[idx];
+        const map = this.dbsMap ||= new Map();
         switch (src) {
             case 'add':
-                const db = { remoteDB: this.dbs[0].remoteDB };
-                this.dbs.splice(this.dbs.length, 0, db);
+                const _db = { path: this.dbs[0].path };
+                this.dbs.splice(this.dbs.length, 0, _db);
                 this._sIdx = this.dbs.length - 1;
                 break;
             case 'remove':
                 if (this._sIdx !== 0) {
+                    if (map.has(db.name)) {
+                        map.get(db.name).local.destroy((err, response) => {
+                            if (err) {
+                                return console.log(err);
+                            } else {
+                                console.log("Local Database Deleted");
+                            }
+                        });
+                        map.delete(db.name);
+                    }
                     this.dbs.splice(idx, 1);
                     this._sIdx = this._sIdx > this.dbs.length - 1 ? this.dbs.length - 1 : this._sIdx;
                 }
@@ -249,19 +292,43 @@ customElements.define('li-base-settings', class LiBaseSettings extends LiElement
     }
     _setDB(e, i, idx) {
         const src = e.target.className;
+        const val = e.target.value;
+        const db = this.dbs[idx];
+        const map = this.dbsMap ||= new Map();
         switch (src) {
-            case 'localDB':
-                console.log(this._sName);
-                this.dbs[idx].localDB = e.target.value;
+            case 'name':
+                if (val) {
+                    db.name = val;
+                    this._data.greateDB(map, db)
+                }
                 break;
-            case 'remoteDB':
-                this.dbs[idx].remoteDB = e.target.value;
+            case 'path':
+                if (db.name && val) {
+                    db.path = val;
+                    const local = map.get(db.name).local;
+                    const remote = new PouchDB(db.path + db.name);
+                    if (local && remote) {
+                        map.get(db.name).remote = remote;
+                        if (db.replicate) {
+                            const handler = local.sync(remote, { live: true });
+                            map.get(db.name).handler = handler;
+                        }
+                    }
+                }
                 break;
             case 'replicate':
-                this.dbs[idx].replicate = e.target.toggled;
+                db.replicate = e.target.toggled;
+                const local = map.get(db.name).local;
+                const remote = map.get(db.name).remote;
+                if (db.replicate && local && remote) {
+                    const handler = local.sync(remote, { live: true });
+                    map.get(db.name).handler = handler;
+                } else {
+                    map.get(db.name)?.handler?.cancel();
+                }
                 break;
             case 'hide':
-                this.dbs[idx].hide = e.target.toggled;
+                this.dbs[idx].hide = val;
                 break;
         }
         this.dbs = [...[], ...this.dbs];
