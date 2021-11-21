@@ -67,7 +67,7 @@ customElements.define('li-base-tree', class LiBaseTree extends LiElement {
                 <div draggable="true" @dragstart="${(e) => this._dragStart(e, i)}" @dragover=${(e) => this._dragOver(e, i)} @drop=${(e) => this._drop(e, i)}
                     class="row ${this.selectedRow === i || this.selectedRow?.ulid === i.ulid ? 'selected' : ''}">
                     <div style="display:flex;align-items:center;margin-left:${this.margin}px;${!this.fullBorder ? 'border-bottom: 1px solid ' + this.colorBorder : ''}">
-                        ${i.items && i.items.length ? html`
+                        ${i.items?.length || i.doc?.items?.length ? html`
                             <li-button back="transparent" name="chevron-right" border="0" toggledClass="right90" ?toggled="${i.expanded}"
                                     @click="${(e) => this._click(e, i)}" size="${this.iconSize}"></li-button>
                         ` : html`
@@ -85,7 +85,7 @@ customElements.define('li-base-tree', class LiBaseTree extends LiElement {
                     </div>
                 </div>
                 <div class="complex ${this.complex} ${this.complexExt}">
-                    ${i.items && i.items.length && i.expanded ? html`
+                    ${i.expanded && i.items?.length ? html`
                         <li-base-tree .item="${i.items}" .margin="${this.margin}" .id="${this.id}" ?allowEdit="${this.allowEdit}" ?allowCheck="${this.allowCheck}" .iconSize="${this.iconSize}" .selected="${this.selectedRow}"></li-base-tree>
                     ` : html``}
                 </div>
@@ -109,6 +109,7 @@ customElements.define('li-base-tree', class LiBaseTree extends LiElement {
     _click(e, i) {
         i.expanded = e.target.toggled;
         //this.fire('changed', { type: 'expanded', value: e.target.toggled, item: i });
+        this.fire('selectedBaseTreeRow', i);
         this.$update();
     }
     _focus(e, i) {

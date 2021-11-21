@@ -47,14 +47,26 @@ customElements.define('li-base', class LiBase extends LiElement {
             dbsMap: { type: Object, local: true },
             _lPanel: { type: String, default: 'tree', save: true, local: true },
             _data: { type: Object, default: {}, local: true },
-            selectedRow: { type: Object, global: true },
-            ready: { type: Boolean, local: true }
+            selectedRow: { type: Object, global: true }
         }
     }
 
     async firstUpdated() {
         super.firstUpdated();
         this._data = { greateDB: (map, db) => this.greateDB(map, db) }
+        this._data.loadItems = (liitem, isLoad) => {
+            if (!liitem || liitem.items) return;
+            const set = new Set();
+            (liitem.doc.items || []).forEach(i => set.add(i));
+            if (set.size) {
+                liitem.localDB.allDocs({ keys: [...set.keys()], include_docs: true }).then(_doc => {
+                    _doc.rows.forEach(i => {
+                        if (i.doc) new LIITEM(liitem.$db, liitem, i.doc, isLoad);
+                    });
+                    this.$update();
+                });
+            }
+        }
         const setsDB = new PouchDB('li-base-local-sets');
         try {
             this._data.generalSets = await setsDB.get('_local/generalSets');
@@ -81,26 +93,38 @@ customElements.define('li-base', class LiBase extends LiElement {
         }
         this.dbsList = this._data.generalSets.dbsList;
         this.dbsMap ||= new Map();
-        this.dbsList.forEach(db => this.greateDB(this.dbsMap, db));
-        this.ready = true;
+        this.dbsList.forEach(db => this.greateDB(this.dbsMap, db, true));
     }
 
-    greateDB(map, db) {
+    async greateDB(map, db, isLoad) {
         if (!db?.name) return;
-        let local;
+        let localDB;
         if (!map.has(db.name)) {
-            local = new PouchDB(db.name);
-            map.set(db.name, { local, changesMap: new ChangesMap(local) })
+            localDB = new PouchDB(db.name);
+            map.set(db.name, { localDB, changesMap: new ChangesMap(localDB) })
         }
-        local ||= map.get(db.name);
+        const dbm = map.get(db.name);
         if (db.path) {
-            const remote = new PouchDB(db.path + db.name);
-            map.get(db.name).remote = remote;
+            localDB ||= dbm.localDB;
+            const remoteDB = new PouchDB(db.path + db.name);
+            dbm.remoteDB = remoteDB;
             if (db.replicate) {
-                const handler = local.sync(remote, { live: true });
-                map.get(db.name).handler = handler;
+                const handler = localDB.sync(remoteDB, { live: true });
+                dbm.handler = handler;
             }
         }
+        let doc, id = 'libs-db:' + db.name;
+        try {
+            doc = await localDB.get(id);
+        } catch (err) { }
+        if (!doc) {
+            const item = new LIITEM();
+            item.doc._id = id;
+            await localDB.put(item.doc);
+            doc = await localDB.get(id);
+        }
+        dbm.liitem = new LIITEM(dbm, null, doc, true);
+        this._data.loadItems(dbm.liitem, isLoad);
     }
 })
 
@@ -187,11 +211,11 @@ customElements.define('li-base-data', class LiBaseData extends LiElement {
             </div>
             ${(this.dbsList || []).map((i, idx) => html`
                 ${i.name && !i.hide ? html`
-                    <div class="db-row ${this._selectedDBName === i.name ? 'selected' : undefined}" @click=${e => this._selectRow(e, i)} style="display: flex; ">
+                    <div class="db-row ${this._selectedDBName === i.name ? 'selected' : undefined}" @click=${e => this._selectBaseRow(e, i)} style="display: flex;">
                         <li-button back="transparent" title="expand" name="chevron-right" border="0" toggledClass="right90" .toggled="${i.expanded}" @click=${e => this._btnClick(e, i)}></li-button>
                         <label style="color: orange;">${i.label || i.name}</label>
                     </div>
-                    ${i.expanded ? html`<li-base-tree .item=${this._db(i.name)?.items || {}}></li-base-tree>` : html``}
+                    ${i.expanded ? html`<li-base-tree .item=${this._db(i.name)?.liitem?.items || []}></li-base-tree>` : html``}
                 ` : html``}
             `)}
         `;
@@ -206,55 +230,26 @@ customElements.define('li-base-data', class LiBaseData extends LiElement {
             _selectedDBName: { type: String },
             _selectedDB: { type: Object, default: undefined },
             selectedRow: { type: Object, global: true },
-            _star: { type: String, default: '' }
+            _star: { type: String, default: '' },
+            _data: { type: Object, default: {}, local: true }
         }
     }
 
     firstUpdated() {
         super.firstUpdated();
         this.listen('selectedBaseTreeRow', async e => {
-            // this._selectedDBName = e.detail.dbName;
-            // const db = e.detail;
-            // if (!db) return;
-            // db.items ||= [];
-            // if (!db.items.length) {
-            //     const items = await db.allDocs({ include_docs: true, startkey: db.ulid, endkey: db.ulid + '\ufff0' });
-            //     items.rows.forEach(i => new LIITEM(db, this.selectedRow, i.doc))
-            // }
-            // if (db.items.length) db.expanded = true;
-            // this.$update();
+            this._selectedDBName = e.detail.dbName;
+            if (e.detail.expanded)
+                this._data.loadItems(e.detail, true);
         })
-    }
-    updated(e) {
-        if (e.has('ready')) {
-            this.dbsList.forEach(async i => {
-                if (i.expanded && this._db(i.name)) {
-                    const db = this._db(i.name);
-                    db.items ||= [];
-                    if (!db.items.length) {
-                        const items = await db.local.allDocs({ include_docs: true, startkey: i.name, endkey: i.name + '\ufff0' });
-                        items.rows.forEach(i => new LIITEM(db, undefined, i.doc));
-                    }
-                }
-            })
-            this.$update;
-        }
     }
 
     _db(name = this._selectedDBName) {
         return this.dbsMap?.get(name);
     }
-    async _selectRow(e, i) {
-        this._selectedDB = i;
+    _selectBaseRow(e, i) {
         this._selectedDBName = i.name;
         this.selectedRow = undefined;
-        const db = this._db();
-        db.items ||= [];
-        if (!db.items.length) {
-            const items = await db.local.allDocs({ include_docs: true, startkey: i.name, endkey: i.name + '\ufff0' });
-            items.rows.forEach(i => new LIITEM(db, this.selectedRow, i.doc))
-        }
-        this.$update();
     }
     _btnClick(e, i) {
         const title = e.target.title;
@@ -263,17 +258,22 @@ customElements.define('li-base-data', class LiBaseData extends LiElement {
             case 'add new':
                 if (db) {
                     this.selectedRow = this.selectedRow instanceof LIITEM ? this.selectedRow : undefined;
-                    this._selectedDB.expanded = true;
-                    const _id = (this.selectedRow?.ulid || this._selectedDBName) + ':' + LI.ulid();
+                    db.expanded = true;
+                    const _id = 'libs-tree:' + LI.ulid();
                     const parent = this.selectedRow?._id || this._selectedDBName;
-                    const litem = new LIITEM(db, this.selectedRow, { _id, parent });
+                    const litem = new LIITEM(db, this.selectedRow || db.liitem, { _id, parent });
                     db.changesMap.set(litem);
                     this.$update();
-                    console.log(litem);
+                    // console.log(litem);
                 }
                 break;
             case 'expand':
+                this._selectBaseRow(e, i);
                 i.expanded = !i.expanded;
+                if (i.expanded && db?.liitem)
+                    this._data.loadItems(db.liitem, true);
+                this._data.saveGeneralSets();
+                this.$update();
                 break;
 
             default:
@@ -391,7 +391,7 @@ customElements.define('li-base-settings', class LiBaseSettings extends LiElement
     }
     _destroyDB(map, db, idx) {
         if (db?.name && map?.has(db.name)) {
-            map.get(db.name).local.destroy((err, response) => {
+            map.get(db.name).localDB.destroy((err, response) => {
                 if (err) {
                     return console.log(err);
                 } else {
@@ -421,12 +421,12 @@ customElements.define('li-base-settings', class LiBaseSettings extends LiElement
             case 'path':
                 if (db.name && val) {
                     db.path = val;
-                    const local = map.get(db.name).local;
-                    const remote = new PouchDB(db.path + db.name);
-                    if (local && remote) {
-                        map.get(db.name).remote = remote;
+                    const localDB = map.get(db.name).localDB;
+                    const remoteDB = new PouchDB(db.path + db.name);
+                    if (localDB && remoteDB) {
+                        map.get(db.name).remoteDB = remoteDB;
                         if (db.replicate) {
-                            const handler = local.sync(remote, { live: true });
+                            const handler = localDB.sync(remoteDB, { live: true });
                             map.get(db.name).handler = handler;
                         }
                     }
@@ -434,10 +434,10 @@ customElements.define('li-base-settings', class LiBaseSettings extends LiElement
                 break;
             case 'replicate':
                 db.replicate = e.target.toggled;
-                const local = map.get(db.name).local;
-                const remote = map.get(db.name).remote;
-                if (db.replicate && local && remote) {
-                    const handler = local.sync(remote, { live: true });
+                const localDB = map.get(db.name).localDB;
+                const remoteDB = map.get(db.name).remoteDB;
+                if (db.replicate && localDB && remoteDB) {
+                    const handler = localDB.sync(remoteDB, { live: true });
                     map.get(db.name).handler = handler;
                 } else {
                     map.get(db.name)?.handler?.cancel();
