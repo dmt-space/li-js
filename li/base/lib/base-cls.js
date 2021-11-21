@@ -22,7 +22,7 @@ export class ChangesMap {
             const saves = await this.db.allDocs({ keys: [...map.keys()], include_docs: true });
             saves.rows.map(i => {
                 let doc = map.get(i.key);
-                if (i.doc) doc = {...i.doc, ...doc};
+                if (i.doc) doc = { ...i.doc, ...doc };
                 if (i.value?.rev) doc._rev = i.value.rev;
                 res.push(doc);
             })
@@ -34,7 +34,7 @@ export class ChangesMap {
 }
 
 export class LIITEM {
-    #doc = LI.icaro({});
+    _doc = LI.icaro({});
     hasChanged = false;
     #fnListen = (e) => {
         const changes = [];
@@ -52,7 +52,7 @@ export class LIITEM {
         }
         this.hasChanged = true;
     }
-    constructor(db, parent, doc, isLoad = false) {
+    constructor(db, parent, doc) {
         if (db) {
             this.$db = db;
             this.localDB = db.localDB;
@@ -72,22 +72,19 @@ export class LIITEM {
         }
         if (parent) {
             this.$parent = parent;
-            parent.doc.items ||= [];
-            parent.doc.items.add(this._id);
             parent.items ||= [];
             parent.items.add(this);
             parent.expanded = true;
-            if (!isLoad)
-                parent.changed();
         }
         this.doc.listen(this.#fnListen);
     }
-    get doc() { return this.#doc }
-    set doc(v) { this.#doc = v }
+    get doc() { return this._doc }
+    set doc(v) { this._doc = v }
     get _id() { return this.doc._id }
     get _ref() { return this.doc._ref }
     get ulid() { return this.doc.ulid }
     get type() { return this.doc.type }
+    set type(v) { this.doc.type = v }
     get created() { return this.doc.created }
     get date() { return this.doc.created.local }
     get utc() { return this.doc.created.utc }
