@@ -56,19 +56,6 @@ customElements.define('li-base', class LiBase extends LiElement {
     async firstUpdated() {
         super.firstUpdated();
         this._data = { greateDB: (map, db) => this.greateDB(map, db) }
-        this._data.loadItems = (liitem, isLoad) => {
-            if (!liitem || liitem.items) return;
-            const set = new Set();
-            (liitem.doc.items || []).forEach(i => set.add(i));
-            if (set.size) {
-                liitem.localDB.allDocs({ keys: [...set.keys()], include_docs: true }).then(_doc => {
-                    _doc.rows.forEach(i => {
-                        if (i.doc) new LIITEM(liitem.$db, liitem, i.doc, isLoad);
-                    });
-                    this.$update();
-                });
-            }
-        }
         const setsDB = new PouchDB('li-base-local-sets');
         try {
             this._data.generalSets = await setsDB.get('_local/generalSets');
@@ -95,11 +82,11 @@ customElements.define('li-base', class LiBase extends LiElement {
         }
         this.dbsList = this._data.generalSets.dbsList;
         this.dbsMap ||= new Map();
-        this.dbsList.forEach(db => this.greateDB(this.dbsMap, db, true));
-        this.ready = true;
+        this._count = this.dbsList.length;
+        this.dbsList.forEach(db => this.greateDB(this.dbsMap, db));
     }
 
-    async greateDB(map, db, isLoad) {
+    async greateDB(map, db) {
         if (!db?.name) return;
         let localDB;
         if (!map.has(db.name)) {
@@ -117,7 +104,7 @@ customElements.define('li-base', class LiBase extends LiElement {
                 dbm.handler = handler;
             }
         }
-        let doc, id = 'libs-db:' + db.name;
+        let doc, id = 'libs--tree:root';
         try {
             doc = await localDB.get(id);
         } catch (err) { }
@@ -127,8 +114,38 @@ customElements.define('li-base', class LiBase extends LiElement {
             await localDB.put(item.doc);
             doc = await localDB.get(id);
         }
-        dbm.liitem = new LIITEM(dbm, null, doc, true);
-        this._data.loadItems(dbm.liitem, isLoad);
+        dbm.liitem = new LIITEM(dbm, null, doc);
+        await this._createTree(dbm);
+        dbm.liitem.expanded = db.expanded;
+        this._count--;
+        if (this._count <= 0) {
+            this.ready = true;
+            this.$update();
+        }
+    }
+    async _createTree(dbm) {
+        const items = await dbm.localDB.allDocs({ include_docs: true, startkey: 'libs-tree', endkey: 'libs-tree' + '\ufff0' });
+        dbm.flat = {};
+        const rootParent = 'libs--tree:root';
+        items.rows.forEach(i => dbm.flat[i.doc._id] = new LIITEM(dbm, null, i.doc));
+        Object.values(dbm.flat).forEach(f => {
+            if (f.doc.parent === rootParent) {
+                dbm.liitem.items ||= [];
+                dbm.liitem.items.push(f);
+                f.parent = dbm.liitem;
+            } else {
+                const i = dbm.flat[f.doc.parent];
+                if (i) {
+                    i.items ||= [];
+                    f.parent = i;
+                    i.items.push(f);
+                }
+            }
+        })
+        dbm.db.expandedList ||= [];
+        dbm.db.expandedList.forEach(i => {
+            if (dbm.flat[i]) dbm.flat[i].expanded = true;
+        })
     }
 })
 
@@ -139,7 +156,7 @@ customElements.define('li-base-lpanel', class LiBaseLPanel extends LiElement {
                 <li-button name="tree-structure" title="tree" ?toggled=${this._lPanel === 'tree'} toggledClass="ontoggled" scale=".8" @click=${this._click}></li-button>
                 <li-button name="settings" title="settings" ?toggled=${this._lPanel === 'settings'} toggledClass="ontoggled" @click=${this._click}></li-button>
                 <div style="flex:1"></div>
-                <li-button name="refresh" title="reset changes"></li-button>
+                <li-button name="refresh" title="reload page"  @click="${() => document.location.reload()}"></li-button>
                 <li-button name="save" title="save" @click=${this._click} .fill="${this._needSave ? 'red' : ''}" .color="${this._needSave ? 'red' : 'gray'}"></li-button>
             </div>
             <div style="padding-left: 2px;">
@@ -192,11 +209,19 @@ customElements.define('li-base-data', class LiBaseData extends LiElement {
                 background-color: papayawhip;
                 /* box-shadow: inset 0 -2px 0 0 lightblue */
             }
+            .show {
+                opacity: 1;
+                transition: opacity 1s; 
+            }
+
+            .hide {
+                opacity: 0;
+            }
         `;
     }
     render() {
         return html`
-            <div style="display: flex; flex-direction: column; overflow: hidden; width: 100%; height: calc(100% - 40px);">
+            <div class="${this.isReady ? 'show' : 'hide'}" style="display: flex; flex-direction: column; overflow: hidden; width: 100%; height: calc(100% - 40px);">
                 <div style="display: flex; border-bottom: 1px solid lightgray;padding: 4px 0;">
                     databases:
                 </div>
@@ -210,7 +235,13 @@ customElements.define('li-base-data', class LiBaseData extends LiElement {
                     <li-button name="library-add" title="add new" size="20" @click=${this._btnClick}></li-button>
                 </div>
                 <div style="display: flex; flex-direction: column; flex: 1; overflow-y: auto;">
-                    ${(this.dbsList || []).map((i, idx) => html`
+                    ${this._star ? html`
+                        <div style="border-bottom: 2px solid orange;padding: 4px 0; color: orange">
+                            <div style="color: lightgray; padding-bottom: 4px; font-size: 12px; border-bottom: 1px solid lightgray">${this._db().db.label}</div>
+                            <div>${this._star.label}</div>
+                        </div>
+                        <li-base-tree .item=${this._star}></li-base-tree>
+                    ` : (this.dbsList || []).map((i, idx) => html`
                         ${i.name && !i.hide ? html`
                             <div class="db-row ${this._selectedDBName === i.name ? 'selected' : undefined}" @click=${e => this._selectBaseRow(e, i)} style="display: flex;">
                                 <li-button back="transparent" title="expand" name="chevron-right" border="0" toggledClass="right90" .toggled="${i.expanded}" @click=${e => this._btnClick(e, i)}></li-button>
@@ -233,24 +264,25 @@ customElements.define('li-base-data', class LiBaseData extends LiElement {
             _selectedDBName: { type: String },
             _selectedDB: { type: Object, default: undefined },
             selectedRow: { type: Object, global: true },
-            _star: { type: String, default: '' },
+            _star: { type: Object },
             _data: { type: Object, default: {}, local: true },
-            ready: { type: Boolean, local: true }
+            ready: { type: Boolean, local: true },
+            isReady: { type: Boolean }
         }
     }
 
     firstUpdated() {
         super.firstUpdated();
-        this.listen('selectedBaseTreeRow', async e => {
-            this._selectedDBName = e.detail.dbName;
-            this._data.selectedDBName = e.detail.$db.db.label;
-            if (e.detail.expanded)
-                this._data.loadItems(e.detail, true);
-        })
+        this.listen('selectedBaseTreeRow', async e => this._selectedDBName = e.detail.dbName);
     }
     updated(e) {
         if (e.has('ready')) {
             this._selectedDBName = this._data.generalSets.selectedDBName;
+            if (this._data.generalSets.selectedRow && this._db().flat[this._data.generalSets.selectedRow])
+                this.selectedRow = this._db().flat[this._data.generalSets.selectedRow];
+            if (this._data.generalSets.star && this._db().flat[this._data.generalSets.star])
+                this._star = this._db().flat[this._data.generalSets.star];
+                this.isReady = true;
         }
     }
 
@@ -259,7 +291,6 @@ customElements.define('li-base-data', class LiBaseData extends LiElement {
     }
     _selectBaseRow(e, i) {
         this._selectedDBName = i.name;
-        this._data.selectedDBName = i.label;
         this.selectedRow = undefined;
         this.$update();
     }
@@ -272,7 +303,7 @@ customElements.define('li-base-data', class LiBaseData extends LiElement {
                     this.selectedRow = this.selectedRow instanceof LIITEM ? this.selectedRow : undefined;
                     db.expanded = true;
                     const _id = 'libs-tree:' + LI.ulid();
-                    const parent = this.selectedRow?._id || this._selectedDBName;
+                    const parent = this.selectedRow?._id || 'libs--tree:root';
                     const litem = new LIITEM(db, this.selectedRow || db.liitem, { _id, parent });
                     db.changesMap.set(litem);
                 }
@@ -280,14 +311,28 @@ customElements.define('li-base-data', class LiBaseData extends LiElement {
             case 'expand':
                 this._selectBaseRow(e, i);
                 i.expanded = !i.expanded;
-                if (i.expanded && db?.liitem)
-                    this._data.loadItems(db.liitem, true);
+                break;
+            case 'set selected as root':
+                if (!this._star && this.selectedRow)
+                    this._star = this.selectedRow;
+                else {
+                    this._star = undefined;
+                }
                 break;
         }
         this.$update();
     }
     _saveTreeState(e) {
-        this._data.generalSets.selectedDBName = this._selectedDBName;
+        this._data.generalSets.dbsList.forEach(db => {
+            const dbm = this.dbsMap?.get(db.name);
+            db.expandedList = [];
+            Object.keys(dbm.flat).forEach(k => {
+                if (dbm.flat[k].expanded) db.expandedList.push(k);
+            })
+        })
+        this._data.generalSets.selectedDBName = this._selectedDBName || '';
+        this._data.generalSets.selectedRow = this.selectedRow?._id || '';
+        this._data.generalSets.star = this._star?._id || '';
         this._data.saveGeneralSets();
     }
 })
