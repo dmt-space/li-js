@@ -129,21 +129,16 @@ customElements.define('li-base', class LiBase extends LiElement {
 })
 
 customElements.define('li-base-lpanel', class LiBaseLPanel extends LiElement {
-    static get styles() {
-        return css`
-
-        `;
-    }
     render() {
         return html`
-            <div style="display: flex; border-bottom: 1px solid lightgray;padding: 4px 0;">
+            <div style="display: flex; border-bottom: 1px solid lightgray; padding: 2px;">
                 <li-button name="tree-structure" title="tree" ?toggled=${this._lPanel === 'tree'} toggledClass="ontoggled" scale=".8" @click=${this._click}></li-button>
                 <li-button name="settings" title="settings" ?toggled=${this._lPanel === 'settings'} toggledClass="ontoggled" @click=${this._click}></li-button>
                 <div style="flex:1"></div>
                 <li-button name="refresh" title="reset changes"></li-button>
                 <li-button name="save" title="save" @click=${this._click} .fill="${this._needSave ? 'red' : ''}" .color="${this._needSave ? 'red' : 'gray'}"></li-button>
             </div>
-            <div style="padding: 2px 4px;">
+            <div style="padding-left: 2px;">
                 ${this._lPanel === 'tree' ? html`<li-base-data></li-base-data>` : html``}
                 ${this._lPanel === 'settings' ? html`<li-base-settings></li-base-settings>` : html``}
             </div>
@@ -178,6 +173,7 @@ customElements.define('li-base-lpanel', class LiBaseLPanel extends LiElement {
 customElements.define('li-base-data', class LiBaseData extends LiElement {
     static get styles() {
         return css`
+            ::-webkit-scrollbar { width: 4px; height: 4px; } ::-webkit-scrollbar-track { background: lightgray; } ::-webkit-scrollbar-thumb { background-color: gray; }
             .db-row {
                 display: flex;
                 align-items: center;
@@ -196,28 +192,32 @@ customElements.define('li-base-data', class LiBaseData extends LiElement {
     }
     render() {
         return html`
-            <div style="display: flex; border-bottom: 1px solid lightgray;padding: 4px 0;">
-                databases:
+            <div style="display: flex; flex-direction: column; overflow: hidden; width: 100%; height: calc(100% - 40px);">
+                <div style="display: flex; border-bottom: 1px solid lightgray;padding: 4px 0;">
+                    databases:
+                </div>
+                <div style="display:flex; border-bottom:1px solid lightgray;width:100%; padding: 4px 0;">
+                    <li-button name="unfold-less" title="collapse" size="20"></li-button>
+                    <li-button name="unfold-more" title="expand" size="20"></li-button>
+                    <li-button name="${this._satr ? 'star' : 'star-border'}" title="set selected as root" size="20"
+                        borderColor="${this._star ? 'orange' : ''}" fill="${this._star ? 'orange' : ''}"></li-button>
+                    <div style="flex: 1"></div>
+                    <li-button name="cached" title="clear deleted" size="20"></li-button>
+                    <li-button name="delete" title="delete" size="20"></li-button>
+                    <li-button name="library-add" title="add new" size="20" @click=${this._btnClick}></li-button>
+                </div>
+                <div style="display: flex; flex-direction: column; flex: 1; overflow-y: auto;">
+                    ${(this.dbsList || []).map((i, idx) => html`
+                        ${i.name && !i.hide ? html`
+                            <div class="db-row ${this._selectedDBName === i.name ? 'selected' : undefined}" @click=${e => this._selectBaseRow(e, i)} style="display: flex;">
+                                <li-button back="transparent" title="expand" name="chevron-right" border="0" toggledClass="right90" .toggled="${i.expanded}" @click=${e => this._btnClick(e, i)}></li-button>
+                                <label style="color: orange;">${i.label || i.name}</label>
+                            </div>
+                            ${i.expanded ? html`<li-base-tree .item=${this._db(i.name)?.liitem?.items || []}></li-base-tree>` : html``}
+                        ` : html``}
+                    `)}
+                </div>
             </div>
-            <div style="display:flex; border-bottom:1px solid lightgray;width:100%;margin: 4px 0;">
-                <li-button name="unfold-less" title="collapse" size="20"></li-button>
-                <li-button name="unfold-more" title="expand" size="20"></li-button>
-                <li-button name="${this._satr ? 'star' : 'star-border'}" title="set selected as root" size="20"
-                    borderColor="${this._star ? 'orange' : ''}" fill="${this._star ? 'orange' : ''}"></li-button>
-                <div style="flex: 1"></div>
-                <li-button name="cached" title="clear deleted" size="20"></li-button>
-                <li-button name="delete" title="delete" size="20"></li-button>
-                <li-button name="library-add" title="add new" size="20" @click=${this._btnClick}></li-button>
-            </div>
-            ${(this.dbsList || []).map((i, idx) => html`
-                ${i.name && !i.hide ? html`
-                    <div class="db-row ${this._selectedDBName === i.name ? 'selected' : undefined}" @click=${e => this._selectBaseRow(e, i)} style="display: flex;">
-                        <li-button back="transparent" title="expand" name="chevron-right" border="0" toggledClass="right90" .toggled="${i.expanded}" @click=${e => this._btnClick(e, i)}></li-button>
-                        <label style="color: orange;">${i.label || i.name}</label>
-                    </div>
-                    ${i.expanded ? html`<li-base-tree .item=${this._db(i.name)?.liitem?.items || []}></li-base-tree>` : html``}
-                ` : html``}
-            `)}
         `;
     }
 
