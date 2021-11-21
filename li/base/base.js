@@ -48,6 +48,7 @@ customElements.define('li-base', class LiBase extends LiElement {
             _lPanel: { type: String, default: 'tree', save: true, local: true },
             _data: { type: Object, default: {}, local: true },
             selectedRow: { type: Object, global: true },
+            ready: { type: Boolean, local: true }
         }
     }
 
@@ -63,7 +64,7 @@ customElements.define('li-base', class LiBase extends LiElement {
                 _id: '_local/generalSets',
                 dbsList: [{
                     label: 'li-base',
-                    name: 'li-base-default',
+                    name: 'li-base-' + LI.ulid().toLowerCase(),
                     path: 'http://admin:54321@localhost:5984/',
                     replicate: false,
                     hide: false,
@@ -81,6 +82,7 @@ customElements.define('li-base', class LiBase extends LiElement {
         this.dbsList = this._data.generalSets.dbsList;
         this.dbsMap ||= new Map();
         this.dbsList.forEach(db => this.greateDB(this.dbsMap, db));
+        this.ready = true;
     }
 
     greateDB(map, db) {
@@ -222,7 +224,9 @@ customElements.define('li-base-data', class LiBaseData extends LiElement {
             // if (db.items.length) db.expanded = true;
             // this.$update();
         })
-        setTimeout(() => {
+    }
+    updated(e) {
+        if (e.has('ready')) {
             this.dbsList.forEach(async i => {
                 if (i.expanded && this._db(i.name)) {
                     const db = this._db(i.name);
@@ -234,10 +238,7 @@ customElements.define('li-base-data', class LiBaseData extends LiElement {
                 }
             })
             this.$update;
-        }, 0);
-
-        this.$update();
-
+        }
     }
 
     _db(name = this._selectedDBName) {
@@ -289,7 +290,6 @@ customElements.define('li-base-settings', class LiBaseSettings extends LiElement
             }
             input {
                 border: none;
-                /* border-bottom: 1px solid gray;  */
                 outline: none; 
                 width: 100%; 
                 color:gray; 
@@ -319,19 +319,17 @@ customElements.define('li-base-settings', class LiBaseSettings extends LiElement
             <div class="row">
                 used databases [${this.dbsList?.length}]:
                 <div style="flex: 1"></div>
-                ${this.dbsList?.length > 1 && this._sIdx > 0 ? html`
-                    <li-button name="remove" title="remove db" size="20" @click=${this._btnClick}></li-button>
-                ` : html``}
+                <li-button name="remove" title="remove db" size="20" @click=${this._btnClick}></li-button>
                 <li-button name="add" title="add db" size="20" @click=${this._btnClick}></li-button>
             </div>
             ${(this.dbsList || []).map((i, idx) => html`
                     <div @click=${e => this._selectRow(e, idx)} style="cursor: pointer; background-color: ${this._sIdx === idx ? 'lightyellow' : 'white'}">
                         <div class="row">
-                            <div style="width: 100px; color: ${i.replicate ? 'red' : ''}; opacity: ${i.hide ? .3 : 1}">label:</div>
+                            <div style="width: 50px; color: ${i.replicate ? 'red' : ''}; opacity: ${i.hide ? .3 : 1}">label:</div>
                             <input class="label" .value="${i.label || ''}" @change="${e => this._setDB(e, i, idx)}">
                         </div>
                         ${this._sIdx === idx ? html`
-                            <div style="color: lightgray; border-bottom: 1px solid lightgray; font-size: 12px;padding: 4px;">${i.name}</div>
+                            <input class="name" .value=${i.name} style="color: lightgray; border-bottom: 1px solid lightgray; font-size: 12px;padding: 4px;" @change=${e => this._setDB(e, i, idx)}>
                             <div class="row" style="border: none;">
                                 <li-checkbox class="replicate" @change="${e => this._setDB(e, i, idx)}" .toggled="${i.replicate}"></li-checkbox>
                                 replicate to remote db:
@@ -345,7 +343,6 @@ customElements.define('li-base-settings', class LiBaseSettings extends LiElement
                                 <div style="flex: 1"></div>
                                 <li-button name="file-upload" rotate="180" title="export db" size="19" @click=${this._btnClick}></li-button>
                                 <li-button name="file-download" title="import db" size="20" @click=${this._btnClick}></li-button>
-                                <!-- <li-button name="delete" title="delete db" size="20" @click=${this._btnClick}></li-button> -->
                             </div>
                         ` : html``}
                     </div>
@@ -380,31 +377,31 @@ customElements.define('li-base-settings', class LiBaseSettings extends LiElement
         const map = this.dbsMap ||= new Map();
         switch (src) {
             case 'add':
-                const _db = { path: this.dbsList[0].path, name: 'li-base-' + LI.ulid().toLowerCase(), hide: true };
+                const _db = { path: this.dbsList[0]?.path || 'http://admin:54321@localhost:5984/', name: 'li-base-' + LI.ulid().toLowerCase(), hide: true };
                 this.dbsList.splice(this.dbsList.length, 0, _db);
                 this._sIdx = this.dbsList.length - 1;
                 this._data.greateDB(map, db)
                 break;
             case 'remove':
-                if (this._sIdx !== 0) {
-                    if (map.has(db.name)) {
-                        map.get(db.name).local.destroy((err, response) => {
-                            if (err) {
-                                return console.log(err);
-                            } else {
-                                console.log("Local Database Deleted");
-                            }
-                        });
-                        map.delete(db.name);
-                    }
-                    this.dbsList.splice(idx, 1);
-                    this._sIdx = this._sIdx > this.dbsList.length - 1 ? this.dbsList.length - 1 : this._sIdx;
-                }
+                this._destroyDB(map, db, idx);
                 break;
         }
-        // this.dbsList = [...[], ...this.dbsList];
         this._data.saveGeneralSets();
         this.$update();
+    }
+    _destroyDB(map, db, idx) {
+        if (db?.name && map?.has(db.name)) {
+            map.get(db.name).local.destroy((err, response) => {
+                if (err) {
+                    return console.log(err);
+                } else {
+                    console.log("Local Database Deleted");
+                }
+            });
+            map.delete(db.name);
+        }
+        this.dbsList.splice(idx, 1);
+        this._sIdx = this._sIdx > this.dbsList.length - 1 ? this.dbsList.length - 1 : this._sIdx;
     }
     _setDB(e, i, idx) {
         const src = e.target.className;
@@ -412,9 +409,14 @@ customElements.define('li-base-settings', class LiBaseSettings extends LiElement
         const db = this.dbsList[idx];
         const map = this.dbsMap ||= new Map();
         switch (src) {
+            case 'name':
+                this._destroyDB(map, db, idx);
+                db.name = val;
+                this.dbsList.splice(idx, 0, db);
+                this._data.greateDB(map, db)
+                break;
             case 'label':
                 db.label = val;
-                // this._data.greateDB(map, db)
                 break;
             case 'path':
                 if (db.name && val) {
@@ -445,7 +447,6 @@ customElements.define('li-base-settings', class LiBaseSettings extends LiElement
                 db.hide = e.target.toggled;
                 break;
         }
-        // this.dbsList = [...[], ...this.dbsList];
         this._data.saveGeneralSets();
         this.$update();
     }
