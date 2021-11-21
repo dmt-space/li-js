@@ -1,4 +1,5 @@
 import { LiElement, html, css } from '../../li.js';
+import '../../lib/li-utils/utils.js';
 
 import '../layout-app/layout-app.js';
 import '../button/button.js';
@@ -47,7 +48,8 @@ customElements.define('li-base', class LiBase extends LiElement {
             dbsMap: { type: Object, local: true },
             _lPanel: { type: String, default: 'tree', save: true, local: true },
             _data: { type: Object, default: {}, local: true },
-            selectedRow: { type: Object, global: true }
+            selectedRow: { type: Object, global: true },
+            ready: { type: Boolean, local: true }
         }
     }
 
@@ -94,6 +96,7 @@ customElements.define('li-base', class LiBase extends LiElement {
         this.dbsList = this._data.generalSets.dbsList;
         this.dbsMap ||= new Map();
         this.dbsList.forEach(db => this.greateDB(this.dbsMap, db, true));
+        this.ready = true;
     }
 
     async greateDB(map, db, isLoad) {
@@ -104,6 +107,7 @@ customElements.define('li-base', class LiBase extends LiElement {
             map.set(db.name, { localDB, changesMap: new ChangesMap(localDB) })
         }
         const dbm = map.get(db.name);
+        dbm.db = db;
         if (db.path) {
             localDB ||= dbm.localDB;
             const remoteDB = new PouchDB(db.path + db.name);
@@ -197,10 +201,9 @@ customElements.define('li-base-data', class LiBaseData extends LiElement {
                     databases:
                 </div>
                 <div style="display:flex; border-bottom:1px solid lightgray;width:100%; padding: 4px 0;">
-                    <li-button name="unfold-less" title="collapse" size="20"></li-button>
-                    <li-button name="unfold-more" title="expand" size="20"></li-button>
-                    <li-button name="${this._satr ? 'star' : 'star-border'}" title="set selected as root" size="20"
+                    <li-button name="${this._satr ? 'star' : 'star-border'}" title="set selected as root" size="20" @click=${this._btnClick}
                         borderColor="${this._star ? 'orange' : ''}" fill="${this._star ? 'orange' : ''}"></li-button>
+                    <li-button name="camera" title="save tree state" @click="${this._saveTreeState}" size="20"></li-button>
                     <div style="flex: 1"></div>
                     <li-button name="cached" title="clear deleted" size="20"></li-button>
                     <li-button name="delete" title="delete" size="20"></li-button>
@@ -231,7 +234,8 @@ customElements.define('li-base-data', class LiBaseData extends LiElement {
             _selectedDB: { type: Object, default: undefined },
             selectedRow: { type: Object, global: true },
             _star: { type: String, default: '' },
-            _data: { type: Object, default: {}, local: true }
+            _data: { type: Object, default: {}, local: true },
+            ready: { type: Boolean, local: true }
         }
     }
 
@@ -239,9 +243,15 @@ customElements.define('li-base-data', class LiBaseData extends LiElement {
         super.firstUpdated();
         this.listen('selectedBaseTreeRow', async e => {
             this._selectedDBName = e.detail.dbName;
+            this._data.selectedDBName = e.detail.$db.db.label;
             if (e.detail.expanded)
                 this._data.loadItems(e.detail, true);
         })
+    }
+    updated(e) {
+        if (e.has('ready')) {
+            this._selectedDBName = this._data.generalSets.selectedDBName;
+        }
     }
 
     _db(name = this._selectedDBName) {
@@ -249,7 +259,9 @@ customElements.define('li-base-data', class LiBaseData extends LiElement {
     }
     _selectBaseRow(e, i) {
         this._selectedDBName = i.name;
+        this._data.selectedDBName = i.label;
         this.selectedRow = undefined;
+        this.$update();
     }
     _btnClick(e, i) {
         const title = e.target.title;
@@ -263,8 +275,6 @@ customElements.define('li-base-data', class LiBaseData extends LiElement {
                     const parent = this.selectedRow?._id || this._selectedDBName;
                     const litem = new LIITEM(db, this.selectedRow || db.liitem, { _id, parent });
                     db.changesMap.set(litem);
-                    this.$update();
-                    // console.log(litem);
                 }
                 break;
             case 'expand':
@@ -272,13 +282,13 @@ customElements.define('li-base-data', class LiBaseData extends LiElement {
                 i.expanded = !i.expanded;
                 if (i.expanded && db?.liitem)
                     this._data.loadItems(db.liitem, true);
-                this._data.saveGeneralSets();
-                this.$update();
-                break;
-
-            default:
                 break;
         }
+        this.$update();
+    }
+    _saveTreeState(e) {
+        this._data.generalSets.selectedDBName = this._selectedDBName;
+        this._data.saveGeneralSets();
     }
 })
 
