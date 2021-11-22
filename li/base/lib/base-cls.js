@@ -65,7 +65,6 @@ export class LIITEM {
         this.doc.ulid ??= LI.ulid();
         this.doc.type ??= 'li-item';
         this.doc._id ??= this.doc.type + ':' + this.doc.ulid;
-        this.doc.label ??= '...';
         if (!this.doc.created) {
             let ds = LI.dates(LI.ulidToDateTime(this.doc.ulid));
             this.doc.created = { utc: ds.utc, local: ds.local };
@@ -82,6 +81,7 @@ export class LIITEM {
     set doc(v) { this._doc = v }
     get _id() { return this.doc._id }
     get _ref() { return this.doc._ref }
+    get _deleted() { return this.doc._deleted }
     get ulid() { return this.doc.ulid }
     get type() { return this.doc.type }
     set type(v) { this.doc.type = v }
@@ -89,7 +89,7 @@ export class LIITEM {
     get date() { return this.doc.created.local }
     get utc() { return this.doc.created.utc }
     //get hasChanged() { return this.#hasChanged }
-    get label() { return this.doc.label }
+    get label() { return this.doc.label || '...'}
     set label(v) { this.doc.label = v }
     get dbName() { return this.localDB?.name }
     clearChanges() {
