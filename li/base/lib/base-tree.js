@@ -121,6 +121,7 @@ customElements.define('li-base-tree', class LiBaseTree extends LiElement {
         this._dragRow = i;
     }
     _dragOver(e, i) {
+        if (i.localDB.name !== this._dragRow.localDB.name) return;
         let enableDrag = true;
         let ulid = this._dragRow.ulid;
         let root = i;
@@ -134,8 +135,9 @@ customElements.define('li-base-tree', class LiBaseTree extends LiElement {
     }
     _drop(e, i) {
         this._dragRow.parent.items.splice(this._dragRow.parent.items.indexOf(this._dragRow), 1);
+        i.items ||= [];
         i.items.splice(i.items.length, 0, this._dragRow);
-        this._dragRow.parentId = i._id;
+        this._dragRow.doc.parent = i._id;
         this._dragRow.parent = i;
         i.expanded = true;
         this._dragRow = undefined;
