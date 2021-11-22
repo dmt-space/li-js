@@ -56,6 +56,7 @@ customElements.define('li-base', class LiBase extends LiElement {
     async firstUpdated() {
         super.firstUpdated();
         this._data = { greateDB: (map, db) => this.greateDB(map, db) }
+        this._data = { _createTree: (map) => this._createTree(map) }
         const setsDB = new PouchDB('li-base-local-sets');
         try {
             this._data.generalSets = await setsDB.get('_local/generalSets');
@@ -126,11 +127,11 @@ customElements.define('li-base', class LiBase extends LiElement {
     async _createTree(dbm) {
         const items = await dbm.localDB.allDocs({ include_docs: true, startkey: 'libs-tree', endkey: 'libs-tree' + '\ufff0' });
         dbm.flat = {};
+        dbm.liitem.items = [];
         const rootParent = 'libs--tree:root';
         items.rows.forEach(i => dbm.flat[i.doc._id] = new LIITEM(dbm, null, i.doc));
         Object.values(dbm.flat).forEach(f => {
             if (f.doc.parent === rootParent) {
-                dbm.liitem.items ||= [];
                 dbm.liitem.items.push(f);
                 f.parent = dbm.liitem;
             } else {
@@ -170,6 +171,7 @@ customElements.define('li-base-lpanel', class LiBaseLPanel extends LiElement {
         return {
             dbsMap: { type: Object, local: true },
             _lPanel: { type: String, default: 'tree', local: true },
+            _data: { type: Object, default: {}, local: true },
         }
     }
 
@@ -183,7 +185,10 @@ customElements.define('li-base-lpanel', class LiBaseLPanel extends LiElement {
         const title = e.target.title;
         switch (title) {
             case 'save':
-                this.dbsMap?.forEach(async (value, key, map) => await value.changesMap.save());
+                this.dbsMap?.forEach(async (value, key, map) => {
+                    await value.changesMap.save();
+                    this._data._createTree(value);
+                });
                 setTimeout(() => this.$update(), 100);
                 return;
         }
@@ -230,8 +235,8 @@ customElements.define('li-base-data', class LiBaseData extends LiElement {
                         borderColor="${this._star ? 'orange' : ''}" fill="${this._star ? 'orange' : ''}"></li-button>
                     <li-button name="camera" title="save tree state" @click="${this._saveTreeState}" size="20"></li-button>
                     <div style="flex: 1"></div>
-                    <li-button name="cached" title="clear deleted" size="20"></li-button>
-                    <li-button name="delete" title="delete" size="20"></li-button>
+                    <li-button name="cached" title="clear deleted" size="20" @click=${this._btnClick}></li-button>
+                    <li-button name="delete" title="delete" size="20" @click=${this._btnClick}></li-button>
                     <li-button name="library-add" title="add new" size="20" @click=${this._btnClick}></li-button>
                 </div>
                 <div style="display: flex; flex-direction: column; flex: 1; overflow-y: auto;">
@@ -282,7 +287,7 @@ customElements.define('li-base-data', class LiBaseData extends LiElement {
                 this.selectedRow = this._db().flat[this._data.generalSets.selectedRow];
             if (this._data.generalSets.star && this._db().flat[this._data.generalSets.star])
                 this._star = this._db().flat[this._data.generalSets.star];
-                this.isReady = true;
+            this.isReady = true;
         }
     }
 
@@ -306,6 +311,7 @@ customElements.define('li-base-data', class LiBaseData extends LiElement {
                     const parent = this.selectedRow?._id || 'libs--tree:root';
                     const litem = new LIITEM(db, this.selectedRow || db.liitem, { _id, parent });
                     db.changesMap.set(litem);
+                    this._db().flat[_id] = litem;
                 }
                 break;
             case 'expand':
@@ -318,6 +324,16 @@ customElements.define('li-base-data', class LiBaseData extends LiElement {
                 else {
                     this._star = undefined;
                 }
+                break;
+            case 'delete':
+                Object.values(this._db().flat).forEach(f => {
+                    if (f.checked) f.doc._deleted = true;
+                })
+                break;
+            case 'clear deleted':
+                Object.values(this._db().flat).forEach(f => {
+                    f.doc._deleted = undefined;
+                })
                 break;
         }
         this.$update();
