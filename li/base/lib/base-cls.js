@@ -81,7 +81,7 @@ export class LIITEM {
     set doc(v) { this._doc = v }
     get _id() { return this.doc._id }
     get _ref() { return this.doc._ref }
-    get _deleted() { return this.doc._deleted }
+    get deleted() { return this._deleted || this.doc._deleted }
     get ulid() { return this.doc.ulid }
     get type() { return this.doc.type }
     set type(v) { this.doc.type = v }
