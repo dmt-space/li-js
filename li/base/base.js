@@ -55,8 +55,7 @@ customElements.define('li-base', class LiBase extends LiElement {
 
     async firstUpdated() {
         super.firstUpdated();
-        this._data = { greateDB: (map, db) => this.greateDB(map, db) }
-        this._data = { _createTree: (map) => this._createTree(map) }
+        this._data = { greateDB: (map, db) => this.greateDB(map, db), _createTree: (map, expandedList) => this._createTree(map, expandedList) }
         const setsDB = new PouchDB('li-base-local-sets');
         try {
             this._data.generalSets = await setsDB.get('_local/generalSets');
@@ -67,7 +66,7 @@ customElements.define('li-base', class LiBase extends LiElement {
                 dbsList: [{
                     label: 'li-base',
                     name: 'li-base-' + LI.ulid().toLowerCase(),
-                    path: 'http://admin:54321@localhost:5984/',
+                    path: 'http://admin:54321@127.0.0.1:5984/',
                     replicate: false,
                     hide: false,
                     expanded: false
@@ -124,7 +123,8 @@ customElements.define('li-base', class LiBase extends LiElement {
             this.$update();
         }
     }
-    async _createTree(dbm) {
+    async _createTree(dbm, expandedList) {
+        expandedList ||= dbm.db.expandedList;
         const items = await dbm.localDB.allDocs({ include_docs: true, startkey: 'libs-tree', endkey: 'libs-tree' + '\ufff0' });
         dbm.flat = {};
         dbm.liitem.items = [];
@@ -143,8 +143,8 @@ customElements.define('li-base', class LiBase extends LiElement {
                 }
             }
         })
-        dbm.db.expandedList ||= [];
-        dbm.db.expandedList.forEach(i => {
+        expandedList ||= [];
+        expandedList.forEach(i => {
             if (dbm.flat[i]) dbm.flat[i].expanded = true;
         })
     }
@@ -177,7 +177,7 @@ customElements.define('li-base-lpanel', class LiBaseLPanel extends LiElement {
 
     get _needSave() {
         let size = 0;
-        this.dbsMap?.forEach((value, key, map) => size += value.changesMap.size);
+        this.dbsMap?.forEach((value, key, map) => size += (value.changesMap.size || value._hasDeleted ? 1 : 0));
         return size > 0;
     }
 
@@ -186,8 +186,19 @@ customElements.define('li-base-lpanel', class LiBaseLPanel extends LiElement {
         switch (title) {
             case 'save':
                 this.dbsMap?.forEach(async (value, key, map) => {
+                    const expandedList = []
+                    Object.values(value.flat).forEach(f => {
+                        if (f._deleted) {
+                            f.doc._deleted = true;
+                            value.changesMap.set(f);
+                        } else f.doc._deleted = undefined;
+                        f._deleted = undefined;
+                        if (f.expanded)
+                            expandedList.push(f._id);
+                    })
+                    value._hasDeleted = undefined;
                     await value.changesMap.save();
-                    this._data._createTree(value);
+                    this._data._createTree(value, expandedList);
                 });
                 setTimeout(() => this.$update(), 100);
                 return;
@@ -250,7 +261,7 @@ customElements.define('li-base-data', class LiBaseData extends LiElement {
                         ${i.name && !i.hide ? html`
                             <div class="db-row ${this._selectedDBName === i.name ? 'selected' : undefined}" @click=${e => this._selectBaseRow(e, i)} style="display: flex;">
                                 <li-button back="transparent" title="expand" name="chevron-right" border="0" toggledClass="right90" .toggled="${i.expanded}" @click=${e => this._btnClick(e, i)}></li-button>
-                                <label style="color: orange;">${i.label || i.name}</label>
+                                <label style="color: ${i.replicate ? 'orange' : 'cadetblue'}" @click=${() => i.expanded = true}>${i.label || i.name}</label>
                             </div>
                             ${i.expanded ? html`<li-base-tree .item=${this._db(i.name)?.liitem?.items || []}></li-base-tree>` : html``}
                         ` : html``}
@@ -282,7 +293,7 @@ customElements.define('li-base-data', class LiBaseData extends LiElement {
     }
     updated(e) {
         if (e.has('ready')) {
-            this._selectedDBName = this._data.generalSets.selectedDBName;
+            this._selectedDBName = this.dbsList.filter(i => !i.hide)[0].name; // this._data.generalSets.selectedDBName;
             if (this._data.generalSets.selectedRow && this._db().flat[this._data.generalSets.selectedRow])
                 this.selectedRow = this._db().flat[this._data.generalSets.selectedRow];
             if (this._data.generalSets.star && this._db().flat[this._data.generalSets.star])
@@ -327,12 +338,14 @@ customElements.define('li-base-data', class LiBaseData extends LiElement {
                 break;
             case 'delete':
                 Object.values(this._db().flat).forEach(f => {
-                    if (f.checked) f.doc._deleted = true;
+                    if (f.checked) f._deleted = true;
+                    this._db()._hasDeleted = true;
                 })
                 break;
             case 'clear deleted':
                 Object.values(this._db().flat).forEach(f => {
-                    f.doc._deleted = undefined;
+                    f._deleted = undefined;
+                    this._db()._hasDeleted = false;
                 })
                 break;
         }
@@ -396,7 +409,7 @@ customElements.define('li-base-settings', class LiBaseSettings extends LiElement
             ${(this.dbsList || []).map((i, idx) => html`
                     <div @click=${e => this._selectRow(e, idx)} style="cursor: pointer; background-color: ${this._sIdx === idx ? 'lightyellow' : 'white'}">
                         <div class="row">
-                            <div style="width: 50px; color: ${i.replicate ? 'red' : ''}; opacity: ${i.hide ? .3 : 1}">label:</div>
+                            <div style="width: 50px; color: ${i.replicate ? 'orange' : 'cadetblue'}; opacity: ${i.hide ? .5 : 1}">label:</div>
                             <input class="label" .value="${i.label || ''}" @change="${e => this._setDB(e, i, idx)}">
                         </div>
                         ${this._sIdx === idx ? html`
@@ -448,10 +461,10 @@ customElements.define('li-base-settings', class LiBaseSettings extends LiElement
         const map = this.dbsMap ||= new Map();
         switch (src) {
             case 'add':
-                const _db = { path: this.dbsList[0]?.path || 'http://admin:54321@localhost:5984/', name: 'li-base-' + LI.ulid().toLowerCase(), hide: true };
+                const _db = { path: this.dbsList[0]?.path || 'http://admin:54321@127.0.0.1:5984/', name: 'li-base-' + LI.ulid().toLowerCase(), hide: true };
                 this.dbsList.splice(this.dbsList.length, 0, _db);
                 this._sIdx = this.dbsList.length - 1;
-                this._data.greateDB(map, db)
+                this._data.greateDB(map, _db)
                 break;
             case 'remove':
                 this._destroyDB(map, db, idx);
@@ -474,7 +487,7 @@ customElements.define('li-base-settings', class LiBaseSettings extends LiElement
         this.dbsList.splice(idx, 1);
         this._sIdx = this._sIdx > this.dbsList.length - 1 ? this.dbsList.length - 1 : this._sIdx;
     }
-    _setDB(e, i, idx) {
+    _setDB(e, i, idx = this._sIdx) {
         const src = e.target.className;
         const val = e.target.value || '';
         const db = this.dbsList[idx];
@@ -504,6 +517,9 @@ customElements.define('li-base-settings', class LiBaseSettings extends LiElement
                 }
                 break;
             case 'replicate':
+                if (e.target.toggled) {
+                    this.dbsList.forEach(i => i.replicate = false);
+                }
                 db.replicate = e.target.toggled;
                 const localDB = map.get(db.name).localDB;
                 const remoteDB = map.get(db.name).remoteDB;
@@ -515,6 +531,12 @@ customElements.define('li-base-settings', class LiBaseSettings extends LiElement
                 }
                 break;
             case 'hide':
+                if (!e.target.toggled) {
+                    this.dbsList.forEach(i => {
+                        i.hide = true;
+                        i.replicate = false;
+                    });
+                }
                 db.hide = e.target.toggled;
                 break;
         }
