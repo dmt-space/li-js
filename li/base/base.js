@@ -294,6 +294,7 @@ customElements.define('li-base-data', class LiBaseData extends LiElement {
     updated(e) {
         if (e.has('ready')) {
             this._selectedDBName = this.dbsList.filter(i => !i.hide)[0].name; // this._data.generalSets.selectedDBName;
+            this.dbsList.filter(i => !i.hide)[0].expanded = true;
             if (this._data.generalSets.selectedRow && this._db().flat[this._data.generalSets.selectedRow])
                 this.selectedRow = this._db().flat[this._data.generalSets.selectedRow];
             if (this._data.generalSets.star && this._db().flat[this._data.generalSets.star])
