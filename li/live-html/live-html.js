@@ -139,9 +139,6 @@ customElements.define('li-live-html', class LiLiveHTML extends LiElement {
 const cssIframe = `
 <style>
     body { font-family: Roboto, Noto, sans-serif; line-height: 1.5; }
-    ::-webkit-scrollbar { width: 4px;  height: 4px; }
-    ::-webkit-scrollbar-track { -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3); }
-    ::-webkit-scrollbar-thumb { border-radius: 3px; background: rgba(0,0,0,0.2); -webkit-box-shadow: inset 0 0 3px rgba(0,0,0,0.2); }
-    ::-webkit-scrollbar-thumb:hover { background: gray; width: 12px; }</style>
+    ::-webkit-scrollbar { width: 4px; height: 4px; } ::-webkit-scrollbar-track { background: lightgray; } ::-webkit-scrollbar-thumb { background-color: gray; }
 </style>
 `
