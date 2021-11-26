@@ -58,7 +58,7 @@ customElements.define('li-editor-ace', class LiAceEditor extends LiElement {
         return this.editor?.getValue();
     }
     set value(v) {
-        this.editor.setValue(v, -1);
+        this.editor.setValue(v ?? '', -1);
         this.editor.session.selection.clearSelection();
     }
 

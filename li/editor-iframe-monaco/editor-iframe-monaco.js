@@ -26,7 +26,7 @@ customElements.define('li-editor-iframe-monaco', class LiEditorIFrameMonaco exte
 
     render() {
         return html`
-            <li-editor-monaco ref="editor" mode=${this.mode || 'html'} src=${this.src}></li-editor-monaco>
+            <li-editor-monaco ref="editor" mode=${this.mode || ['html', 'javascript', 'typescript']} src=${this.src}></li-editor-monaco>
         `
     }
 

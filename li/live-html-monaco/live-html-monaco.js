@@ -7,9 +7,7 @@ import { LZString } from '../../lib/lz-string/lz-string.js';
 customElements.define('li-live-html-monaco', class LiLiveHTMLMonaco extends LiElement {
     static get styles() {
         return css`
-            ::-webkit-scrollbar { width: 4px; height: 4px; }
-            ::-webkit-scrollbar-track { background: lightgray; }
-            ::-webkit-scrollbar-thumb { background-color: gray; }
+            ::-webkit-scrollbar { width: 4px; height: 4px; } ::-webkit-scrollbar-track { background: lightgray; } ::-webkit-scrollbar-thumb { background-color: gray; }
             #main {
                 position: relative;
                 display: flex;
@@ -52,10 +50,11 @@ customElements.define('li-live-html-monaco', class LiLiveHTMLMonaco extends LiEl
                 <li-button name="more-vert" @click="${() => this._resize(this.$id('main').offsetWidth / 2)}" style="margin-right:4px" border="none"></li-button>
                 <li-button name="filter-1" @click="${() => this._resize(this.$id('main').offsetWidth)}" style="margin-right:4px" border="none"></li-button>
                 <li-button name="launch" @click=${this._open} title="open in new window" style="margin-right:8px" border="none"></li-button>
+                <li-button name="refresh" @click="${this._reload}" title="reload page" style="margin-right:4px" border="none"></li-button>
                 <label style="margin-right: auto; padding-left: 4px; color: gray">li-live-html Preview</label>
             </div>
             <div id="main">
-                <div class="main-panel ${this._widthL <= 0 ? 'hidden' : ''}" style="width:${this._widthL}px">
+                <div class="main-panel ${this._widthL <= 0 ? 'hidden' : ''}" style="width:${this._widthL}px; overflow: hidden">
                     <li-editor-iframe-monaco id="editor" @change=${this._change} src=${this.src}></li-editor-iframe-monaco>
                 </div>
                 <div class="splitter ${this._action === 'splitter-move' ? 'splitter-move' : ''}" @pointerdown="${this._pointerdown}"></div>
@@ -94,7 +93,7 @@ customElements.define('li-live-html-monaco', class LiLiveHTMLMonaco extends LiEl
     _change(e) {
         LI.debounce('_change', () => {
             this.editorValue = e?.detail?.value;
-            this.srcIframe = cssIframe + this.editorValue;
+            this.srcIframe = cssIframe + (this.editorValue || '');
             this.$update;
         }, 500);
     }
@@ -125,6 +124,10 @@ customElements.define('li-live-html-monaco', class LiLiveHTMLMonaco extends LiEl
         let url = this.$url.replace('live-html-monaco.js', 'index.html#?') + LZString.compressToEncodedURIComponent(this.editorValue);
         window.open(url, '_blank').focus();
     }
+    _reload() {
+        document.location.href = this.$url.replace('live-html-monaco.js', 'index.html#?') + LZString.compressToEncodedURIComponent(this.editorValue);
+        document.location.reload();
+    }
     _resize(v) {
         this._widthL = v;
         requestAnimationFrame(() => {
@@ -137,9 +140,6 @@ customElements.define('li-live-html-monaco', class LiLiveHTMLMonaco extends LiEl
 const cssIframe = `
 <style>
     body { font-family: Roboto, Noto, sans-serif; line-height: 1.5; }
-    ::-webkit-scrollbar { width: 4px;  height: 4px; }
-    ::-webkit-scrollbar-track { -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3); }
-    ::-webkit-scrollbar-thumb { border-radius: 3px; background: rgba(0,0,0,0.2); -webkit-box-shadow: inset 0 0 3px rgba(0,0,0,0.2); }
-    ::-webkit-scrollbar-thumb:hover { background: gray; width: 12px; }</style>
+    ::-webkit-scrollbar { width: 4px; height: 4px; } ::-webkit-scrollbar-track { background: lightgray; } ::-webkit-scrollbar-thumb { background-color: gray; }
 </style>
 `

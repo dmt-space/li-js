@@ -7,9 +7,7 @@ import { LZString } from '../../lib/lz-string/lz-string.js';
 customElements.define('li-live-html', class LiLiveHTML extends LiElement {
     static get styles() {
         return css`
-            ::-webkit-scrollbar { width: 4px; height: 4px; }
-            ::-webkit-scrollbar-track { background: lightgray; }
-            ::-webkit-scrollbar-thumb { background-color: gray; }
+            ::-webkit-scrollbar { width: 4px; height: 4px; } ::-webkit-scrollbar-track { background: lightgray; } ::-webkit-scrollbar-thumb { background-color: gray; }
             #main {
                 position: relative;
                 display: flex;
@@ -52,6 +50,7 @@ customElements.define('li-live-html', class LiLiveHTML extends LiElement {
                 <li-button name="more-vert" @click="${() => this._resize(this.$id('main').offsetWidth / 2)}" style="margin-right:4px" border="none"></li-button>
                 <li-button name="filter-1" @click="${() => this._resize(this.$id('main').offsetWidth)}" style="margin-right:4px" border="none"></li-button>
                 <li-button name="launch" @click=${this._open} title="open in new window" style="margin-right:8px" border="none"></li-button>
+                <li-button name="refresh" @click="${this._reload}" title="reload page" style="margin-right:4px" border="none"></li-button>
                 <label style="margin-right: auto; padding-left: 4px; color: gray">li-live-html Preview</label>
             </div>
             <div id="main">
@@ -92,7 +91,7 @@ customElements.define('li-live-html', class LiLiveHTML extends LiElement {
 
     _change() {
         LI.debounce('_change', () => {
-            this.src = cssIframe + this.$id('editor').value;
+            this.src = cssIframe + (this.$id('editor').value || '');
             //setTimeout(() => {
                 //this.$id('iframe').contentDocument.body.innerHTML = cssIframe + this.$id('iframe').contentDocument.body.innerHTML;
                 this.$update;
@@ -126,6 +125,10 @@ customElements.define('li-live-html', class LiLiveHTML extends LiElement {
     _open() {
         let url = this.$url.replace('live-html.js', 'index.html#?') + LZString.compressToEncodedURIComponent(this.$id('editor')?.value);
         window.open(url, '_blank').focus();
+    }
+    _reload() {
+        document.location.href = this.$url.replace('live-html.js', 'index.html#?') + LZString.compressToEncodedURIComponent(this.$id('editor')?.value);
+        document.location.reload();
     }
     _resize(v) {
         this._widthL = v;
