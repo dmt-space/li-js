@@ -66,7 +66,8 @@ customElements.define('li-base-tree', class LiBaseTree extends LiElement {
             ${!this.items ? html`` : this.items.map(i => html`
                 <div draggable="true" @dragstart="${(e) => this._dragStart(e, i)}" @dragover=${(e) => this._dragOver(e, i)} @drop=${(e) => this._drop(e, i)}
                     class="row ${this.selectedRow === i || this.selectedRow?.ulid === i.ulid ? 'selected' : ''}">
-                    <div style="display:flex;align-items:center;margin-left:${this.margin}px;${!this.fullBorder ? 'border-bottom: 1px solid ' + this.colorBorder : ''}">
+                    <div style="display:flex;align-items:center;margin-left:${this.margin}px;${!this.fullBorder ? 'border-bottom: 1px solid ' + this.colorBorder : ''}"
+                            @contextmenu=${e => { this._contextmenu(e, i) }}>
                         ${i.items?.length || i.doc?.items?.length ? html`
                             <li-button back="transparent" name="chevron-right" border="0" toggledClass="right90" ?toggled="${i.expanded}"
                                     @click="${(e) => this._click(e, i)}" size="${this.iconSize}"></li-button>
@@ -77,7 +78,9 @@ customElements.define('li-base-tree', class LiBaseTree extends LiElement {
                             <li-checkbox .size="${this.iconSize}" .item="${i}" @click="${(e) => this._checkChildren(e, i)}" @blur="${() => this._ed = false}"></li-checkbox>
                         ` : html``}
                         ${this._ed && (this.selectedRow === i || this.selectedRow?.ulid === i.ulid) && !i._deleted ? html`
-                            <input value="${i.label}" @change="${(e) => this._setLabel(e, i)}" style="background-color: transparent; color: gray; flex:1;padding:1px;width:${this.labelWidth}px;font-size:${this.fontSize};border: none;margin:1px;outline: none;"/>
+                            <input value="${i.label}" @change="${(e) => this._setLabel(e, i)}" 
+                                style="background-color: transparent; color: gray; flex:1;padding:1px;width:${this.labelWidth}px;font-size:${this.fontSize};border: none;margin:1px;outline: none;"
+                            />
                         ` : html`
                             <div style="flex:1;padding:2px;width:${this.labelWidth}px;font-size:${this.fontSize}; text-decoration:${i._deleted ? 'line-through 2px solid red !important' : ''}"
                                 @dblclick="${() => this._ed = true}" @click="${(e) => this._focus(e, i)}">${i.label}</div>
@@ -142,5 +145,25 @@ customElements.define('li-base-tree', class LiBaseTree extends LiElement {
         i.expanded = true;
         this._dragRow = undefined;
         this.$update();
+    }
+    _contextmenu(e, i) {
+        e.preventDefault();
+        //this._focus(e, i);
+        LI.show('dropdown', 'db-cell-list', {
+            list: [
+                { icon: 'content-paste', label: 'view source', action: 'viewSorce', hideIcons: '23' },
+                // { icon: 'close', label: 'Delete item', hideIcons: '23' },
+                // { icon: 'refresh', label: '10 x console.log(ulid)', action: 'ulid', hideIcons: '23' },
+                // { icon: 'refresh', label: '2 x date.toISOString', action: 'toISOString', hideIcons: '23' },
+            ],
+            width: '200px'
+        }, {}).then(res => {
+            this.fire('dbAction', { action: res.detail.action, liitem: i, value: res });
+            LI.show('dropdown', 'editor-ace', {
+                src: JSON.stringify(i.doc)
+            }, { align: 'modal' }).then(res => {
+
+            }).catch(err => { });
+        }).catch(err => { });
     }
 });
