@@ -6,6 +6,8 @@ import '../button/button.js';
 import '../checkbox/checkbox.js';
 import '../../lib/pouchdb/pouchdb.js';
 import './lib/base-tree.js';
+import '../editor-ace/editor-ace.js';
+import '../editor-monaco/editor-monaco.js';
 import { ChangesMap, LIITEM } from './lib/base-cls.js';
 
 customElements.define('li-base', class LiBase extends LiElement {
@@ -31,7 +33,7 @@ customElements.define('li-base', class LiBase extends LiElement {
                 </div>
                 <li-base-lpanel slot="app-left"></li-base-lpanel>
                 <div slot="app-main" class="main" id="main">
-                    main
+                    <li-editor-ace id="ace" mode="json" theme="chrome" .options=${{ fontSize: 16, minLines: 80 }}></li-editor-ace>
                 </div>
                 <div slot="app-right" class="panel">
                     right
@@ -84,6 +86,11 @@ customElements.define('li-base', class LiBase extends LiElement {
         this.dbsMap ||= new Map();
         this._count = this.dbsList.length;
         this.dbsList.forEach(db => this.greateDB(this.dbsMap, db));
+
+        this.listen('dbAction', (e) => {
+            console.log(e);
+            this.$id('ace').src = JSON.stringify(e.detail.liitem.doc, null, 4);
+        })
     }
 
     async greateDB(map, db) {
@@ -518,8 +525,13 @@ customElements.define('li-base-settings', class LiBaseSettings extends LiElement
                 }
                 break;
             case 'replicate':
+                let repl = 0;
                 if (e.target.toggled) {
-                    this.dbsList.forEach(i => i.replicate = false);
+                    this.dbsList.forEach(i => { if (i.replicate) repl++ });
+                }
+                if (repl >= 5) {
+                    e.target.toggled = false;
+                    return;
                 }
                 db.replicate = e.target.toggled;
                 const localDB = map.get(db.name).localDB;
@@ -532,12 +544,12 @@ customElements.define('li-base-settings', class LiBaseSettings extends LiElement
                 }
                 break;
             case 'hide':
-                if (!e.target.toggled) {
-                    this.dbsList.forEach(i => {
-                        i.hide = true;
-                        i.replicate = false;
-                    });
-                }
+                // if (!e.target.toggled) {
+                //     this.dbsList.forEach(i => {
+                //         i.hide = true;
+                //         i.replicate = false;
+                //     });
+                // }
                 db.hide = e.target.toggled;
                 break;
         }

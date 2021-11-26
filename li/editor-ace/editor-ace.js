@@ -6,9 +6,7 @@ let url = import.meta.url;
 customElements.define('li-editor-ace', class LiAceEditor extends LiElement {
     static get styles() {
         return css`
-            ::-webkit-scrollbar { width: 4px; height: 4px; }
-            ::-webkit-scrollbar-track { background: lightgray; }
-            ::-webkit-scrollbar-thumb { background-color: gray; }
+            ::-webkit-scrollbar { width: 4px; height: 4px; } ::-webkit-scrollbar-track { background: lightgray; } ::-webkit-scrollbar-thumb { background-color: gray; }
         `;
     }
     render() {
@@ -64,7 +62,7 @@ customElements.define('li-editor-ace', class LiAceEditor extends LiElement {
 
     constructor() {
         super();
-        this.options = icaro({
+        this._options = icaro({
             // mode: 'ace/mode/html',
             // theme: 'ace/theme/chrome', // 'solarized_light',
             highlightActiveLine: true,
@@ -107,8 +105,8 @@ customElements.define('li-editor-ace', class LiAceEditor extends LiElement {
             wrap: true,
             foldStyle: 'markbeginend' //"markbegin" | "markbeginend" | "manual",
         })
-        this.options.listen((e) => {
-            this.editor.setOptions(this.options);
+        this._options.listen((e) => {
+            this.editor.setOptions(this._options);
             this.$update();
         })
     }
@@ -119,6 +117,7 @@ customElements.define('li-editor-ace', class LiAceEditor extends LiElement {
         this.editor.renderer.attachToShadowRoot();
         this.editor.setTheme('ace/theme/' + this.theme);
         this.editor.getSession().setMode('ace/mode/' + this.mode);
+        this.editor.setOptions(this._options);
         this.editor.setOptions(this.options);
         this.value = this.src;
         this.editor.getSession().on('change', () => this.fire('change'));
@@ -136,6 +135,10 @@ customElements.define('li-editor-ace', class LiAceEditor extends LiElement {
             }
             if (changedProperties.has('mode')) {
                 this.editor.getSession().setMode('ace/mode/' + this.mode);
+                this.$update();
+            }
+            if (changedProperties.has('options')) {
+                this.editor.setOptions(this.options);
                 this.$update();
             }
         }
