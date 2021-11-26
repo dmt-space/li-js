@@ -17,9 +17,7 @@ const workersDir = new URL('monaco/', import.meta.url)
 customElements.define('li-editor-monaco', class LiMonaco extends LiElement {
     static get styles() {
         return css`
-            ::-webkit-scrollbar { width: 4px; height: 4px; }
-            ::-webkit-scrollbar-track { background: lightgray; }
-            ::-webkit-scrollbar-thumb { background-color: gray; }
+            ::-webkit-scrollbar { width: 4px; height: 4px; } ::-webkit-scrollbar-track { background: lightgray; } ::-webkit-scrollbar-thumb { background-color: gray; }
             :host {
                 width: 100%;
                 height: 100%;
@@ -62,7 +60,7 @@ customElements.define('li-editor-monaco', class LiMonaco extends LiElement {
     constructor() {
         super();
         this.options = icaro({
-            language: this.mode || 'javascript',
+            language: this.mode || ['javascript', 'typescript'],
             theme: this.theme || 'vs-dark',
             automaticLayout: true,
             lineNumbersMinChars: 3,
