@@ -126,7 +126,9 @@ customElements.define('li-live-html-monaco', class LiLiveHTMLMonaco extends LiEl
     }
     _reload() {
         document.location.href = this.$url.replace('live-html-monaco.js', 'index.html#?') + LZString.compressToEncodedURIComponent(this.editorValue);
-        document.location.reload();
+        setTimeout(() => {
+            window.location.reload(); 
+        }, 100);
     }
     _resize(v) {
         this._widthL = v;
