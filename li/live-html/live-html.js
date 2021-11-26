@@ -128,7 +128,9 @@ customElements.define('li-live-html', class LiLiveHTML extends LiElement {
     }
     _reload() {
         document.location.href = this.$url.replace('live-html.js', 'index.html#?') + LZString.compressToEncodedURIComponent(this.$id('editor')?.value);
-        document.location.reload();
+        setTimeout(() => {
+            window.location.reload(); 
+        }, 100);
     }
     _resize(v) {
         this._widthL = v;
