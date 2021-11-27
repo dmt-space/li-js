@@ -6,8 +6,8 @@ import '../button/button.js';
 import '../checkbox/checkbox.js';
 import '../../lib/pouchdb/pouchdb.js';
 import './lib/base-tree.js';
-import '../editor-ace/editor-ace.js';
-import '../editor-monaco/editor-monaco.js';
+import './lib/base-view.js';
+
 import { ChangesMap, LIITEM } from './lib/base-cls.js';
 
 customElements.define('li-base', class LiBase extends LiElement {
@@ -33,7 +33,7 @@ customElements.define('li-base', class LiBase extends LiElement {
                 </div>
                 <li-base-lpanel slot="app-left"></li-base-lpanel>
                 <div slot="app-main" class="main" id="main">
-                    <li-editor-ace id="ace" mode="json" theme="chrome" .options=${{ fontSize: 16, minLines: 80 }}></li-editor-ace>
+                    <li-base-view></li-base-view>
                 </div>
                 <div slot="app-right" class="panel">
                     right
@@ -51,7 +51,9 @@ customElements.define('li-base', class LiBase extends LiElement {
             _lPanel: { type: String, default: 'tree', save: true, local: true },
             _data: { type: Object, default: {}, local: true },
             selectedRow: { type: Object, global: true },
-            ready: { type: Boolean, local: true }
+            ready: { type: Boolean, local: true },
+            baseView: { type: String, default: 'desktop', global: true },
+            src: { type: String, default: '', global: true },
         }
     }
 
@@ -89,7 +91,10 @@ customElements.define('li-base', class LiBase extends LiElement {
 
         this.listen('dbAction', (e) => {
             console.log(e);
-            this.$id('ace').src = JSON.stringify(e.detail.liitem.doc, null, 4);
+            console.log(e.detail.action);
+            this.baseView = e.detail.action;
+            this.src = JSON.stringify(e.detail.liitem.doc, null, 4);
+            this.$update();
         })
     }
 
@@ -301,7 +306,7 @@ customElements.define('li-base-data', class LiBaseData extends LiElement {
     updated(e) {
         if (e.has('ready')) {
             this._selectedDBName = this.dbsList.filter(i => !i.hide)[0].name; // this._data.generalSets.selectedDBName;
-            this.dbsList.filter(i => !i.hide)[0].expanded = true;
+            // this.dbsList.filter(i => !i.hide)[0].expanded = true;
             if (this._data.generalSets.selectedRow && this._db().flat[this._data.generalSets.selectedRow])
                 this.selectedRow = this._db().flat[this._data.generalSets.selectedRow];
             if (this._data.generalSets.star && this._db().flat[this._data.generalSets.star])
