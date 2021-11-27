@@ -29,7 +29,7 @@ customElements.define('li-db-cell-list', class LiDbCellList extends LiElement {
     render() {
         return html`
             <div class="db-list" style="width: ${this.width}">
-                ${this.list.map(i => html`<li-db-cell icon="${i.icon}" label="${i.label}" action="${i.action}" .callback="${i.callback}" hideIcons="${i.hideIcons}"></li-db-cell>`)}
+                ${this.list.map(i => html`<li-db-cell .item=${i} icon="${i.icon}" label="${i.label}" group="${i.group}" action="${i.action}" .callback="${i.callback}" hideIcons="${i.hideIcons}"></li-db-cell>`)}
             </div>
         `;
     }

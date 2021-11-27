@@ -151,19 +151,16 @@ customElements.define('li-base-tree', class LiBaseTree extends LiElement {
         //this._focus(e, i);
         LI.show('dropdown', 'db-cell-list', {
             list: [
-                { icon: 'content-paste', label: 'view source', action: 'viewSorce', hideIcons: '23' },
-                // { icon: 'close', label: 'Delete item', hideIcons: '23' },
-                // { icon: 'refresh', label: '10 x console.log(ulid)', action: 'ulid', hideIcons: '23' },
-                // { icon: 'refresh', label: '2 x date.toISOString', action: 'toISOString', hideIcons: '23' },
+                { group: 'setView', label: 'set view' },
+                { icon: 'content-paste', label: 'source', action: 'source', hideIcons: '23' },
+                { icon: 'content-paste', label: 'props', action: 'props', hideIcons: '23' },
+                { icon: 'content-paste', label: 'table', action: 'table', hideIcons: '23' },
+                
             ],
             width: '200px'
-        }, {}).then(res => {
-            this.fire('dbAction', { action: res.detail.action, liitem: i, value: res });
-            LI.show('dropdown', 'editor-ace', {
-                src: JSON.stringify(i.doc)
-            }, { align: 'modal' }).then(res => {
-
-            }).catch(err => { });
+        }, {}).then(result => {
+            if (result.detail.action)
+                this.fire('dbAction', { action: result.detail.action, label: result.detail.value, liitem: i, result });
         }).catch(err => { });
     }
 });
