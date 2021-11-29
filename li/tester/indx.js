@@ -283,7 +283,7 @@ export const indx = {
         }
     },
     'live-html': [{ label: 'index', url: url + '/live-html' }, { label: 'index2', url: url + '/live-html/index-2.html' }],
-    
+
     'li-live-html-monaco': {
         type: 'apps', label: 'li-live-html-monaco', props: {
             lzs: `DwZwLgngNgpgfAKAJACMD2ATCACA3s1AQwGMBrAcwCc0BXAOwwFoBLAW0PJgC5sCkpmdGIUqMqhDMxh0wACgAsAVgwxyAGmwBiGDuwAmRQFINYSoTogADiOlh9Rk2YvXKt7AHYHWnTA9ftugCMAAzBhgCUanwCQiJiZpK2CsqqGgG+BsbYAO4AFsxgGV55Bb6eWel+FT7YIWHhANwEKCQU1PRMlmggBcxodDzBlgAe2EPDGorj2FMjTUhEZFS0DIw9AF7ctaEj2+MN2IdHh8gAvgjAAPTg0PAI98CSAG7YN7AAvABExGhQaJQ8FBQGgwA4AM36YDWzE2PAAzHoRp9EPxmIwBE8YIxcmBWFBGKx+iQ0NgAAquJ5SbIXS7POBAA`
@@ -364,6 +364,48 @@ export const indx = {
 
     'li-chart-apex': { type: 'demo', label: 'li-chart-apex', props: { iframe: '../chart-apex/index.html' } },
     'chart-apex': [{ label: 'index', url: url + '/chart-apex' }],
+
+    'li-leaflet': {
+        type: 'demo', label: 'leaflet map', props: {
+            showPositionOnClick: true,
+            latitude: 54.630627,
+            longitude: 39.739861,
+            zoom: 13,
+            markers: [
+                {
+                    latitude: 54.630627,
+                    longitude: 39.739861,
+                    bindPopup: '<b>Hello world !!!</b><br>I am a Ryazan city.'
+                }
+            ],
+            polygons: [
+                {
+                    polygons: [
+                        [54.666187, 39.733772],
+                        [54.664499, 39.736862],
+                        [54.669662, 39.767418],
+                        [54.680183, 39.7542],
+                        [54.674129, 39.738235]
+                    ],
+                    bindPopup: 'I am a Lukovsky forest.'
+                }
+            ],
+            circles: [
+                {
+                    latitude: 54.630627 - 0.02,
+                    longitude: 39.739861 - 0.01,
+                    args: {
+                        color: 'red',
+                        fillColor: '#f03',
+                        fillOpacity: 0.5,
+                        radius: 500
+                    },
+                    bindPopup: 'I am a Central Park of Culture and Leisure.'
+                }
+            ]
+        }
+    },
+    'leaflet': [{ label: 'index', url: url + '/leaflet' }],
 
     'li-three-meshline': { type: 'demo', label: 'meshLine (three.js)' },
     'three-meshline': [{ label: 'index', url: url + '/three-meshline' }],

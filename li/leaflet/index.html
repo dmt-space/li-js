@@ -1,0 +1,58 @@
+<meta charset="utf-8">
+<script type="module" src="./leaflet.js"></script>
+
+<style>
+    html * {
+        font-family: Arial;
+    }
+
+    html,
+    body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+    }
+</style>
+
+<li-leaflet id="leafletmap"></li-leaflet>
+
+<script>
+    leafletmap.args = {
+        showPositionOnClick: true,
+        latitude: 54.630627,
+        longitude: 39.739861,
+        zoom: 13,
+        markers: [
+            {
+                latitude: 54.630627,
+                longitude: 39.739861,
+                bindPopup: '<b>Hello world !!!</b><br>I am a Ryazan city.'
+            }
+        ],
+        polygons: [
+            {
+                polygons: [
+                    [54.666187, 39.733772],
+                    [54.664499, 39.736862],
+                    [54.669662, 39.767418],
+                    [54.680183, 39.7542],
+                    [54.674129, 39.738235]
+                ],
+                bindPopup: 'I am a Lukovsky forest.'
+            }
+        ],
+        circles: [
+            {
+                latitude: 54.630627 - 0.02,
+                longitude: 39.739861 - 0.01,
+                args: {
+                    color: 'red',
+                    fillColor: '#f03',
+                    fillOpacity: 0.5,
+                    radius: 500
+                },
+                bindPopup: 'I am a Central Park of Culture and Leisure.'
+            }
+        ]
+    }
+</script>
