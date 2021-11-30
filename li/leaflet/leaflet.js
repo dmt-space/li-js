@@ -3,9 +3,9 @@ import { LiElement, html, css } from '../../li.js';
 import '../button/button.js';
 import * as L from '../../lib/leaflet/leaflet-src.esm.js';
 
-const iconRetinaUrl = '/lib/leaflet/images/marker-icon-2x.png';
-const iconUrl = '/lib/leaflet/images/marker-icon.png';
-const shadowUrl = '/lib/leaflet/images/marker-shadow.png';
+const iconRetinaUrl = '../../lib/leaflet/images/marker-icon-2x.png';
+const iconUrl = '../../lib/leaflet/images/marker-icon.png';
+const shadowUrl = '../../lib/leaflet/images/marker-shadow.png';
 const iconDefault = L.icon({
     iconRetinaUrl,
     iconUrl,
@@ -30,7 +30,7 @@ customElements.define('li-leaflet', class liLeaflet extends LiElement {
 
     render() {
         return html`
-            <link rel="stylesheet" href="/lib/leaflet/leaflet.css">
+            <link rel="stylesheet" href="../../leaflet/leaflet.css">
             <div id="mapid" style="height: 100%"></div>
         `;
     }
