@@ -402,6 +402,13 @@ export const indx = {
                     },
                     bindPopup: 'I am a Central Park of Culture and Leisure.'
                 }
+            ],
+            polylines: [
+                {
+                    polylines: [[54.630627, 39.739861], [54.610627, 39.729861]],
+                    bindPopup: 'I am a distance.',
+                    args: { color: 'orange' },
+                }
             ]
         }
     },
