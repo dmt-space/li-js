@@ -30,7 +30,7 @@ customElements.define('li-leaflet', class liLeaflet extends LiElement {
 
     render() {
         return html`
-            <link rel="stylesheet" href="../../leaflet/leaflet.css">
+            <link rel="stylesheet" href="../../lib/leaflet/leaflet.css">
             <div id="mapid" style="height: 100%"></div>
         `;
     }
