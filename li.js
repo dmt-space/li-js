@@ -91,7 +91,6 @@ export class LiElement extends LitElement {
 
         }
         this._partid = this.$partid || this._partid || this.partid;
-        // this.$$.__update = this.$$.__changed = 0;
     }
     disconnectedCallback() {
         if (this.$$?.update) this.$$.update.unlisten(this.fnUpdate);
@@ -100,51 +99,29 @@ export class LiElement extends LitElement {
         super.disconnectedCallback();
     }
     _initBus() {
-        if (this.$partid || this.$properties.get('$partid') || (!this.$$ && (this.$properties.get('_partid') || this.__saves || !this.$root || this.__locals || this.__globals))) {
+        if (this.$partid || this.$properties.get('$partid') || (!this.$$ && (!this.$root || this.$properties.get('_partid') || this.__saves || this.__locals || this.__globals))) {
             this._partid = this.$partid || this._partid || this.id || this.localName;
-            if (this.$properties.get('$partid'))
-                this.$partid = this._partid;
-            if (this.$$?.update)
-                this.$$.update.unlisten(this.fnUpdate);
-            if (!LI._$$[this._partid]) {
-                LI._$$[this._partid] = { _$$: {}, _$$: {} };
-                LI._$$[this._partid]._$$ = icaro({});
-                LI._$$[this._partid]._$$.update = icaro({ value: 0 });
-            }
+            this.$partid = this.$properties.get('$partid') ? this._partid : this.$partid;
+            if (this.$$?.update) this.$$.update.unlisten(this.fnUpdate);
+            LI._$$[this._partid] ||= { _$$: icaro({ update: icaro({ value: 0 }) }) };
         }
     }
 
-    fnUpdate = (e) => {
-        this.requestUpdate();
-        // if (LI._$update) {
-        //     ++this.$$.__update;
-        //     LI.debounce('_$update', () => {
-        //         console.log('_$update', 'requestUpdate', this.$$.__update, 'changed', this.$$.__changed);
-        //         this.$$.__update = 0;
-        //         this.$$.__changed = 0;
-        //     }, 100);
-        // }
-    }
+    fnUpdate = (e) => { this.requestUpdate() }
     fnLocals = (e) => { if (this.__locals) this.__locals.forEach(i => { if (e.has(i)) this[i] = e.get(i) }) }
     fnGlobals = (e) => { if (this.__globals) this.__globals.forEach(i => { if (e.has(i)) this[i] = e.get(i) }) }
 
-    _setPartid(_partid) {
-        if (this._partid !== _partid) {
-            this._PARTID = _partid;
-            this.$$.update.listen(this.fnUpdate);
-        }
-    }
     get partid() { return this._PARTID || this.$partid || this.$root?.partid || this._partid || undefined }
     get $$() { return LI._$$?.[this.partid]?.['_$$'] ? LI._$$[this.partid]['_$$'] : undefined }
-    get $root() { return this.getRootNode().host; }
+    get $root() { return this.getRootNode().host }
     get _saveFileName() { return ((this.id || this.partid || this.localName.replace('li-', '')) + '.saves') }
     $(v) { return this.$$[v].value }
     $id(id) {
-        if (!id) return this.renderRoot.querySelectorAll('[id]');
+        if (!id) return Array.from(this.renderRoot.querySelectorAll('[id]'));
         return this.renderRoot.getElementById(id);
     }
     $refs(ref) {
-        const refs = this.renderRoot.querySelectorAll('[ref]');
+        const refs = Array.from(this.renderRoot.querySelectorAll('[ref]'));
         if (!ref) return refs;
         let node = undefined;
         if (refs?.length) refs.forEach(i => {
@@ -152,6 +129,12 @@ export class LiElement extends LitElement {
             if (_ref === ref) node = node || i;
         })
         return node;
+    }
+    $qs(path) {
+        return this.renderRoot.querySelector(path);
+    }
+    $qsa(path) {
+        return Array.from(this.renderRoot.querySelectorAll(path));
     }
 
     firstUpdated() {
@@ -167,8 +150,7 @@ export class LiElement extends LitElement {
             this._initBus();
             this.$$.update.listen(this.fnUpdate);
         }
-        if (this.args && changedProps.has('args'))
-            Object.keys(this.args).forEach(k => this[k] = this.args[k]);
+        if (this.args && changedProps.has('args')) Object.keys(this.args).forEach(k => this[k] = this.args[k]);
         for (const prop of changedProps.keys()) {
             if (this.__enableSave && this.__saves && this.__saves.includes(prop)) {
                 let v = JSON.parse(localStorage.getItem(this._saveFileName));
@@ -177,17 +159,12 @@ export class LiElement extends LitElement {
                 localStorage.setItem(this._saveFileName, JSON.stringify(v));
             }
             if (this.__isFirstUpdated) {
-                if (this.$$ && this.__locals && this.__locals.includes(prop))
-                    this.$$[prop] = this[prop];
-                if (this.$$ && this.__globals && this.__globals.includes(prop))
-                    LI.$$[prop] = this[prop];
-                // if (LI._changed) console.log('_changed', this.localName, prop, { old: changedProps.get(prop) }, { new: this[prop] });
-                // if (LI._$update) ++this.$$.__changed;
+                if (this.$$ && this.__locals && this.__locals.includes(prop)) this.$$[prop] = this[prop];
+                if (this.$$ && this.__globals && this.__globals.includes(prop)) LI.$$[prop] = this[prop];
             }
             if (this.__notifications && this.__notifications.has(prop)) {
                 const event = this.__notifications.get(prop);
                 this.fire(event, { value: this[prop] });
-                //if (LI._notify) console.log('_notify ', this.localName, event, { old: changedProps.get(prop) }, { new: this[prop] });
             }
         }
     }
@@ -228,10 +205,6 @@ class CLI {
         this.ulidm = monotonicFactory();
         this.icaro = icaro;
         this.$url = urlLI;
-        // this._notify = false;
-        // this._changed = false;
-        // this._icaro = false;
-        // this._$update = false;
     }
     get _$$() { return __$$._$$; }
     get $$() { return __$$.$$; }
