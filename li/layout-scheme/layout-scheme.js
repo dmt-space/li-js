@@ -136,6 +136,7 @@ customElements.define('li-layout-scheme', class LiLayoutScheme extends LiElement
     connectedCallback() {
         super.connectedCallback();
         this.$update();
+        this.listen('update', () => this.$update());
     }
 
     updated(changedProps) {
