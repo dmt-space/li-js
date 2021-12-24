@@ -70,9 +70,7 @@ customElements.define('li-tester', class LiTester extends LiElement {
     }
 
     slotchange(updateComponent = false) {
-        if (!(updateComponent === true && this.component))
-            this.component = this.shadowRoot.querySelectorAll('slot')[0].assignedElements()[0];
-        if (this.component?._setPartid && this._partid) this.component._setPartid(this._partid);
+        if (!(updateComponent === true && this.component)) this.component = this.shadowRoot.querySelectorAll('slot')[0].assignedElements()[0];
     }
 
     async _tap(e, key) {
