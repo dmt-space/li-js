@@ -72,6 +72,10 @@ customElements.define('li-layout-grid', class LiLayoutGrid extends LiElement {
     _resizeRuller() {
         this._resizeRuler_h();
         this._resizeRuler_v();
+        setTimeout(() => {
+            this.$update();
+            this.fire('update');
+        }, 10)
     }
     _mousewheel(e) {
         if (e.ctrlKey) {
@@ -99,10 +103,6 @@ customElements.define('li-layout-grid', class LiLayoutGrid extends LiElement {
             }
         }
         this._resizeRuller();
-        setTimeout(() => {
-            this.$update();
-        }, 10)
-
     }
 
     static get styles() {

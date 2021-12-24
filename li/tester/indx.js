@@ -316,6 +316,9 @@ export const indx = {
     'li-layout-grid': { type: 'demo', label: 'li-layout-grid' },
     'layout-grid': [{ label: 'index', url: url + '/layout-grid' }],
 
+    'li-layout-grid-new': { type: 'demo', label: 'li-layout-grid (infinite scroll)', props: { iframe: '../layout-grid-new/index.html' } },
+    'layout-grid-new': [{ label: 'index', url: url + '/layout-grid-new' }],
+
     'li-layout-scheme': { type: 'demo', label: 'li-scheme-designer', props: { iframe: '../layout-scheme/index-3.html' } },
     'layout-scheme': [{ label: 'demo-1', url: url + '/layout-scheme' },
     { label: 'demo-2', url: url + '/layout-scheme/index-2.html' }, { label: 'demo-3', url: url + '/layout-scheme/index-3.html' }],

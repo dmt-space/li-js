@@ -2,7 +2,7 @@ import { LiElement, html, css, svg } from '../../li.js';
 
 import '../button/button.js';
 
-customElements.define('li-layout-grid', class LiLayoutGrid extends LiElement {
+customElements.define('li-layout-grid-new', class LiLayoutGridNew extends LiElement {
     static get properties() {
         return {
             width: { type: Number, default: 0, local: true },
@@ -24,8 +24,8 @@ customElements.define('li-layout-grid', class LiLayoutGrid extends LiElement {
         window.addEventListener('resize', () => { this._update() });
     }
     _update() {
-
         this.$update();
+        this.fire('update');
     }
 
     static get styles() {
