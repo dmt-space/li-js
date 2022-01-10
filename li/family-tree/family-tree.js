@@ -4,34 +4,92 @@ import '../layout-app/layout-app.js';
 import '../button/button.js'
 
 customElements.define('li-family-tree', class LiFamilyTree extends LiElement {
+    static get styles() {
+        return css`
+            :host {
+                color: #505050;
+            }
+            .header {
+                display: flex;
+                align-items: center;
+                color: gray;
+                font-size: large;
+            }
+            .splitter {
+                max-width: 4px;
+                min-width: 4px;
+                cursor: col-resize;
+                z-index: 9;
+            }
+            .splitter:hover, .splitter-move {
+                background-color: lightgray;
+            }
+        `;
+    }
+
     render() {
         return html`
-            <li-layout-app sides="260,260,1,1" fill="#9f731350" style="width: 100%; height: 100%; flex: 1; position: relative;">
-                <div slot="app-top">
-                    family-tree
+            <li-layout-app hide="r" fill="#9f731350" style="width: 100%; height: 100%; flex: 1; position: relative;">
+                <div slot="app-top" class="header">
+                    <div style="flex:1"></div>family tree<div style="flex:1"></div>
+                    <li-button size="26" id="sl" name="filter-1" @click="${() => this._widthL = 0}" style="margin-right:4px" border="none"></li-button>
+                    <li-button size="26" id="slr" name="more-vert" @click="${() => this._widthL = this.$id('main').offsetWidth / 2}" style="margin-right:4px" border="none"></li-button>
+                    <li-button size="26" id="sr" name="filter-2" @click="${() => this._widthL = this.$id('main').offsetWidth}" style="margin-right:8px" border="none"></li-button>
                 </div>
 
                  <div slot="app-left">
                      <li-family-left></li-family-left>
                 </div>
 
-                <li-family-tree-main slot="app-main" style="width: 100%; height: 100%;"></li-family-tree-main>
-
-                <div slot="app-right">
-                    <li-family-right></li-family-right>
+                <div id="main" slot="app-main" style="display: flex; height: 100%;">
+                    ${this._widthL <= 0 ? html`` : html`
+                        <li-family-tree-main-left style="width:${this._widthL}px"></li-family-tree-main-left>
+                    `}
+                    <div class="splitter ${this._action === 'splitter-move' ? 'splitter-move' : ''}" @pointerdown="${this._pointerdown}"></div>
+                    ${this._widthL >= this.$id('main')?.offsetWidth ? html`` : html`
+                        <li-family-tree-main-right></li-family-tree-main-right>
+                    `}
                 </div>
+
+                <!-- <div slot="app-right">
+                    <li-family-right></li-family-right>
+                </div> -->
             </li-layout-app>
         `;
     }
 
     static get properties() {
         return {
-            people: { type: Array, local: true }
+            people: { type: Array, local: true },
+            _widthL: { type: Number, default: 800, save: true, local: true }
         }
+    }
+
+    _pointerdown(e) {
+        e.stopPropagation();
+        e.preventDefault();
+        this._action = 'splitter-move';
+        document.addEventListener("pointermove", this.__move = this.__move || this._move.bind(this), false);
+        document.addEventListener("pointerup", this.__up = this.__up || this._up.bind(this), false);
+        document.addEventListener("pointercancel", this.__up = this.__up || this._up.bind(this), false);
+    }
+    _move(e) {
+        e.preventDefault();
+        this._widthL = this._widthL + e.movementX;
+        this._widthL = this._widthL <= 0 ? 0 : this._widthL >= this.$id('main')?.offsetWidth ? this.$id('main').offsetWidth : this._widthL;
+        this.fire('resize');
+    }
+    _up(e) {
+        e.preventDefault();
+        this._action = '';
+        document.removeEventListener("pointermove", this.__move, false);
+        document.removeEventListener("pointerup", this.__up, false);
+        document.removeEventListener("pointercancel", this.__up, false);
+        this.$update();
     }
 });
 
-customElements.define('li-family-tree-main', class LiFamilyTreeMain extends LiElement {
+customElements.define('li-family-tree-main-left', class LiFamilyTreeMain extends LiElement {
     static get styles() {
         return css`
             :host {
@@ -39,15 +97,15 @@ customElements.define('li-family-tree-main', class LiFamilyTreeMain extends LiEl
                 justify-content: center;
                 align-items: center;
                 position: relative;
-                flex: 1;
                 box-sizing: border-box;
+                overflow: hidden;
             }
         `;
     }
 
     render() {
         return html`
-            <div style="transform: scale(${this.scale}); display: flex"  @pointerdown=${this._down} @wheel=${this._wheel}>
+            <div style="transform: scale(${this.scale}); display: flex"  @pointerdown=${this._pointerdown} @wheel=${this._wheel}>
                 <li-family-tree-box .persona=${this.people?.[0]?.parents[0]} level=-1></li-family-tree-box>
                 <li-family-tree-box .persona=${this.people?.[0]?.parents[1]} level=-1></li-family-tree-box>
                 <li-family-tree-box .persona=${this.people?.[0]} level=0></li-family-tree-box>
@@ -68,7 +126,7 @@ customElements.define('li-family-tree-main', class LiFamilyTreeMain extends LiEl
         }
     }
 
-    _down(e) {
+    _pointerdown(e) {
         this._lastX = e.pageX;
         this._lastY = e.pageY;
         document.addEventListener("pointermove", this.__move ||= this._move.bind(this), false);
@@ -90,6 +148,36 @@ customElements.define('li-family-tree-main', class LiFamilyTreeMain extends LiEl
     _wheel(e) {
         this.scale += e.deltaY * -0.01;
         this.scale = Math.min(Math.max(.125, this.scale), 4);
+    }
+});
+
+customElements.define('li-family-tree-main-right', class LiFamilyTreeMain extends LiElement {
+    static get styles() {
+        return css`
+            :host {
+                display: flex;
+                flex: 1;
+                justify-content: top;
+                align-items: left;
+                position: relative;
+                box-sizing: border-box;
+                overflow: hidden;
+            }
+        `;
+    }
+
+    render() {
+        return html`
+            <div style="width: 100%; border-left: ${this._widthL > 100 ? '1px solid lightgray' : 'none'}">
+                main-right
+            </div>
+        `;
+    }
+
+    static get properties() {
+        return {
+            _widthL: { type: Number, default: 800, local: true }
+        }
     }
 });
 
