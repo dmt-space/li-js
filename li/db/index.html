@@ -1,0 +1,22 @@
+<script type="module" src="../layout-app/layout-app.js"></script>
+<script type="module" src="./db.js"></script>
+
+<style>
+    html * {
+        /* font-size: 1.05em; */
+        color: gray;
+        font-family: Arial;
+    }
+
+    html,
+    body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+    }
+</style>
+
+<li-layout-app hide="r">
+    <label slot="app-top">Test li-db</label>
+    <li-db slot="app-left"></li-db>
+</li-layout-app>
