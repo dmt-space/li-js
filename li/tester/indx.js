@@ -244,7 +244,7 @@ export const indx = {
     'property-grid': [{ label: 'index', url: url + '/property-grid' }],
 
     'li-layout-app': { type: 'comp', label: 'li-layout-app' },
-    'layout-app': [{ label: 'demo-1', url: url + '/layout-app' }, { label: 'demo-2', url: url + '/layout-app/demo.html' }, { label: 'demo-3', url: url + '/layout-app/demo2.html' }],
+    'layout-app': [{ label: 'demo-1', url: url + '/layout-app' }, { label: 'demo-2', url: url + '/layout-app/demo.html' }],
 
 
 
@@ -435,40 +435,5 @@ export const indx = {
 
     'li-life-webgl': { type: 'demo', label: 'Games of Life (webgl)', props: { id: 'life-webgl-tester' } },
     'life-webgl': [{ label: 'index', url: url + '/life-webgl' }],
-
-    'li-tabulator': {
-        type: 'demo', label: 'li-tabulator', props: {
-            options: {
-                maxHeight: "99%",
-                minHeight: 400,
-                height: "100%",
-                layout: "fitColumns",
-                data: [
-                    { id: 1, name: "Oli Bob", age: 12, col: "red", dob: "", rating: 2 },
-                    { id: 2, name: "Mary May", age: 13, col: "blue", dob: "14/05/1982", rating: 0 },
-                    { id: 3, name: "Christine Lobowski", age: 42, col: "green", dob: "22/05/1982", rating: 4 },
-                    { id: 4, name: "Brendon Philips", age: 81, col: "orange", dob: "01/08/1980", rating: 5 },
-                    { id: 5, name: "Margret Marmajuke", age: 16, col: "yellow", dob: "31/01/1999", rating: 3 },
-                    { id: 6, name: "Oli Bob", age: 27, col: "red", dob: "", rating: 1 },
-                    { id: 7, name: "Mary May", age: 31, col: "blue", dob: "14/05/1982", rating: 4 },
-                    { id: 8, name: "Christine Lobowski", age: 57, col: "green", dob: "22/05/1982", rating: 2 },
-                    { id: 9, name: "Brendon Philips", age: 63, col: "orange", dob: "01/08/1980", rating: 4 },
-                    { id: 10, name: "Margret Marmajuke", age: 99, col: "yellow", dob: "31/01/1999", rating: 5 },
-                ],
-                columns: [
-                    { label: "id", field: "id", width: 150, bottomCalc: "sum", hozAlign: "center" },
-                    { label: "Name", field: "name", width: 150 },
-                    { label: "Age", field: "age", hozAlign: "center", bottomCalc: "avg" },
-                    { label: "Favourite Color", field: "col" },
-                    { label: "Date Of Birth", field: "dob", sorter: "date", hozAlign: "center" },
-                    { label: "Rating", field: "rating", formatter: "star" }
-                ]
-            }
-        }
-    },
-    tabulator: [{ label: 'index', url: url + '/tabulator' }],
-
-    'li-app': { type: 'demo', label: 'li-app' },
-    app: [{ label: 'index', url: url + '/app' }],
 
 }

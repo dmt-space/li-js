@@ -107,7 +107,12 @@ export class LiElement extends LitElement {
         }
     }
 
-    fnUpdate = (e) => { this.requestUpdate() }
+    fnUpdate = (e) => { 
+        this.requestUpdate();
+        (this._to$update || []).forEach(i => i.$update && i.$update());
+    }
+    _to$update = [];
+    to$update = (e) => e && (this._to$update || []).add(e);
     fnLocals = (e) => { if (this.__locals) this.__locals.forEach(i => { if (e.has(i)) this[i] = e.get(i) }) }
     fnGlobals = (e) => { if (this.__globals) this.__globals.forEach(i => { if (e.has(i)) this[i] = e.get(i) }) }
 
