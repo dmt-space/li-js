@@ -16,7 +16,7 @@ customElements.define('li-tester', class LiTester extends LiElement {
         }
     }
 
-    get _localName() { return this.component?.localName || 'li-tester' }
+    get _localName() { return this._locName || this.component?.localName || 'li-tester' }
     get hide() { return this.component?.localName === 'iframe' ? 'r' : '' }
 
     static get styles() {
@@ -40,7 +40,8 @@ customElements.define('li-tester', class LiTester extends LiElement {
                     <slot name="app-test"></slot>
                 </div>
                 <div slot="app-left" style="display: flex; flex-direction: column;">
-                    <div style="display: flex; flex-wrap: wrap; width: 100%; border-bottom: 1px solid gray; margin-bottom: 8px; padding: 2px; position: sticky; top: 0; background-color: lightyellow; justify-content: left">    
+                    <div style="displa: flex; padding: 4px;"><a href="https://github.com/resu062/li-js" target="_blank">https://github.com/resu062/li-js</a></div>
+                    <div style="display: flex; flex-wrap: wrap; width: 100%; border-top: 1px solid gray; border-bottom: 1px solid gray; margin-bottom: 8px; padding: 2px; position: sticky; top: 0; background-color: lightyellow; justify-content: left">    
                         <li-button name="apps" width="70" @click=${() => this._tabs = 'apps'} back=${this._tabs === 'apps' ? '#e0e0e0' : ''}>Apps</li-button>
                         <li-button name="extension" width="70" @click=${() => this._tabs = 'demo'} back=${this._tabs === 'demo' ? '#e0e0e0' : ''}>Demo</li-button>
                         <li-button name="settings" width="144" @click=${() => this._tabs = 'comp'} back=${this._tabs === 'comp' ? '#e0e0e0' : ''}>Components</li-button>
@@ -77,7 +78,7 @@ customElements.define('li-tester', class LiTester extends LiElement {
             this.removeChild(this.component);
         if (!this._wasRemoved) this.$refs('main').removeChild(this.$id('slot'));
         this._wasRemoved = true
-        let el = e?.target.label2 || e?.target.label || key;
+        let el = this._locName = e?.target.label2 || e?.target.label || key;
         this._focused = key;
         let props = { ...indx[el].props, _partid: this.partid };
         if (props.iframe && props.iframe !== 'noiframe') {
