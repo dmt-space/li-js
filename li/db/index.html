@@ -1,4 +1,5 @@
 <script type="module" src="../layout-app/layout-app.js"></script>
+<script type="module" src="../property-grid/property-grid.js"></script>
 <script type="module" src="./db.js"></script>
 
 <style>
@@ -16,7 +17,12 @@
     }
 </style>
 
-<li-layout-app hide="r">
+<li-layout-app>
     <label slot="app-top">Test li-db</label>
-    <li-db slot="app-left"></li-db>
+    <li-db id="li_db" slot="app-left"></li-db>
+    <li-property-grid id="li_pg" slot="app-right"></li-property-grid>
 </li-layout-app>
+
+<script type="module">
+    li_pg.io = li_db;
+</script>

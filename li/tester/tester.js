@@ -16,9 +16,8 @@ customElements.define('li-tester', class LiTester extends LiElement {
         }
     }
 
-    get _localName() {
-        return this.component?.localName || 'li-tester'
-    }
+    get _localName() { return this.component?.localName || 'li-tester' }
+    get hide() { return this.component?.localName === 'iframe' ? 'r' : '' }
 
     static get styles() {
         return css`
@@ -32,7 +31,7 @@ customElements.define('li-tester', class LiTester extends LiElement {
 
     render() {
         return html`
-            <li-layout-app sides="300,300" fill="#9f731350" id="li-layout-app-tester">
+            <li-layout-app sides="300,300" fill="#9f731350" id="li-layout-app-tester" hide=${this.hide}>
                 <div slot="app-top">
                     <div>${this._localName}</div>
                 </div>
