@@ -241,6 +241,7 @@ customElements.define('li-db-settings', class LiDbSettings extends LiElement {
             this.replicationHandler = this.dbLocal.sync(this.dbRemote, { live: true });
         } else {
             this.replicationHandler.cancel();
+            this.replicationHandler = undefined;
         }
     }
 })

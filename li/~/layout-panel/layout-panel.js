@@ -1,6 +1,6 @@
-import { LiElement, html, css } from '../../li.js';
+import { LiElement, html, css } from '../../../li.js';
 
-import '../button/button.js';
+import '../../button/button.js';
 
 customElements.define('li-layout-panel', class LiLayoutPanel extends LiElement {
     static get properties() {

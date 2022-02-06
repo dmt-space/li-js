@@ -1,7 +1,7 @@
-import { LiElement, html, css } from '../../../li.js';
+import { LiElement, html, css } from '../../../../li.js';
 
-import '../../button/button.js';
-import '../../checkbox/checkbox.js';
+import '../../../button/button.js';
+import '../../../checkbox/checkbox.js';
 
 customElements.define('li-base-view-desktop', class LiBaseViewDesktop extends LiElement {
     static get styles() {

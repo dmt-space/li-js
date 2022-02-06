@@ -1,10 +1,10 @@
-import { LiElement, html, css } from '../../li.js';
-import '../../lib/li-utils/utils.js';
+import { LiElement, html, css } from '../../../li.js';
+import '../../../lib/li-utils/utils.js';
 
-import '../layout-app/layout-app.js';
-import '../button/button.js';
-import '../checkbox/checkbox.js';
-import '../../lib/pouchdb/pouchdb.js';
+import '../../layout-app/layout-app.js';
+import '../../button/button.js';
+import '../../checkbox/checkbox.js';
+import '../../../lib/pouchdb/pouchdb.js';
 import './lib/base-tree.js';
 import './lib/base-view.js';
 

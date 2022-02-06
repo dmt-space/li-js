@@ -1,8 +1,8 @@
-import { LiElement, html, css } from '../../../li.js';
+import { LiElement, html, css } from '../../../../li.js';
 
-import '../../button/button.js';
-import '../../checkbox/checkbox.js';
-import '../../editor-ace/editor-ace.js';
+import '../../../button/button.js';
+import '../../../checkbox/checkbox.js';
+import '../../../editor-ace/editor-ace.js';
 
 customElements.define('li-base-view-source', class LiBaseViewSource extends LiElement {
     static get styles() {
