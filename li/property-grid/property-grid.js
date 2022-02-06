@@ -7,7 +7,7 @@ customElements.define('li-property-grid', class LiPropertyGrid extends LiElement
     static get properties() {
         return {
             label: { type: String },
-            io: { type: Object, default: undefined },
+            io: { type: Object, default: undefined, local: true },
             ioProperties: { type: Object, default: {} },
             expertMode: { type: Boolean, default: false, local: true },
             showFunction: { type: Boolean, default: false, local: true },
@@ -169,6 +169,7 @@ customElements.define('li-property-grid', class LiPropertyGrid extends LiElement
         this.item = [];
         //this.$update();
         const io = this.isShowFocused ? this.focused.el || this.focused || this.io : this.io;
+        io.to$update && io.to$update(this);
         this._io = await makeData(io, this.args);
         const obj = {};
         this.ioLength = 0;
@@ -226,6 +227,7 @@ customElements.define('li-property-grid', class LiPropertyGrid extends LiElement
 customElements.define('li-property-tree', class LiPropertyTree extends LiElement {
     static get properties() {
         return {
+            io: { type: Object, local: true },
             expertMode: { type: Boolean, default: false, local: true },
             item: { type: Object, default: undefined },
             props: { type: Object, default: {} },
@@ -319,6 +321,7 @@ customElements.define('li-property-tree', class LiPropertyTree extends LiElement
             if (e.target.type === 'checkbox') i.obj[i.key] = e.target.checked;
             else i.obj[i.key] = e.target.value;
             this.$fire('changedInPropertyGrid');
+            this.io?.$update();
         }
     }
     _dblclick(e, item) {
