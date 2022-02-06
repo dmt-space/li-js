@@ -19,7 +19,9 @@ customElements.define('li-db', class LiDb extends LiElement {
                 <li-button id="settings" name="settings" title="settings" ?toggled=${this.dbPanel === 'settings'} toggledClass="ontoggled" @click=${this._onclick}></li-button>
                 <div style="flex:1"></div>
                 <li-button id="reload" name="refresh" title="reload page"  @click="${this._onclick}"></li-button>
-                <li-button id="save" name="save" title="save" @click=${this._onclick} .fill="${this.needSave ? 'red' : ''}" .color="${this.needSave ? 'red' : 'gray'}"></li-button>
+                ${this.readOnly ? html`` : html`
+                    <li-button id="save" name="save" title="save" @click=${this._onclick} .fill="${this.needSave ? 'red' : ''}" .color="${this.needSave ? 'red' : 'gray'}"></li-button>
+                `}
             </div>
             <div style="padding-left: 2px;">
                 ${this.dbPanel === 'tree' ? html`<li-db-three></li-db-three>` : html``}
@@ -33,6 +35,8 @@ customElements.define('li-db', class LiDb extends LiElement {
         return {
             dbName: { type: String, default: 'li-db', local: true, save: true },
             dbURL: { type: String, default: 'http://admin:54321@localhost:5984/', local: true, save: true },
+            replication: { type: Boolean, default: false, local: true, save: true },
+            readOnly: { type: Boolean, default: false, local: true },
             dbPanel: { type: String, default: 'tree', local: true },
             starView: { type: Boolean, default: false, local: true }
         }
@@ -76,18 +80,20 @@ customElements.define('li-db-three', class LiDbThree extends LiElement {
                     borderColor="${this.starView ? 'orange' : ''}" fill="${this.starView ? 'orange' : ''}"></li-button>
                 <li-button name="camera" title="save tree state" @click="${this._saveTreeState}" size="20"></li-button>
                 <div style="flex: 1"></div>
-                <li-button name="restore" title="clear deleted" size="20" @click=${this._onclick}></li-button>
-                <li-button name="delete" title="delete" size="20" @click=${this._onclick}></li-button>
-                <li-button name="library-add" title="add new" size="20" @click=${this._onclick}></li-button>
+                ${this.readOnly ? html`` : html`
+                    <li-button name="restore" title="clear deleted" size="20" @click=${this._onclick}></li-button>
+                    <li-button name="delete" title="delete" size="20" @click=${this._onclick}></li-button>
+                    <li-button name="library-add" title="add new" size="20" @click=${this._onclick}></li-button>
+                `}
             </div>
         `
     }
 
     static get properties() {
         return {
-            autoSync: { type: Boolean, default: false, save: true },
+            readOnly: { type: Boolean, local: true },
             dbPanel: { type: String, local: true },
-            starView: { type: Boolean, default: false, local: true }
+            starView: { type: Boolean, local: true }
         }
     }
 
@@ -148,7 +154,7 @@ customElements.define('li-db-settings', class LiDbSettings extends LiElement {
                 <div class="row-panel" style="display: flex; align-items: center; margin-bottom: 4px"><div style="width: 100px;">db name:</div><input .value="${this.dbName}" @change="${this._setDbName}"></div>
                 <div style="color: gray; opacity: 0.7; text-decoration: underline; padding: 4px 2px 6px 0;">Couchdb settings:</div>
                 <div style="display: flex; align-items: center; margin-bottom: 4px"><div style="width: 100px">db  url:</div><input .value="${this.dbURL}" @change="${this._setdbURL}"></div>
-                <div style="display: flex; align-items: center;"><li-checkbox @change="${this._setAutoSync}" .toggled="${this.autoSync}"></li-checkbox>
+                <div style="display: flex; align-items: center;"><li-checkbox @change="${this._setReplication}" .toggled="${this.replication}"></li-checkbox>
                     Auto replication local and remote db</div>
                 <div class="row-panel"></div>
                 <li-button id="Compacting db" @click="${this._settings}" height="auto" width="auto" padding="4px">Compacting current database</li-button>
@@ -160,7 +166,7 @@ customElements.define('li-db-settings', class LiDbSettings extends LiElement {
                 <div class="row-panel"></div>
                 <div style="color:gray; opacity: 0.7; text-decoration: underline; padding: 4px 2px 6px 0;">Import database:</div>
                 <div style="display: flex; align-items: center;"><li-checkbox @change="${e => this._importToFocused = e.detail}"></li-checkbox>Import to focused in tree</div>
-                <li-button for="import" height="auto" width="auto" padding="4px" @click=${() => {this.$id('import').click()}}>Импорт db</li-button>
+                <li-button for="import" height="auto" width="auto" padding="4px" @click=${() => { this.$id('import').click() }}>Импорт db</li-button>
                 <input id="import" type="file" id="import" @change=${this._tap} style="display: none"/>
             </div>
         `
@@ -170,6 +176,7 @@ customElements.define('li-db-settings', class LiDbSettings extends LiElement {
         return {
             dbName: { type: String, local: true },
             dbURL: { type: String, local: true },
+            replication: { type: Boolean, local: true },
             dbPanel: { type: String, local: true },
         }
     }

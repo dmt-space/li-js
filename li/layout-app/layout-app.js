@@ -43,6 +43,16 @@ customElements.define('li-layout-app', class LiLayoutApp extends LiElement {
             }
         }
     }
+    updated(changedProperties) {
+        if (changedProperties.has('hide')) {
+            let s = this.sides.split(',');
+            this._l = this.hide.includes('l') ? 0 : Number(s[0]) || 0;
+            this._r = this.hide.includes('r') ? 0 : Number(s[1]) || 0;
+            this._t = !this.hide.includes('t');
+            this._b = !this.hide.includes('b');
+        };
+    }
+
     _movePanel(panel) {
         this._move = panel;
         this._indx = 999;
