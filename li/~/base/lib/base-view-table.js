@@ -1,8 +1,8 @@
-import { LiElement, html, css } from '../../../li.js';
+import { LiElement, html, css } from '../../../../li.js';
 
-import '../../button/button.js';
-import '../../checkbox/checkbox.js';
-import '../../table/table.js';
+import '../../../button/button.js';
+import '../../../checkbox/checkbox.js';
+import '../../../table/table.js';
 
 customElements.define('li-base-view-table', class LiBaseViewTable extends LiElement {
     static get styles() {

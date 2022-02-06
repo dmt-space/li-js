@@ -1,5 +1,5 @@
-import '../../../li.js';
-import '../../../lib/pouchdb/pouchdb.js';
+import '../../../../li.js';
+import '../../../../lib/pouchdb/pouchdb.js';
 
 export class ChangesMap {
     #map = new Map();

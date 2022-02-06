@@ -41,23 +41,6 @@ export const indx = {
     'li-table': { type: 'comp', label: 'li-table', props: { iframe: '../table/index.html' } },
     table: [{ label: 'index', url: url + '/table' }, { label: 'calorie table', url: url + '/table/index2.html' }],
 
-    'li-tabs': {
-        type: 'comp', label: 'li-tabs',
-        props: {
-            vertical: true,
-            horizontal: true,
-            item: [
-                { label: 'tab-001', icon: 'android' },
-                { label: 'tab-002' },
-                { label: 'tab-003' },
-                { label: 'tab-004' },
-                { label: 'tab-005' },
-                { label: 'tab-000000005', icon: 'refresh' },
-            ]
-        }
-    },
-    tabs: [{ label: 'index', url: url + '/tree' }],
-
     'li-tree': {
         type: 'comp', label: 'li-tree', props: {
             allowCheck: true,
