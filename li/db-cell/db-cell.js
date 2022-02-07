@@ -1,6 +1,6 @@
-import { LiElement, html, css } from '../../../li.js';
+import { LiElement, html, css } from '../../li.js';
 
-import '../../button/button.js';
+import '../button/button.js';
 
 customElements.define('li-db-cell', class LiDbCell extends LiElement {
     static get styles() {
