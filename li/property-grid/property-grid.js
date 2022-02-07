@@ -397,7 +397,7 @@ async function makeData(el, { expert, group, sort, showFunction, categories }, s
         }
         for (const key of props.keys()) {
             let list;
-            if (!expert && exts.test(key)) continue;
+            // if (!expert && exts.test(key)) continue;
             if (info?.list && info.list[key]) {
                 list = info.list[key];
             }

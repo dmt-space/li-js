@@ -68,9 +68,19 @@ export class LiElement extends LitElement {
             this.$$.update.listen(this.fnUpdate);
         }
         if (this.$$ && this.__saves) {
+            const obj = JSON.parse(localStorage.getItem(this._saveFileName));
             this.__saves.forEach(i => {
-                const v = JSON.parse(localStorage.getItem(this._saveFileName));
-                if (v) this.$$[i] = this[i] = v[this.localName + '.' + i] !== undefined ? v[this.localName + '.' + i] : this[i];
+                const v = obj?.[this.localName + '.' + i];
+                if (v !== undefined) {
+                    if (v != null && v.constructor.name === "Object") {
+                        this.$$[i] = this[i] = { ...this[i], ...v };
+                    } else {
+                        this.$$[i] = this[i] = v;
+                    }
+                } else {
+                    this.$$[i] = this[i];
+                }
+                this.$$[i]?.listen && this.$$[i].listen(() => this.fnSave(i));
             });
             this.__enableSave = true;
         }
@@ -107,7 +117,7 @@ export class LiElement extends LitElement {
         }
     }
 
-    fnUpdate = (e) => { 
+    fnUpdate = (e) => {
         this.requestUpdate();
         (this._to$update || []).forEach(i => i.$update && i.$update());
     }
@@ -115,10 +125,20 @@ export class LiElement extends LitElement {
     to$update = (e) => e && (this._to$update || []).add(e);
     fnLocals = (e) => { if (this.__locals) this.__locals.forEach(i => { if (e.has(i)) this[i] = e.get(i) }) }
     fnGlobals = (e) => { if (this.__globals) this.__globals.forEach(i => { if (e.has(i)) this[i] = e.get(i) }) }
+    fnSave = (prop) => {
+        let obj = JSON.parse(localStorage.getItem(this._saveFileName));
+        obj = obj || {};
+        obj[this.localName + '.' + prop] = this[prop];
+        localStorage.setItem(this._saveFileName, JSON.stringify(obj));
+    }
 
     get partid() { return this._PARTID || this.$partid || this.$root?.partid || this._partid || undefined }
     get $$() { return LI._$$?.[this.partid]?.['_$$'] ? LI._$$[this.partid]['_$$'] : undefined }
-    get $root() { return this.getRootNode().host }
+    get $root() {
+        try {
+            return this.getRootNode().host;
+        } catch (err) { }
+    }
     get _saveFileName() { return ((this.id || this.partid || this.localName.replace('li-', '')) + '.saves') }
     $(v) { return this.$$[v].value }
     $id(id) {
@@ -158,10 +178,7 @@ export class LiElement extends LitElement {
         if (this.args && changedProps.has('args')) Object.keys(this.args).forEach(k => this[k] = this.args[k]);
         for (const prop of changedProps.keys()) {
             if (this.__enableSave && this.__saves && this.__saves.includes(prop)) {
-                let v = JSON.parse(localStorage.getItem(this._saveFileName));
-                v = v || {};
-                v[this.localName + '.' + prop] = this[prop];
-                localStorage.setItem(this._saveFileName, JSON.stringify(v));
+                this.fnSave(prop);
             }
             if (this.__isFirstUpdated) {
                 if (this.$$ && this.__locals && this.__locals.includes(prop)) this.$$[prop] = this[prop];
