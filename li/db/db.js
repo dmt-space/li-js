@@ -55,7 +55,7 @@ customElements.define('li-db', class LiDb extends LiElement {
                     dbRemote: undefined,
                     replicationHandler: undefined,
                     dbPanel: 'tree',
-                    starView: false
+                    starActive: false
                 }
             }
         }
@@ -116,8 +116,7 @@ customElements.define('li-db-three', class LiDbThree extends LiElement {
             <div class="row-panel">
                 <li-button id="collapse" name="unfold-less" title="collapse" size="20" @click=${this.btnClick}></li-button>
                 <li-button id="expand" name="unfold-more" title="expand" size="20" @click=${this.btnClick}></li-button>
-                <li-button id="starView" name="${$c.starView ? 'star' : 'star-border'}" title="set selected as root" size="20" @click=${this.btnClick}
-                    borderColor="${$c.starView ? 'orange' : ''}" fill="${$c.starView ? 'orange' : ''}"></li-button>
+                <li-button id="starActive" name=${this.starIcon} title="set selected as root" size="20" @click=${this.btnClick} borderColor=${this.starColor} fill=${this.starColor}></li-button>
                 <li-button name="camera" title="save tree state" @click="${this._saveTreeState}" size="20"></li-button>
                 <div style="flex: 1"></div>
                 ${$a.readOnly ? html`` : html`
@@ -134,6 +133,8 @@ customElements.define('li-db-three', class LiDbThree extends LiElement {
 
         }
     }
+    get starColor() { return $c.starActive ? 'orange' : '' }
+    get starIcon() { return $c.starActive ? 'star' : 'star-border' }
 
     btnClick(e) {
         const id = e.target.id;
@@ -144,8 +145,8 @@ customElements.define('li-db-three', class LiDbThree extends LiElement {
             expand: () => {
 
             },
-            starView: () => {
-                $c.starView = !$c.starView;
+            starActive: () => {
+                $c.starActive = !$c.starActive;
             },
         }
         action[id] && action[id]();
