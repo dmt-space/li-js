@@ -243,7 +243,7 @@ class CLI {
         comp = comp || {};
         if (typeof comp === 'string') {
             comp = comp.replace('li-', '');
-            let url = `${urlLI.replace('li.js', '')}li/${comp}/${comp}.js`;
+            let url = `${urlLI.replace('li.js', '')}li` + (comp.includes('.') ? comp : `/${comp}/${comp}.js`);
             await import(url);
             const cmp = document.createElement(`li-${comp}`);
             for (let p in props) cmp[p] = props[p];
