@@ -82,12 +82,14 @@ customElements.define('li-dropdown', class LiDropdown extends LiElement {
         LI.listen(window, 'dropdownDataChange', this.__ok, true);
         LI.listen(window, 'keyup', this.__keyup, true);
         LI.listen(window, 'mousedown, resize, wheel', this.__close, true);
+        LI.listen(document, 'ok', (e) => this.ok(e));
         this._setSize();
     }
     disconnectedCallback() {
         LI.unlisten(window, 'dropdownDataChange', this.__ok, true);
         LI.unlisten(window, 'keyup', this.__keyup, true);
         LI.unlisten(window, 'mousedown, resize, wheel', this.__close, true);
+        LI.unlisten(document, 'ok', this.ok());
         super.disconnectedCallback();
     }
 

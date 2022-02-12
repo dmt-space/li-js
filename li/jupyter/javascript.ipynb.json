@@ -1,0 +1,95 @@
+{
+    "metadata": {
+        "language_info": {
+            "codemirror_mode": {
+                "name": "javascript"
+            },
+            "file_extension": ".js",
+            "mimetype": "text/javascript",
+            "name": "javascript",
+            "nbconvert_exporter": "javascript",
+            "pygments_lexer": "javascript",
+            "version": "es2017"
+        },
+        "kernelspec": {
+            "name": "javascript",
+            "display_name": "JavaScript",
+            "language": "javascript"
+        },
+        "toc-showcode": true
+    },
+    "nbformat_minor": 4,
+    "nbformat": 4,
+    "cells": [
+        {
+            "cell_type": "html",
+            "source": "<h3 style='color: green'>I'm HTML editor ...</h3>",
+            "color": "#16C60C",
+            "metadata": {}
+        },
+        {
+            "cell_type": "markdown",
+            "source": "# JavaScript in `oda-jupyter-notebook`\n\n![](https://odajs.org/site/icon.webp)",
+            "metadata": {}
+        },
+        {
+            "cell_type": "markdown",
+            "source": "## Standard streams",
+            "metadata": {}
+        },
+        {
+            "cell_type": "code",
+            "cell_props": {
+                "readOnly": true
+            },
+            "source": "console.log('hello world') // is readOnly code in view mode",
+            "metadata": {
+                "trusted": true
+            },
+            "execution_count": null,
+            "outputs": []
+        },
+        {
+            "cell_type": "code",
+            "source": "console.error('error')",
+            "metadata": {
+                "trusted": true
+            },
+            "execution_count": null,
+            "outputs": []
+        },
+        {
+            "cell_type": "markdown",
+            "source": "## JavaScript specific constructs",
+            "metadata": {}
+        },
+        {
+            "cell_type": "code",
+            "source": "const delay = 2000;\n\nsetTimeout(() => {\n    console.log('done');\n}, delay);",
+            "metadata": {
+                "trusted": true
+            },
+            "execution_count": null,
+            "outputs": []
+        },
+        {
+            "cell_type": "code",
+            "source": "var str = \"hello world\"\nstr.split('').forEach(c => {\n    console.log(c)\n})",
+            "metadata": {
+                "trusted": true
+            },
+            "execution_count": null,
+            "outputs": []
+        },
+        {
+            "cell_type": "markdown",
+            "source": "<hr><h3 style='color: red'>use old oda-site-md-style in Markdown cells</h3><hr>",
+            "metadata": {}
+        },
+        {
+            "cell_type": "markdown",
+            "source": "Директива **~style** используется для реактивной стилизации любого HTML-элемента, объявленного внутри компонента. \r\n\r\nЗначение директивы **~style** автоматически связывается со значение атрибута **style** любого HTML-элемента, задавая стиль его отображения.\r\n\r\n### Пример 1.\r\n\r\n```javascript _run_edit_[my-component.js]\r\nODA({\r\n    is: 'my-component',\r\n    template: `\r\n        <div ~style=\"myStyle\" @tap=\"_changeStyle\">Щелкни по мне</div>\r\n    `,\r\n    props: {\r\n        myStyle: \"background: green; color: yellow; padding: 10px\"\r\n    },\r\n    _changeStyle() {\r\n        let myStyle1 = \"background: green; color: yellow; padding: 10px\";\r\n        let myStyle2 = \"background: yellow; color: green; padding: 10px\";\r\n        this.myStyle = this.myStyle === myStyle1 ? myStyle2 : myStyle1;\r\n    }\r\n});\r\n```\r\n\r\nЗдесь при щелчке изменяется значение свойства компонента **myStyle**, что приводит к автоматическому изменению стиля отображения HTML-элемента **div**, в котором была указана эта директива **~style**.\r\n\r\nЗначение директивы **~style** можно задать не только в виде свойства компонента, но в виде обычной строки.\r\n\r\n<hr>",
+            "metadata": {}
+        }
+    ]
+}

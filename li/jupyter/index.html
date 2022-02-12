@@ -1,0 +1,24 @@
+<meta charset="utf-8">
+<title>li-jupyter test</title>
+
+<style>
+    html,
+    body {
+        color: gray;
+        font-family: Arial;
+    }
+</style>
+
+<script type="module" src="./jupyter.js"></script>
+<script type="module" src="../button/button.js"></script>
+
+<div style="display: flex; flex-direction: row-reverse; border-bottom: 1px solid gray; position: sticky; top: 0; background: white; z-index: 31;">
+    <li-button width="100px" onclick="jupyter.$$a.readOnly = !jupyter.$$a.readOnly" style="margin: 4px;" allow-toggle ::toggled="jupyter.readOnly">readOnly</li-button>
+    <li-button width="100px" onclick="jupyter.loadURL()" style="margin: 4px;">Reset view</li-button>
+    <li-button width="100px" onclick="jupyter.$$c.notebook.cells = undefined; jupyter.$update();" style="margin: 4px;">Clear all data</li-button>
+    <li-button width="100px" onclick="document.location.reload()" style="margin: 4px;">Reload page</li-button>
+</div>
+
+<div style="position: relative; height: calc(100vh - 64px); margin-top: 6px; border: 1px solid lightgray; overflow: auto;">
+    <li-jupyter id="jupyter" url="./javascript.ipynb.json"></li-jupyter>
+</div>
