@@ -1,4 +1,4 @@
-LI({ is: 'LI-jupyter',
+LI({ is: 'li-jupyter',
     template: /*html*/`
         <style>
             :host {
@@ -9,8 +9,8 @@ LI({ is: 'LI-jupyter',
                 min-height: 28px;
             }
         </style>
-        <LI-jupyter-cell-addbutton ~if="!notebook?.cells?.length" style="position: absolute; top: 18px; left: 12px; z-index: 31;"></LI-jupyter-cell-addbutton>
-        <LI-jupyter-cell ~for="cell in notebook?.cells" :cell :idx="index"></LI-jupyter-cell>
+        <li-jupyter-cell-addbutton ~if="!notebook?.cells?.length" style="position: absolute; top: 18px; left: 12px; z-index: 31;"></li-jupyter-cell-addbutton>
+        <li-jupyter-cell ~for="cell in notebook?.cells" :cell :idx="index"></li-jupyter-cell>
     `,
     props: {
         url: {
@@ -37,7 +37,7 @@ LI({ is: 'LI-jupyter',
     }
 })
 
-LI({ is: 'LI-jupyter-cell',
+LI({ is: 'li-jupyter-cell',
     template: /*html*/`
         <style>
             :host {
@@ -51,10 +51,10 @@ LI({ is: 'LI-jupyter-cell',
                 box-shadow: 0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12), 0 2px 4px -1px rgba(0,0,0,0.4);
             }
         </style>
-        <LI-jupyter-cell-toolbar ~if="!readOnly && focusedCell===cell" :cell></LI-jupyter-cell-toolbar>
+        <li-jupyter-cell-toolbar ~if="!readOnly && focusedCell===cell" :cell></li-jupyter-cell-toolbar>
         <div ~class="{focused: !readOnly && focusedCell===cell}" ~is="cellType" :id="'cell-'+cell?.order" @tap="focusedCell=cell" :cell></div>
-        <LI-jupyter-cell-addbutton ~if="!readOnly && cell && focusedCell===cell" :cell></LI-jupyter-cell-addbutton>
-        <LI-jupyter-cell-addbutton ~if="!readOnly && cell && focusedCell===cell" :cell position="bottom"></LI-jupyter-cell-addbutton>
+        <li-jupyter-cell-addbutton ~if="!readOnly && cell && focusedCell===cell" :cell></li-jupyter-cell-addbutton>
+        <li-jupyter-cell-addbutton ~if="!readOnly && cell && focusedCell===cell" :cell position="bottom"></li-jupyter-cell-addbutton>
     `,
     props: {
         idx: {
@@ -66,14 +66,14 @@ LI({ is: 'LI-jupyter-cell',
     },
     cell: {},
     get cellType() {
-        if (this.cell?.cell_type === 'markdown') return 'LI-jupyter-cell-markdown';
-        if (this.cell?.cell_type === 'html') return 'LI-jupyter-cell-html';
-        if (this.cell?.cell_type === 'code') return 'LI-jupyter-cell-code';
+        if (this.cell?.cell_type === 'markdown') return 'li-jupyter-cell-markdown';
+        if (this.cell?.cell_type === 'html') return 'li-jupyter-cell-html';
+        if (this.cell?.cell_type === 'code') return 'li-jupyter-cell-code';
         return 'div';
     }
 })
 
-LI({ is: 'LI-jupyter-cell-toolbar', imports: '@LI/button',
+LI({ is: 'li-jupyter-cell-toolbar', imports: '@LI/button',
     template: /*html*/`
         <style>
             :host {
@@ -87,19 +87,19 @@ LI({ is: 'LI-jupyter-cell-toolbar', imports: '@LI/button',
                 width: 200px;
                 height: 24px;
             }
-            LI-button {
+            li-button {
                 border-radius: 3px;
                 margin: 2px 0px;
             }
         </style>
-        <LI-button icon="icons:close" :icon-size @tap="focusedCell=undefined"></LI-button>
-        <LI-button icon="icons:arrow-back:90" :icon-size @tap="tapOrder($event, -1.1)" :disabled="cell.order<=0" title="move up"></LI-button>
-        <LI-button icon="icons:arrow-forward:90" :icon-size @tap="tapOrder($event, 1.1)" :disabled="cell.order>=notebook?.cells?.length-1" title="move down"></LI-button>
-        <LI-button icon="icons:select-all" :icon-size title="show cells border" @tap="showBorder=!showBorder" allow-tooglle ::toggled="showBorder"></LI-button>
-        <LI-button icon="editor:mode-edit" :icon-size @tap="editedCell=editedCell===cell?undefined:cell" ~style="{fill: editedCell===cell ? 'red' : ''}" title="edit mode"></LI-button>
-        <LI-button ~if="editedCell===cell" icon="icons:settings" :icon-size></LI-button>
+        <li-button icon="icons:close" :icon-size @tap="focusedCell=undefined"></li-button>
+        <li-button icon="icons:arrow-back:90" :icon-size @tap="tapOrder($event, -1.1)" :disabled="cell.order<=0" title="move up"></li-button>
+        <li-button icon="icons:arrow-forward:90" :icon-size @tap="tapOrder($event, 1.1)" :disabled="cell.order>=notebook?.cells?.length-1" title="move down"></li-button>
+        <li-button icon="icons:select-all" :icon-size title="show cells border" @tap="showBorder=!showBorder" allow-tooglle ::toggled="showBorder"></li-button>
+        <li-button icon="editor:mode-edit" :icon-size @tap="editedCell=editedCell===cell?undefined:cell" ~style="{fill: editedCell===cell ? 'red' : ''}" title="edit mode"></li-button>
+        <li-button ~if="editedCell===cell" icon="icons:settings" :icon-size></li-button>
         <div class="flex"></div>
-        <LI-button icon="icons:delete" :icon-size @tap="tapDelete" title="delete"></LI-button>
+        <li-button icon="icons:delete" :icon-size @tap="tapDelete" title="delete"></li-button>
     `,
     iconSize: 14,
     cell: {},
@@ -117,7 +117,7 @@ LI({ is: 'LI-jupyter-cell-toolbar', imports: '@LI/button',
     }
 })
 
-LI({ is: 'LI-jupyter-cell-addbutton', imports: '@LI/button, @tools/containers',
+LI({ is: 'li-jupyter-cell-addbutton', imports: '@LI/button, @tools/containers',
     template: /*html*/`
         <style>
             .btn {
@@ -144,8 +144,8 @@ LI({ is: 'LI-jupyter-cell-addbutton', imports: '@LI/button, @tools/containers',
                 cursor: pointer;
             }
         </style>
-        <LI-button class="btn" icon="icons:add" :icon-size title="add cell" @tap="showCellViews('add')"></LI-button>
-        <div ~if="position==='top'" class="cell" @tap="showCellViews('select type')" title="select cell type" ~style="{color: cell?.color || 'gray'}">{{cell.label || cell.cell_type}}</div>
+        <li-button class="btn" icon="icons:add" :icon-size title="add cell" @tap="showCellViews('add')"></li-button>
+        <div ~if="position==='top'" class="cell" @tap="showCellViews('select type')" title="select cell type" ~style="color: ${this.cell?.color || 'gray'}">{{cell.label || cell.cell_type}}</div>
     `,
     props: {
         position: 'top'
@@ -153,12 +153,12 @@ LI({ is: 'LI-jupyter-cell-addbutton', imports: '@LI/button, @tools/containers',
     iconSize: 14,
     cell: {},
     async showCellViews(view) {
-        const res = await LI.showDropdown('LI-jupyter-list-views', { cell: this.cell, notebook: this.notebook, position: this.position, view }, {});
+        const res = await LI.showDropdown('li-jupyter-list-views', { cell: this.cell, notebook: this.notebook, position: this.position, view }, {});
         if (res && view === 'add') this.editedCell = undefined;
     }
 })
 
-LI({ is: 'LI-jupyter-list-views', imports: '@LI/button',
+LI({ is: 'li-jupyter-list-views', imports: '@LI/button',
     template: /*html*/`
         <style>
             :host {
@@ -167,7 +167,7 @@ LI({ is: 'LI-jupyter-list-views', imports: '@LI/button',
             }
         </style>
         <div class="header flex" style="text-align: center; padding: 1px; width: 100%">{{view}} cell</div>
-        <LI-button class="horizontal flex" ~for="cellViews" @tap="addCell(item)" style="justify-content: start">{{item.source + item.label}}</LI-button>
+        <li-button class="horizontal flex" ~for="cellViews" @tap="addCell(item)" style="justify-content: start">{{item.source + item.label}}</li-button>
     `,
     props: {
         position: 'top',
@@ -199,7 +199,7 @@ LI({ is: 'LI-jupyter-list-views', imports: '@LI/button',
     }
 })
 
-LI({ is: 'LI-jupyter-cell-markdown', imports: '@LI/md-viewer, @LI/ace-editor, @LI/splitter',
+LI({ is: 'li-jupyter-cell-markdown', imports: '@LI/md-viewer, @LI/ace-editor, @LI/splitter',
     template: /*html*/`
         <style>
             ::-webkit-scrollbar { width: 4px; height: 4px; }
@@ -214,11 +214,11 @@ LI({ is: 'LI-jupyter-cell-markdown', imports: '@LI/md-viewer, @LI/ace-editor, @L
             }
         </style>
         <div class="flex" ~show="!readOnly&&editedCell===cell" style="min-width: 50%; overflow: auto;">
-            <LI-ace-editor class="flex ace" highlight-active-line="false" show-print-margin="false" theme="solarized_light" mode:markdown show-gutter="false" min-lines=1></LI-ace-editor></LI-ace-editor>
+            <li-ace-editor class="flex ace" highlight-active-line="false" show-print-margin="false" theme="solarized_light" mode:markdown show-gutter="false" min-lines=1></li-ace-editor></li-ace-editor>
         </div>
-        <!-- <LI-splitter class="no-flex" ~if="!readOnly&&editedCell===cell" style="width: 4px;"></LI-splitter> -->
+        <!-- <li-splitter class="no-flex" ~if="!readOnly&&editedCell===cell" style="width: 4px;"></li-splitter> -->
         <div class="flex" style="min-width: 50%; overflow: auto">
-            <LI-md-viewer class="flex" :srcmd="cell?.source" :src="cell?.src"></LI-md-viewer>
+            <li-md-viewer class="flex" :srcmd="cell?.source" :src="cell?.src"></li-md-viewer>
         </div>
     `,
     cell: {},
@@ -226,7 +226,7 @@ LI({ is: 'LI-jupyter-cell-markdown', imports: '@LI/md-viewer, @LI/ace-editor, @L
         change(e) {
             if (this.readOnly || this.editedCell !== this.cell) return;
             //this.debounce('changeCellValue', () => {
-                this.cell.source = this.$('LI-ace-editor').value;
+                this.cell.source = this.$('li-ace-editor').value;
             //}, 1000);
         },
         dblclick(e) {
@@ -237,12 +237,12 @@ LI({ is: 'LI-jupyter-cell-markdown', imports: '@LI/md-viewer, @LI/ace-editor, @L
     observers: [
         function setEditedCell(editedCell) {
             if (editedCell && editedCell === this.cell)
-                this.$('LI-ace-editor').value = this.$('LI-md-viewer').source;
+                this.$('li-ace-editor').value = this.$('li-md-viewer').source;
         }
     ]
 })
 
-LI({ is: 'LI-jupyter-cell-code', imports: '@LI/ace-editor',
+LI({ is: 'li-jupyter-cell-code', imports: '@LI/ace-editor',
     template: /*html*/`
         <style>
             :host {
@@ -265,13 +265,13 @@ LI({ is: 'LI-jupyter-cell-code', imports: '@LI/ace-editor',
         <div class="box vertical no-flex">
             <div>[...]</div>
         </div>
-        <LI-ace-editor class="flex ace" :value="cell?.source" highlight-active-line="false" show-print-margin="false" :theme="!readOnly&&editedCell===cell?'solarized_light':'dawn'" min-lines=1 :read-only="isReadOnly && editedCell!==cell"></LI-ace-editor>
+        <li-ace-editor class="flex ace" :value="cell?.source" highlight-active-line="false" show-print-margin="false" :theme="!readOnly&&editedCell===cell?'solarized_light':'dawn'" min-lines=1 :read-only="isReadOnly && editedCell!==cell"></li-ace-editor>
     `,
     cell: {},
     listeners: {
         change(e) {
             if (!this.isReadOnly || this.editedCell === this.cell) 
-            this.cell.source = this.$('LI-ace-editor').value;        
+            this.cell.source = this.$('li-ace-editor').value;        
         },
         dblclick(e) {
             if (this.readOnly) return;
@@ -283,7 +283,7 @@ LI({ is: 'LI-jupyter-cell-code', imports: '@LI/ace-editor',
     }
 })
 
-LI({ is: 'LI-jupyter-cell-html', imports: '@LI/pell-editor',
+LI({ is: 'li-jupyter-cell-html', imports: '@LI/pell-editor',
     template: /*html*/`
         <style>
             :host {
@@ -293,7 +293,7 @@ LI({ is: 'LI-jupyter-cell-html', imports: '@LI/pell-editor',
             }
 
         </style>
-        <LI-pell-editor class="flex pell" ~show="!readOnly&&editedCell===cell" :pell></LI-pell-editor>
+        <li-pell-editor class="flex pell" ~show="!readOnly&&editedCell===cell" :pell></li-pell-editor>
         <div  ~show="editedCell!==cell" :html="cell.source" style="width: 100%; padding: 8px;"></div>
     `,
     cell: {},
@@ -310,7 +310,7 @@ LI({ is: 'LI-jupyter-cell-html', imports: '@LI/pell-editor',
     observers: [
         function setEditedCell(editedCell) {
             if (editedCell && editedCell === this.cell)
-                this.$('LI-pell-editor').editor.content.innerHTML = this.cell.source;
+                this.$('li-pell-editor').editor.content.innerHTML = this.cell.source;
         }
     ]
 })
