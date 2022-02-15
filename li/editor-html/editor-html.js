@@ -20,13 +20,15 @@ customElements.define('li-editor-html', class LiEditorHTML extends LiElement {
         return this.editor?.content?.innerHTML || '';
     }
     set value(v) {
-        this.editor.content.innerHTML = v;
+        if (this.editor)
+            this.editor.content.innerHTML = v;
     }
 
     static get styles() {
         return css`
             :host {
-               display: relative; 
+               display: relative;
+               display: flex;
             }
             .pell {
                 border: 1px solid rgba(10, 10, 10, 0.1);
@@ -81,14 +83,14 @@ customElements.define('li-editor-html', class LiEditorHTML extends LiElement {
         return html`
             <div id="editor" ?hidden="${this._showSource || this._showSourceMonaco}"></div>
             ${this._showSource ? html`
-                <div>
+                <div style="position: relative; overflow: auto; flex: 1">
                     <li-button name="refresh" size="14"                       
                         @click="${() => { this._showSource = false; this.editor.content.innerHTML = this.ace.getValue() }}"></li-button>
                     <li-editor-ace id="ace"></li-editor-ace>
                 </div>
             ` : html``}
             ${this._showSourceMonaco ? html`
-                <div>
+                <div style="position: relative; overflow: auto; flex: 1">
                     <li-button name="refresh" size="14"                       
                         @click="${() => { this._showSourceMonaco = false; this.editor.content.innerHTML = this.$id('monaco').value; document.getElementsByClassName('monaco-aria-container')[0].hidden = true }}"></li-button>
                     <li-editor-monaco id="monaco" mode="html"></li-editor-monaco>
@@ -123,7 +125,7 @@ customElements.define('li-editor-html', class LiEditorHTML extends LiElement {
         if (!this.editor) {
             this.editor = pell.init({
                 element: this.$id('editor'),
-                onChange: () => { if (this.item) this.item.value = this.value; this.fire('change'); this.$update(); },
+                onChange: (e) => { if (this.item) this.item.value = this.value; this.fire('change', e); this.$update(); },
                 actions: [
                     'bold',
                     'italic',
@@ -232,7 +234,7 @@ customElements.define('li-editor-html', class LiEditorHTML extends LiElement {
                                 this.ace = this.$id('ace').editor;
                                 this.ace.setTheme('ace/theme/chrome');
                                 this.ace.getSession().setMode('ace/mode/html');
-                                this.ace.setOptions({ fontSize: 16, maxLines: Infinity, minLines: 100, });
+                                this.ace.setOptions({ fontSize: 16, maxLines: Infinity, minLines: 1, });
                                 this.ace.getSession().on('change', () => {
                                     this.value = this.ace.getValue() || '';
                                     if (this.item) this.item.value = this.value;
@@ -243,23 +245,23 @@ customElements.define('li-editor-html', class LiEditorHTML extends LiElement {
                             }, 100);
                         }
                     },
-                    {
-                        name: 'viewSourceMonaco',
-                        icon: '&lt;/&gt;',
-                        title: 'View source code in monaco',
-                        result: () => {
-                            this._showSourceMonaco = true;
-                            setTimeout(() => {
-                                this.monaco = this.$id('monaco');
-                                this.monaco.value = this.editor.content.innerHTML;
-                                this.monaco.editor.getModel().onDidChangeContent((e) => {
-                                    this.value = this.monaco.value || '';
-                                    if (this.item) this.item.value = this.value;
-                                    this.$update();
-                                });
-                            }, 100);
-                        }
-                    },
+                    // {
+                    //     name: 'viewSourceMonaco',
+                    //     icon: '&lt;/&gt;',
+                    //     title: 'View source code in monaco',
+                    //     result: () => {
+                    //         this._showSourceMonaco = true;
+                    //         setTimeout(() => {
+                    //             this.monaco = this.$id('monaco');
+                    //             this.monaco.value = this.editor.content.innerHTML;
+                    //             this.monaco.editor.getModel().onDidChangeContent((e) => {
+                    //                 this.src = this.monaco.value || '';
+                    //                 if (this.item) this.item.value = this.value;
+                    //                 this.$update();
+                    //             });
+                    //         }, 100);
+                    //     }
+                    // },
                 ],
             });
         }
