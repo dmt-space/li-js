@@ -31,11 +31,11 @@ customElements.define('li-jupyter', class extends LiElement {
     static get properties() {
         return {
             url: { type: String, default: '' },
-            showBorder:  { type: Boolean, default: false, local: true, save: true },
-            readOnly:  { type: Boolean, default: false, local: true },
-            notebook:  { type: Object, default: {}, local: true },
-            focusedCell:  { type: Object, local: true },
-            editedCell:  { type: Object, local: true },
+            showBorder: { type: Boolean, default: false, local: true, save: true },
+            readOnly: { type: Boolean, default: false, local: true },
+            notebook: { type: Object, default: {}, local: true },
+            focusedCell: { type: Object, local: true },
+            editedCell: { type: Object, local: true },
         }
     }
 
@@ -88,14 +88,14 @@ customElements.define('li-jupyter-cell-addbutton', class extends LiElement {
 
     static get properties() {
         return {
-            notebook:  { type: Object, local: true },
+            notebook: { type: Object, local: true },
             cell: { type: Object },
             position: { type: String, default: 'top' }
         }
     }
 
     async showCellViews(view) {
-        const res = await LI.show('dropdown', new LiJupyterListViews, { notebook: this.notebook, cell: this.cell, position: this.position, view });
+        const res = await LI.show('dropdown', new LiJupyterListViews, { notebook: this.notebook, cell: this.cell, position: this.position, view }, { parent: this.$qs('li-button') });
         if (res && view === 'add') this.editedCell = undefined;
         this.$update();
     }
@@ -130,7 +130,7 @@ class LiJupyterListViews extends LiElement {
 
     static get properties() {
         return {
-            notebook:  { type: Object, local: true },
+            notebook: { type: Object, local: true },
             cell: { type: Object },
             position: { type: String, default: 'top' },
             view: { type: String },
@@ -153,7 +153,7 @@ class LiJupyterListViews extends LiElement {
             this.notebook.cells.splice(idx, 0, cell);
             this.notebook.cells.sort((a, b) => a.order - b.order).map((i, idx) => i.order = idx - .1 <= ord ? idx : idx + 1);
         } else if (this.view === 'select type') {
-            const cell = { ...this.cell, ...{ cell_type: item.cell_type, cell_extType: item.cell_extType, color: item.color, label: item.label  } };
+            const cell = { ...this.cell, ...{ cell_type: item.cell_type, cell_extType: item.cell_extType, color: item.color, label: item.label } };
             this.notebook.cells.splice(idx, 1, cell);
         }
         LI.fire(document, 'ok', item);
@@ -198,11 +198,11 @@ customElements.define('li-jupyter-cell', class extends LiElement {
 
     static get properties() {
         return {
-            showBorder:  { type: Boolean, local: true },
-            readOnly:  { type: Boolean, local: true },
-            notebook:  { type: Object, local: true },
-            focusedCell:  { type: Object, local: true },
-            editedCell:  { type: Object, local: true },
+            showBorder: { type: Boolean, local: true },
+            readOnly: { type: Boolean, local: true },
+            notebook: { type: Object, local: true },
+            focusedCell: { type: Object, local: true },
+            editedCell: { type: Object, local: true },
             cell: { type: Object, default: undefined },
             idx: { type: Number, default: 0 },
         }
@@ -272,11 +272,11 @@ customElements.define('li-jupyter-cell-toolbar', class extends LiElement {
 
     static get properties() {
         return {
-            showBorder:  { type: Boolean, local: true },
-            readOnly:  { type: Boolean, local: true },
-            notebook:  { type: Object, local: true },
-            focusedCell:  { type: Object, local: true },
-            editedCell:  { type: Object, local: true },
+            showBorder: { type: Boolean, local: true },
+            readOnly: { type: Boolean, local: true },
+            notebook: { type: Object, local: true },
+            focusedCell: { type: Object, local: true },
+            editedCell: { type: Object, local: true },
             cell: { type: Object },
             idx: { type: Number, default: 0 }
         }
@@ -322,7 +322,7 @@ customElements.define('li-jupyter-cell-markdown', class extends LiElement {
 
     render() {
         return html`
-            ${this.readOnly || this.editedCell !== this.cell ? html``: html`
+            ${this.readOnly || this.editedCell !== this.cell ? html`` : html`
                 <div class="panel" style="max-height: 80vh; border-right: 1px solid lightgray">
                     <li-editor-ace class="ace" style="width: 100%; height: 100%;" theme="solarized_light" mode="markdown"></li-editor-ace> 
                 </div>
@@ -335,8 +335,8 @@ customElements.define('li-jupyter-cell-markdown', class extends LiElement {
 
     static get properties() {
         return {
-            readOnly:  { type: Boolean, local: true },
-            editedCell:  { type: Object, local: true, notify: true },
+            readOnly: { type: Boolean, local: true },
+            editedCell: { type: Object, local: true, notify: true },
             cell: { type: Object }
         }
     }
@@ -398,8 +398,8 @@ customElements.define('li-jupyter-cell-code', class extends LiElement {
 
     static get properties() {
         return {
-            readOnly:  { type: Boolean, local: true },
-            editedCell:  { type: Object, local: true },
+            readOnly: { type: Boolean, local: true },
+            editedCell: { type: Object, local: true },
             cell: { type: Object }
         }
     }
@@ -419,7 +419,7 @@ customElements.define('li-jupyter-cell-html', class extends LiElement {
 
     render() {
         return html`
-            ${this.readOnly || this.editedCell !== this.cell ? html``: html`
+            ${this.readOnly || this.editedCell !== this.cell ? html`` : html`
                 <li-editor-html style="width: 100%;max-height: 100vh"></li-editor-html>
             `}
             <div .innerHTML=${this.cell.source} style="width: 100%; padding: 8px;"></div>
@@ -428,8 +428,8 @@ customElements.define('li-jupyter-cell-html', class extends LiElement {
 
     static get properties() {
         return {
-            readOnly:  { type: Boolean, local: true },
-            editedCell:  { type: Object, local: true, notify: true },
+            readOnly: { type: Boolean, local: true },
+            editedCell: { type: Object, local: true, notify: true },
             cell: { type: Object }
         }
     }
