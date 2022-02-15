@@ -7,8 +7,6 @@ import '../editor-ace/editor-ace.js';
 import '../editor-monaco/editor-monaco.js';
 import '../viewer-md/viewer-md.js';
 
-let $s = {}, $a = {}, $c = {};
-
 customElements.define('li-jupyter', class extends LiElement {
     static get styles() {
         return css`
@@ -22,53 +20,37 @@ customElements.define('li-jupyter', class extends LiElement {
     }
     render() {
         return html`
-            ${$c.notebook?.cells?.length ? html`` : html`
+            ${this.notebook?.cells?.length ? html`` : html`
                 <li-jupyter-cell-addbutton style="position: absolute; top: 18px; left: 12px; z-index: 31;"></li-jupyter-cell-addbutton>
             `}
-            ${($c.notebook?.cells || []).map((cell, idx) => html`
+            ${(this.notebook?.cells || []).map((cell, idx) => html`
                 <li-jupyter-cell .cell=${cell} idx=${idx}></li-jupyter-cell>
             `)}
         `
     }
 
-    firstUpdated() {
-        super.firstUpdated();
-        $s = this.$$s; $a = this.$$a; $c = this.$$c;
+    static get properties() {
+        return {
+            url: { type: String, default: '' },
+            showBorder:  { type: Boolean, default: false, local: true, save: true },
+            readOnly:  { type: Boolean, default: false, local: true },
+            notebook:  { type: Object, default: {}, local: true },
+            focusedCell:  { type: Object, local: true },
+            editedCell:  { type: Object, local: true },
+        }
     }
+
     updated(changedProperties) {
         if (changedProperties.has('url')) this.loadURL();
     }
 
-    static get properties() {
-        return {
-            $$s: {
-                type: Object, local: true, save: true, default: {
-                    showBorder: false
-                }
-            },
-            $$a: {
-                type: Object, local: true, default: {
-                    readOnly: false
-                }
-            },
-            $$c: {
-                type: Object, local: true, default: {
-                    notebook: {},
-                    focusedCell: undefined,
-                    editedCell: undefined
-                }
-            },
-            url: { type: String, default: '' }
-        }
-    }
-
     async loadURL(url = this.url) {
-        $c.focusedCell = undefined;
+        this.focusedCell = undefined;
         if (url) {
             const response = await fetch(url);
             const json = await response.json();
-            $c.notebook = json;
-            $c.notebook.cells.map((i, idx) => i.order ||= idx);
+            this.notebook = json;
+            this.notebook.cells.map((i, idx) => i.order ||= idx);
             this.$update();
         }
     }
@@ -80,19 +62,15 @@ customElements.define('li-jupyter-cell-addbutton', class extends LiElement {
             .btn {
                 display: flex;
                 position: absolute;
-                left: -8px;
+                left: 0px;
                 z-index: 31;
-                opacity: 0.5;
-            }
-            .btn:hover {
-                opacity: 1;
             }
             .cell {
                 position: absolute;
-                top: -12px;
-                left: 16px;
+                top: -14px;
+                left: 24px;
                 z-index: 31;
-                font-size: 10px;
+                font-size: 12px;
                 cursor: pointer;
             }
         `;
@@ -100,8 +78,8 @@ customElements.define('li-jupyter-cell-addbutton', class extends LiElement {
 
     render() {
         return html`
-            <li-button class="btn" name="add" size=16 radius="50%" title="add cell" @click=${() => this.showCellViews('add')}
-                    style="top: ${this.position === 'top' ? '-12px' : 'unset'}; bottom: ${this.position !== 'top' ? '-12px' : 'unset'};"></li-button>
+            <li-button class="btn" name="add" size=16 radius="50%" title="add cell" @click=${() => this.showCellViews('add')} borderColor="dodgerblue"
+                    style="top: ${this.position === 'top' ? '-16px' : 'unset'}; bottom: ${this.position !== 'top' ? '-16px' : 'unset'};"></li-button>
             ${this.position === 'top' ? html`
                 <div class="cell" @click=${() => this.showCellViews('select type')} title="select cell type" style="color: ${this.cell?.color || 'gray'}">${this.cell?.label || this.cell?.cell_type}</div>
             ` : html``}
@@ -110,14 +88,15 @@ customElements.define('li-jupyter-cell-addbutton', class extends LiElement {
 
     static get properties() {
         return {
-            cell: { type: Object, default: undefined },
+            notebook:  { type: Object, local: true },
+            cell: { type: Object },
             position: { type: String, default: 'top' }
         }
     }
 
     async showCellViews(view) {
-        const res = await LI.show('dropdown', new LiJupyterListViews, { cell: this.cell, position: this.position, view });
-        if (res && view === 'add') $c.editedCell = undefined;
+        const res = await LI.show('dropdown', new LiJupyterListViews, { notebook: this.notebook, cell: this.cell, position: this.position, view });
+        if (res && view === 'add') this.editedCell = undefined;
         this.$update();
     }
 })
@@ -151,9 +130,10 @@ class LiJupyterListViews extends LiElement {
 
     static get properties() {
         return {
-            cell: { type: Object, default: undefined },
+            notebook:  { type: Object, local: true },
+            cell: { type: Object },
             position: { type: String, default: 'top' },
-            view: { type: String, default: '' },
+            view: { type: String },
         }
     }
     get cellViews() {
@@ -169,12 +149,12 @@ class LiJupyterListViews extends LiElement {
         if (this.view === 'add') {
             const ord = this.position === 'top' ? idx - .1 : idx + .1;
             const cell = { order: ord, cell_type: item.cell_type, cell_extType: item.cell_extType, source: item.source, color: item.color, label: item.label };
-            $c.notebook.cells ||= [];
-            $c.notebook.cells.splice(idx, 0, cell);
-            $c.notebook.cells.sort((a, b) => a.order - b.order).map((i, idx) => i.order = idx - .1 <= ord ? idx : idx + 1);
+            this.notebook.cells ||= [];
+            this.notebook.cells.splice(idx, 0, cell);
+            this.notebook.cells.sort((a, b) => a.order - b.order).map((i, idx) => i.order = idx - .1 <= ord ? idx : idx + 1);
         } else if (this.view === 'select type') {
             const cell = { ...this.cell, ...{ cell_type: item.cell_type, cell_extType: item.cell_extType, color: item.color, label: item.label  } };
-            $c.notebook.cells.splice(idx, 1, cell);
+            this.notebook.cells.splice(idx, 1, cell);
         }
         LI.fire(document, 'ok', item);
     }
@@ -197,23 +177,24 @@ customElements.define('li-jupyter-cell', class extends LiElement {
                 width: 100%
             }
             .focused {
-                box-shadow: 0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12), 0 2px 4px -1px rgba(0,0,0,0.4);
+                /* box-shadow: 0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12), 0 2px 4px -1px rgba(0,0,0,0.4); */
+                box-shadow: 0 0 0 1px dodgerblue;
             }
         `;
     }
 
     render() {
         return html`
-            <div id="${this.id}" class="cell ${this.focused}" style="order: ${this.cell?.order || 0}; box-shadow: ${!this.readOnly && $s.showBorder && $c.focusedCell !== this.cell ? 'inset 0px 0px 0px 1px lightgray' : ''};">
+            <div id="${this.id}" class="cell ${this.focused}" style="order: ${this.cell?.order || 0}; box-shadow: ${!this.readOnly && this.showBorder && this.focusedCell !== this.cell ? 'inset 0px 0px 0px 1px lightgray' : ''};">
                 ${this.cellType}
             </div>
-            ${!$a.readOnly && $c.focusedCell === this.cell ? html`
+            ${!this.readOnly && this.focusedCell === this.cell ? html`
                 <li-jupyter-cell-toolbar .cell=${this.cell} idx=${this.idx}></li-jupyter-cell-toolbar>
             ` : html``}
-            ${!$a.readOnly && this.cell && $c.focusedCell === this.cell ? html`
+            ${!this.readOnly && this.cell && this.focusedCell === this.cell ? html`
                 <li-jupyter-cell-addbutton .cell=${this.cell}></li-jupyter-cell-addbutton>
             ` : html``}
-            ${!$a.readOnly && this.cell && $c.focusedCell === this.cell ? html`
+            ${!this.readOnly && this.cell && this.focusedCell === this.cell ? html`
                 <li-jupyter-cell-addbutton .cell=${this.cell} position="bottom"></li-jupyter-cell-addbutton>
             ` : html``}
         `
@@ -221,11 +202,16 @@ customElements.define('li-jupyter-cell', class extends LiElement {
 
     static get properties() {
         return {
+            showBorder:  { type: Boolean, local: true },
+            readOnly:  { type: Boolean, local: true },
+            notebook:  { type: Object, local: true },
+            focusedCell:  { type: Object, local: true },
+            editedCell:  { type: Object, local: true },
             cell: { type: Object, default: undefined },
             idx: { type: Number, default: 0 },
         }
     }
-    get focused() { return !$a.readOnly && $c.focusedCell === this.cell ? 'focused' : '' }
+    get focused() { return !this.readOnly && this.focusedCell === this.cell ? 'focused' : '' }
     get id() { return 'cell-' + (this.cell?.order || this.idx || 0) }
     get cellType() {
         if (this.cell?.cell_type === 'markdown')
@@ -237,7 +223,7 @@ customElements.define('li-jupyter-cell', class extends LiElement {
         return html`<div></div>`;
     }
     click(e) {
-        $c.focusedCell = this.cell;
+        this.focusedCell = this.cell;
         this.$update();
     }
 })
@@ -249,9 +235,10 @@ customElements.define('li-jupyter-cell-toolbar', class extends LiElement {
                 display: flex;
                 position: absolute;
                 right: 8px;
-                top: -12px;
+                top: -18px;
                 z-index: 21;
-                box-shadow: 0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12), 0 2px 4px -1px rgba(0,0,0,0.4);
+                /* box-shadow: 0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12), 0 2px 4px -1px rgba(0,0,0,0.4); */
+                box-shadow: 0 0 0 1px dodgerblue;
                 background: white;
                 width: 200px;
                 height: 24px;
@@ -269,12 +256,12 @@ customElements.define('li-jupyter-cell-toolbar', class extends LiElement {
 
     render() {
         return html`
-            <li-button name="close" @click=${() => { $c.focusedCell = undefined; this.$update() }} border=0 size=16></li-button>
+            <li-button name="close" @click=${() => { this.focusedCell = undefined; this.$update() }} border=0 size=16></li-button>
             <li-button name="arrow-back" @click=${(e) => this.tapOrder(e, -1.1)} ?disabled=${this.order <= 0} title="move up" border=0 size=16 rotate=90></li-button>
-            <li-button name="arrow-forward"  @click=${(e) => this.tapOrder(e, 1.1)} ?disabled=${this.order >= $c.notebook?.cells?.length - 1} title="move down" border=0 size=16 rotate=90></li-button>
-            <li-button name="select-all" title="show cells border" @click=${() => { $s.showBorder = !$s.showBorder; this.$update(); }} border=0 size=16></li-button>
-            <li-button name="mode-edit" @click=${() => { $c.editedCell = $c.editedCell === this.cell ? undefined : this.cell; this.$update() }} style="fill: ${$c.editedCell === this.cell ? 'red' : ''}" title="edit mode" border=0 size=16></li-button>
-            ${$c.editedCell === this.cell ? html`
+            <li-button name="arrow-forward"  @click=${(e) => this.tapOrder(e, 1.1)} ?disabled=${this.order >= this.notebook?.cells?.length - 1} title="move down" border=0 size=16 rotate=90></li-button>
+            <li-button name="select-all" title="show cells border" @click=${() => { this.showBorder = !this.showBorder; this.$update(); }} border=0 size=16></li-button>
+            <li-button name="mode-edit" @click=${() => { this.editedCell = this.editedCell === this.cell ? undefined : this.cell; this.$update() }} style="fill: ${this.editedCell === this.cell ? 'red' : ''}" title="edit mode" border=0 size=16></li-button>
+            ${this.editedCell === this.cell ? html`
                 <li-button name="settings" border=0 size=16></li-button>
             ` : html``}
             <div style="flex: 1;"></div>
@@ -284,6 +271,11 @@ customElements.define('li-jupyter-cell-toolbar', class extends LiElement {
 
     static get properties() {
         return {
+            showBorder:  { type: Boolean, local: true },
+            readOnly:  { type: Boolean, local: true },
+            notebook:  { type: Object, local: true },
+            focusedCell:  { type: Object, local: true },
+            editedCell:  { type: Object, local: true },
             cell: { type: Object },
             idx: { type: Number, default: 0 }
         }
@@ -291,16 +283,16 @@ customElements.define('li-jupyter-cell-toolbar', class extends LiElement {
     get order() { return this.cell.order || this.idx }
 
     tapOrder(e, v) {
-        if ($c.focusedCell !== this.cell) return;
+        if (this.focusedCell !== this.cell) return;
         const ord = this.cell.order = this.order + v;
-        $c.notebook.cells.sort((a, b) => a.order - b.order).map((i, idx) => i.order = idx - 1.1 <= ord ? idx : idx + 1);
+        this.notebook.cells.sort((a, b) => a.order - b.order).map((i, idx) => i.order = idx - 1.1 <= ord ? idx : idx + 1);
         this.$update();
     }
     tapDelete() {
         if (!this.cell.source || this.cell.source === ' ' || ['🔴', '🟠', '🟡', '🟢', '🔵', '🟣', '🟤', '⚫️', '⚪️'].includes(this.cell.source.slice(0, 2))) {
-            $c.notebook.cells.splice(this.cell.order, 1);
-            $c.notebook.cells.sort((a, b) => a.order - b.order).map((i, idx) => i.order = idx);
-            $c.focusedCell = $c.notebook.cells[(this.cell.order > $c.notebook.cells.length - 1) ? $c.notebook.cells.length - 1 : this.cell.order];
+            this.notebook.cells.splice(this.cell.order, 1);
+            this.notebook.cells.sort((a, b) => a.order - b.order).map((i, idx) => i.order = idx);
+            this.focusedCell = this.notebook.cells[(this.cell.order > this.notebook.cells.length - 1) ? this.notebook.cells.length - 1 : this.cell.order];
             this.$update();
         }
     }
@@ -335,6 +327,11 @@ customElements.define('li-jupyter-cell-markdown', class extends LiElement {
 
     static get properties() {
         return {
+            showBorder:  { type: Boolean, local: true },
+            readOnly:  { type: Boolean, local: true },
+            notebook:  { type: Object, local: true },
+            focusedCell:  { type: Object, local: true },
+            editedCell:  { type: Object, local: true },
             cell: { type: Object }
         }
     }
@@ -363,7 +360,7 @@ customElements.define('li-jupyter-cell-code', class extends LiElement {
             <div class="box ">
                 <div>[...]</div>
             </div>
-            <li-editor-ace class="ace" style="width: 100%;" theme=${!$a.readOnly && $c.editedCell === this.cell ? 'solarized_light' : 'dawn'} mode="javascript"></li-editor-ace>    
+            <li-editor-ace class="ace" style="width: 100%;" theme=${!this.readOnly && this.editedCell === this.cell ? 'solarized_light' : 'dawn'} mode="javascript"></li-editor-ace>    
         `
     }
 
@@ -379,6 +376,11 @@ customElements.define('li-jupyter-cell-code', class extends LiElement {
 
     static get properties() {
         return {
+            showBorder:  { type: Boolean, local: true },
+            readOnly:  { type: Boolean, local: true },
+            notebook:  { type: Object, local: true },
+            focusedCell:  { type: Object, local: true },
+            editedCell:  { type: Object, local: true },
             cell: { type: Object }
         }
     }
@@ -397,7 +399,7 @@ customElements.define('li-jupyter-cell-html', class extends LiElement {
 
     render() {
         return html`
-            ${$a.readOnly || $c.editedCell !== this.cell ? html`
+            ${this.readOnly || this.editedCell !== this.cell ? html`
                 <div .innerHTML=${this.cell.source} style="width: 100%; padding: 8px;"></div>
             `: html`
                 <li-editor-html style="width: 100%;"></li-editor-html>
@@ -407,6 +409,11 @@ customElements.define('li-jupyter-cell-html', class extends LiElement {
 
     static get properties() {
         return {
+            showBorder:  { type: Boolean, local: true },
+            readOnly:  { type: Boolean, local: true },
+            notebook:  { type: Object, local: true },
+            focusedCell:  { type: Object, local: true },
+            editedCell:  { type: Object, local: true },
             cell: { type: Object }
         }
     }
