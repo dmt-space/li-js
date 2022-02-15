@@ -165,7 +165,7 @@ customElements.define('li-editor-ace', class LiAceEditor extends LiElement {
             }
         })
         this.value = this.src;
-        this.editor.getSession().on('change', () => this.fire('change'));
+        this.editor.getSession().on('change', (e) => this.fire('change', this.value));
         this.$update();
     }
     updated(changedProperties) {
