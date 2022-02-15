@@ -16,7 +16,7 @@
 <script type="module" src="./jupyter.js"></script>
 <script type="module" src="../button/button.js"></script>
 
-<div style="display: flex; flex-direction: row-reverse; border-bottom: 1px solid gray; position: sticky; top: 0; background: white; z-index: 31;">
+<div style="display: flex; flex-direction: row-reverse; border-bottom: 1px solid gray; position: sticky; top: 0; background: white; z-index: 41;">
     <li-button width="100px" border=0 onclick="jupyter.readOnly = !jupyter.readOnly" style="margin: 4px;" allow-toggle ::toggled="jupyter.readOnly">readOnly</li-button>
     <li-button width="100px" border=0  onclick="jupyter.loadURL()" style="margin: 4px;">Reset view</li-button>
     <li-button width="100px" border=0  onclick="jupyter.notebook.cells = undefined; jupyter.$update();" style="margin: 4px;">Clear all data</li-button>

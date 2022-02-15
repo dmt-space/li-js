@@ -284,6 +284,9 @@ export const indx = {
     'li-dbmon': { type: 'demo', label: 'DBMON li-benchmark', props: { iframe: '../dbmon/index.html' } },
     'dbmon': [{ label: 'index', url: url + '/dbmon/index.html' }],
 
+    'li-jupyter': { type: 'demo', label: 'li-jupyter notebook', props: { iframe: '../jupyter/index.html' } },
+    'jupyter': [{ label: 'index', url: url + '/jupyter/index.html' }],
+
     'li-gallery': { type: 'demo', label: 'image gallery', props: { iframe: '../gallery/index.html' } },
     'gallery': [{ label: 'index', url: url + '/gallery/index.html' }],
 
