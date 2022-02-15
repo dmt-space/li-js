@@ -4,7 +4,6 @@ import '../button/button.js';
 import '../dropdown/dropdown.js';
 import '../editor-html/editor-html.js';
 import '../editor-ace/editor-ace.js';
-import '../editor-monaco/editor-monaco.js';
 import '../viewer-md/viewer-md.js';
 
 customElements.define('li-jupyter', class extends LiElement {
