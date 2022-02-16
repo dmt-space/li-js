@@ -63,6 +63,8 @@ customElements.define('li-splitter', class extends LiElement {
             prevSibling.style.pointerEvents = 'none';
             nextSibling.style.userSelect = 'none';
             nextSibling.style.pointerEvents = 'none';
+
+            LI.debounce('splitterMove', () => window.dispatchEvent(new Event('resize')), 50);
         }
 
         const upHandler = () => {

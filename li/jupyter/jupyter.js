@@ -5,6 +5,7 @@ import '../dropdown/dropdown.js';
 import '../editor-html/editor-html.js';
 import '../editor-ace/editor-ace.js';
 import '../viewer-md/viewer-md.js';
+import '../splitter/splitter.js';
 
 customElements.define('li-jupyter', class extends LiElement {
     static get styles() {
@@ -172,7 +173,7 @@ customElements.define('li-jupyter-cell', class extends LiElement {
             .cell {
                 display: flex;
                 position: relative;
-                padding: 4px;
+                /* padding: 4px; */
                 min-height: 28px;
                 width: 100%
             }
@@ -311,25 +312,24 @@ customElements.define('li-jupyter-cell-markdown', class extends LiElement {
                 width: 100%;
                 min-height: 28px;
             }
-            .panel {
-                overflow: auto;
-                width: 100%;
-                flex: 1;
-                padding: 2px;
-            }
         `;
     }
 
     render() {
         return html`
-            ${this.readOnly || this.editedCell !== this.cell ? html`` : html`
-                <div class="panel" style="max-height: 80vh; border-right: 1px solid lightgray">
-                    <li-editor-ace class="ace" style="width: 100%; height: 100%;" theme="solarized_light" mode="markdown"></li-editor-ace> 
+            ${this.readOnly || this.editedCell !== this.cell ? html`
+                <li-viewer-md src=${this.cell?.source} style="width: 100%"></li-viewer-md>
+            ` :  html`
+                <div style="display: flex; overflow: hidden; width: 100%">
+                    <div style="max-height: 80vh; width: 50%; overflow: auto">
+                        <li-editor-ace class="ace" style="width: 100%" theme="solarized_light" mode="markdown"></li-editor-ace> 
+                    </div>
+                    <li-splitter size="3px" color="dodgerblue" style="opacity: .3"></li-splitter>
+                    <div style="max-height: 80vh; flex: 1; overflow: auto">
+                        <li-viewer-md src=${this.cell?.source} style="width: 100%; padding: 0;"></li-viewer-md>
+                    </div>
                 </div>
             `}
-            <div class="panel" style="max-height: ${!this.readOnly && this.editedCell === this.cell ? '80vh' : ''}">
-                <li-viewer-md src=${this.cell?.source} style="width: 100%; padding: 0"></li-viewer-md>
-            </div>
         `
     }
 
@@ -365,7 +365,7 @@ customElements.define('li-jupyter-cell-code', class extends LiElement {
             :host {
                 width: 100%;
                 display: flex;
-                padding: 4px;
+                /* padding: 4px; */
                 min-height: 28px;
             }
             .box {
@@ -408,6 +408,9 @@ customElements.define('li-jupyter-cell-code', class extends LiElement {
 customElements.define('li-jupyter-cell-html', class extends LiElement {
     static get styles() {
         return css`
+            ::-webkit-scrollbar { width: 4px; height: 4px; }
+            ::-webkit-scrollbar-track { background: lightgray; }
+            ::-webkit-scrollbar-thumb {  background-color: gray; }    
             :host {
                 position: relative;
                 display: flex;
@@ -419,10 +422,19 @@ customElements.define('li-jupyter-cell-html', class extends LiElement {
 
     render() {
         return html`
-            ${this.readOnly || this.editedCell !== this.cell ? html`` : html`
-                <li-editor-html style="width: 100%;max-height: 100vh"></li-editor-html>
+            ${this.readOnly || this.editedCell !== this.cell ? html`
+                <div .innerHTML=${this.cell.source} style="width: 100%; padding: 8px;"></div>
+            ` :  html`
+                <div style="display: flex; overflow: hidden; width: 100%">
+                    <div style="width: 50%; height: 80vh; overflow: auto">
+                        <li-editor-html style="width: 100%"></li-editor-html>
+                    </div>
+                    <li-splitter size="3px" color="dodgerblue" style="opacity: .3"></li-splitter>
+                    <div style="flex: 1; height: 80vh; overflow: auto">
+                        <div .innerHTML=${this.cell.source} style="width: 100%"></div>
+                    </div>
+                </div>
             `}
-            <div .innerHTML=${this.cell.source} style="width: 100%; padding: 8px;"></div>
         `
     }
 
