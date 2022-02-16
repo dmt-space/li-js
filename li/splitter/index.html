@@ -1,0 +1,57 @@
+<script type="module" src="./splitter.js"></script>
+<style>
+    html {
+        color: gray;
+        font-family: Arial;
+    }
+    .container {
+        display: flex;
+
+        border: 1px solid #cbd5e0;
+        height: 100%;
+        width: 100%;
+    }
+    .container__left {
+        width: 50%;
+
+        align-items: center;
+        display: flex;
+        justify-content: center;
+        min-width: 50px;
+    }
+    .container__right {
+        flex: 1;
+
+        align-items: center;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        min-width: 50px;
+    }
+    .container__top {
+        height: 50%;
+
+        align-items: center;
+        display: flex;
+        justify-content: center;
+        min-height: 50px;
+    }
+    .container__bottom {
+        flex: 1;
+
+        align-items: center;
+        display: flex;
+        justify-content: center;
+        min-height: 50px;
+    }
+</style>
+
+<div class="container">
+    <div class="container__left">Left</div>
+    <li-splitter direction="vertical" color="#cbd5e0" size="4px"></li-splitter>
+    <div class="container__right">
+        <div class="container__top">Top</div>
+        <li-splitter direction="horizontal" color="#cbd5e0" size="4px"></li-splitter>
+        <div class="container__bottom">Bottom</div>
+    </div>
+</div>

@@ -24,6 +24,9 @@ export const indx = {
     'li-calendar': { type: 'comp', label: 'li-calendar' },
     'calendar': [{ label: 'index', url: url + '/calendar' }],
 
+    'li-splitter': { type: 'comp', label: 'li-splitter', props: { iframe: '../splitter/index.html' } },
+    splitter: [{ label: 'index', url: url + '/splitter' }],
+
     'li-accordion': { type: 'comp', label: 'li-accordion', props: { iframe: '../accordion/index.html' } },
     accordion: [{ label: 'index', url: url + '/accordion' }, { label: 'index-2', url: url + '/accordion/index-2.html' }],
 
@@ -265,7 +268,7 @@ export const indx = {
             lzs: `DwZwLgngNgpgfAKAJACMD2ATCACA3s1AQwGMBrAcwCc0BXAOwwFoBLAW0PJgC5sCkpmdGIUqMqhDMxh0wACgAsAVgwxyAGmwBiGDuwAmRQFINYSoTogADiOlh9Rk2YvXKt7AHYHWnTA9ftugCMAAzBhgCUanwCQiJiZpK2CsqqGgG+BsbYAO4AFsxgGV55Bb6eWel+FT7YIWHhANwEKCQU1PRMlmggBcxodDzBlgAe2EPDGorj2FMjTUhEZFS0DIw9AF7ctaEj2+MN2IdHh8gAvgjAAPTg0PAI98CSAG7YN7AAvABExGhQaJQ8VwYA4AM36YDWzE2PAAzHoRp9EPxmIwBE8YIxcmBWFBsAAFVxPKTZC6XZ6IIA`
         }
     },
-    'live-html': [{ label: 'ace', url: url + '/live-html' }, { label: 'ace-demo', url: url + '/live-html/index-2.html' }, 
+    'live-html': [{ label: 'ace', url: url + '/live-html' }, { label: 'ace-demo', url: url + '/live-html/index-2.html' },
     { label: 'monaco', url: url + '/live-html-monaco/index.html' }, { label: 'monaco-demo', url: url + '/live-html-monaco/index-2.html' }],
 
     'li-lzstring': { type: 'apps', label: 'li-lzstring', props: { iframe: '../lzstring/index.html' } },
