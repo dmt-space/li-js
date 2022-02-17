@@ -6,6 +6,7 @@ import '../editor-html/editor-html.js';
 import '../editor-ace/editor-ace.js';
 import '../viewer-md/viewer-md.js';
 import '../splitter/splitter.js';
+import { LZString } from '../../lib/lz-string/lz-string.js';
 
 customElements.define('li-jupyter', class extends LiElement {
     static get styles() {
@@ -32,6 +33,7 @@ customElements.define('li-jupyter', class extends LiElement {
     static get properties() {
         return {
             url: { type: String, default: '' },
+            lzs: { type: String, default: '' },
             showBorder: { type: Boolean, default: false, local: true, save: true },
             readOnly: { type: Boolean, default: false, local: true },
             notebook: { type: Object, default: {}, local: true },
@@ -41,18 +43,35 @@ customElements.define('li-jupyter', class extends LiElement {
     }
 
     updated(changedProperties) {
-        if (changedProperties.has('url')) this.loadURL();
+        if (changedProperties.has('url') || changedProperties.has('lzs')) this.loadURL();
         if (changedProperties.has('focusedCell')) this.editedCell = undefined;
     }
 
-    async loadURL(url = this.url) {
+    async loadURL() {
         this.focusedCell = undefined;
-        if (url) {
-            const response = await fetch(url);
+        this._location = window.location.href;
+        let _lzs = this._location.split('?lzs=')[1];
+        _lzs = _lzs || this.lzs;
+        if (_lzs) {
+            try {
+                _lzs = LZString.decompressFromEncodedURIComponent(_lzs)
+                console.log(_lzs);
+                this.notebook = JSON.parse(_lzs);
+                // return;
+            } catch (err) {  }
+        } else if (this.url) {
+            const response = await fetch(this.url);
             const json = await response.json();
             this.notebook = json;
-            this.notebook.cells.map((i, idx) => i.order ||= idx);
-            this.$update();
+        }
+        this.notebook?.cells?.map((i, idx) => i.order ||= idx);
+        this.$update();
+    }
+    share() {
+        const str = JSON.stringify(this.notebook);
+        if (str) {
+            let url = this.$url.replace('jupyter.js', 'index.html#?lzs=') + LZString.compressToEncodedURIComponent(str);
+            window.open(url, '_blank').focus();
         }
     }
 })
