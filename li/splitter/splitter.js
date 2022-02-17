@@ -17,8 +17,9 @@ customElements.define('li-splitter', class extends LiElement {
     static get properties() { 
         return { 
             direction: { type: String, default: 'vertical' },
-            size: { type: String, default: '4px' },
-            color: { type: String, default: 'lightgray' }
+            size: { type: String, default: '2px' },
+            color: { type: String, default: 'lightgray' },
+            resize: { type: Boolean }
         } 
     }
 
@@ -51,8 +52,12 @@ customElements.define('li-splitter', class extends LiElement {
                 const w = ((prevSiblingWidth + dx) * 100) / this.parentNode.getBoundingClientRect().width;
                 prevSibling.style.width = `${w}%`;
             } else {
-                const h = ((prevSiblingHeight + dy) * 100) / this.parentNode.getBoundingClientRect().height;
-                prevSibling.style.height = `${h}%`;
+                if (this.resize) { 
+                    this.parentNode.style.height = `${prevSiblingHeight + dy}px`;
+                } else {
+                    const h = ((prevSiblingHeight + dy) * 100) / this.parentNode.getBoundingClientRect().height;
+                    prevSibling.style.height = `${h}%`;
+                }
             }
 
             const cursor = this.direction === 'vertical' ? 'col-resize' : 'row-resize';

@@ -142,6 +142,7 @@ class LiJupyterListViews extends LiElement {
             { cell_type: 'markdown', cell_extType: 'md', color: '#F7630C', source: '🟠 ... ', label: 'md' },
             { cell_type: 'html', cell_extType: 'html', color: '#16C60C', source: '🟢 ... ', label: 'html' },
             { cell_type: 'code', cell_extType: 'code', color: '#0078D7', source: '🔵 ... ', label: 'code' },
+            { cell_type: 'html-code', cell_extType: 'html-code', color: 'gray', source: '⚪️... ', label: 'html-code' },
         ]
     }
 
@@ -217,6 +218,9 @@ customElements.define('li-jupyter-cell', class extends LiElement {
             return html`<li-jupyter-cell-html @click=${this.click} @dblclick=${this.dblclick} .cell=${this.cell}></li-jupyter-cell-html>`;
         if (this.cell?.cell_type === 'code')
             return html`<li-jupyter-cell-code @click=${this.click} @dblclick=${this.dblclick} .cell=${this.cell}></li-jupyter-cell-code>`;
+        if (this.cell?.cell_type === 'html-code')
+            return html`<li-jupyter-cell-html-code @click=${this.click} @dblclick=${this.dblclick} .cell=${this.cell}></li-jupyter-cell-html-code>`;
+
         return html`<div></div>`;
     }
     click(e) {
@@ -453,6 +457,63 @@ customElements.define('li-jupyter-cell-html', class extends LiElement {
             requestAnimationFrame(() => {
                 if (this.editedCell && this.editedCell === this.cell) this.$qs('li-editor-html').src = this.cell.source;
             })
+        })
+    }
+})
+
+customElements.define('li-jupyter-cell-html-code', class extends LiElement {
+    static get styles() {
+        return css`
+            ::-webkit-scrollbar { width: 4px; height: 4px; }
+            ::-webkit-scrollbar-track { background: lightgray; }
+            ::-webkit-scrollbar-thumb {  background-color: gray; }            
+            :host {
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                width: 100%;
+                min-height: 24px;
+            }
+        `;
+    }
+
+    render() {
+        return html`
+            <div style="position: relative; display: flex; flex-direction: column; overflow: hidden; width: 100%; height: 100%; min-height: 24px;">
+                <div style="display: flex; overflow: hidden; width: 100%; height: 100%">
+                    <div style="width: 50%; overflow: auto">
+                        <li-editor-ace class="ace" style="width: 100%" theme="cobalt" mode="html"></li-editor-ace> 
+                    </div>
+                    <li-splitter size="3px" color="dodgerblue" style="opacity: .3"></li-splitter>
+                    <div style="flex: 1; overflow: auto">
+                        <iframe srcdoc=${this.cell?.source} style="border: none; width: 100%; height: 100%"></iframe>
+                    </div>
+                </div>
+                <li-splitter direction="horizontal" size="3px" color="dodgerblue" style="opacity: .3" resize></li-splitter>
+                <div style="display: flex; overflow: auto; flex: 1; width: 100%"></div>
+            </div>
+        `
+    }
+
+    static get properties() {
+        return {
+            readOnly: { type: Boolean, local: true },
+            editedCell: { type: Object, local: true, notify: true },
+            cell: { type: Object }
+        }
+    }
+
+    firstUpdated() {
+        super.firstUpdated();
+        this.listen('change', (e) => {
+            this.cell.source = e.detail
+            this.$update();
+        })
+        setTimeout(() => {
+            const ace = this.$qs('li-editor-ace');
+            ace.options = { highlightActiveLine: false, showPrintMargin: false, minLines: 1, fontSize: 16 };
+            ace.value = this.cell.source;
+            this.$update();
         })
     }
 })
