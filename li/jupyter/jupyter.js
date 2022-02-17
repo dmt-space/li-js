@@ -158,10 +158,11 @@ class LiJupyterListViews extends LiElement {
     }
     get cellViews() {
         return [
-            { cell_type: 'markdown', cell_extType: 'md', color: '#F7630C', source: '🟠 ... ', label: 'md' },
-            { cell_type: 'html', cell_extType: 'html', color: '#16C60C', source: '🟢 ... ', label: 'html' },
+            { cell_type: 'markdown', cell_extType: 'md', color: '#F7630C', source: '🟠 ... ', label: 'md-showdown' },
+            { cell_type: 'html', cell_extType: 'html', color: '#16C60C', source: '🟢 ... ', label: 'html-pell-editor' },
+            { cell_type: 'html-cde', cell_extType: 'html-cde', color: '#16C60C', source: '🟢... ', label: 'html-CDEditor' },
             { cell_type: 'code', cell_extType: 'code', color: '#0078D7', source: '🔵 ... ', label: 'code' },
-            { cell_type: 'html-code', cell_extType: 'html-code', color: 'gray', source: '⚪️... ', label: 'html-code' },
+            { cell_type: 'html-executable', cell_extType: 'html-executable', color: '#0078D7', source: '🔵... ', label: 'code-html-executable' },
         ]
     }
 
@@ -235,10 +236,12 @@ customElements.define('li-jupyter-cell', class extends LiElement {
             return html`<li-jupyter-cell-markdown @click=${this.click} @dblclick=${this.dblclick} .cell=${this.cell}></li-jupyter-cell-markdown>`;
         if (this.cell?.cell_type === 'html')
             return html`<li-jupyter-cell-html @click=${this.click} @dblclick=${this.dblclick} .cell=${this.cell}></li-jupyter-cell-html>`;
+        if (this.cell?.cell_type === 'html-cde')
+            return html`<li-jupyter-cell-html-cde @click=${this.click} @dblclick=${this.dblclick} .cell=${this.cell}></li-jupyter-cell-html-cde>`;
         if (this.cell?.cell_type === 'code')
             return html`<li-jupyter-cell-code @click=${this.click} @dblclick=${this.dblclick} .cell=${this.cell}></li-jupyter-cell-code>`;
-        if (this.cell?.cell_type === 'html-code')
-            return html`<li-jupyter-cell-html-code @click=${this.click} @dblclick=${this.dblclick} .cell=${this.cell}></li-jupyter-cell-html-code>`;
+        if (this.cell?.cell_type === 'html-executable')
+            return html`<li-jupyter-cell-html-executable @click=${this.click} @dblclick=${this.dblclick} .cell=${this.cell}></li-jupyter-cell-html-executable>`;
 
         return html`<div></div>`;
     }
@@ -480,7 +483,7 @@ customElements.define('li-jupyter-cell-html', class extends LiElement {
     }
 })
 
-customElements.define('li-jupyter-cell-html-code', class extends LiElement {
+customElements.define('li-jupyter-cell-html-executable', class extends LiElement {
     static get styles() {
         return css`
             ::-webkit-scrollbar { width: 4px; height: 4px; }
@@ -533,6 +536,71 @@ customElements.define('li-jupyter-cell-html-code', class extends LiElement {
             ace.options = { highlightActiveLine: false, showPrintMargin: false, minLines: 1, fontSize: 16 };
             ace.value = this.cell.source;
             this.$update();
+        })
+    }
+})
+
+customElements.define('li-jupyter-cell-html-cde', class extends LiElement {
+    static get styles() {
+        return css`
+            ::-webkit-scrollbar { width: 4px; height: 4px; }
+            ::-webkit-scrollbar-track { background: lightgray; }
+            ::-webkit-scrollbar-thumb {  background-color: gray; }    
+            :host {
+                position: relative;
+                display: flex;
+                flex: 1;
+                min-height: 28px;
+            }
+        `;
+    }
+
+    render() {
+        return html`
+            ${this.readOnly || this.editedCell !== this.cell ? html`
+                <div .innerHTML=${this.cell.source} style="width: 100%; padding: 8px;"></div>
+            ` :  html`
+                <div style="display: flex; overflow: hidden; width: 100%">
+                    <div style="width: 50%; height: 80vh; overflow: auto">
+                        <iframe style="border: none; width: 100%; height: 80vh"></iframe>
+                    </div>
+                    <li-splitter size="3px" color="dodgerblue" style="opacity: .3"></li-splitter>
+                    <div style="flex: 1; height: 80vh; overflow: auto">
+                        <div .innerHTML=${this.cell.source} style="width: 100%"></div>
+                    </div>
+                </div>
+            `}
+        `
+    }
+
+    static get properties() {
+        return {
+            readOnly: { type: Boolean, local: true },
+            editedCell: { type: Object, local: true, notify: true },
+            cell: { type: Object }
+        }
+    }
+    get srcEditor() { return 'https://cdn.ckeditor.com/4.13.0/full/ckeditor.js'}
+    get initEditor() { return `let editor = CKEDITOR.replace('editor');` }
+    get eventChange() { return `editor.on('change',function(e){document.dispatchEvent(new CustomEvent('change',{detail: e.editor.getData()}));});` }
+    get events() { return `editor.on( 'instanceReady',function(event){if(event.editor.getCommand('maximize').state==CKEDITOR.TRISTATE_OFF);event.editor.execCommand('maximize');});`}    get srcdoc() { return `<style>::-webkit-scrollbar { width: 4px; height: 4px; };::-webkit-scrollbar-track { -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3); }::-webkit-scrollbar-thumb { border-radius: 10px; background: var(--body-background); -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5); }</style><div id="editor">\r\n<p>${this.cell?.source || ''}</p>\r\n</div>\r\n\x3Cscript src="${this.srcEditor}">\x3C/script>\r\n\x3Cscript>\r\n${this.initEditor}\r\n${this.eventChange}\r\n${this.events}\r\n\x3C/script>\r\n` }
+    get srcdoc() { return `<style>::-webkit-scrollbar { width: 4px; height: 4px; };::-webkit-scrollbar-track { -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3); }::-webkit-scrollbar-thumb { border-radius: 10px; background: var(--body-background); -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5); }</style><div id="editor">\r\n<p>${this.cell?.source || ''}</p>\r\n</div>\r\n\x3Cscript src="${this.srcEditor}">\x3C/script>\r\n\x3Cscript>\r\n${this.initEditor}\r\n${this.eventChange}\r\n${this.events}\r\n\x3C/script>\r\n` }
+
+    firstUpdated() {
+        super.firstUpdated();
+        this.listen('change', (e) => this.cell.source = e.detail);
+        this.listen('editedCell-changed', () => {
+            requestAnimationFrame(() => {
+                if (this.editedCell && this.editedCell === this.cell) {
+                    const iframe = this.$qs('iframe');
+                    iframe.srcdoc = this.srcdoc;
+                    requestAnimationFrame(() => (iframe.contentDocument || iframe.contentWindow)
+                        .addEventListener("change", (e) => {
+                            this.cell.source = e.detail;
+                            this.$update();
+                        }));
+                }
+            })
         })
     }
 })
