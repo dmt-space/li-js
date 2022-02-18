@@ -474,8 +474,8 @@ customElements.define('li-jupyter-cell-html-executable', class extends LiElement
                                 <span @click=${() => this.mode = 'javascript'} class="${this.mode === 'javascript' ? 'mode' : ''}">javascript</span>
                                 <span @click=${() => this.mode = 'css'} class="${this.mode === 'css' ? 'mode' : ''}">css</span>
                                 <div style="flex: 1"></div>
-                                <li-button size=12 name="content-cut" @click=${(e) => {this.cell.source=this.cell.sourceJS=this.cell.sourceCSS=''; this.setValue()}}></li-button>
-                                <li-button size=12 name="refresh" @click=${(e) => {this._srcdoc = this._srcdoc ? '' : ' '}}></li-button>
+                                <li-button size=12 name="content-cut" @click=${(e) => {this.cell.source=this.cell.sourceJS=this.cell.sourceCSS=''; this.setValue()}} title="clear all"></li-button>
+                                <li-button size=12 name="refresh" @click=${(e) => {this._srcdoc = this._srcdoc ? '' : ' '}} style="margin-left: 6px" title="refresh"></li-button>
                             </div>
                             <li-editor-ace class="ace" style="width: 100%" theme=${this.mode === 'html' ? 'cobalt' : this.mode === 'javascript' ? 'solarized_light' : 'dawn'} mode=${this.mode}></li-editor-ace>
                         </div>
