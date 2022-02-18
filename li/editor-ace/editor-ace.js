@@ -13,11 +13,16 @@ customElements.define('li-editor-ace', class LiAceEditor extends LiElement {
     static get styles() {
         return css`
             ::-webkit-scrollbar { width: 4px; height: 4px; } ::-webkit-scrollbar-track { background: lightgray; } ::-webkit-scrollbar-thumb { background-color: gray; }
+            :host {
+                display: block;
+                position: relative;
+                height: 100%;
+            }
         `;
     }
     render() {
         return html`
-            <div id="editor"></div>
+            <div id="editor" style="min-height: 100%;"></div>
         `
     }
 
@@ -62,8 +67,10 @@ customElements.define('li-editor-ace', class LiAceEditor extends LiElement {
         return this.editor?.getValue();
     }
     set value(v) {
-        this.editor.setValue(v ?? '', -1);
-        this.editor.session.selection.clearSelection();
+        if (this.editor) {
+            this.editor.setValue(v ?? '', -1);
+            this.editor.session.selection.clearSelection();
+        }
     }
 
     constructor() {

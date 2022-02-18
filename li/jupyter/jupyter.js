@@ -8,6 +8,11 @@ import '../viewer-md/viewer-md.js';
 import '../splitter/splitter.js';
 import { LZString } from '../../lib/lz-string/lz-string.js';
 
+const editorCSS = css`
+    ::-webkit-scrollbar { width: 4px; height: 4px; } ::-webkit-scrollbar-track { background: lightgray; } ::-webkit-scrollbar-thumb {  background-color: gray; }            
+    :host { position: relative; display: flex; width: 100% }
+`;
+
 customElements.define('li-jupyter', class extends LiElement {
     static get styles() {
         return css`
@@ -58,7 +63,7 @@ customElements.define('li-jupyter', class extends LiElement {
                 console.log(_lzs);
                 this.notebook = JSON.parse(_lzs);
                 // return;
-            } catch (err) {  }
+            } catch (err) { }
         } else if (this.url) {
             const response = await fetch(this.url);
             const json = await response.json();
@@ -160,9 +165,9 @@ class LiJupyterListViews extends LiElement {
         return [
             { cell_type: 'markdown', cell_extType: 'md', color: '#F7630C', source: '🟠 ... ', label: 'md-showdown' },
             { cell_type: 'html', cell_extType: 'html', color: '#16C60C', source: '🟢 ... ', label: 'html-pell-editor' },
-            { cell_type: 'html-cde', cell_extType: 'html-cde', color: '#16C60C', source: '🟢... ', label: 'html-CDEditor' },
+            { cell_type: 'html-cde', cell_extType: 'html-cde', color: '#16C60C', source: '🟢 ... ', label: 'html-CDEditor' },
             { cell_type: 'code', cell_extType: 'code', color: '#0078D7', source: '🔵 ... ', label: 'code' },
-            { cell_type: 'html-executable', cell_extType: 'html-executable', color: '#0078D7', source: '🔵... ', label: 'code-html-executable' },
+            { cell_type: 'html-executable', cell_extType: 'html-executable', color: '#0078D7', source: '🔵 ... ', label: 'code-html-executable' },
         ]
     }
 
@@ -194,12 +199,9 @@ customElements.define('li-jupyter-cell', class extends LiElement {
             .cell {
                 display: flex;
                 position: relative;
-                /* padding: 4px; */
-                min-height: 28px;
                 width: 100%
             }
             .focused {
-                /* box-shadow: 0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12), 0 2px 4px -1px rgba(0,0,0,0.4); */
                 box-shadow: 0 0 0 1px dodgerblue;
             }
         `;
@@ -207,7 +209,7 @@ customElements.define('li-jupyter-cell', class extends LiElement {
 
     render() {
         return html`
-            <div id="${this.id}" class="cell ${this.focused}" style="order: ${this.cell?.order || 0}; box-shadow: ${!this.readOnly && this.showBorder && this.focusedCell !== this.cell ? 'inset 0px 0px 0px 1px lightgray' : ''};">
+            <div id="${this.id}" class="cell ${this.focused}" style="order: ${this.cell?.order || 0}; box-shadow: ${!this.readOnly && this.showBorder && this.focusedCell !== this.cell ? '0px 0px 0px 1px lightgray' : ''};">
                 ${this.cellType}
             </div>
             ${!this.readOnly && this.cell && this.focusedCell === this.cell ? html`
@@ -265,7 +267,6 @@ customElements.define('li-jupyter-cell-toolbar', class extends LiElement {
                 right: 8px;
                 top: -18px;
                 z-index: 21;
-                /* box-shadow: 0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12), 0 2px 4px -1px rgba(0,0,0,0.4); */
                 box-shadow: 0 0 0 1px dodgerblue;
                 background: white;
                 width: 200px;
@@ -328,27 +329,17 @@ customElements.define('li-jupyter-cell-toolbar', class extends LiElement {
 
 customElements.define('li-jupyter-cell-markdown', class extends LiElement {
     static get styles() {
-        return css`
-            ::-webkit-scrollbar { width: 4px; height: 4px; }
-            ::-webkit-scrollbar-track { background: lightgray; }
-            ::-webkit-scrollbar-thumb {  background-color: gray; }            
-            :host {
-                position: relative;
-                display: flex;
-                width: 100%;
-                min-height: 28px;
-            }
-        `;
+        return [editorCSS, css``]
     }
 
     render() {
         return html`
             ${this.readOnly || this.editedCell !== this.cell ? html`
                 <li-viewer-md src=${this.cell?.source} style="width: 100%"></li-viewer-md>
-            ` :  html`
-                <div style="display: flex; overflow: hidden; width: 100%">
+            ` : html`
+                <div style="display: flex; overflow: hidden; width: 100%; height: 100%">
                     <div style="max-height: 80vh; width: 50%; overflow: auto">
-                        <li-editor-ace class="ace" style="width: 100%" theme="solarized_light" mode="markdown"></li-editor-ace> 
+                        <li-editor-ace class="ace" style="width: 100%; height: 100%" theme="solarized_light" mode="markdown"></li-editor-ace> 
                     </div>
                     <li-splitter size="3px" color="dodgerblue" style="opacity: .3"></li-splitter>
                     <div style="max-height: 80vh; flex: 1; overflow: auto">
@@ -387,28 +378,12 @@ customElements.define('li-jupyter-cell-markdown', class extends LiElement {
 
 customElements.define('li-jupyter-cell-code', class extends LiElement {
     static get styles() {
-        return css`
-            :host {
-                width: 100%;
-                display: flex;
-                /* padding: 4px; */
-                min-height: 28px;
-            }
-            .box {
-                width: 24px;
-                cursor: pointer;
-                align-self: flex-start;
-                padding-right: 4px;
-            }
-        `;
+        return [editorCSS, css``]
     }
 
     render() {
         return html`
-            <div class="box ">
-                <div>[...]</div>
-            </div>
-            <li-editor-ace style="width: 100%;" theme=${!this.readOnly && this.editedCell === this.cell ? 'solarized_light' : 'dawn'} mode="javascript"></li-editor-ace>    
+            <li-editor-ace style="width: 100%; height: 100%" theme=${!this.readOnly && this.editedCell === this.cell ? 'solarized_light' : 'dawn'} mode="javascript"></li-editor-ace>    
         `
     }
 
@@ -433,24 +408,14 @@ customElements.define('li-jupyter-cell-code', class extends LiElement {
 
 customElements.define('li-jupyter-cell-html', class extends LiElement {
     static get styles() {
-        return css`
-            ::-webkit-scrollbar { width: 4px; height: 4px; }
-            ::-webkit-scrollbar-track { background: lightgray; }
-            ::-webkit-scrollbar-thumb {  background-color: gray; }    
-            :host {
-                position: relative;
-                display: flex;
-                flex: 1;
-                min-height: 28px;
-            }
-        `;
+        return [editorCSS, css``]
     }
 
     render() {
         return html`
             ${this.readOnly || this.editedCell !== this.cell ? html`
                 <div .innerHTML=${this.cell.source} style="width: 100%; padding: 8px;"></div>
-            ` :  html`
+            ` : html`
                 <div style="display: flex; overflow: hidden; width: 100%">
                     <div style="width: 50%; height: 80vh; overflow: auto">
                         <li-editor-html style="width: 100%"></li-editor-html>
@@ -485,30 +450,39 @@ customElements.define('li-jupyter-cell-html', class extends LiElement {
 
 customElements.define('li-jupyter-cell-html-executable', class extends LiElement {
     static get styles() {
-        return css`
-            ::-webkit-scrollbar { width: 4px; height: 4px; }
-            ::-webkit-scrollbar-track { background: lightgray; }
-            ::-webkit-scrollbar-thumb {  background-color: gray; }            
-            :host {
-                position: relative;
-                display: flex;
-                flex-direction: column;
-                width: 100%;
-                min-height: 24px;
+        return [editorCSS, css`
+            span {
+                cursor: pointer;
+                font-size: 12px;
+                padding: 0 4px;
             }
-        `;
+            .mode {
+                color: red;
+                background: white;
+            }
+        `]
     }
 
     render() {
         return html`
-            <div style="position: relative; display: flex; flex-direction: column; overflow: hidden; width: 100%; height: 100%; min-height: 24px;">
+            <div style="position: relative; display: flex; flex-direction: column; overflow: hidden; width: 100%; height: 200px;">
                 <div style="display: flex; overflow: hidden; width: 100%; height: 100%">
                     <div style="width: 50%; overflow: auto">
-                        <li-editor-ace class="ace" style="width: 100%" theme="cobalt" mode="html"></li-editor-ace> 
+                        <div style="display: flex; flex-direction: column; width: 100%; overflow: auto; height: 100%; position: relative">
+                            <div style="display: flex; background: lightgray; padding: 4px;position: sticky; top: 0; z-index: 9">
+                                <span @click=${() => this.mode = 'html'} class="${this.mode === 'html' ? 'mode' : ''}">html</span>
+                                <span @click=${() => this.mode = 'javascript'} class="${this.mode === 'javascript' ? 'mode' : ''}">javascript</span>
+                                <span @click=${() => this.mode = 'css'} class="${this.mode === 'css' ? 'mode' : ''}">css</span>
+                                <div style="flex: 1"></div>
+                                <li-button size=12 name="content-cut" @click=${(e) => {this.cell.source=this.cell.sourceJS=this.cell.sourceCSS=''; this.setValue()}}></li-button>
+                                <li-button size=12 name="refresh" @click=${(e) => {this._srcdoc = this._srcdoc ? '' : ' '}}></li-button>
+                            </div>
+                            <li-editor-ace class="ace" style="width: 100%" theme=${this.mode === 'html' ? 'cobalt' : this.mode === 'javascript' ? 'solarized_light' : 'dawn'} mode=${this.mode}></li-editor-ace>
+                        </div>
                     </div>
                     <li-splitter size="3px" color="dodgerblue" style="opacity: .3"></li-splitter>
                     <div style="flex: 1; overflow: auto">
-                        <iframe srcdoc=${this.cell?.source} style="border: none; width: 100%; height: 100%"></iframe>
+                        <iframe srcdoc=${this.srcdoc || ''} style="border: none; width: 100%; height: 100%"></iframe>
                     </div>
                 </div>
                 <li-splitter direction="horizontal" size="3px" color="dodgerblue" style="opacity: .3" resize></li-splitter>
@@ -521,45 +495,57 @@ customElements.define('li-jupyter-cell-html-executable', class extends LiElement
         return {
             readOnly: { type: Boolean, local: true },
             editedCell: { type: Object, local: true, notify: true },
-            cell: { type: Object }
+            cell: { type: Object },
+            mode: { type: String, default: 'html' }
         }
+    }
+    get srcdoc() {
+        return `<style>${this.cell?.sourceCSS || ''}</style>${this.cell?.source || ''}<script type="module">${this.cell?.sourceJS || ''}</script>${this._srcdoc || ''}`
     }
 
     firstUpdated() {
         super.firstUpdated();
         this.listen('change', (e) => {
-            this.cell.source = e.detail
+            const v = e.detail;
+            if (this.mode === 'javascript')
+                this.cell.sourceJS = v;
+            if (this.mode === 'html')
+                this.cell.source = v;
+            if (this.mode === 'css')
+                this.cell.sourceCSS = v;
             this.$update();
         })
         setTimeout(() => {
             const ace = this.$qs('li-editor-ace');
             ace.options = { highlightActiveLine: false, showPrintMargin: false, minLines: 1, fontSize: 16 };
-            ace.value = this.cell.source;
-            this.$update();
+            this.setValue();
         })
+    }
+    updated(changedProperties) {
+        if (changedProperties.has('mode')) this.setValue();
+    }
+    setValue(mode = this.mode) {
+        const ace = this.$qs('li-editor-ace');
+        if (mode === 'javascript')
+            ace.value = this.cell.sourceJS || '';
+        if (mode === 'html')
+            ace.value = this.cell.source || '';
+        if (mode === 'css')
+            ace.value = this.cell.sourceCSS || '';
+        this.$update();
     }
 })
 
 customElements.define('li-jupyter-cell-html-cde', class extends LiElement {
     static get styles() {
-        return css`
-            ::-webkit-scrollbar { width: 4px; height: 4px; }
-            ::-webkit-scrollbar-track { background: lightgray; }
-            ::-webkit-scrollbar-thumb {  background-color: gray; }    
-            :host {
-                position: relative;
-                display: flex;
-                flex: 1;
-                min-height: 28px;
-            }
-        `;
+        return [editorCSS, css``]
     }
 
     render() {
         return html`
             ${this.readOnly || this.editedCell !== this.cell ? html`
                 <div .innerHTML=${this.cell.source} style="width: 100%; padding: 8px;"></div>
-            ` :  html`
+            ` : html`
                 <div style="display: flex; overflow: hidden; width: 100%">
                     <div style="width: 50%; height: 80vh; overflow: auto">
                         <iframe style="border: none; width: 100%; height: 80vh"></iframe>
@@ -580,10 +566,10 @@ customElements.define('li-jupyter-cell-html-cde', class extends LiElement {
             cell: { type: Object }
         }
     }
-    get srcEditor() { return 'https://cdn.ckeditor.com/4.13.0/full/ckeditor.js'}
+    get srcEditor() { return 'https://cdn.ckeditor.com/4.13.0/full/ckeditor.js' }
     get initEditor() { return `let editor = CKEDITOR.replace('editor');` }
     get eventChange() { return `editor.on('change',function(e){document.dispatchEvent(new CustomEvent('change',{detail: e.editor.getData()}));});` }
-    get events() { return `editor.on( 'instanceReady',function(event){if(event.editor.getCommand('maximize').state==CKEDITOR.TRISTATE_OFF);event.editor.execCommand('maximize');});`}    get srcdoc() { return `<style>::-webkit-scrollbar { width: 4px; height: 4px; };::-webkit-scrollbar-track { -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3); }::-webkit-scrollbar-thumb { border-radius: 10px; background: var(--body-background); -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5); }</style><div id="editor">\r\n<p>${this.cell?.source || ''}</p>\r\n</div>\r\n\x3Cscript src="${this.srcEditor}">\x3C/script>\r\n\x3Cscript>\r\n${this.initEditor}\r\n${this.eventChange}\r\n${this.events}\r\n\x3C/script>\r\n` }
+    get events() { return `editor.on( 'instanceReady',function(event){if(event.editor.getCommand('maximize').state==CKEDITOR.TRISTATE_OFF);event.editor.execCommand('maximize');});` } get srcdoc() { return `<style>::-webkit-scrollbar { width: 4px; height: 4px; };::-webkit-scrollbar-track { -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3); }::-webkit-scrollbar-thumb { border-radius: 10px; background: var(--body-background); -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5); }</style><div id="editor">\r\n<p>${this.cell?.source || ''}</p>\r\n</div>\r\n\x3Cscript src="${this.srcEditor}">\x3C/script>\r\n\x3Cscript>\r\n${this.initEditor}\r\n${this.eventChange}\r\n${this.events}\r\n\x3C/script>\r\n` }
     get srcdoc() { return `<style>::-webkit-scrollbar { width: 4px; height: 4px; };::-webkit-scrollbar-track { -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3); }::-webkit-scrollbar-thumb { border-radius: 10px; background: var(--body-background); -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5); }</style><div id="editor">\r\n<p>${this.cell?.source || ''}</p>\r\n</div>\r\n\x3Cscript src="${this.srcEditor}">\x3C/script>\r\n\x3Cscript>\r\n${this.initEditor}\r\n${this.eventChange}\r\n${this.events}\r\n\x3C/script>\r\n` }
 
     firstUpdated() {
