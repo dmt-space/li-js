@@ -34,13 +34,14 @@ customElements.define('li-db', class LiDb extends LiElement {
             :host {
                 display: flex;
                 flex-direction: column;
-                height: 100%;
                 overflow: hidden;
+                height: 100%;
             }
             .panel {
                 display: flex;
                 flex-direction: column;
                 overflow: hidden;
+                height: 100%;
             }
         `]
     }
