@@ -284,11 +284,12 @@ class CLI {
         _$temp.debounces.set(key, pending)
     }
 
-    dates(d = new Date()) {
+    dates(d = new Date(), isShort) {
         const utc = d.toISOString();
         const local = new Date(d.getTime() - (d.getTimezoneOffset()) * 60 * 1000).toISOString().slice(0, -5).replace('T', ' ');
         const short = local.split(' ')[0];
         const monthStr = short.slice(0, -3);
+        if (isShort) return { utc, local };
         return { utc, local, short, monthStr };
     }
     ulidToDateTime(ulid) {
