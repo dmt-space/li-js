@@ -644,13 +644,12 @@ customElements.define('li-table-cell', class extends LiElement {
                         ${this.column.calc ? html`
                             ${this._calc}
                         ` : html`
-                            ${!this.selected ? html`${this.row[this.column.name] || ''}` : html``}
-                            ${this.selected ? html`
+                            ${this.readOnly || !this.selected ? html`${this.row[this.column.name] || ''}` : html`
                                 <input class="input" .value=${this.row[this.column.name] || ''} style=${styleMap(this.styles)}
                                     @blur=${this._changeValue} 
                                     @change=${this._changeValue}
                                 >
-                            ` : html``}
+                            `}
                         `}
                     `}
             </div>
@@ -671,8 +670,8 @@ customElements.define('li-table-cell', class extends LiElement {
             idx: { type: Number }
         }
     }
-    get readonly() {
-        return this.column.name === '$idx' || this.column?.readonly || this.data?.options?.readonly;
+    get readOnly() {
+        return this.column.name === '$idx' || this.column?.readOnly || this.data?.options?.readOnly;
     }
     get _calc() {
         let res = this.column.calc(this.row);
@@ -690,7 +689,7 @@ customElements.define('li-table-cell', class extends LiElement {
             action: 'clearSelected',
             ulid: this.$ulid
         }
-        if (!this.readonly) this.selected = true;
+        if (!this.readOnly) this.selected = true;
     }
     _changeValue(e) {
         if (this.row[this.column.name] !== e.target.value) {

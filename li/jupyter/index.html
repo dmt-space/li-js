@@ -1,29 +1,46 @@
 <meta charset="utf-8">
-<title>li-jupyter test</title>
+<title>li-jupyter demo</title>
 
 <style>
-    html,
-    body {
+    html, body {
         color: gray;
         font-family: Arial;
-        margin: 0;padding: 0;
+        margin: 0;
+        padding: 0;
     }
-    ::-webkit-scrollbar { width: 4px; height: 4px; }
-    ::-webkit-scrollbar-track { background: lightgray; }
-    ::-webkit-scrollbar-thumb {  background-color: gray; }
 </style>
 
-<script type="module" src="./jupyter.js"></script>
-<script type="module" src="../button/button.js"></script>
+<li-jupyter-demo id="li_demo"></li-jupyter-demo>
 
-<div style="display: flex; flex-direction: row-reverse; border-bottom: 1px solid gray; position: sticky; top: 0; background: white; z-index: 41;">
-    <li-button width="auto" border=0 onclick="jupyter.share()" style="margin: 4px 8px;">share</li-button>
-    <li-button width="auto" border=0 onclick="jupyter.readOnly = !jupyter.readOnly" style="margin: 4px 8px;" allow-toggle ::toggled="jupyter.readOnly">readOnly</li-button>
-    <li-button width="auto" border=0  onclick="jupyter.loadURL()" style="margin: 4px 8px;">Reset view</li-button>
-    <li-button width="auto" border=0  onclick="jupyter.notebook.cells = undefined; jupyter.$update();" style="margin: 4px 8px;">Clear all data</li-button>
-    <li-button width="auto" border=0  onclick="document.location.reload()" style="margin: 4px 8px;">Reload page</li-button>
-</div>
-
-<div style="position: relative; overflow: auto; padding: 4px;">
-    <li-jupyter id="jupyter" url="./javascript.ipynb.json"></li-jupyter>
-</div>
+<script type="module">
+    import { LiElement, html, css } from '../../li.js';
+    import './jupyter.js';
+    import '../button/button.js';
+    customElements.define('li-jupyter-demo', class extends LiElement {
+        static get styles() {
+            return css`
+                ::-webkit-scrollbar { width: 4px; height: 4px; }; ::-webkit-scrollbar-track { background: lightgray; }; ::-webkit-scrollbar-thumb {  background-color: gray; }
+	        `;
+        }
+        render() {
+            return html`
+                <div style="display: flex; flex-direction: row-reverse; border-bottom: 1px solid gray; position: sticky; top: 0; background: white; z-index: 41;">
+                    <li-button width="auto" border=0 @click=${() => this.jupyter.share()} style="margin: 4px 8px;">share</li-button>
+                    <li-button width="auto" border=0 @click=${() => this.jupyter.readOnly = !this.jupyter.readOnly} style="margin: 4px 8px;" color=${this.readOnly ? 'red' : 'lightgray'}>readOnly</li-button>
+                    <li-button width="auto" border=0 @click=${() => this.jupyter.loadURL()} style="margin: 4px 8px;">Reset view</li-button>
+                    <li-button width="auto" border=0 @click=${() => this.jupyter.clearAll()} style="margin: 4px 8px;" color=${this.readOnly ? 'lightgray' : 'gray'}>Clear all data</li-button>
+                    <li-button width="auto" border=0 @click=${() => document.location.reload()} style="margin: 4px 8px;">Reload page</li-button>
+                </div>
+                <div style="position: relative; overflow: auto; padding: 4px;">
+                    <li-jupyter id="jupyter" url="./javascript.ipynb.json" readOnly></li-jupyter>
+                </div>
+	        `
+        }
+        static get properties() {
+            return {
+                readOnly: { type: Boolean, local: true }
+            }
+        }
+        get jupyter() { return this.$qs('li-jupyter') || {} }
+    })
+</script>
