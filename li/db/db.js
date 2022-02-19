@@ -6,12 +6,31 @@ import '../table/table.js';
 import '../../lib/pouchdb/pouchdb.js';
 import '../../lib/li-utils/utils.js';
 
-const mainCSS = css` .row-panel { display: flex; border-bottom: 1px solid lightgray; padding: 4px 2px; margin-bottom: 2px; }`;
+const rowPanelCSS = css` .row-panel { display: flex; border-bottom: 1px solid lightgray; padding: 4px 2px; margin-bottom: 2px; }`;
 const scrollCSS = css`::-webkit-scrollbar { width: 4px; height: 4px; } ::-webkit-scrollbar-track { background: lightgray; } ::-webkit-scrollbar-thumb {  background-color: gray; }`;
+
+class ITEM {
+    constructor(doc = {}) {
+        this.doc = doc;
+        this.doc.type = doc.type || 'articles';
+        this.doc.label = doc.label || 'new-article';
+        const ulid = LI.ulid();
+        this.doc._id = doc._id || this.doc.type + ':' + ulid;
+        this.doc.ulid = doc.ulid || ulid;
+        this.doc.created = doc.created || LI.dates(null, true);
+        this.items = [];
+    }
+    get _id() { return this.doc._id }
+    get ulid() { return this.doc.ulid }
+    get created() { return this.doc.created }
+    get label() { return this.doc.label }
+    get parentId() { return this.doc.parentId || '' }
+    get partsId() { return this.doc.partsId || [] }
+}
 
 customElements.define('li-db', class LiDb extends LiElement {
     static get styles() {
-        return [mainCSS, css``]
+        return [rowPanelCSS, css``]
     }
     render() {
         return html`
@@ -92,10 +111,10 @@ customElements.define('li-db', class LiDb extends LiElement {
     async firstInit() {
         try { this.rootArticle = await this.dbLocal.get('$wiki:articles') } catch (error) { }
         if (!this.rootArticle) {
-            await this.dbLocal.put({ label: 'wiki-articles', _id: '$wiki:articles', ulid: '$wiki:articles' });
+            await this.dbLocal.put(new ITEM({ _id: '$wiki:articles', type: 'articles', label: 'wiki-articles' }).doc);
             this.rootArticle = await this.dbLocal.get('$wiki:articles');
         }
-        this.rootArticle = { label: 'wiki-articles', items: [], doc: { ...this.rootArticle }, ulid: '$wiki:articles', partsId: this.rootArticle.partsId, _id: '$wiki:articles' };
+        this.rootArticle = new ITEM({ ...this.rootArticle });
         this.articles = [this.rootArticle];
         try { this.dbLocalStore = await this.dbLocal.get('_local/store') } catch (error) { };
         this.dbLocalStore ||= {};
@@ -109,7 +128,7 @@ customElements.define('li-db', class LiDb extends LiElement {
         const items = await this.dbLocal.allDocs({ include_docs: true, startkey: 'articles', endkey: 'articles' + '\ufff0' });
         if (!items.rows) return;
         const flat = {};
-        items.rows.forEach(i => flat[i.doc._id] = { label: i.doc.label, items: [], doc: i.doc, _id: i.doc._id, ulid: i.doc._id, partsId: i.doc.partsId });
+        items.rows.forEach(i => flat[i.doc._id] = new ITEM({ ...i.doc }));
         Object.values(flat).forEach(f => {
             if (f.doc['parentId'] === '$wiki:articles') {
                 f.parent = this.articles[0];
@@ -185,7 +204,7 @@ customElements.define('li-db', class LiDb extends LiElement {
 
 customElements.define('li-db-three', class LiDbThree extends LiElement {
     static get styles() {
-        return [mainCSS, scrollCSS, css`
+        return [rowPanelCSS, scrollCSS, css`
             :host {
                 display: flex;
                 flex-direction: column;
@@ -306,7 +325,7 @@ customElements.define('li-db-list', class LiDblist extends LiElement {
 
 customElements.define('li-db-settings', class LiSettings extends LiElement {
     static get styles() {
-        return [mainCSS, css`
+        return [rowPanelCSS, css`
             input {
                 border: none; 
                 outline: none; 
