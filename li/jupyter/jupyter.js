@@ -190,6 +190,7 @@ class LiJupyterListViews extends LiElement {
             this.notebook.cells.splice(idx, 1, cell);
         }
         LI.fire(document, 'ok', item);
+        this.$update();
     }
 }
 customElements.define('li-jupyter-list-views', LiJupyterListViews);
@@ -215,7 +216,7 @@ customElements.define('li-jupyter-cell', class extends LiElement {
 
     render() {
         return html`
-            <div id="${this.id}" class="cell ${this.focused}" style="order: ${this.cell?.order || 0}; box-shadow: ${!this.readOnly && this.showBorder && this.focusedCell !== this.cell ? '0px 0px 0px 1px lightgray' : ''};">
+            <div id="${this.id}" class="cell ${this.focused}" style="order: ${this.cell?.order || 0}; box-shadow: ${this.showBorder && this.focusedCell !== this.cell ? '0px 0px 0px 1px lightgray' : ''};">
                 ${this.cellType}
             </div>
             ${!this.readOnly && this.cell && this.focusedCell === this.cell ? html`
@@ -254,6 +255,7 @@ customElements.define('li-jupyter-cell', class extends LiElement {
         return html`<div></div>`;
     }
     click(e) {
+        if (this.readOnly) return;
         this.focusedCell = this.cell;
         this.$update();
     }

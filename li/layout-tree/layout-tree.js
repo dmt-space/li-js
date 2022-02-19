@@ -6,7 +6,7 @@ import '../checkbox/checkbox.js';
 customElements.define('li-layout-tree', class LiLayoutTree extends LiElement {
     static get properties() {
         return {
-            readOnly: { type: Boolean, default: true, local: true },
+            readOnly: { type: Boolean, local: true },
             id: { type: String, default: '' },
             item: { type: Object, default: {} },
             iconSize: { type: Number, default: 28 },
@@ -65,7 +65,7 @@ customElements.define('li-layout-tree', class LiLayoutTree extends LiElement {
     render() {
         return html`
             ${!this.items ? html`` : this.items.map(i => html`
-                <div draggable="true" @dragstart="${(e) => this._dragStart(e, i)}" @dragover=${(e) => this._dragOver(e, i)} @drop=${(e) => this._drop(e, i)}
+                <div draggable=${!this.readOnly} @dragstart="${(e) => this._dragStart(e, i)}" @dragover=${(e) => this._dragOver(e, i)} @drop=${(e) => this._drop(e, i)}
                     class="row ${this.selected && (this.selected === i || this.selected?.ulid === i.ulid) ? 'selected' : ''}">
                     <div style="display:flex;align-items:center;margin-left:${this.margin}px;${!this.fullBorder ? 'border-bottom: 1px solid ' + this.colorBorder : ''}">
                         ${i.items && i.items.length ? html`

@@ -27,6 +27,7 @@
                 <div style="display: flex; flex-direction: row-reverse; border-bottom: 1px solid gray; position: sticky; top: 0; background: white; z-index: 41;">
                     <li-button width="auto" border=0 @click=${() => this.jupyter.share()} style="margin: 4px 8px;">share</li-button>
                     <li-button width="auto" border=0 @click=${() => this.jupyter.readOnly = !this.jupyter.readOnly} style="margin: 4px 8px;" color=${this.readOnly ? 'red' : 'lightgray'}>readOnly</li-button>
+                    <li-button width="auto" border=0 @click=${() => this.jupyter.showBorder = !this.jupyter.showBorder} style="margin: 4px 8px;" color=${this.showBorder ? 'gray' : 'lightgray'}>show border</li-button>
                     <li-button width="auto" border=0 @click=${() => this.jupyter.loadURL()} style="margin: 4px 8px;">Reset view</li-button>
                     <li-button width="auto" border=0 @click=${() => this.jupyter.clearAll()} style="margin: 4px 8px;" color=${this.readOnly ? 'lightgray' : 'gray'}>Clear all data</li-button>
                     <li-button width="auto" border=0 @click=${() => document.location.reload()} style="margin: 4px 8px;">Reload page</li-button>
@@ -38,7 +39,8 @@
         }
         static get properties() {
             return {
-                readOnly: { type: Boolean, local: true }
+                readOnly: { type: Boolean, local: true },
+                showBorder: { type: Boolean, local: true }
             }
         }
         get jupyter() { return this.$qs('li-jupyter') || {} }
