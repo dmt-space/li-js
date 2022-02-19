@@ -17,7 +17,7 @@ class ITEM {
         const ulid = LI.ulid();
         this.doc._id = doc._id || this.doc.type + ':' + ulid;
         this.doc.ulid = doc.ulid || ulid;
-        this.doc.created = doc.created || LI.dates(null, true);
+        this.doc.created = doc.created || LI.dates(new Date(), true);
         this.items = [];
     }
     get _id() { return this.doc._id }

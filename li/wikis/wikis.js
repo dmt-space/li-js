@@ -24,12 +24,14 @@ customElements.define('li-wikis', class LiWikis extends LiElement {
         return html`
             <li-layout-app hide="r">
                 <div slot="app-top" class="header">
+                    <li-button size="26" id="left" name="arrow-back" @click="${this.onclick}" style="margin-left:8px" border="none"></li-button>
+                    <li-button size="26" id="right" name="arrow-forward" @click="${this.onclick}" style="margin-left:8px" border="none"></li-button>
                     <div style="flex:1"></div>${this.name || 'li-wikis'}<div style="flex:1"></div>
                     <li-button size="26" id="edit" name="edit" @click="${this.onclick}" style="margin-right:8px" border="none" title="enable edit" fill=${this.readOnly ? 'gray' : 'red'}></li-button>
                     <li-button size="26" id="border" name="border-outer" @click="${this.onclick}" style="margin-right:8px" border="none" title="show border" fill=${this.showBorder ? 'gray' : 'lightgray'}></li-button>
                     <li-button size="26" id="share" name="launch" @click="${this.onclick}" style="margin-right:8px" border="none" title="share"></li-button>
                 </div>
-                <div slot="app-left">
+                <div slot="app-left" style="display: block; height: 100%;">
                     <li-db></li-db>
                 </div>
                 <div slot="app-main" style="margin-top: 6px">
@@ -61,6 +63,21 @@ customElements.define('li-wikis', class LiWikis extends LiElement {
             },
             share: () => {
                 this.$qs('li-jupyter').share();
+            },
+            left: () => {
+                const app = this.$qs('li-layout-app');
+                if (app._widthL > 200) {
+                    app._lastWidthL = app._widthL = app._widthL - 20;
+                    app._hideL();
+                    app._hideL();
+                }
+            },
+            right: () => {
+                const app = this.$qs('li-layout-app');
+                app._l  = app._l * (app._widthL < 100 ? -1 : 1);
+                app._lastWidthL = app._widthL = app._widthL < 100 ? 420 : app._widthL + 20;
+                app._hideL();
+                app._hideL();
             }
         }
         click[id] && click[id]();
