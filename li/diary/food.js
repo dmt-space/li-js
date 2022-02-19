@@ -19,7 +19,7 @@ export const foodList = {
   columns: [
     { name: '$idx', label: '№', width: 50 },
     { name: 'category', label: 'категория', width: 200 },
-    { name: 'name', label: 'наименование', textAlign: 'left', showTitle: true, minWidth: 200 },
+    { name: 'name', label: 'наименование', textAlign: 'left', alignItems: 'flex-start', showTitle: true, minWidth: 200 },
     { name: 'num', label: 'кол', width: 50 },
     { name: 'ed', label: 'изм', width: 50 },
     { name: 'kcal', label: 'ккал', width: 60 },

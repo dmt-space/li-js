@@ -597,7 +597,6 @@ customElements.define('li-table-cell', class extends LiElement {
                 position: relative;
                 display: flex;
                 flex: 1;
-                align-items: center;
                 overflow: hidden;
                 word-break: break-word;
                 outline: none;
@@ -621,6 +620,7 @@ customElements.define('li-table-cell', class extends LiElement {
             height: this.data?.options?.rowHeight ? this.data?.options?.rowHeight + 'px' : this.data?.options?.lazy ? '32px' : '100%',
             'max-height': this.data?.options?.rowHeight ? this.data?.options?.rowHeight + 'px' : this.data?.options?.lazy ? '32px' : '100%',
             'min-height': (this.data?.options?.rowMinHeight || 32) + 'px',
+            'align-items': this.column?.alignItems  || 'center',
             'text-align': this.column?.textAlign || 'center',
             'justify-content': this.column?.textAlign || 'center',
             'font-size': this.column?.fontSize || this.data?.options?.fontSize || '1rem',

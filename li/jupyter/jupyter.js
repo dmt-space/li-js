@@ -51,6 +51,7 @@ customElements.define('li-jupyter', class extends LiElement {
     updated(changedProperties) {
         if (changedProperties.has('url') || changedProperties.has('lzs')) this.loadURL();
         if (changedProperties.has('focusedCell')) this.editedCell = undefined;
+        if (changedProperties.has('readOnly')) this.focusedCell = undefined;
     }
 
     async loadURL() {
