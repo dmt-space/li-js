@@ -42,8 +42,8 @@ customElements.define('li-wikis', class LiWikis extends LiElement {
 
     static get properties() {
         return {
-            notebook: { type: Object, local: true },
-            readOnly: { type: Boolean, default: true, local: true }
+            readOnly: { type: Boolean, default: true, local: true },
+            notebook: { type: Object, local: true }
         }
     }
 
