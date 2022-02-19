@@ -24,8 +24,9 @@ customElements.define('li-wikis', class LiWikis extends LiElement {
         return html`
             <li-layout-app hide="r">
                 <div slot="app-top" class="header">
-                    <div style="flex:1"></div>${this.dbName || 'wikis'}<div style="flex:1"></div>
+                    <div style="flex:1"></div>${this.name || 'li-wikis'}<div style="flex:1"></div>
                     <li-button size="26" id="edit" name="edit" @click="${this.onclick}" style="margin-right:8px" border="none" title="enable edit" fill=${this.readOnly ? 'gray' : 'red'}></li-button>
+                    <li-button size="26" id="border" name="border-outer" @click="${this.onclick}" style="margin-right:8px" border="none" title="show border" fill=${this.showBorder ? 'gray' : 'lightgray'}></li-button>
                     <li-button size="26" id="share" name="launch" @click="${this.onclick}" style="margin-right:8px" border="none" title="share"></li-button>
                 </div>
                 <div slot="app-left">
@@ -33,7 +34,7 @@ customElements.define('li-wikis', class LiWikis extends LiElement {
                 </div>
                 <div slot="app-main" style="margin-top: 6px">
                     ${this.notebook ? html`
-                        <li-jupyter .notebook=${this.notebook}></li-jupyter>
+                        <li-jupyter></li-jupyter>
                     ` : html``}
                 </div>
             </li-layout-app>
@@ -43,6 +44,8 @@ customElements.define('li-wikis', class LiWikis extends LiElement {
     static get properties() {
         return {
             readOnly: { type: Boolean, default: true, local: true },
+            name: { type: String, local: true },
+            showBorder: { type: Boolean, default: false, local: true, save: true },
             notebook: { type: Object, local: true }
         }
     }
@@ -50,8 +53,11 @@ customElements.define('li-wikis', class LiWikis extends LiElement {
     onclick(e) {
         const id = e.target.id;
         const click = {
+            border: () => {
+                this.showBorder = !this.showBorder;
+            },
             edit: () => {
-                this.readOnly = !this.readOnly
+                this.readOnly = !this.readOnly;
             },
             share: () => {
                 this.$qs('li-jupyter').share();
