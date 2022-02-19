@@ -30,7 +30,19 @@ class ITEM {
 
 customElements.define('li-db', class LiDb extends LiElement {
     static get styles() {
-        return [rowPanelCSS, css``]
+        return [rowPanelCSS, css`
+            :host {
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+                overflow: hidden;
+            }
+            .panel {
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+            }
+        `]
     }
     render() {
         return html`
@@ -44,7 +56,7 @@ customElements.define('li-db', class LiDb extends LiElement {
                     <li-button id="save" name="save" title="save" @click=${this.btnClick} .fill="${this.needSave ? 'red' : ''}" .color="${this.needSave ? 'red' : 'gray'}"></li-button>
                 `}
             </div>
-            <div style="padding-left: 2px;">
+            <div class="panel">
                     ${this.dbPanel === 'tree' ? html`<li-db-three></li-db-three>` : html``}
                     ${this.dbPanel === 'list' ? html`<li-db-list></li-db-list>` : html``}
                     ${this.dbPanel === 'settings' ? html`<li-db-settings></li-db-settings></li-base-settings>` : html``}             
@@ -208,9 +220,7 @@ customElements.define('li-db-three', class LiDbThree extends LiElement {
             :host {
                 display: flex;
                 flex-direction: column;
-                height: calc(100vh - 80px);
-                border-bottom: 1px solid lightgray;
-                padding-bottom: 2px;
+                height: 100%;
             }
         `]
     }
@@ -296,8 +306,9 @@ customElements.define('li-db-list', class LiDblist extends LiElement {
     static get styles() {
         return css`
             :host {
-                display: block;
-                height: calc(100% - 40px);
+                display: flex;
+                flex-direction: column;
+                height: 100%;
             }
         `
     }
@@ -325,7 +336,12 @@ customElements.define('li-db-list', class LiDblist extends LiElement {
 
 customElements.define('li-db-settings', class LiSettings extends LiElement {
     static get styles() {
-        return [rowPanelCSS, css`
+        return [scrollCSS, rowPanelCSS, css`
+            :host {
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+            }
             input {
                 border: none; 
                 outline: none; 
