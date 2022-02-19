@@ -26,7 +26,7 @@ customElements.define('li-jupyter', class extends LiElement {
     }
     render() {
         return html`
-            ${this.notebook?.cells?.length || !this.isReady ? html`` : html`
+            ${this.readOnly || this.notebook?.cells?.length || !this.isReady ? html`` : html`
                 <li-jupyter-cell-addbutton style="position: absolute; top: 18px; left: 6px; z-index: 31;"></li-jupyter-cell-addbutton>
             `}
             ${(this.notebook?.cells || []).map((cell, idx) => html`

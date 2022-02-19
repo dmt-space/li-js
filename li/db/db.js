@@ -4,12 +4,10 @@ import '../button/button.js'
 import '../layout-tree/layout-tree.js';
 import '../table/table.js';
 import '../../lib/pouchdb/pouchdb.js';
+import '../../lib/li-utils/utils.js';
 
-import { ITEM, BOX } from '../wiki/data.js';
-
-const mainCSS = css`
-    .row-panel { display: flex; border-bottom: 1px solid lightgray; padding: 4px 2px; margin-bottom: 2px; }
-`;
+const mainCSS = css` .row-panel { display: flex; border-bottom: 1px solid lightgray; padding: 4px 2px; margin-bottom: 2px; }`;
+const scrollCSS = css`::-webkit-scrollbar { width: 4px; height: 4px; } ::-webkit-scrollbar-track { background: lightgray; } ::-webkit-scrollbar-thumb {  background-color: gray; }`;
 
 customElements.define('li-db', class LiDb extends LiElement {
     static get styles() {
@@ -47,16 +45,17 @@ customElements.define('li-db', class LiDb extends LiElement {
             dbRemote: { type: Object, default: {}, local: true },
             replicationHandler: { type: Object, default: {}, local: true },
             dbPanel: { type: String, default: 'tree', local: true },
-            starActive: { type: Boolean, default: false, local: true },
 
+            dbLocalStore: { type: Object, local: true },
             articles: { type: Array, default: [], local: true },
+            flatArticles: { type: Object, default: {}, local: true },
             sortArticles: { type: Object, default: [], local: true },
             selectedArticle: { type: Object, local: true },
+            starArticle: { type: Object, local: true },
             notebook: { type: Object, local: true },
         }
     }
     get needSave() { return false };
-    get _selected() { return this.selectedArticle }
 
     constructor() {
         super();
@@ -78,7 +77,14 @@ customElements.define('li-db', class LiDb extends LiElement {
     }
     async updated(e) {
         if (e.has('selectedArticle')) {
-            await this.setSelectedEditors();
+            this.notebook = { cells: [] };
+            if (!this.selectedArticle?.partsId) return;
+            const temps = await this.dbLocal.allDocs({ keys: this.selectedArticle.partsId, include_docs: true });
+            this.selectedArticle.parts = [];
+            temps.rows.map((i, idx) => {
+                //this.selectedArticle.parts;
+                i.doc && this.notebook.cells.push({ cell_name: i.doc.name, source: i.doc.value, order: idx, cell_h: i.doc.h });
+            });
             this.$update();
         }
     }
@@ -86,71 +92,57 @@ customElements.define('li-db', class LiDb extends LiElement {
     async firstInit() {
         try { this.rootArticle = await this.dbLocal.get('$wiki:articles') } catch (error) { }
         if (!this.rootArticle) {
-            await this.dbLocal.put((new ITEM({ _id: '$wiki:articles', label: 'wiki-articles', type: 'articles' })).doc);
+            await this.dbLocal.put({ label: 'wiki-articles', _id: '$wiki:articles', ulid: '$wiki:articles' });
             this.rootArticle = await this.dbLocal.get('$wiki:articles');
         }
-        this.rootArticle = new ITEM({ ...this.rootArticle });
+        this.rootArticle = { label: 'wiki-articles', items: [], doc: { ...this.rootArticle }, ulid: '$wiki:articles', partsId: this.rootArticle.partsId, _id: '$wiki:articles' };
         this.articles = [this.rootArticle];
-        try {
-            this._localStore = await this.dbLocal.get('_local/store');
-        } catch (error) { }
-        this._localStore = this._localStore || {};
-        this._articles = await this.createTree('articles');
-        this.selectedArticle = this._articles[this._localStore['selected-articles']] || this.articles[0];
-        if (this._localStore['starId-articles']) {
-            this['_star-articles'] = this._articles[this._localStore['starId-articles']] || undefined;
-            this.$refs('star').toggled = true;
-        }
-        await this.setSelectedEditors();
-        Object.keys(this._articles).forEach(k => this._articles[k].changed = false);
-        LI.listen(document, 'needSave', (e) => {
-            //console.log(e.detail);
-            if (e?.detail?._id && e?.detail?.type === '_deleted') this._deletedList.add(e.detail._id);
-            else if (e?.detail?._id && !this._deletedList.includes(e.detail._id)) this._changedList.add(e.detail._id);
-        });
-        this.setSortArticles();
+        try { this.dbLocalStore = await this.dbLocal.get('_local/store') } catch (error) { };
+        this.dbLocalStore ||= {};
+        this.flatArticles = await this.getFlatArticles();
+        this.selectedArticle = this.flatArticles[this.dbLocalStore['selected-article']] || this.articles[0];
+        this.starArticle = this.flatArticles[this.dbLocalStore['star-article']] || undefined;
+        this.sortArticles = this.getSortArticles();
         this.$update();
     }
-    async createTree(type) {
-        const
-            items = await this.dbLocal.allDocs({ include_docs: true, startkey: type, endkey: type + '\ufff0' }),
-            flat = {},
-            tree = this[type],
-            rootParent = '$wiki:' + type;
-        items.rows.forEach(i => flat[i.doc._id] = new ITEM({ ...i.doc }));
+    async getFlatArticles(type = 'articles') {
+        const items = await this.dbLocal.allDocs({ include_docs: true, startkey: 'articles', endkey: 'articles' + '\ufff0' });
+        if (!items.rows) return;
+        const flat = {};
+        items.rows.forEach(i => flat[i.doc._id] = { label: i.doc.label, items: [], doc: i.doc, _id: i.doc._id, ulid: i.doc._id, partsId: i.doc.partsId });
         Object.values(flat).forEach(f => {
-            if (f['parentId'] === rootParent) {
-                f.parent = tree[0];
-                tree[0].items.push(f);
+            if (f.doc['parentId'] === '$wiki:articles') {
+                f.parent = this.articles[0];
+                this.articles[0].items.push(f);
             } else {
-                const i = flat[f['parentId']];
+                const i = flat[f.doc['parentId']];
                 if (i) {
                     i.items = i.items || [];
                     f.parent = i;
                     i.items.push(f);
                 } else {
-                    f['parentId'] = rootParent;
-                    f.parent = tree[0];
-                    tree[0].items.push(f);
+                    f.doc['parentId'] = '$wiki:articles';
+                    f.parent = this.articles[0];
+                    this.articles[0].items.push(f);
                     f._deleted = true;
                 }
             }
         });
-        flat[rootParent] = this[type][0];
-        this._localStore['expanded-' + type]?.forEach(k => flat[k] ? flat[k].expanded = true : '');
+        flat['$wiki:articles'] = this.articles[0];
+        this.dbLocalStore['expanded-articles']?.forEach(k => flat[k] ? flat[k].expanded = true : '');
         return flat;
     }
-    setSortArticles() {
+    getSortArticles() {
         const rows = [];
-        Object.keys(this._articles).sort((a, b) => a.ulid > b.ulid ? 1 : -1).forEach(k => {
-            const article = this._articles[k];
+        Object.keys(this.flatArticles).sort((a, b) => a.ulid > b.ulid ? 1 : -1).forEach(k => {
+            const article = this.flatArticles[k];
             if (article.partsId?.length) {
-                article.name = article._data.label;
+                article.name = article.label;
                 rows.push(article);
             }
         })
         rows.shift();
-        const data = {
+        return {
             options: {
                 // lazy: true, 
                 headerService: true,
@@ -166,23 +158,6 @@ customElements.define('li-db', class LiDb extends LiElement {
             columns: [{ label: '№', name: '$idx', width: 50 }, { label: 'articles', name: 'name', textAlign: 'left', showTitle: true }],
             rows: rows
         }
-        this.sortArticles = data;
-    }
-    async setSelectedEditors() {
-        //if (!this._selected || this._selected.partsLoaded || !this._selected.partsId) return;
-        this._editors = this._editors || {};
-        this.notebook = { cells: [] };
-        const temps = await this.dbLocal.allDocs({ keys: this.selectedArticle.partsId, include_docs: true });
-        this._selected.parts.splice(0);
-        temps.rows.map((i, idx) => {
-            if (i.doc) {
-                this.notebook.cells.push({ cell_name: i.doc.name, source: i.doc.value, order: idx, cell_h: i.doc.h })
-                const box = new BOX({ ...i.doc, changed: false });
-                this._selected.parts.push(box);
-                this._editors[i.id] = box;
-            }
-        });
-        this._selected.partsLoaded = true;
     }
     btnClick(e) {
         const id = e.target.id;
@@ -210,16 +185,24 @@ customElements.define('li-db', class LiDb extends LiElement {
 
 customElements.define('li-db-three', class LiDbThree extends LiElement {
     static get styles() {
-        return [mainCSS, css``]
+        return [mainCSS, scrollCSS, css`
+            :host {
+                display: flex;
+                flex-direction: column;
+                height: calc(100vh - 80px);
+                border-bottom: 1px solid lightgray;
+                padding-bottom: 2px;
+            }
+        `]
     }
     render() {
         return html`
-            <label class="row-panel">three</label>
+            <label class="row-panel">${this.starArticle?.label || 'articles'}</label>
             <div class="row-panel">
                 <li-button id="collapse" name="unfold-less" title="collapse" size="20" @click=${this.btnClick}></li-button>
                 <li-button id="expand" name="unfold-more" title="expand" size="20" @click=${this.btnClick}></li-button>
-                <li-button id="starActive" name=${this.starIcon} title="set selected as root" size="20" @click=${this.btnClick} borderColor=${this.starColor} fill=${this.starColor}></li-button>
-                <li-button name="camera" title="save tree state" @click="${this._saveTreeState}" size="20"></li-button>
+                <li-button id="starArticle" name=${this.starIcon} title="set selected as root" size="20" @click=${this.btnClick} borderColor=${this.starColor} fill=${this.starColor}></li-button>
+                <li-button id="camera" name="camera" title="save tree state" @click="${this.btnClick}" size="20"></li-button>
                 <div style="flex: 1"></div>
                 ${this.readOnly ? html`` : html`
                     <li-button name="restore" title="clear deleted" size="20" @click=${this.btnClick}></li-button>
@@ -227,35 +210,60 @@ customElements.define('li-db-three', class LiDbThree extends LiElement {
                     <li-button name="library-add" title="add new" size="20" @click=${this.btnClick}></li-button>
                 `}
             </div>
-            <li-layout-tree .item="${this._star}" .selected="${this.selectedArticle}" @selected="${this.onselected}" style="overflow: auto;"
-                allowEdit allowCheck iconSize="20"></li-layout-tree>
+            <div style="overflow: auto; flex: 1">
+                <li-layout-tree .item="${this._articles}" .selected="${this.selectedArticle}" @selected="${this.onselected}" style="overflow: auto;"
+                    allowEdit allowCheck iconSize="20"></li-layout-tree>
+            </div>
         `
     }
 
     static get properties() {
         return {
             readOnly: { type: Boolean, local: true },
-            starActive: { type: Boolean, local: true },
-            articles: { type: Array, default: [], local: true },
+            dbLocal: { type: Object, local: true },
+            dbLocalStore: { type: Object, local: true },
+            articles: { type: Array, local: true },
+            flatArticles: { type: Object, local: true },
             selectedArticle: { type: Object, local: true },
+            starArticle: { type: Object, local: true }
         }
     }
-    get starColor() { return this.starActive ? 'orange' : '' }
-    get starIcon() { return this.starActive ? 'star' : 'star-border' }
-    get _star() { return this['_star-articles'] || this.articles }
+    get starColor() { return this.starArticle ? 'orange' : '' }
+    get starIcon() { return this.starArticle ? 'star' : 'star-border' }
+    get _articles() { return this.starArticle || this.articles }
 
     btnClick(e) {
         const id = e.target.id;
         const action = {
             collapse: () => {
-
+                LIUtils.arrSetItems(this.selectedArticle, 'expanded', false);
             },
             expand: () => {
+                LIUtils.arrSetItems(this.selectedArticle, 'expanded', true);
+            },
+            starArticle: () => {
+                if (this.starArticle) {
+                    // this.selectedArticle = this.starArticle;
+                    this.starArticle = undefined;
+                } else if (this.selectedArticle?.items?.length) {
+                    this.starArticle = this.selectedArticle;
+                }
+            },
+            camera: async () => {
+                const expanded = [];
+                Object.keys(this.flatArticles).map(key => { if (this.flatArticles[key]?.expanded) expanded.push(key) });
+                let _ls = {};
+                try {
+                    _ls = await this.dbLocal.get('_local/store')
+                } catch (error) { }
+                _ls._id = '_local/store';
+                _ls['selected-article'] = this.selectedArticle?._id || '';
+                _ls['expanded-articles'] = expanded;
+                _ls['star-article'] = this.starArticle?._id || '';
+                await this.dbLocal.put(_ls);
+                this.dbLocalStore = await this.dbLocal.get('_local/store');
 
-            },
-            starActive: () => {
-                this.starActive = !this.starActive;
-            },
+            }
         }
         action[id] && action[id]();
         this.$update();
@@ -358,8 +366,7 @@ customElements.define('li-db-settings', class LiSettings extends LiElement {
             dbLocal: { type: Object, local: true },
             dbRemote: { type: Object, local: true },
             replicationHandler: { type: Object, local: true },
-            dbPanel: { type: String, local: true },
-            starActive: { type: Boolean, local: true },
+            dbPanel: { type: String, local: true }
         }
     }
 

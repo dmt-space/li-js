@@ -30,6 +30,9 @@ customElements.define('li-editor-html', class LiEditorHTML extends LiElement {
                display: relative;
                display: flex;
             }
+            #editor {
+                width: 100%;
+            }
             .pell {
                 border: 1px solid rgba(10, 10, 10, 0.1);
                 box-sizing: border-box;

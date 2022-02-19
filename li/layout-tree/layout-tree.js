@@ -6,6 +6,7 @@ import '../checkbox/checkbox.js';
 customElements.define('li-layout-tree', class LiLayoutTree extends LiElement {
     static get properties() {
         return {
+            readOnly: { type: Boolean, default: true, local: true },
             id: { type: String, default: '' },
             item: { type: Object, default: {} },
             iconSize: { type: Number, default: 28 },
@@ -17,7 +18,7 @@ customElements.define('li-layout-tree', class LiLayoutTree extends LiElement {
             view: { type: String, default: '' },
             allowCheck: { type: Boolean, default: false },
             noCheckChildren: { type: Boolean, default: false },
-            selected: { type: Object, default: {} },
+            selected: { type: Object },
             fontSize: { type: String, default: 'medium' },
             allowEdit: { type: Boolean, default: false },
             _dragRow: { type: Object, local: true }
@@ -65,7 +66,7 @@ customElements.define('li-layout-tree', class LiLayoutTree extends LiElement {
         return html`
             ${!this.items ? html`` : this.items.map(i => html`
                 <div draggable="true" @dragstart="${(e) => this._dragStart(e, i)}" @dragover=${(e) => this._dragOver(e, i)} @drop=${(e) => this._drop(e, i)}
-                    class="row ${this.selected === i || this.selected?.ulid === i.ulid ? 'selected' : ''}">
+                    class="row ${this.selected && (this.selected === i || this.selected?.ulid === i.ulid) ? 'selected' : ''}">
                     <div style="display:flex;align-items:center;margin-left:${this.margin}px;${!this.fullBorder ? 'border-bottom: 1px solid ' + this.colorBorder : ''}">
                         ${i.items && i.items.length ? html`
                             <li-button back="transparent" name="chevron-right" border="0" toggledClass="right90" ?toggled="${i.expanded}"
@@ -76,11 +77,11 @@ customElements.define('li-layout-tree', class LiLayoutTree extends LiElement {
                         ${this.allowCheck ? html`
                             <li-checkbox .size="${this.iconSize}" .item="${i}" @click="${(e) => this._checkChildren(e, i)}" @blur="${() => this._ed = false}"></li-checkbox>
                         ` : html``}
-                        ${this._ed && (this.selected === i || this.selected?.ulid === i.ulid) && !i._deleted ? html`
+                        ${this._ed && (this.selected && (this.selected === i || this.selected?.ulid === i.ulid)) && !i._deleted ? html`
                             <input value="${i.label}" @change="${(e) => this._setLabel(e, i)}" style="color: gray; flex:1;padding:1px;width:${this.labelWidth}px;font-size:${this.fontSize};border: none;margin:1px;outline: none;"/>
                         ` : html`
                             <div style="flex:1;padding:2px;width:${this.labelWidth}px;font-size:${this.fontSize}; text-decoration:${i._deleted ? 'line-through solid red !important' : ''}"
-                                @dblclick="${() => this._ed = true}" @click="${(e) => this._focus(e, i)}">${i.label}</div>
+                                @dblclick="${() => this._ed = !this.readOnly}" @click="${(e) => this._focus(e, i)}">${i.label}</div>
                         `}
                     </div>
                 </div>
