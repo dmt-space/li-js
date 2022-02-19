@@ -10,7 +10,7 @@ import { LZString } from '../../lib/lz-string/lz-string.js';
 
 const editorCSS = css`
     ::-webkit-scrollbar { width: 4px; height: 4px; } ::-webkit-scrollbar-track { background: lightgray; } ::-webkit-scrollbar-thumb {  background-color: gray; }            
-    :host { position: relative; display: flex; width: 100% }
+    :host { position: relative; display: flex; width: 100%; overflow: hidden }
 `;
 
 customElements.define('li-jupyter', class extends LiElement {
@@ -26,7 +26,7 @@ customElements.define('li-jupyter', class extends LiElement {
     }
     render() {
         return html`
-            ${this.notebook?.cells?.length ? html`` : html`
+            ${this.notebook?.cells?.length || !this.isReady ? html`` : html`
                 <li-jupyter-cell-addbutton style="position: absolute; top: 18px; left: 6px; z-index: 31;"></li-jupyter-cell-addbutton>
             `}
             ${(this.notebook?.cells || []).map((cell, idx) => html`
@@ -37,6 +37,7 @@ customElements.define('li-jupyter', class extends LiElement {
 
     static get properties() {
         return {
+            isReady: { type: Boolean, default: false },
             url: { type: String, default: '' },
             lzs: { type: String, default: '' },
             showBorder: { type: Boolean, default: false, local: true, save: true },
@@ -60,7 +61,6 @@ customElements.define('li-jupyter', class extends LiElement {
         if (_lzs) {
             try {
                 _lzs = LZString.decompressFromEncodedURIComponent(_lzs)
-                console.log(_lzs);
                 this.notebook = JSON.parse(_lzs);
                 // return;
             } catch (err) { }
@@ -70,6 +70,7 @@ customElements.define('li-jupyter', class extends LiElement {
             this.notebook = json;
         }
         this.notebook?.cells?.map((i, idx) => i.order ||= idx);
+        this.isReady= true;
         this.$update();
     }
     share() {
@@ -78,6 +79,11 @@ customElements.define('li-jupyter', class extends LiElement {
             let url = this.$url.replace('jupyter.js', 'index.html#?lzs=') + LZString.compressToEncodedURIComponent(str);
             window.open(url, '_blank').focus();
         }
+    }
+    clearAll() {
+        if (this.readOnly) return;
+        this.notebook.cells = [];
+        this.$update();
     }
 })
 
@@ -106,7 +112,7 @@ customElements.define('li-jupyter-cell-addbutton', class extends LiElement {
             <li-button class="btn" name="add" size=16 radius="50%" title="add cell" @click=${() => this.showCellViews('add')} borderColor="dodgerblue"
                     style="top: ${this.position === 'top' ? '-16px' : 'unset'}; bottom: ${this.position !== 'top' ? '-16px' : 'unset'};"></li-button>
             ${this.position === 'top' ? html`
-                <label class="lbl" @click=${() => this.showCellViews('select type')} title="select cell type" style="color: ${this.cell?.color || 'gray'}">${this.cell?.label || this.cell?.cell_type}</label>
+                <label class="lbl" @click=${() => this.showCellViews('select type')} title="select cell type" style="color: ${this.cell?.color || 'gray'}">${this.cell?.label || this.cell?.cell_type || this.cell?.cell_name}</label>
             ` : html``}
         `
     }
@@ -234,15 +240,15 @@ customElements.define('li-jupyter-cell', class extends LiElement {
     get focused() { return !this.readOnly && this.focusedCell === this.cell ? 'focused' : '' }
     get id() { return 'cell-' + (this.cell?.order || this.idx || 0) }
     get cellType() {
-        if (this.cell?.cell_type === 'markdown')
+        if (this.cell?.cell_type === 'markdown'|| this.cell?.cell_name === 'simplemde'|| this.cell?.cell_name === 'showdown')
             return html`<li-jupyter-cell-markdown @click=${this.click} @dblclick=${this.dblclick} .cell=${this.cell}></li-jupyter-cell-markdown>`;
-        if (this.cell?.cell_type === 'html')
+        if (this.cell?.cell_type === 'html' || this.cell?.cell_name === 'html-editor' || this.cell?.cell_name === 'suneditor')
             return html`<li-jupyter-cell-html @click=${this.click} @dblclick=${this.dblclick} .cell=${this.cell}></li-jupyter-cell-html>`;
         if (this.cell?.cell_type === 'html-cde')
             return html`<li-jupyter-cell-html-cde @click=${this.click} @dblclick=${this.dblclick} .cell=${this.cell}></li-jupyter-cell-html-cde>`;
         if (this.cell?.cell_type === 'code')
             return html`<li-jupyter-cell-code @click=${this.click} @dblclick=${this.dblclick} .cell=${this.cell}></li-jupyter-cell-code>`;
-        if (this.cell?.cell_type === 'html-executable')
+        if (this.cell?.cell_type === 'html-executable'|| this.cell?.cell_name === 'iframe')
             return html`<li-jupyter-cell-html-executable @click=${this.click} @dblclick=${this.dblclick} .cell=${this.cell}></li-jupyter-cell-html-executable>`;
 
         return html`<div></div>`;
@@ -465,7 +471,7 @@ customElements.define('li-jupyter-cell-html-executable', class extends LiElement
 
     render() {
         return html`
-            <div style="position: relative; display: flex; flex-direction: column; overflow: hidden; width: 100%; height: 200px;">
+            <div style="position: relative; display: flex; flex-direction: column; overflow: hidden; width: 100%; height: ${this.cell?.cell_h || '200px'}">
                 <div style="display: flex; overflow: hidden; width: 100%; height: 100%">
                     <div style="width: 50%; overflow: auto">
                         <div style="display: flex; flex-direction: column; width: 100%; overflow: auto; height: 100%; position: relative">
