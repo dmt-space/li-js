@@ -175,18 +175,18 @@ customElements.define('li-db', class LiDb extends LiElement {
         rows.shift();
         return {
             options: {
-                // lazy: true, 
+                lazy: true, 
                 headerService: true,
                 headerServiceText: 'sort by last add',
                 footerHidden: true,
                 footerService: true,
                 footerServiceTotal: true,
-                // rowHeight: 40,
+                rowHeight: 50,
                 fontSize: '.9rem',
                 searchColumns: ['name'],
                 readOnly: true
             },
-            columns: [{ label: '№', name: '$idx', width: 50 }, { label: 'articles', name: 'name', textAlign: 'left', showTitle: true }],
+            columns: [{ label: '№', name: '$idx', width: 50 }, { label: 'articles', name: 'name', textAlign: 'left', alignItems: 'flex-start', showTitle: true }],
             rows: rows
         }
     }
