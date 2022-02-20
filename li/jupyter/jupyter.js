@@ -244,7 +244,7 @@ customElements.define('li-jupyter-cell', class extends LiElement {
     get cellType() {
         if (this.cell?.cell_type === 'markdown'|| this.cell?.cell_name === 'simplemde'|| this.cell?.cell_name === 'showdown')
             return html`<li-jupyter-cell-markdown @click=${this.click} @dblclick=${this.dblclick} .cell=${this.cell}></li-jupyter-cell-markdown>`;
-        if (this.cell?.cell_type === 'html' || this.cell?.cell_name === 'html-editor' || this.cell?.cell_name === 'suneditor')
+        if (this.cell?.cell_type === 'html' || this.cell?.cell_name === 'html-editor' || this.cell?.cell_name === 'suneditor' || this.cell?.cell_name === 'html')
             return html`<li-jupyter-cell-html @click=${this.click} @dblclick=${this.dblclick} .cell=${this.cell}></li-jupyter-cell-html>`;
         if (this.cell?.cell_type === 'html-cde')
             return html`<li-jupyter-cell-html-cde @click=${this.click} @dblclick=${this.dblclick} .cell=${this.cell}></li-jupyter-cell-html-cde>`;
@@ -252,8 +252,7 @@ customElements.define('li-jupyter-cell', class extends LiElement {
             return html`<li-jupyter-cell-code @click=${this.click} @dblclick=${this.dblclick} .cell=${this.cell}></li-jupyter-cell-code>`;
         if (this.cell?.cell_type === 'html-executable'|| this.cell?.cell_name === 'iframe')
             return html`<li-jupyter-cell-html-executable @click=${this.click} @dblclick=${this.dblclick} .cell=${this.cell}></li-jupyter-cell-html-executable>`;
-
-        return html`<div></div>`;
+        return html`<div style="min-height: 28px;">${this.cell?.value || this.cell.sourse}</div>`;
     }
     click(e) {
         if (this.readOnly) return;
