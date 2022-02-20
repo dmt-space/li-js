@@ -10,22 +10,36 @@ const rowPanelCSS = css` .row-panel { display: flex; border-bottom: 1px solid li
 const scrollCSS = css`::-webkit-scrollbar { width: 4px; height: 4px; } ::-webkit-scrollbar-track { background: lightgray; } ::-webkit-scrollbar-thumb {  background-color: gray; }`;
 
 class ITEM {
-    constructor(doc = {}) {
+    constructor(doc = {}, props = {}) {
         this.doc = doc;
-        this.doc.type = doc.type || 'articles';
-        this.doc.label = doc.label || 'new-article';
+        this.doc.type = doc.type || props.type || 'articles';
+        this.doc.label = doc.label || props.label || 'new-article';
         const ulid = LI.ulid();
         this.doc._id = doc._id || this.doc.type + ':' + ulid;
         this.doc.ulid = doc.ulid || ulid;
         this.doc.created = doc.created || LI.dates(new Date(), true);
         this.items = [];
+        Object.keys(props).forEach(key => this[key] = props[key]);
     }
     get _id() { return this.doc._id }
     get ulid() { return this.doc.ulid }
     get created() { return this.doc.created }
-    get label() { return this.doc.label }
-    get parentId() { return this.doc.parentId || '' }
     get partsId() { return this.doc.partsId || [] }
+    get label() { return this.doc.label }
+    set label(v) { this.doc.label = v }
+    get parentId() { return this.doc.parentId || '' }
+    set parentId(v) { this.doc.parentId = v }
+    get partsId() { return this.doc.partsId || [] }
+    set partsId(v) { this.doc.partsId = v }
+    get _deleted() { return this.doc._deleted }
+    set _deleted(v) {
+        if (v) {
+            this
+            this.doc._deleted = v;
+        } else {
+            delete this.doc._deleted;
+        }
+    }
 }
 
 customElements.define('li-db', class LiDb extends LiElement {
@@ -85,9 +99,13 @@ customElements.define('li-db', class LiDb extends LiElement {
             selectedArticle: { type: Object, local: true },
             starArticle: { type: Object, local: true },
             notebook: { type: Object, local: true },
+            changedItemsID: { type: Array, default: [], local: true },
+            changedItems: { type: Object, default: {}, local: true },
+            deletedItemsID: { type: Array, default: [], local: true },
+            deletedItems: { type: Object, default: {}, local: true },
         }
     }
-    get needSave() { return false };
+    get needSave() { return this.changedItemsID.length || this.deletedItemsID.length };
 
     constructor() {
         super();
@@ -109,14 +127,44 @@ customElements.define('li-db', class LiDb extends LiElement {
     }
     async updated(e) {
         if (e.has('selectedArticle')) {
-            this.notebook = { cells: [] };
+            this.notebook = { cells: icaro([]) };
             if (!this.selectedArticle?.partsId) return;
-            const temps = await this.dbLocal.allDocs({ keys: this.selectedArticle.partsId, include_docs: true });
-            this.selectedArticle.parts = [];
-            temps.rows.map((i, idx) => {
-                //this.selectedArticle.parts;
-                i.doc && this.notebook.cells.push({ cell_name: i.doc.name, source: i.doc.value, order: idx, cell_h: i.doc.h });
+            const parts = await this.dbLocal.allDocs({ keys: this.selectedArticle.partsId, include_docs: true });
+            parts.rows.map((i, idx) => {
+                if (i.doc) {
+                    const cell = icaro({ cell_name: i.doc.name, cell_type: i.doc.cell_type, source: i.doc.value, order: idx, cell_h: i.doc.cell_h || i.doc.h })
+                    i.doc && this.notebook.cells.push(cell);
+                    const item = new ITEM(i.doc, { type: 'editors' });
+                    console.log(item._id, i.id)
+                    cell.listen((e) => {
+                        // console.log(e.get('source'));
+                        item.doc.value = e.get('source')
+                        this.changedItemsID.add(item._id)
+                        this.changedItems[item._id] = item
+                        console.log(item._id, Object.fromEntries(e))
+                    })
+                }
             });
+            this.notebook.cells.listen((e) => {
+                this.selectedArticle.doc.partsId = [];
+                this.notebook.cells.forEach(i => {
+                    const name = i.cell_name || i.cell_type === 'markdown' ? 'showdown'
+                        : i.cell_type === 'html' || i.cell_type === 'html-cde' || i.cell_type === 'code' ? 'html'
+                            : i.cell_type === 'html-executable' ? 'iframe' : 'showdown';
+                    const item = new ITEM({ name, value: i.source, h: i.cell_h, cell_type: i.cell_type  }, { type: 'editors' });
+                    //if (!i.listen) i.listen((e) => {
+                    item.doc.value = e.get('source')
+                    this.changedItemsID.add(item._id)
+                    this.changedItems[item._id] = item
+                    console.log(item._id, Object.fromEntries(e))
+                    this.changedItemsID.add(item._id)
+                    this.changedItems[item._id] = item
+                    //})
+                    this.selectedArticle.doc.partsId.push(item._id);
+                })
+                this.changedItemsID.add(this.selectedArticle._id)
+                this.changedItems[this.selectedArticle._id] = this.selectedArticle
+            })
             this.$update();
         }
     }
@@ -141,6 +189,7 @@ customElements.define('li-db', class LiDb extends LiElement {
         const items = await this.dbLocal.allDocs({ include_docs: true, startkey: 'articles', endkey: 'articles' + '\ufff0' });
         if (!items.rows) return;
         const flat = {};
+        let toDelete;
         items.rows.forEach(i => flat[i.doc._id] = new ITEM({ ...i.doc }));
         Object.values(flat).forEach(f => {
             if (f.doc['parentId'] === '$wiki:articles') {
@@ -153,14 +202,21 @@ customElements.define('li-db', class LiDb extends LiElement {
                     f.parent = i;
                     i.items.push(f);
                 } else {
-                    f.doc['parentId'] = '$wiki:articles';
-                    f.parent = this.articles[0];
-                    this.articles[0].items.push(f);
+                    if (!toDelete) {
+                        toDelete = new ITEM({ _id: '$todelete:articles', label: 'No parent (to delete ?)', parenID: '$wiki:articles' }, { expanded: true, _deleted: true });
+                        this.articles[0].items.push(toDelete);
+                        this.deletedItemsID.add('$todelete:articles');
+                    }
+                    f.doc['parentId'] = '$todelete:articles';
+                    f.parent = toDelete;
+                    toDelete.items.push(f);
                     f._deleted = true;
+                    this.deletedItemsID.add(f._id);
                 }
             }
         });
         flat['$wiki:articles'] = this.articles[0];
+        if (toDelete) flat['$todelete:articles'] = toDelete;
         this.dbLocalStore['expanded-articles']?.forEach(k => flat[k] ? flat[k].expanded = true : '');
         return flat;
     }
@@ -176,7 +232,7 @@ customElements.define('li-db', class LiDb extends LiElement {
         rows.shift();
         return {
             options: {
-                lazy: true, 
+                lazy: true,
                 headerService: true,
                 headerServiceText: 'sort by last add',
                 footerHidden: true,
@@ -207,11 +263,42 @@ customElements.define('li-db', class LiDb extends LiElement {
                 document.location.reload();
             },
             save: () => {
-                console.log('save ...')
+                this.save();
+                this.getSortArticles();
             }
         }
         action[id] && action[id]();
         this.$update();
+    }
+    async save() {
+        if (this.changedItemsID?.length) {
+            const items = await this.dbLocal.allDocs({ keys: this.changedItemsID, include_docs: true });
+            const res = [];
+            items.rows.map(i => {
+                if (i.doc) {
+                    res.add({ ...i.doc, ...this.changedItems[i.key].doc });
+                    this.changedItemsID.remove(i);
+                }
+            })
+            this.changedItemsID.forEach(i => res.add(this.changedItems[i].doc));
+            await this.dbLocal.bulkDocs(res);
+            this.changedItemsID = [];
+            this.changedItems = {};
+        }
+        if (this.deletedItemsID?.length) {
+            const items = await this.dbLocal.allDocs({ keys: this.deletedItemsID, include_docs: true });
+            const res = [];
+            items.rows.map(i => {
+                if (i.doc) {
+                    i.doc._deleted = true;
+                    res.add(i.doc);
+                }
+            })
+            await this.dbLocal.bulkDocs(res);
+            this.deletedItemsID = [];
+            this.deletedItems = {};
+            this.firstInit();
+        }
     }
 })
 
@@ -235,9 +322,9 @@ customElements.define('li-db-three', class LiDbThree extends LiElement {
                 <li-button id="camera" name="camera" title="save tree state" @click="${this.btnClick}" size="20"></li-button>
                 <div style="flex: 1"></div>
                 ${this.readOnly ? html`` : html`
-                    <li-button name="restore" title="clear deleted" size="20" @click=${this.btnClick}></li-button>
-                    <li-button name="delete" title="delete" size="20" @click=${this.btnClick}></li-button>
-                    <li-button name="library-add" title="add new" size="20" @click=${this.btnClick}></li-button>
+                    <li-button id="clearDeleted" name="restore" title="clear deleted" size="20" @click=${this.btnClick}></li-button>
+                    <li-button id="delete" name="delete" title="delete" size="20" @click=${this.btnClick} fill="${this.needSave ? 'red' : ''}" .color="${this.needSave ? 'red' : 'gray'}"></li-button>
+                    <li-button id="addArticle" name="library-add" title="add new" size="20" @click=${this.btnClick}></li-button>
                 `}
             </div>
             <div style="overflow: auto; flex: 1">
@@ -255,12 +342,17 @@ customElements.define('li-db-three', class LiDbThree extends LiElement {
             articles: { type: Array, local: true },
             flatArticles: { type: Object, local: true },
             selectedArticle: { type: Object, local: true },
-            starArticle: { type: Object, local: true }
+            starArticle: { type: Object, local: true },
+            changedItemsID: { type: Array, local: true },
+            changedItems: { type: Object, local: true },
+            deletedItemsID: { type: Array, local: true },
+            deletedItems: { type: Object, local: true },
         }
     }
     get starColor() { return this.starArticle ? 'orange' : '' }
     get starIcon() { return this.starArticle ? 'star' : 'star-border' }
     get _articles() { return this.starArticle || this.articles }
+    get needSave() { return this.deletedItemsID.length }
 
     btnClick(e) {
         const id = e.target.id;
@@ -293,6 +385,37 @@ customElements.define('li-db-three', class LiDbThree extends LiElement {
                 await this.dbLocal.put(_ls);
                 this.dbLocalStore = await this.dbLocal.get('_local/store');
 
+            },
+            addArticle: () => {
+                let item = new ITEM({ parentId: this.selectedArticle._id }, { parent: this.selectedArticle, changed: true, isNew: true });
+                this.selectedArticle.items.splice(this.selectedArticle.items.length, 0, item);
+                this.selectedArticle.expanded = true;
+                this.flatArticles[item._id] = item;
+                this.changedItemsID ||= [];
+                this.changedItemsID.add(item._id);
+                this.changedItems ||= {};
+                this.changedItems[item._id] = item;
+                this.$update();
+            },
+            delete: () => {
+                this.articles[0].checked = false;
+                const itemToDelete = LIUtils.arrFindItem(this.articles[0], 'checked', true);
+                if (!itemToDelete || (confirm && !window.confirm(`Do you really want delete selected and all children articles?`))) return;
+                Object.keys(this.flatArticles).forEach(key => {
+                    const item = this.flatArticles[key];
+                    if (item.checked) {
+                        item.checked = false;
+                        item._deleted = true;
+                        this.deletedItemsID.add(key);
+                        item._partsId?.forEach(i => this.deletedItemsID.add(i));
+                        item.partsId?.forEach(i => this.deletedItemsID.add(i));
+                    }
+                })
+            },
+            clearDeleted: () => {
+                Object.keys(this.flatArticles).forEach(key => { if (this.flatArticles[key]._deleted) this.flatArticles[key]._deleted = false })
+                this.deletedItemsID = [];
+                this.$update();
             }
         }
         action[id] && action[id]();
