@@ -27,15 +27,17 @@ customElements.define('li-wikis', class LiWikis extends LiElement {
                     <li-button size="26" id="left" name="arrow-back" @click="${this.onclick}" style="margin-left:8px" border="none"></li-button>
                     <li-button size="26" id="right" name="arrow-forward" @click="${this.onclick}" style="margin-left:8px" border="none"></li-button>
                     <div style="flex:1"></div>${this.name || 'li-wikis'}<div style="flex:1"></div>
-                    <li-button size="26" id="border" name="border-outer" @click="${this.onclick}" style="margin-right:8px" border="none" title="show border" fill=${this.showBorder ? 'gray' : 'lightgray'}></li-button>
+                    <li-button size="26" id="margin" name="crop-original" @click="${this.onclick}" style="margin-right:8px" border="none" title="show border" fill=${this.margin ? 'gray' : 'lightgray'}></li-button>
+                    <li-button size="26" id="border" name="select-all" @click="${this.onclick}" style="margin-right:8px" border="none" title="show border" fill=${this.showBorder ? 'gray' : 'lightgray'}></li-button>
                     <li-button size="26" id="share" name="launch" @click="${this.onclick}" style="margin-right:8px" border="none" title="share"></li-button>
                 </div>
                 <div slot="app-left" style="display: block; height: 100%;">
                     <li-db></li-db>
                 </div>
-                <div slot="app-main" style="margin-top: 6px">
+                <div id="main" slot="app-main">
+                    <img src="./back.jpg" style="flex: 1; position: fixed; opacity: ${this.margin ? .9 : 0}">
                     ${this.notebook ? html`
-                        <li-jupyter></li-jupyter>
+                        <li-jupyter style="background: white; margin: 0 ${this.margin * 100}px; min-height: ${this.margin ? 'calc(100vh - 54px)' : 'unset'}"></li-jupyter>
                     ` : html``}
                 </div>
             </li-layout-app>
@@ -46,6 +48,7 @@ customElements.define('li-wikis', class LiWikis extends LiElement {
         return {
             name: { type: String, local: true },
             showBorder: { type: Boolean, default: false, local: true, save: true },
+            margin: { type: Number, default: 0, local: true, save: true },
             notebook: { type: Object, local: true }
         }
     }
@@ -55,6 +58,11 @@ customElements.define('li-wikis', class LiWikis extends LiElement {
         const click = {
             border: () => {
                 this.showBorder = !this.showBorder;
+            },
+            margin: () => {
+                this.margin += 1;
+                let max = this.$qs('#main').offsetWidth / 360;
+                this.margin = this.margin > max ? 0: this.margin;
             },
             share: () => {
                 this.$qs('li-jupyter').share();
