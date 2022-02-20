@@ -13,7 +13,8 @@ class ITEM {
     constructor(doc = {}, props = {}) {
         this.doc = doc;
         this.doc.type = doc.type || props.type || 'articles';
-        this.doc.label = doc.label || props.label || 'new-article';
+        if (doc.label || props.label) this.doc.label = doc.label || props.label;
+        else if (this.doc.type === 'articles') this.doc.label = 'new article';
         const ulid = LI.ulid();
         this.doc._id = doc._id || this.doc.type + ':' + ulid;
         this.doc.ulid = doc.ulid || ulid;
@@ -66,10 +67,11 @@ customElements.define('li-db', class LiDb extends LiElement {
                 <li-button id="list" name="list" title="list" ?toggled=${this.dbPanel === 'list'} toggledClass="ontoggled" @click=${this.btnClick}></li-button>
                 <li-button id="settings" name="settings" title="settings" ?toggled=${this.dbPanel === 'settings'} toggledClass="ontoggled" @click=${this.btnClick}></li-button>
                 <div style="flex:1"></div>
-                <li-button id="reload" name="refresh" title="reload page"  @click="${this.btnClick}"></li-button>
                 ${this.readOnly ? html`` : html`
                     <li-button id="save" name="save" title="save" @click=${this.btnClick} .fill="${this.needSave ? 'red' : ''}" .color="${this.needSave ? 'red' : 'gray'}"></li-button>
                 `}
+                <li-button id="readonly" name="edit" @click=${this.btnClick} style="margin-right:8px" title="enable edit" fill=${this.readOnly ? 'lightgray' : '#F08080'} .color="${this.readOnly ? 'lightgray' : '#F08080'}"></li-button>
+                <li-button id="reload" name="refresh" title="reload page"  @click="${this.btnClick}"></li-button>
             </div>
             <div class="panel">
                     ${this.dbPanel === 'tree' ? html`<li-db-three></li-db-three>` : html``}
@@ -84,7 +86,7 @@ customElements.define('li-db', class LiDb extends LiElement {
             name: { type: String, default: 'db/', local: true, save: true },
             url: { type: String, default: 'http://admin:54321@localhost:5984/', local: true, save: true },
             replication: { type: Boolean, default: false, local: true, save: true },
-            readOnly: { type: Boolean, default: false, local: true },
+            readOnly: { type: Boolean, default: true, local: true },
             allowImport: { type: Boolean, default: true, local: true },
             allowExport: { type: Boolean, default: true, local: true },
             dbLocal: { type: Object, default: {}, local: true },
@@ -126,41 +128,60 @@ customElements.define('li-db', class LiDb extends LiElement {
         }, 100);
     }
     async updated(e) {
+        const fn = (e, item) => {
+            if (this.readOnly) return;
+            e.forEach((value, key) => {
+                const convert = {
+                    cell_name: 'name',
+                    source: 'value',
+                    cell_h: 'h'
+                }
+                if (convert[key]) {
+                    item.doc[convert[key]] = value;
+                } else {
+                    item.doc[key] = value;
+                }
+            })
+            this.changedItemsID.add(item._id);
+            this.changedItems[item._id] = item;
+        }
         if (e.has('selectedArticle')) {
             this.notebook = { cells: icaro([]) };
             if (!this.selectedArticle?.partsId) return;
             const parts = await this.dbLocal.allDocs({ keys: this.selectedArticle.partsId, include_docs: true });
             parts.rows.map((i, idx) => {
                 if (i.doc) {
-                    const cell = icaro({ cell_name: i.doc.name, cell_type: i.doc.cell_type, source: i.doc.value, order: idx, cell_h: i.doc.cell_h || i.doc.h })
-                    i.doc && this.notebook.cells.push(cell);
-                    const item = new ITEM(i.doc, { type: 'editors' });
-                    console.log(item._id, i.id)
-                    cell.listen((e) => {
-                        // console.log(e.get('source'));
-                        item.doc.value = e.get('source')
-                        this.changedItemsID.add(item._id)
-                        this.changedItems[item._id] = item
-                        console.log(item._id, Object.fromEntries(e))
+                    const item = new ITEM(i.doc, { type: 'editors', isUse: true });
+                    const cell = icaro({
+                        _id: item._id,
+                        cell_name: i.doc.name,
+                        label: i.doc.label,
+                        source: i.doc.value,
+                        cell_h: i.doc.h,
+                        order: i.doc.order || idx,
+                        cell_type: i.doc.cell_type
                     })
+                    this.notebook.cells.push(cell);
+                    cell.listen(e => fn(e, item));
                 }
             });
             this.notebook.cells.listen((e) => {
+                if (this.readOnly) return;
                 this.selectedArticle.doc.partsId = [];
-                this.notebook.cells.forEach(i => {
-                    const name = i.cell_name || i.cell_type === 'markdown' ? 'showdown'
-                        : i.cell_type === 'html' || i.cell_type === 'html-cde' || i.cell_type === 'code' ? 'html'
-                            : i.cell_type === 'html-executable' ? 'iframe' : 'showdown';
-                    const item = new ITEM({ name, value: i.source, h: i.cell_h, cell_type: i.cell_type  }, { type: 'editors' });
-                    //if (!i.listen) i.listen((e) => {
-                    item.doc.value = e.get('source')
-                    this.changedItemsID.add(item._id)
-                    this.changedItems[item._id] = item
-                    console.log(item._id, Object.fromEntries(e))
-                    this.changedItemsID.add(item._id)
-                    this.changedItems[item._id] = item
-                    //})
-                    this.selectedArticle.doc.partsId.push(item._id);
+                this.notebook.cells.map((i, idx) => {
+                    if (!i._id) {
+                        const name = i.cell_name || (i.cell_type === 'markdown' ? 'showdown'
+                            : i.cell_type === 'html' || i.cell_type === 'html-cde' || i.cell_type === 'code' ? 'html'
+                                : i.cell_type === 'html-executable' ? 'iframe' : 'showdown');
+                        const item = new ITEM({ name, value: i.source, h: i.cell_h, cell_type: i.cell_type, label: i.label }, { type: 'editors' });
+                        i._id = item._id
+                        i = icaro({ ...{}, ...i });
+                        i.listen(e => fn(e, item));
+                        this.notebook.cells[idx] = i;
+                        this.changedItemsID.add(item._id);
+                        this.changedItems[item._id] = item;
+                    }
+                    this.selectedArticle.doc.partsId.add(i._id);
                 })
                 this.changedItemsID.add(this.selectedArticle._id)
                 this.changedItems[this.selectedArticle._id] = this.selectedArticle
@@ -250,18 +271,11 @@ customElements.define('li-db', class LiDb extends LiElement {
     btnClick(e) {
         const id = e.target.id;
         const action = {
-            tree: () => {
-                this.dbPanel = id;
-            },
-            list: () => {
-                this.dbPanel = id;
-            },
-            settings: () => {
-                this.dbPanel = id;
-            },
-            reload: () => {
-                document.location.reload();
-            },
+            tree: () => this.dbPanel = id,
+            list: () => this.dbPanel = id,
+            settings: () => this.dbPanel = id,
+            readonly: () => this.readOnly = !this.readOnly,
+            reload: () => document.location.reload(),
             save: () => {
                 this.save();
                 this.getSortArticles();
