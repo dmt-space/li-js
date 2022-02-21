@@ -1,6 +1,6 @@
 ## li-js
 
-### li-wikis (personal wiki on li-jupyter notebook):   https://resu062.github.io/li-js/
+### li-wikis (personal wiki on li-jupyter notebook):   https://resu062.github.io/li-js/li/wikis
 
 
 li-jupyter notebook:  https://resu062.github.io/li-js/li/jupyter/
