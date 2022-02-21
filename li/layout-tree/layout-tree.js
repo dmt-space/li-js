@@ -98,8 +98,8 @@ customElements.define('li-layout-tree', class LiLayoutTree extends LiElement {
             this.selected.label = e.target.value;
             this._ed = false;
             this.fire('setlabel', e.target.value);
-            //this.fire('changed', { type: 'setlabel', value: e.target.value, item: i  });
             this.$update();
+            this.fire('changed', { type: 'setTreeLabel', value: e.target.value, item: i  });
         }
     }
     _checkChildren(e, i) {
@@ -138,7 +138,8 @@ customElements.define('li-layout-tree', class LiLayoutTree extends LiElement {
         this._dragRow.parentId = i._id;
         this._dragRow.parent = i;
         i.expanded = true;
-        this._dragRow = undefined;
         this.$update();
+        this.fire('changed', { type: 'moveTreeItem', value: e.target.value, item: this._dragRow });
+        this._dragRow = undefined;
     }
 });

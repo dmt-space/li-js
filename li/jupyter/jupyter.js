@@ -171,11 +171,11 @@ class LiJupyterListViews extends LiElement {
     }
     get cellViews() {
         return [
-            { cell_type: 'markdown', cell_extType: 'md', source: '...', label: 'md-showdown' },
-            { cell_type: 'html', cell_extType: 'html', source: '...', label: 'html-pell-editor' },
-            { cell_type: 'html-cde', cell_extType: 'html-cde', source: '...', label: 'html-CDEditor' },
-            { cell_type: 'code', cell_extType: 'code', source: '...', label: 'code' },
-            { cell_type: 'html-executable', cell_extType: 'html-executable', source: '...', label: 'code-html-executable' },
+            { cell_type: 'markdown', cell_extType: 'md', source: '', label: 'md-showdown' },
+            { cell_type: 'html', cell_extType: 'html', source: '', label: 'html-pell-editor' },
+            { cell_type: 'html-cde', cell_extType: 'html-cde', source: '', label: 'html-CDEditor' },
+            { cell_type: 'code', cell_extType: 'code', source: '', label: 'code' },
+            { cell_type: 'html-executable', cell_extType: 'html-executable', source: '', label: 'code-html-executable' },
         ]
     }
 
@@ -524,6 +524,14 @@ customElements.define('li-jupyter-cell-html-executable', class LiJupyterCellHtml
         return `<style>${this.cell?.sourceCSS || ''}</style>${this.cell?.source || ''}<script type="module">${this.cell?.sourceJS || ''}</script>${this._srcdoc || ''}`
     }
 
+    constructor() {
+        super();
+        this.listen('endSplitterMove', (e) => {
+            if (this.readOnly) return;
+            this.cell.h = e.detail.h;
+            // console.log(this.cell.h);
+        })
+    }
     firstUpdated() {
         super.firstUpdated();
         this.listen('change', (e) => {

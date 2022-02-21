@@ -17,6 +17,12 @@ customElements.define('li-wikis', class LiWikis extends LiElement {
                 color: gray;
                 font-size: large;
             }
+            #main {
+                background: url(./back.jpg);
+                background-size: cover;
+                background-attachment: fixed;
+                background-color: #F4F4F2;
+            }
         `;
     }
 
@@ -35,7 +41,6 @@ customElements.define('li-wikis', class LiWikis extends LiElement {
                     <li-db></li-db>
                 </div>
                 <div id="main" slot="app-main">
-                    <img src="./back.jpg" style="flex: 1; position: fixed; opacity: ${this.margin ? .9 : 0}">
                     ${this.notebook ? html`
                         <li-jupyter style="background: white; margin: 0 ${this.margin * 100}px; min-height: ${this.margin ? 'calc(100vh - 54px)' : 'unset'}"></li-jupyter>
                     ` : html``}
@@ -62,7 +67,7 @@ customElements.define('li-wikis', class LiWikis extends LiElement {
             margin: () => {
                 this.margin += 1;
                 let max = this.$qs('#main').offsetWidth / 360;
-                this.margin = this.margin > max ? 0: this.margin;
+                this.margin = this.margin > max ? 0 : this.margin;
             },
             share: () => {
                 this.$qs('li-jupyter').share();
@@ -77,7 +82,7 @@ customElements.define('li-wikis', class LiWikis extends LiElement {
             },
             right: () => {
                 const app = this.$qs('li-layout-app');
-                app._l  = app._l * (app._widthL < 100 ? -1 : 1);
+                app._l = app._l * (app._widthL < 100 ? -1 : 1);
                 app._lastWidthL = app._widthL = app._widthL < 100 ? 420 : app._widthL + 20;
                 app._hideL();
                 app._hideL();

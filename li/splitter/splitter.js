@@ -14,13 +14,13 @@ customElements.define('li-splitter', class extends LiElement {
         `
     }
 
-    static get properties() { 
-        return { 
+    static get properties() {
+        return {
             direction: { type: String, default: 'vertical' },
             size: { type: String, default: '2px' },
             color: { type: String, default: 'lightgray' },
             resize: { type: Boolean }
-        } 
+        }
     }
 
     constructor() {
@@ -52,7 +52,7 @@ customElements.define('li-splitter', class extends LiElement {
                 const w = ((prevSiblingWidth + dx) * 100) / this.parentNode.getBoundingClientRect().width;
                 prevSibling.style.width = `${w}%`;
             } else {
-                if (this.resize) { 
+                if (this.resize) {
                     this.parentNode.style.height = `${prevSiblingHeight + dy}px`;
                 } else {
                     const h = ((prevSiblingHeight + dy) * 100) / this.parentNode.getBoundingClientRect().height;
@@ -83,6 +83,7 @@ customElements.define('li-splitter', class extends LiElement {
 
             document.removeEventListener('pointermove', this._moveHandler);
             document.removeEventListener('pointerup', this._upHandler);
+            this.fire('endSplitterMove', { direction: this.direction, prevSiblingWidth, prevSiblingHeight, h: this.parentNode.style.height });
         }
         splitter.addEventListener('pointerdown', downHandler);
     }
