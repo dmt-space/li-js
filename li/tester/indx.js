@@ -234,8 +234,13 @@ export const indx = {
 
 
 
+    'li-wikis': { type: 'apps', label: 'Wikis (jupyter version)', props: { iframe: '../wikis/index.html' } },
+    wikis: [{ label: 'index', url: url + '/wikis' }],
 
-    'li-wiki': { type: 'apps', label: 'Wiki (личная база знаний)', props: { iframe: '../wiki/index.html' } },
+    'li-jupyter': { type: 'apps', label: 'li-jupyter notebook', props: { iframe: '../jupyter/index.html' } },
+    'jupyter': [{ label: 'index', url: url + '/jupyter/index.html' }],
+
+    'li-wiki': { type: 'apps', label: 'Wiki (old version)', props: { iframe: '../wiki/index.html' } },
     wiki: [{ label: 'index', url: url + '/wiki' }],
 
     'li-diary': { type: 'apps', label: 'Мой дневник', props: { iframe: '../diary/index.html' } },
@@ -286,9 +291,6 @@ export const indx = {
 
     'li-dbmon': { type: 'demo', label: 'DBMON li-benchmark', props: { iframe: '../dbmon/index.html' } },
     'dbmon': [{ label: 'index', url: url + '/dbmon/index.html' }],
-
-    'li-jupyter': { type: 'demo', label: 'li-jupyter notebook', props: { iframe: '../jupyter/index.html' } },
-    'jupyter': [{ label: 'index', url: url + '/jupyter/index.html' }],
 
     'li-gallery': { type: 'demo', label: 'image gallery', props: { iframe: '../gallery/index.html' } },
     'gallery': [{ label: 'index', url: url + '/gallery/index.html' }],

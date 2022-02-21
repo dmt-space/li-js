@@ -83,15 +83,15 @@ customElements.define('li-db', class LiDb extends LiElement {
 
     static get properties() {
         return {
-            name: { type: String, default: 'db/', local: true, save: true },
+            name: { type: String, default: 'db', local: true, save: true },
             url: { type: String, default: 'http://admin:54321@localhost:5984/', local: true, save: true },
             replication: { type: Boolean, default: false, local: true, save: true },
             readOnly: { type: Boolean, default: true, local: true },
             allowImport: { type: Boolean, default: true, local: true },
             allowExport: { type: Boolean, default: true, local: true },
-            dbLocal: { type: Object, default: {}, local: true },
-            dbRemote: { type: Object, default: {}, local: true },
-            replicationHandler: { type: Object, default: {}, local: true },
+            dbLocal: { type: Object, local: true },
+            dbRemote: { type: Object, local: true },
+            replicationHandler: { type: Object, local: true },
             dbPanel: { type: String, default: 'tree', local: true },
 
             dbLocalStore: { type: Object, local: true },
@@ -112,6 +112,13 @@ customElements.define('li-db', class LiDb extends LiElement {
     constructor() {
         super();
         this._dbName = window.location.href.split('#')?.[1];
+        this.listen('changed', (e) => { 
+            if ((e.detail.type === 'setTreeLabel' || e.detail.type === 'moveTreeItem') && e.detail.item) {
+                console.log(e.detail.item)
+                this.changedItemsID.add(e.detail.item._id);
+                this.changedItems[e.detail.item._id] = e.detail.item;
+            }
+        })
     }
     firstUpdated() {
         super.firstUpdated();
@@ -119,7 +126,7 @@ customElements.define('li-db', class LiDb extends LiElement {
             if (this._dbName && this._dbName !== this.name) this.replication = false;
             this.name = this._dbName || this.name;
             if (this.name) {
-                const prefix = 'lidb_'
+                const prefix = 'lidb_';
                 this.dbLocal = new PouchDB(prefix + this.name);
                 this.dbRemote = new PouchDB(this.url + prefix + this.name);
                 if (this.replication) this.replicationHandler = this.dbLocal.sync(this.dbRemote, { live: true });
@@ -144,6 +151,8 @@ customElements.define('li-db', class LiDb extends LiElement {
             })
             this.changedItemsID.add(item._id);
             this.changedItems[item._id] = item;
+            // console.log(item.doc);
+            this.$update();
         }
         if (e.has('selectedArticle')) {
             this.notebook = { cells: icaro([]) };
@@ -224,7 +233,7 @@ customElements.define('li-db', class LiDb extends LiElement {
                     i.items.push(f);
                 } else {
                     if (!toDelete) {
-                        toDelete = new ITEM({ _id: '$todelete:articles', label: 'No parent (to delete ?)', parenID: '$wiki:articles' }, { expanded: true, _deleted: true });
+                        toDelete = new ITEM({ _id: '$todelete:articles', label: 'No parent (to delete ?)', parenID: '$wiki:articles' }, { expanded: true });
                         this.articles[0].items.push(toDelete);
                         this.deletedItemsID.add('$todelete:articles');
                     }
@@ -250,7 +259,7 @@ customElements.define('li-db', class LiDb extends LiElement {
                 rows.push(article);
             }
         })
-        rows.shift();
+        // rows.shift();
         return {
             options: {
                 lazy: true,
@@ -494,7 +503,7 @@ customElements.define('li-db-settings', class LiSettings extends LiElement {
         return html`
             <div class="row-panel" style="align-items: center">
                 <label>settings</label>
-                <div style="color:gray; opacity: 0.7; margin-left: auto; font-size: 12px;">version: 0.0.1</div>
+                <div style="color:gray; opacity: 0.7; margin-left: auto; font-size: 12px;">version: 1.0.1</div>
             </div>
             <div style="flex-direction: column; overflow: auto; padding-top: -4px;">
                 <div class="row-panel" style="display: flex; align-items: center; margin-bottom: 4px"><div style="width: 100px;">db name:</div><input .value="${this.name}" @change="${this.setDbName}"></div>
@@ -503,27 +512,28 @@ customElements.define('li-db-settings', class LiSettings extends LiElement {
                 <div style="display: flex; align-items: center;"><li-checkbox @change="${this.setReplication}" .toggled="${this.replication}"></li-checkbox>
                     Auto replication local and remote db</div>
                 <div class="row-panel"></div>
-                ${this.readOnly ? html`` : html`
+                ${!this.readOnly && this.dbLocal ? html`
                     <div class="row-panel" style="display: flex; flex-direction: column;">
-                        <li-button id="Compacting db" @click="${this._settings}" height="auto" width="auto" padding="4px">Compacting current database</li-button>
-                        <li-button id="Delete db" @click="${this._settings}" height="auto" width="auto" padding="4px">Delete current database</li-button>
+                        <li-button id="compacting" @click="${this.btnClick}" height="auto" width="auto" padding="4px">Compacting current database</li-button>
+                        <div style="display: flex; align-items: center;"><li-checkbox id="also-delete-remote"></li-checkbox>Also delete remoteDB</div>
+                        <li-button id="delete" @click="${this.btnClick}" height="auto" width="auto" padding="4px">Delete current localDB</li-button>
                     </div>
-                ` }
-                ${!this.allowExport ? html`` : html`
+                ` : html``}
+                ${this.allowExport && this.dbLocal ? html`
                     <div class="row-panel" style="display: flex; flex-direction: column;">
                         <div style="color:gray; opacity: 0.7; text-decoration: underline; padding: 4px 2px 6px 0;">Export database:</div>
-                        <div style="display: flex; align-items: center;"><li-checkbox @change="${e => this._exportToFocused = e.detail}"></li-checkbox>Export focused in tree</div>
-                        <li-button id="Export dbFile" @click="${this._settings}" height="auto" width="auto" padding="4px">Export db (or focused) to file</li-button>
+                        <div style="display: flex; align-items: center;"><li-checkbox id="focused-export"></li-checkbox>Export focused in tree</div>
+                        <li-button id="export" @click="${this.btnClick}" height="auto" width="auto" padding="4px">Export db (or focused) to file</li-button>
                     </div>
-                ` }
-                ${!this.allowImport ? html`` : html`
+                ` : html``}
+                ${this.allowImport && this.dbLocal ? html`
                     <div class="row-panel" style="display: flex; flex-direction: column;">
                         <div style="color:gray; opacity: 0.7; text-decoration: underline; padding: 4px 2px 6px 0;">Import database:</div>
-                        <div style="display: flex; align-items: center;"><li-checkbox @change="${e => this._importToFocused = e.detail}"></li-checkbox>Import to focused in tree</div>
+                        <div style="display: flex; align-items: center;"><li-checkbox id="focused-import"></li-checkbox>Import to focused in tree</div>
                         <li-button for="import" height="auto" width="auto" padding="4px" @click=${() => { this.$id('import').click() }}>Импорт db</li-button>
-                        <input id="import" type="file" id="import" @change=${this._tap} style="display: none"/>
+                        <input id="import" type="file" id="import" @change=${this.btnClick} style="display: none"/>
                     </div>
-                ` }
+                ` : html``}
             </div>
         `
     }
@@ -539,7 +549,8 @@ customElements.define('li-db-settings', class LiSettings extends LiElement {
             dbLocal: { type: Object, local: true },
             dbRemote: { type: Object, local: true },
             replicationHandler: { type: Object, local: true },
-            dbPanel: { type: String, local: true }
+            dbPanel: { type: String, local: true },
+            selectedArticle: { type: Object, local: true }
         }
     }
 
@@ -562,6 +573,147 @@ customElements.define('li-db-settings', class LiSettings extends LiElement {
             this.replicationHandler.cancel();
             this.replicationHandler = undefined;
         }
+        this.$update();
+    }
+    btnClick(e) {
+        const id = e.target.id;
+        const action = {
+            compacting: () => {
+                if (!window.confirm(`Do you really want compacting current localDB ?`)) return;
+                this.dbLocal.compact().then(function(info) {
+                    console.log('Local compaction complete');
+                }).catch(function(err) {
+                    return console.log(err); f
+                });
+            },
+            delete: () => {
+                if (!window.confirm(`Do you really want delete current localDB ${this.$qs('#also-delete-remote').toggled ? 'and remoteDB' : ''} ?`)) return;
+                this.replication = false;
+                this.name = '';
+                if (this.$qs('#also-delete-remote').toggled) {
+                    this.dbRemote.destroy((err, response) => {
+                        if (err) {
+                            return console.log(err);
+                        } else {
+                            console.log("Remote CouchDB Database Deleted");
+                        }
+                    });
+                }
+                this.dbLocal.destroy((err, response) => {
+                    if (err) {
+                        return console.log(err);
+                    } else {
+                        console.log("Local Database Deleted");
+                    }
+                });
+                setTimeout(() => {
+                    let url = window.location.href.split('#')?.[0];
+                    window.open(url, '_parent');
+                }, 500);
+            },
+            export: async () => {
+                const _download = (content, fileName, contentType = 'text/plain') => {
+                    const a = document.createElement("a");
+                    const file = new Blob([content], { type: contentType });
+                    a.href = URL.createObjectURL(file);
+                    if (fileName) {
+                        a.download = fileName;
+                        a.click();
+                    } else {
+                        window.open(a.href, '_blank');
+                    }
+                }
+                if (!this.$qs('#focused-export').toggled) {
+                    await this.dbLocal.allDocs({ include_docs: true }, (error, doc) => {
+                        if (error) console.error(error);
+                        else {
+                            const content = new Blob([JSON.stringify(doc.rows.map(({ doc }) => doc))], { type: 'text/plain' });
+                            _download(content, this.dbName + '.json');
+                        };
+                    });
+                } else {
+                    const
+                        keys = [],
+                        root = '$wiki:articles',
+                        parent = this.selectedArticle._id,
+                        arr = LIUtils.arrAllChildren(this.selectedArticle);
+                    keys.add(parent);
+                    arr.map(i => {
+                        keys.add(i._id);
+                        (i.doc.partsId || []).map(id => keys.add(id));
+                    })
+                    await this.dbLocal.allDocs({ include_docs: true, keys }, (error, doc) => {
+                        if (error) console.error(error);
+                        else {
+                            doc.rows.map(({ doc }) => {
+                                if (doc.parentId === parent) doc.parentId = root;
+                                if (doc._id === parent) doc._id = root;
+                            })
+                            const content = new Blob([JSON.stringify(doc.rows.map(({ doc }) => doc))], { type: 'text/plain' });
+                            _download(content, this.selectedArticle.label + '.json');
+                        };
+                    });
+                }
+            },
+            import: async ({ target: { files: [file] } }) => {
+                const importToFocused = this.$qs('#focused-import').toggled;
+                if (importToFocused && !window.confirm(`Do you really want import to focused article ?`)) return;
+                if (!importToFocused && !window.confirm(`Do you really want rewrite current Database ?`)) return;
+                if (file) {
+                    if (!importToFocused) {
+                        await this.dbRemote.destroy((err, response) => {
+                            if (err) {
+                                return console.log(err);
+                            } else {
+                                console.log("Remote Database Deleted");
+                            }
+                        });
+                        await this.dbLocal.destroy(async (err, response) => {
+                            if (err) {
+                                return console.log(err);
+                            } else {
+                                console.log("Local Database Deleted");
+
+                            }
+                        });
+                    }
+                    const reader = new FileReader();
+                    reader.onload = async ({ target: { result } }) => {
+                        result = JSON.parse(result);
+                        if (importToFocused) {
+                            const ulid = LI.ulid();
+                            result.forEach(i => {
+                                if (i._id === '$wiki:articles') {
+                                    i._id = 'articles:' + ulid;
+                                    i.ulid = LI.ulid();
+                                    i.parentId = this.selectedArticle._id;
+                                }
+                                if (i.parentId === '$wiki:articles') i.parentId = 'articles:' + ulid;
+                            })
+                        }
+                        //console.log(result)
+                        if (!importToFocused) {
+                            this.dbLocal = new PouchDB('lidb_' + this.name);
+                            this.dbRemote = new PouchDB('lidb_' + this.url + this.name);
+                            if (this.replication) this.replicationHandler = this.dbLocal.sync(this.dbRemote, { live: true });
+                        }
+                        await this.dbLocal.bulkDocs(
+                            result,
+                            { new_edits: false },
+                            (...args) => {
+                                this.$update();
+                                console.log('DONE', args)
+                            }
+                        );
+                        setTimeout(() => {
+                            document.location.reload();
+                        }, 500);
+                    };
+                    reader.readAsText(file);
+                }
+            }
+        }
+        action[id] && action[id](e);
         this.$update();
     }
 })
