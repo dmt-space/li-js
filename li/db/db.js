@@ -612,25 +612,20 @@ customElements.define('li-db-settings', class LiSettings extends LiElement {
                 }, 500);
             },
             export: async () => {
-                const _download = (content, fileName, contentType = 'text/plain') => {
-                    const a = document.createElement("a");
-                    const file = new Blob([content], { type: contentType });
-                    a.href = URL.createObjectURL(file);
-                    if (fileName) {
-                        a.download = fileName;
-                        a.click();
-                    } else {
-                        window.open(a.href, '_blank');
-                    }
+                let saveFile = async(json, name) => {
+                    let str = JSON.stringify(json);
+                    const blob = new Blob([str], { type: "text/plain" });
+                    const fileHandle = await window.showSaveFilePicker({ suggestedName: name + '.json', types: [{ description: "Json file", accept: { "text/plain": [".json"] } }] });
+                    const fileStream = await fileHandle.createWritable();
+                    await fileStream.write(blob);
+                    await fileStream.close();
+                    this.$update();
                 }
                 if (!this.$qs('#focused-export').toggled) {
                     await this.dbLocal.allDocs({ include_docs: true }, (error, doc) => {
                         if (error) console.error(error);
-                        else {
-                            const content = new Blob([JSON.stringify(doc.rows.map(({ doc }) => doc))], { type: 'text/plain' });
-                            _download(content, this.dbName + '.json');
-                        };
-                    });
+                        else saveFile(doc.rows.map(({ doc }) => doc), this.name);
+                    })
                 } else {
                     const
                         keys = [],
@@ -649,37 +644,39 @@ customElements.define('li-db-settings', class LiSettings extends LiElement {
                                 if (doc.parentId === parent) doc.parentId = root;
                                 if (doc._id === parent) doc._id = root;
                             })
-                            const content = new Blob([JSON.stringify(doc.rows.map(({ doc }) => doc))], { type: 'text/plain' });
-                            _download(content, this.selectedArticle.label + '.json');
-                        };
-                    });
+                            saveFile(doc.rows.map(({ doc }) => doc), this.selectedArticle.label);
+                        }
+                    })
                 }
             },
-            import: async ({ target: { files: [file] } }) => {
+            import: async () => {
+                const file = e.target.files[0];
                 const importToFocused = this.$qs('#focused-import').toggled;
                 if (importToFocused && !window.confirm(`Do you really want import to focused article ?`)) return;
                 if (!importToFocused && !window.confirm(`Do you really want rewrite current Database ?`)) return;
                 if (file) {
-                    if (!importToFocused) {
-                        await this.dbRemote.destroy((err, response) => {
-                            if (err) {
-                                return console.log(err);
-                            } else {
-                                console.log("Remote Database Deleted");
-                            }
-                        });
-                        await this.dbLocal.destroy(async (err, response) => {
-                            if (err) {
-                                return console.log(err);
-                            } else {
-                                console.log("Local Database Deleted");
+                    // if (!importToFocused) {
+                    //     if (this.dbRemote)
+                    //         await this.dbRemote.destroy((err, response) => {
+                    //             if (err) {
+                    //                 return console.log(err);
+                    //             } else {
+                    //                 console.log("Remote Database Deleted");
+                    //             }
+                    //         })
+                    //     if (this.dbLocal)
+                    //         await this.dbLocal.destroy(async (err, response) => {
+                    //             if (err) {
+                    //                 return console.log(err);
+                    //             } else {
+                    //                 console.log("Local Database Deleted");
 
-                            }
-                        });
-                    }
+                    //             }
+                    //         })
+                    // }
                     const reader = new FileReader();
-                    reader.onload = async ({ target: { result } }) => {
-                        result = JSON.parse(result);
+                    reader.onload = async (e) => {
+                        let result = JSON.parse(e.target.result);
                         if (importToFocused) {
                             const ulid = LI.ulid();
                             result.forEach(i => {
@@ -691,7 +688,6 @@ customElements.define('li-db-settings', class LiSettings extends LiElement {
                                 if (i.parentId === '$wiki:articles') i.parentId = 'articles:' + ulid;
                             })
                         }
-                        //console.log(result)
                         if (!importToFocused) {
                             this.dbLocal = new PouchDB('lidb_' + this.name);
                             this.dbRemote = new PouchDB('lidb_' + this.url + this.name);
@@ -705,9 +701,7 @@ customElements.define('li-db-settings', class LiSettings extends LiElement {
                                 console.log('DONE', args)
                             }
                         );
-                        setTimeout(() => {
-                            document.location.reload();
-                        }, 500);
+                        setTimeout(() => document.location.reload(), 500);
                     };
                     reader.readAsText(file);
                 }

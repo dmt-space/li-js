@@ -71,7 +71,7 @@ customElements.define('li-jupyter', class LiJupyter extends LiElement {
             this.notebook = json;
         }
         this.notebook?.cells?.map((i, idx) => i.order ||= idx);
-        this.isReady= true;
+        this.isReady = true;
         this.$update();
     }
     share() {
@@ -84,6 +84,23 @@ customElements.define('li-jupyter', class LiJupyter extends LiElement {
     clearAll() {
         if (this.readOnly) return;
         this.notebook.cells = [];
+        this.$update();
+    }
+    loadFile(e) {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = async e => this.notebook = JSON.parse(e.target.result);
+        reader.readAsText(file, 'UTF-8');
+        this.$update();
+    }
+    async saveFile(e) {
+        let str = JSON.stringify(this.notebook);
+        if (!str) return;
+        const blob = new Blob([str], { type: "text/plain" });
+        const fileHandle = await window.showSaveFilePicker({ suggestedName: 'jupyter-000.json', types: [{ description: "Json file", accept: { "text/plain": [".json"] } }] });
+        const fileStream = await fileHandle.createWritable();
+        await fileStream.write(blob);
+        await fileStream.close();
         this.$update();
     }
 })
@@ -253,8 +270,8 @@ customElements.define('li-jupyter-cell', class LiJupyterCell extends LiElement {
             return html`<li-jupyter-cell-code @click=${this.click} @dblclick=${this.dblclick} .cell=${this.cell}></li-jupyter-cell-code>`;
         if (this.cell?.cell_type === 'html-executable')
             return html`<li-jupyter-cell-html-executable @click=${this.click} @dblclick=${this.dblclick} .cell=${this.cell}></li-jupyter-cell-html-executable>`;
-        
-        if (this.cell?.cell_name === 'simplemde'|| this.cell?.cell_name === 'showdown')
+
+        if (this.cell?.cell_name === 'simplemde' || this.cell?.cell_name === 'showdown')
             return html`<li-jupyter-cell-markdown @click=${this.click} @dblclick=${this.dblclick} .cell=${this.cell}></li-jupyter-cell-markdown>`;
         if (this.cell?.cell_name === 'html-editor' || this.cell?.cell_name === 'suneditor' || this.cell?.cell_name === 'html')
             return html`<li-jupyter-cell-html @click=${this.click} @dblclick=${this.dblclick} .cell=${this.cell}></li-jupyter-cell-html>`;
@@ -335,7 +352,7 @@ customElements.define('li-jupyter-cell-toolbar', class LiJupyterCellToolbar exte
         this.$update();
     }
     tapDelete() {
-        if (!this.cell.source || this.cell.source === ' ') {
+        if (this.cell?.source.trim() === '' || !this.cell.source || window.confirm(`Do you really want delete current cell ?`)) {
             this.notebook.cells.splice(this.cell.order, 1);
             this.notebook.cells.sort((a, b) => a.order - b.order).map((i, idx) => i.order = idx);
             this.focusedCell = this.notebook.cells[(this.cell.order > this.notebook.cells.length - 1) ? this.notebook.cells.length - 1 : this.cell.order];
@@ -495,8 +512,8 @@ customElements.define('li-jupyter-cell-html-executable', class LiJupyterCellHtml
                                 <span @click=${() => this.mode = 'javascript'} class="${this.mode === 'javascript' ? 'mode' : ''}">javascript</span>
                                 <span @click=${() => this.mode = 'css'} class="${this.mode === 'css' ? 'mode' : ''}">css</span>
                                 <div style="flex: 1"></div>
-                                <li-button size=12 name="content-cut" @click=${(e) => {this.cell.source=this.cell.sourceJS=this.cell.sourceCSS=''; this.setValue()}} title="clear all"></li-button>
-                                <li-button size=12 name="refresh" @click=${(e) => {this._srcdoc = this._srcdoc ? '' : ' '; this.$update()}} style="margin-left: 6px" title="refresh"></li-button>
+                                <li-button size=12 name="content-cut" @click=${(e) => { this.cell.source = this.cell.sourceJS = this.cell.sourceCSS = ''; this.setValue() }} title="clear all"></li-button>
+                                <li-button size=12 name="refresh" @click=${(e) => { this._srcdoc = this._srcdoc ? '' : ' '; this.$update() }} style="margin-left: 6px" title="refresh"></li-button>
                             </div>
                             <li-editor-ace class="ace" style="width: 100%" theme=${this.mode === 'html' ? 'cobalt' : this.mode === 'javascript' ? 'solarized_light' : 'dawn'} mode=${this.mode}></li-editor-ace>
                         </div>
