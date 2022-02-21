@@ -234,7 +234,7 @@ export const indx = {
 
 
 
-    'li-wikis': { type: 'apps', label: 'Wikis (jupyter version)', props: { iframe: '../wikis/index.html' } },
+    'li-wikis': { type: 'apps', label: 'Wikis (li-jupyter version)', props: { iframe: '../wikis/index.html' } },
     wikis: [{ label: 'index', url: url + '/wikis' }],
 
     'li-jupyter': { type: 'apps', label: 'li-jupyter notebook', props: { iframe: '../jupyter/index.html' } },
