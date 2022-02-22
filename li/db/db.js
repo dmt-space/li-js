@@ -152,16 +152,25 @@ customElements.define('li-db', class LiDb extends LiElement {
             })
             this.changedItemsID.add(item._id);
             this.changedItems[item._id] = item;
-            // console.log(item.doc);
             this.$update();
         }
         if (e.has('selectedArticle')) {
-            this.notebook = { cells: icaro([]) };
-            if (!this.selectedArticle?.partsId) return;
-            const parts = await this.dbLocal.allDocs({ keys: this.selectedArticle.partsId, include_docs: true });
+            this.notebook  = undefined;
+            if (this.selectedArticle.notebook) { 
+                setTimeout(() => {
+                    this.notebook = this.selectedArticle.notebook;
+                    this.$update();
+                    return; 
+                }, 100);
+
+            }
+            this.selectedArticle._items = [];
+            this.selectedArticle.notebook = { cells: icaro([]) };
+            const parts = await this.dbLocal.allDocs({ keys: this.selectedArticle.partsId || [], include_docs: true });
             parts.rows.map((i, idx) => {
                 if (i.doc) {
                     const item = new ITEM(i.doc, { type: 'editors', isUse: true });
+                    this.selectedArticle._items.push(item);
                     const cell = icaro({
                         _id: item._id,
                         cell_name: i.doc.name,
@@ -174,23 +183,24 @@ customElements.define('li-db', class LiDb extends LiElement {
                         sourceJS: i.doc.sourceJS || '',
                         sourceCSS: i.doc.sourceCSS || '',
                     })
-                    this.notebook.cells.push(cell);
+                    this.selectedArticle.notebook.cells.push(cell);
                     cell.listen(e => fn(e, item));
                 }
-            });
-            this.notebook.cells.listen((e) => {
+            })
+            this.selectedArticle.notebook.cells.listen((e) => {
                 if (this.readOnly) return;
                 this.selectedArticle.doc.partsId = [];
-                this.notebook.cells.map((i, idx) => {
+                this.selectedArticle.notebook.cells.map((i, idx) => {
                     if (!i._id) {
                         const name = i.cell_name || (i.cell_type === 'markdown' ? 'showdown'
                             : i.cell_type === 'html' || i.cell_type === 'html-cde' || i.cell_type === 'code' ? 'html'
                                 : i.cell_type === 'html-executable' ? 'iframe' : 'showdown');
                         const item = new ITEM({ name, value: i.source, h: i.cell_h, cell_type: i.cell_type, label: i.label }, { type: 'editors' });
+                        this.selectedArticle._items.push(item);
                         i._id = item._id
                         i = icaro({ ...{}, ...i });
                         i.listen(e => fn(e, item));
-                        this.notebook.cells[idx] = i;
+                        this.selectedArticle.notebook.cells[idx] = i;
                         this.changedItemsID.add(item._id);
                         this.changedItems[item._id] = item;
                     }
@@ -199,6 +209,7 @@ customElements.define('li-db', class LiDb extends LiElement {
                 this.changedItemsID.add(this.selectedArticle._id)
                 this.changedItems[this.selectedArticle._id] = this.selectedArticle
             })
+            this.notebook = this.selectedArticle.notebook;
             this.$update();
         }
     }

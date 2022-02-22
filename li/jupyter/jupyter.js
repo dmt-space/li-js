@@ -180,7 +180,7 @@ class LiJupyterListViews extends LiElement {
 
     static get properties() {
         return {
-            notebook: { type: Object, local: true },
+            notebook: { type: Object },
             cell: { type: Object },
             position: { type: String, default: 'top' },
             view: { type: String },
