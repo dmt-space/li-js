@@ -115,7 +115,7 @@ customElements.define('li-db', class LiDb extends LiElement {
         this._dbName = window.location.href.split('#')?.[1];
         this.listen('changed', (e) => {
             if ((e.detail.type === 'setTreeLabel' || e.detail.type === 'moveTreeItem') && e.detail.item) {
-                console.log(e.detail.item)
+                // console.log(e.detail.item)
                 this.changedItemsID.add(e.detail.item._id);
                 this.changedItems[e.detail.item._id] = e.detail.item;
             }
@@ -136,34 +136,34 @@ customElements.define('li-db', class LiDb extends LiElement {
         }, 100);
     }
     async updated(e) {
-        const fn = (e, item) => {
-            if (this.readOnly) return;
-            e.forEach((value, key) => {
-                const convert = {
-                    cell_name: 'name',
-                    source: 'value',
-                    cell_h: 'h'
-                }
-                if (convert[key]) {
-                    item.doc[convert[key]] = value;
-                } else {
-                    item.doc[key] = value;
-                }
-            })
-            this.changedItemsID.add(item._id);
-            this.changedItems[item._id] = item;
-            this.$update();
-        }
         if (e.has('selectedArticle')) {
+            const fn = (e, item) => {
+                if (this.readOnly) return;
+                e.forEach((value, key) => {
+                    const convert = {
+                        cell_name: 'name',
+                        source: 'value',
+                        cell_h: 'h'
+                    }
+                    if (convert[key]) {
+                        item.doc[convert[key]] = value;
+                    } else {
+                        item.doc[key] = value;
+                    }
+                })
+                this.changedItemsID.add(item._id);
+                this.changedItems[item._id] = item;
+                this.$update();
+            }
             this.notebook  = undefined;
             if (this.selectedArticle.notebook) { 
                 setTimeout(() => {
                     this.notebook = this.selectedArticle.notebook;
                     this.$update();
-                    return; 
                 }, 100);
-
+                return;
             }
+            // console.log(this.selectedArticle)
             this.selectedArticle._items = [];
             this.selectedArticle.notebook = { cells: icaro([]) };
             const parts = await this.dbLocal.allDocs({ keys: this.selectedArticle.partsId || [], include_docs: true });
@@ -315,7 +315,10 @@ customElements.define('li-db', class LiDb extends LiElement {
             items.rows.map(i => {
                 if (i.doc) {
                     res.add({ ...i.doc, ...this.changedItems[i.key].doc });
-                    this.changedItemsID.remove(i);
+                    this.changedItemsID.remove(i.key);
+                    if (this.changedItems[i.key] !== this.selectedArticle && this.changedItems[i.key].notebook) {
+                        this.changedItems[i.key]._items = this.changedItems[i.key].cells = this.changedItems[i.key].notebook = undefined;
+                    }
                 }
             })
             this.changedItemsID.forEach(i => res.add(this.changedItems[i].doc));
