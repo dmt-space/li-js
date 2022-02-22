@@ -87,13 +87,13 @@ customElements.define('li-db', class LiDb extends LiElement {
             name: { type: String, default: 'db', local: true, save: true },
             url: { type: String, default: 'http://admin:54321@localhost:5984/', local: true, save: true },
             replication: { type: Boolean, default: false, local: true, save: true },
-            readOnly: { type: Boolean, default: true, local: true },
+            readOnly: { type: Boolean, default: true, local: true, save: true },
             allowImport: { type: Boolean, default: true, local: true },
             allowExport: { type: Boolean, default: true, local: true },
             dbLocal: { type: Object, local: true },
             dbRemote: { type: Object, local: true },
             replicationHandler: { type: Object, local: true },
-            dbPanel: { type: String, default: 'tree', local: true },
+            dbPanel: { type: String, default: 'tree', local: true, save: true },
 
             dbLocalStore: { type: Object, local: true },
             articles: { type: Array, default: [], local: true },
@@ -152,7 +152,6 @@ customElements.define('li-db', class LiDb extends LiElement {
                 }, 100);
                 return;
             }
-            // console.log(this.selectedArticle)
             this.selectedArticle._items = [];
             this.selectedArticle.notebook = { cells: icaro([]) };
             const parts = await this.dbLocal.allDocs({ keys: this.selectedArticle.partsId || [], include_docs: true });
@@ -184,7 +183,7 @@ customElements.define('li-db', class LiDb extends LiElement {
                         const name = i.cell_name || (i.cell_type === 'markdown' ? 'showdown'
                             : i.cell_type === 'html' || i.cell_type === 'html-cde' || i.cell_type === 'code' ? 'html'
                                 : i.cell_type === 'html-executable' ? 'iframe' : 'showdown');
-                        const item = new ITEM({ name, value: i.source, h: i.cell_h, cell_type: i.cell_type, label: i.label }, { type: 'editors' });
+                        const item = new ITEM({ name, h: i.cell_h, cell_type: i.cell_type, label: i.label }, { type: 'editors' });
                         this.selectedArticle._items.push(item);
                         i._id = item._id
                         i = icaro({ ...{}, ...i });
@@ -530,7 +529,7 @@ customElements.define('li-db-settings', class LiSettings extends LiElement {
                     <div class="row-panel" style="display: flex; flex-direction: column;">
                         <div style="color:gray; opacity: 0.7; text-decoration: underline; padding: 4px 2px 6px 0;">Export database:</div>
                         <div style="display: flex; align-items: center;"><li-checkbox id="focused-export"></li-checkbox>Export focused in tree</div>
-                        <li-button id="export" @click="${this.btnClick}" height="auto" width="auto" padding="4px">Export db (or focused) to file</li-button>
+                        <li-button id="export" height="auto" width="auto" padding="4px" @click=${this.btnClick}>Export db (or focused) to file</li-button>
                     </div>
                 ` : html``}
                 ${this.allowImport && this.dbLocal ? html`
@@ -563,7 +562,7 @@ customElements.define('li-db-settings', class LiSettings extends LiElement {
 
     setDbName(e) {
         this.name = e.target.value;
-        if (!this.name) this.name = 'li-db';
+        if (!this.name) this.name = 'db';
         this.replication = false;
         window.location.href = window.location.href.split('#')?.[0] + '#' + this.name;
         location.reload();
@@ -618,14 +617,15 @@ customElements.define('li-db-settings', class LiSettings extends LiElement {
                     window.open(url, '_parent');
                 }, 500);
             },
-            export: async () => {
+            export: async (e) => {
                 let saveFile = async (json, name) => {
                     let str = JSON.stringify(json);
+                    if (!str || !name) return;
                     const blob = new Blob([str], { type: "text/plain" });
-                    const fileHandle = await window.showSaveFilePicker({ suggestedName: name + '.json', types: [{ description: "Json file", accept: { "text/plain": [".json"] } }] });
-                    const fileStream = await fileHandle.createWritable();
-                    await fileStream.write(blob);
-                    await fileStream.close();
+                    const a = document.createElement("a");
+                    a.href = URL.createObjectURL(blob);
+                    a.download = name + '.json';
+                    a.click();
                     this.$update();
                 }
                 if (!this.$qs('#focused-export').toggled) {
@@ -662,25 +662,6 @@ customElements.define('li-db-settings', class LiSettings extends LiElement {
                 if (importToFocused && !window.confirm(`Do you really want import to focused article ?`)) return;
                 if (!importToFocused && !window.confirm(`Do you really want rewrite current Database ?`)) return;
                 if (file) {
-                    // if (!importToFocused) {
-                    //     if (this.dbRemote)
-                    //         await this.dbRemote.destroy((err, response) => {
-                    //             if (err) {
-                    //                 return console.log(err);
-                    //             } else {
-                    //                 console.log("Remote Database Deleted");
-                    //             }
-                    //         })
-                    //     if (this.dbLocal)
-                    //         await this.dbLocal.destroy(async (err, response) => {
-                    //             if (err) {
-                    //                 return console.log(err);
-                    //             } else {
-                    //                 console.log("Local Database Deleted");
-
-                    //             }
-                    //         })
-                    // }
                     const reader = new FileReader();
                     reader.onload = async (e) => {
                         let result = JSON.parse(e.target.result);
@@ -697,18 +678,18 @@ customElements.define('li-db-settings', class LiSettings extends LiElement {
                         }
                         if (!importToFocused) {
                             this.dbLocal = new PouchDB('lidb_' + this.name);
-                            this.dbRemote = new PouchDB('lidb_' + this.url + this.name);
+                            this.dbRemote = new PouchDB(this.url + 'lidb_' + this.name);
                             if (this.replication) this.replicationHandler = this.dbLocal.sync(this.dbRemote, { live: true });
                         }
                         await this.dbLocal.bulkDocs(
                             result,
                             { new_edits: false },
                             (...args) => {
-                                this.$update();
                                 console.log('DONE', args)
+                                this.$update();
+                                setTimeout(() => document.location.reload(), 500);
                             }
-                        );
-                        setTimeout(() => document.location.reload(), 500);
+                        )
                     };
                     reader.readAsText(file);
                 }
