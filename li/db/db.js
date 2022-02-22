@@ -68,9 +68,10 @@ customElements.define('li-db', class LiDb extends LiElement {
                 <li-button id="settings" name="settings" title="settings" ?toggled=${this.dbPanel === 'settings'} toggledClass="ontoggled" @click=${this.btnClick}></li-button>
                 <div style="flex:1"></div>
                 ${this.readOnly ? html`` : html`
-                    <li-button id="save" name="save" title="save" @click=${this.btnClick} .fill="${this.needSave ? 'red' : ''}" .color="${this.needSave ? 'red' : 'gray'}"></li-button>
+                    <li-button id="save" name="save" title="save" @click=${this.btnClick} .fill="${this.needSave ? 'red' : ''}" color="${this.needSave ? 'red' : 'gray'}"></li-button>
                 `}
-                <li-button id="readonly" name="edit" @click=${this.btnClick} style="margin-right:8px" title="enable edit" fill=${this.readOnly ? 'lightgray' : '#F08080'} .color="${this.readOnly ? 'lightgray' : '#F08080'}"></li-button>
+                <li-button id="readonly" name="edit" @click=${this.btnClick} style="margin-right:8px" title="enable edit" fill=${this.readOnly ? 'lightgray' : 'green'} 
+                        color="${this.readOnly ? 'lightgray' : 'green'}" back="${this.readOnly ? 'transparent' : '#e9ffdb'}"></li-button>
                 <li-button id="reload" name="refresh" title="reload page"  @click="${this.btnClick}"></li-button>
             </div>
             <div class="panel">
@@ -112,7 +113,7 @@ customElements.define('li-db', class LiDb extends LiElement {
     constructor() {
         super();
         this._dbName = window.location.href.split('#')?.[1];
-        this.listen('changed', (e) => { 
+        this.listen('changed', (e) => {
             if ((e.detail.type === 'setTreeLabel' || e.detail.type === 'moveTreeItem') && e.detail.item) {
                 console.log(e.detail.item)
                 this.changedItemsID.add(e.detail.item._id);
@@ -165,10 +166,13 @@ customElements.define('li-db', class LiDb extends LiElement {
                         _id: item._id,
                         cell_name: i.doc.name,
                         label: i.doc.label,
-                        source: i.doc.value,
+                        source: i.doc.value || '',
                         cell_h: i.doc.h,
                         order: i.doc.order || idx,
-                        cell_type: i.doc.cell_type
+                        cell_type: i.doc.cell_type,
+                        sourceHTML: i.doc.sourceHTML || (i.doc.label === 'iframe' ? i.doc.value : ''),
+                        sourceJS: i.doc.sourceJS || '',
+                        sourceCSS: i.doc.sourceCSS || '',
                     })
                     this.notebook.cells.push(cell);
                     cell.listen(e => fn(e, item));
@@ -612,7 +616,7 @@ customElements.define('li-db-settings', class LiSettings extends LiElement {
                 }, 500);
             },
             export: async () => {
-                let saveFile = async(json, name) => {
+                let saveFile = async (json, name) => {
                     let str = JSON.stringify(json);
                     const blob = new Blob([str], { type: "text/plain" });
                     const fileHandle = await window.showSaveFilePicker({ suggestedName: name + '.json', types: [{ description: "Json file", accept: { "text/plain": [".json"] } }] });

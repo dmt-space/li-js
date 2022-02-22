@@ -538,7 +538,7 @@ customElements.define('li-jupyter-cell-html-executable', class LiJupyterCellHtml
         }
     }
     get srcdoc() {
-        return `<style>${this.cell?.sourceCSS || ''}</style>${this.cell?.source || ''}<script type="module">${this.cell?.sourceJS || ''}</script>${this._srcdoc || ''}`
+        return `<style>${this.cell?.sourceCSS || ''}</style>${this.cell?.sourceHTML || ''}<script type="module">${this.cell?.sourceJS || ''}</script>${this._srcdoc || ''}`
     }
 
     constructor() {
@@ -554,11 +554,12 @@ customElements.define('li-jupyter-cell-html-executable', class LiJupyterCellHtml
         this.listen('change', (e) => {
             const v = e.detail;
             if (this.mode === 'javascript')
-                this.cell.sourceJS = v;
+                this.cell.sourceJS = v || '';
             if (this.mode === 'html')
-                this.cell.source = v;
+                this.cell.sourceHTML = v || '';
             if (this.mode === 'css')
-                this.cell.sourceCSS = v;
+                this.cell.sourceCSS = v || '';
+            this.cell.source = this.srcdoc;
             this.$update();
         })
         setTimeout(() => {
@@ -575,9 +576,10 @@ customElements.define('li-jupyter-cell-html-executable', class LiJupyterCellHtml
         if (mode === 'javascript')
             ace.value = this.cell.sourceJS || '';
         if (mode === 'html')
-            ace.value = this.cell.source || '';
+            ace.value = this.cell.sourceHTML || '';
         if (mode === 'css')
             ace.value = this.cell.sourceCSS || '';
+        this.cell.source = this.srcdoc;
         this.$update();
     }
 })
