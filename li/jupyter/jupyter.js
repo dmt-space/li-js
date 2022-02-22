@@ -20,7 +20,7 @@ customElements.define('li-jupyter', class LiJupyter extends LiElement {
                 position: relative;
                 display: flex;
                 flex-direction: column;
-                padding: 12px 0;
+                padding: 16px 0;
             }
         `;
     }
@@ -97,10 +97,10 @@ customElements.define('li-jupyter', class LiJupyter extends LiElement {
         let str = JSON.stringify(this.notebook);
         if (!str) return;
         const blob = new Blob([str], { type: "text/plain" });
-        const fileHandle = await window.showSaveFilePicker({ suggestedName: 'jupyter-000.json', types: [{ description: "Json file", accept: { "text/plain": [".json"] } }] });
-        const fileStream = await fileHandle.createWritable();
-        await fileStream.write(blob);
-        await fileStream.close();
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = (this.notebook.label || 'li-jupyter') + '.json';
+        a.click();
         this.$update();
     }
 })
@@ -560,7 +560,6 @@ customElements.define('li-jupyter-cell-html-executable', class LiJupyterCellHtml
                 this.cell.sourceHTML = v || '';
             if (this.mode === 'css')
                 this.cell.sourceCSS = v || '';
-            // this.cell.source = this.srcdoc;
             this.$update();
         })
         setTimeout(() => {
@@ -580,8 +579,6 @@ customElements.define('li-jupyter-cell-html-executable', class LiJupyterCellHtml
             ace.value = this.cell.sourceHTML || '';
         if (mode === 'css')
             ace.value = this.cell.sourceCSS || '';
-        // this.cell.source = this.srcdoc;
-        this.cell.h ||= 200;
         this.$update();
     }
 })
