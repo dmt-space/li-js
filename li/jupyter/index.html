@@ -30,11 +30,11 @@
                     <li-button width="auto" border=0 @click=${(e) => this.jupyter.saveFile(e)}>save json</li-button>
                     <li-button for="load" width="auto" border=0 @click=${() => this.$qs('#load').click()}>load json</li-button>
                     <input id="load" type="file" style="display: none" @change=${(e) => this.jupyter.loadFile(e)}/>
-                    <li-button width="auto" border=0 @click=${() => this.jupyter.readOnly = !this.jupyter.readOnly} color=${this.readOnly ? 'red' : 'lightgray'}>readOnly</li-button>
+                    <li-button width="auto" border=0 @click=${() => this.jupyter.readOnly = !this.jupyter.readOnly} back=${this.readOnly ? '' : '#e9ffdb'} color=${this.readOnly ? 'lightgray' : 'green'}>enable edit</li-button>
                     <li-button width="auto" border=0 @click=${() => this.jupyter.showBorder = !this.jupyter.showBorder} color=${this.showBorder ? 'gray' : 'lightgray'}>show border</li-button>
-                    <li-button width="auto" border=0 @click=${() => this.jupyter.loadURL()} >Restore view</li-button>
-                    <li-button width="auto" border=0 @click=${() => this.jupyter.clearAll()} color=${this.readOnly ? 'lightgray' : 'gray'}>Clear all data</li-button>
-                    <li-button width="auto" border=0 @click=${() => document.location.reload()} >Reload page</li-button>
+                    <li-button width="auto" border=0 @click=${() => this.jupyter.loadURL()} >restore view</li-button>
+                    <li-button width="auto" border=0 @click=${() => this.jupyter.clearAll()} color=${this.readOnly ? 'lightgray' : 'gray'}>clear all data</li-button>
+                    <li-button width="auto" border=0 @click=${() => document.location.reload()} >reload page</li-button>
                 </div>
                 <div style="position: relative; overflow: auto; padding: 4px;">
                     <li-jupyter id="jupyter" url="./jupyter.json" readOnly></li-jupyter>
