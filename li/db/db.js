@@ -139,18 +139,7 @@ customElements.define('li-db', class LiDb extends LiElement {
         if (e.has('selectedArticle')) {
             const fn = (e, item) => {
                 if (this.readOnly) return;
-                e.forEach((value, key) => {
-                    const convert = {
-                        cell_name: 'name',
-                        source: 'value',
-                        cell_h: 'h'
-                    }
-                    if (convert[key]) {
-                        item.doc[convert[key]] = value;
-                    } else {
-                        item.doc[key] = value;
-                    }
-                })
+                e.forEach((value, key) => item.doc[key] = value);
                 this.changedItemsID.add(item._id);
                 this.changedItems[item._id] = item;
                 this.$update();
@@ -173,10 +162,10 @@ customElements.define('li-db', class LiDb extends LiElement {
                     this.selectedArticle._items.push(item);
                     const cell = icaro({
                         _id: item._id,
-                        cell_name: i.doc.name,
                         label: i.doc.label,
-                        source: i.doc.value || '',
-                        cell_h: i.doc.h,
+                        cell_name: i.doc.cell_name || i.doc.name,
+                        source: i.doc.source || i.doc.value || '',
+                        cell_h: i.doc.cell_h || i.doc.h,
                         order: i.doc.order || idx,
                         cell_type: i.doc.cell_type,
                         sourceHTML: i.doc.sourceHTML || (i.doc.label === 'iframe' ? i.doc.value : ''),

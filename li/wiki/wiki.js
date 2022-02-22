@@ -741,6 +741,7 @@ customElements.define('li-wiki', class LiWiki extends LiElement {
         this._selected.parts.splice(0);
         temps.rows.forEach(i => {
             if (i.doc) {
+                if ((i.doc.source || i.doc.sourceHTML) && !i.doc.value) i.doc.value = i.doc.source || i.doc.sourceHTML; // for jupyter notebook ???
                 const box = new BOX({ ...i.doc, changed: false });
                 this._selected.parts.push(box);
                 this._editors[i.id] = box;
@@ -848,11 +849,18 @@ customElements.define('li-wiki-box', class LiWikiBox extends LiElement {
 
     get _editor() {
         const editors = {
+            // old editors :
             'html-editor': html`<li-editor-html ref="ed" .item="${this.item}"></li-editor-html>`,
             'suneditor': html`<li-editor-suneditor ref="ed" .item="${this.item}"></li-editor-suneditor>`,
             'simplemde': html`<li-editor-simplemde ref="ed" .item="${this.item}"></li-editor-simplemde>`,
             'showdown': html`<li-editor-showdown ref="ed" .item="${this.item}"></li-editor-showdown>`,
-            'iframe': html`<li-editor-iframe ref="ed" .item="${this.item}"></li-editor-iframe>`
+            'iframe': html`<li-editor-iframe ref="ed" .item="${this.item}"></li-editor-iframe>`,
+            // jupyter notebook :
+            'html-CDEditor': html`<li-editor-suneditor ref="ed" .item="${this.item}"></li-editor-suneditor>`,
+            'html-pell-editor': html`<li-editor-html ref="ed" .item="${this.item}"></li-editor-html>`,
+            'md-showdown': html`<li-editor-showdown ref="ed" .item="${this.item}"></li-editor-showdown>`,
+            'code': html`<li-editor-showdown ref="ed" .item="${this.item}"></li-editor-showdown>`,
+            'code-html-executable': html`<li-editor-iframe ref="ed" .item="${this.item}"></li-editor-iframe>`,
         }
         return editors[this.item?.type] || editors[this.item?.label] || editors['iframe'];
     }
@@ -884,7 +892,7 @@ customElements.define('li-wiki-box', class LiWikiBox extends LiElement {
                     <li-button class="btn" name="close" title="hide box" @click="${this._hideBox}" size="20"></li-button>
                 </div>
                 <div class="box" ?hidden="${!this._expandedBox && (this.item?.h <= 0 || this.item.collapsed)}"
-                        style="height:${this._expandedBox ? '100%' : this.item?.h + 'px'}">
+                        style="height:${this._expandedBox ? '100%' : this.item?.h || 150 + 'px'}">
                     ${this._editor}
                 </div>
                 <div class="bottomSplitter ${this._itemBox === this.item ? 'bottomSplitter-move' : ''}" ?hidden="${this._expandedBox}"
@@ -944,7 +952,7 @@ customElements.define('li-wiki-box', class LiWikiBox extends LiElement {
         this.$update();
     }
     _liveHTML() {
-        let url = this.$url.replace('wiki-box/wiki-box.js', 'live-html/#?') + LZString.compressToEncodedURIComponent(this.item.value);
+        let url = this.$url.replace('wiki-box/wiki-box.js', 'live-html/#?') + LZString.compressToEncodedURIComponent(this.item.value || this.item.source);
         window.open(url, '_blank').focus();
     }
 });
