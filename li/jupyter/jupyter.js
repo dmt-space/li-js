@@ -352,6 +352,7 @@ customElements.define('li-jupyter-cell-toolbar', class LiJupyterCellToolbar exte
         this.$update();
     }
     tapDelete() {
+        if ((this.cell?.sourceHTML || !this.cell?.sourceJS || !this.cell?.sourceCSS) && !window.confirm(`Do you really want delete current cell ?`)) return;
         if (this.cell?.source.trim() === '' || !this.cell.source || window.confirm(`Do you really want delete current cell ?`)) {
             this.notebook.cells.splice(this.cell.order, 1);
             this.notebook.cells.sort((a, b) => a.order - b.order).map((i, idx) => i.order = idx);
@@ -559,7 +560,7 @@ customElements.define('li-jupyter-cell-html-executable', class LiJupyterCellHtml
                 this.cell.sourceHTML = v || '';
             if (this.mode === 'css')
                 this.cell.sourceCSS = v || '';
-            this.cell.source = this.srcdoc;
+            // this.cell.source = this.srcdoc;
             this.$update();
         })
         setTimeout(() => {
@@ -579,7 +580,8 @@ customElements.define('li-jupyter-cell-html-executable', class LiJupyterCellHtml
             ace.value = this.cell.sourceHTML || '';
         if (mode === 'css')
             ace.value = this.cell.sourceCSS || '';
-        this.cell.source = this.srcdoc;
+        // this.cell.source = this.srcdoc;
+        this.cell.h ||= 200;
         this.$update();
     }
 })
