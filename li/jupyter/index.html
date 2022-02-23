@@ -37,13 +37,13 @@
                     <li-button width="auto" border=0 @click=${() => document.location.reload()} >reload page</li-button>
                 </div>
                 <div style="position: relative; overflow: auto; padding: 4px;">
-                    <li-jupyter id="jupyter" url="./jupyter.json" readOnly></li-jupyter>
+                    <li-jupyter id="jupyter" url="./jupyter.json"></li-jupyter>
                 </div>
 	        `
         }
         static get properties() {
             return {
-                readOnly: { type: Boolean, local: true },
+                readOnly: { type: Boolean, false: true },
                 showBorder: { type: Boolean, local: true }
             }
         }

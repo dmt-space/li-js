@@ -4,6 +4,7 @@ import '../layout-app/layout-app.js';
 import '../db/db.js';
 import '../jupyter/jupyter.js';
 import '../button/button.js';
+import { demo } from './jupyter-demo.js';
 
 customElements.define('li-wikis', class LiWikis extends LiElement {
     static get styles() {
@@ -54,8 +55,19 @@ customElements.define('li-wikis', class LiWikis extends LiElement {
             name: { type: String, local: true },
             showBorder: { type: Boolean, default: false, local: true, save: true },
             margin: { type: Number, default: 0, local: true, save: true },
-            notebook: { type: Object, local: true }
+            notebook: { type: Object, local: true },
+            flatArticles: { type: Array, local: true },
         }
+    }
+
+    firstUpdated() {
+        super.firstUpdated();
+        setTimeout(() => {
+            if (Object.keys(this.flatArticles).length === 1 && !this.flatArticles['$wiki:articles'].doc.partsId?.length) {
+                this.notebook = demo;
+            }
+        }, 500);
+
     }
 
     onclick(e) {

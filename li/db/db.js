@@ -87,7 +87,7 @@ customElements.define('li-db', class LiDb extends LiElement {
             name: { type: String, default: 'db', local: true, save: true },
             url: { type: String, default: 'http://admin:54321@localhost:5984/', local: true, save: true },
             replication: { type: Boolean, default: false, local: true, save: true },
-            readOnly: { type: Boolean, default: true, local: true, save: true },
+            readOnly: { type: Boolean, default: false, local: true, save: true },
             allowImport: { type: Boolean, default: true, local: true },
             allowExport: { type: Boolean, default: true, local: true },
             dbLocal: { type: Object, local: true },

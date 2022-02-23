@@ -352,8 +352,8 @@ customElements.define('li-jupyter-cell-toolbar', class LiJupyterCellToolbar exte
         this.$update();
     }
     tapDelete() {
-        if ((this.cell?.sourceHTML || !this.cell?.sourceJS || !this.cell?.sourceCSS) && !window.confirm(`Do you really want delete current cell ?`)) return;
-        if (this.cell?.source.trim() === '' || !this.cell.source || window.confirm(`Do you really want delete current cell ?`)) {
+        if ((this.cell?.sourceHTML?.trim() || !this.cell?.sourceJS ?.trim()|| !this.cell?.sourceCSS?.trim()) && !window.confirm(`Do you really want delete current cell ?`)) return;
+        if (this.cell?.source?.trim() === '' || !this.cell.source || window.confirm(`Do you really want delete current cell ?`)) {
             this.notebook.cells.splice(this.cell.order, 1);
             this.notebook.cells.sort((a, b) => a.order - b.order).map((i, idx) => i.order = idx);
             this.focusedCell = this.notebook.cells[(this.cell.order > this.notebook.cells.length - 1) ? this.notebook.cells.length - 1 : this.cell.order];
@@ -532,7 +532,7 @@ customElements.define('li-jupyter-cell-html-executable', class LiJupyterCellHtml
 
     static get properties() {
         return {
-            readOnly: { type: Boolean, local: true },
+            readOnly: { type: Boolean, local: false },
             editedCell: { type: Object, local: true, notify: true },
             cell: { type: Object },
             mode: { type: String, default: 'html' }
@@ -545,8 +545,9 @@ customElements.define('li-jupyter-cell-html-executable', class LiJupyterCellHtml
     constructor() {
         super();
         this.listen('endSplitterMove', (e) => {
-            if (this.readOnly) return;
-            this.cell.h = e.detail.h;
+            if (!this.readOnly) this.cell.h = e.detail.h;
+            this._srcdoc = this._srcdoc ? '' : ' ';
+            this.$update();
             // console.log(this.cell.h);
         })
     }
