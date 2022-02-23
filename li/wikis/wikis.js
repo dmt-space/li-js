@@ -4,7 +4,6 @@ import '../layout-app/layout-app.js';
 import '../db/db.js';
 import '../jupyter/jupyter.js';
 import '../button/button.js';
-import { demo } from './jupyter-demo.js';
 
 customElements.define('li-wikis', class LiWikis extends LiElement {
     static get styles() {
@@ -62,9 +61,10 @@ customElements.define('li-wikis', class LiWikis extends LiElement {
 
     firstUpdated() {
         super.firstUpdated();
-        setTimeout(() => {
+        setTimeout(async () => {
             if (Object.keys(this.flatArticles).length === 1 && !this.flatArticles['$wiki:articles'].doc.partsId?.length) {
-                this.notebook = demo;
+                let demo = await import('./jupyter-demo.js');
+                this.notebook = demo.default;
             }
         }, 500);
 

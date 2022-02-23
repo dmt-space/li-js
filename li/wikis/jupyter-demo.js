@@ -1,4 +1,4 @@
-export const demo = {
+export default {
     "label": "li_jupiter_demo",
     "cells": [
         {
