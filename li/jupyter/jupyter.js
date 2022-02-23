@@ -505,14 +505,14 @@ customElements.define('li-jupyter-cell-html-executable', class LiJupyterCellHtml
         return html`
             <div style="position: relative; display: flex; flex-direction: column; overflow: hidden; width: 100%; height: ${this.cell?.cell_h || '200px'}">
                 <div style="display: flex; overflow: hidden; width: 100%; height: 100%">
-                    <div style="width: ${this.cell?.cell_w ? this.cell?.cell_w + '%' : '50%'}; overflow: auto">
+                    <div style="width: ${this.cell?.cell_w >= 0 ? this.cell?.cell_w + '%' : '50%'}; overflow: auto">
                         <div style="display: flex; flex-direction: column; width: 100%; overflow: auto; height: 100%; position: relative">
                             <div style="display: flex; background: lightgray; padding: 4px;position: sticky; top: 0; z-index: 9">
                                 <span @click=${() => this.mode = 'html'} class="${this.mode === 'html' ? 'mode' : ''}">html</span>
                                 <span @click=${() => this.mode = 'javascript'} class="${this.mode === 'javascript' ? 'mode' : ''}">javascript</span>
                                 <span @click=${() => this.mode = 'css'} class="${this.mode === 'css' ? 'mode' : ''}">css</span>
                                 <div style="flex: 1"></div>
-                                <li-button size=12 name="content-cut" @click=${(e) => { this.cell.source = this.cell.sourceJS = this.cell.sourceCSS = ''; this.setValue() }} title="clear all"></li-button>
+                                <li-button size=12 name="content-cut" @click=${(e) => { this.cell.sourceHTML = this.cell.sourceJS = this.cell.sourceCSS = ''; this.setValue() }} title="clear all"></li-button>
                                 <li-button size=12 name="refresh" @click=${(e) => { this._srcdoc = this._srcdoc ? '' : ' '; this.$update() }} style="margin-left: 6px" title="refresh"></li-button>
                             </div>
                             <li-editor-ace class="ace" style="width: 100%" theme=${this.mode === 'html' ? 'cobalt' : this.mode === 'javascript' ? 'solarized_light' : 'dawn'} mode=${this.mode}></li-editor-ace>
@@ -531,7 +531,7 @@ customElements.define('li-jupyter-cell-html-executable', class LiJupyterCellHtml
 
     static get properties() {
         return {
-            readOnly: { type: Boolean, local: false },
+            readOnly: { type: Boolean, local: true },
             editedCell: { type: Object, local: true, notify: true },
             cell: { type: Object },
             mode: { type: String, default: 'html' }
@@ -547,11 +547,12 @@ customElements.define('li-jupyter-cell-html-executable', class LiJupyterCellHtml
             if (!this.readOnly) {
                 if (e.detail.direction === 'horizontal') {
                     this.cell.cell_h = e.detail.h;
-                    // console.log('this.cell.cell_h', this.cell.h);
+                    console.log('h = ', this.cell.cell_h);
                 }
                 if (e.detail.direction === 'vertical') {
                     this.cell.cell_w = e.detail.w;
-                    // console.log('this.cell.cell_w', this.cell.h);
+                    this.cell.cell_w = this.cell.cell_w < 1 ? 0 : this.cell.cell_w;
+                    console.log('w = ', this.cell.cell_w);
                 }
             }
             this._srcdoc = this._srcdoc ? '' : ' ';

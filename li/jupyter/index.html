@@ -30,8 +30,8 @@
                     <li-button width="auto" border=0 @click=${(e) => this.jupyter.saveFile(e)}>save json</li-button>
                     <li-button for="load" width="auto" border=0 @click=${() => this.$qs('#load').click()}>load json</li-button>
                     <input id="load" type="file" style="display: none" @change=${(e) => this.jupyter.loadFile(e)}/>
-                    <li-button width="auto" border=0 @click=${() => this.jupyter.readOnly = !this.jupyter.readOnly} back=${this.readOnly ? '' : '#e9ffdb'} color=${this.readOnly ? 'lightgray' : 'green'}>enable edit</li-button>
-                    <li-button width="auto" border=0 @click=${() => this.jupyter.showBorder = !this.jupyter.showBorder} color=${this.showBorder ? 'gray' : 'lightgray'}>show border</li-button>
+                    <li-button width="auto" border=0 @click=${() => this.readOnly = !this.readOnly} back=${this.readOnly ? '' : '#e9ffdb'} color=${this.readOnly ? 'lightgray' : 'green'}>enable edit</li-button>
+                    <li-button width="auto" border=0 @click=${() => this.showBorder = !this.showBorder} color=${this.showBorder ? 'gray' : 'lightgray'}>show border</li-button>
                     <li-button width="auto" border=0 @click=${() => this.jupyter.loadURL()} >restore view</li-button>
                     <li-button width="auto" border=0 @click=${() => this.jupyter.clearAll()} color=${this.readOnly ? 'lightgray' : 'gray'}>clear all data</li-button>
                     <li-button width="auto" border=0 @click=${() => document.location.reload()} >reload page</li-button>
@@ -43,7 +43,7 @@
         }
         static get properties() {
             return {
-                readOnly: { type: Boolean, false: true },
+                readOnly: { type: Boolean, local: true },
                 showBorder: { type: Boolean, local: true }
             }
         }
