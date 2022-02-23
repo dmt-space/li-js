@@ -33,7 +33,7 @@ customElements.define('li-wikis', class LiWikis extends LiElement {
                     <li-button size="26" id="left" name="arrow-back" @click="${this.onclick}" style="margin-left:8px" border="none"></li-button>
                     <li-button size="26" id="right" name="arrow-forward" @click="${this.onclick}" style="margin-left:8px" border="none"></li-button>
                     <div style="flex:1"></div>${this.name || 'li-wikis'}<div style="flex:1"></div>
-                    <li-button size="26" id="margin" name="crop-original" @click="${this.onclick}" style="margin-right:8px" border="none" title="show border" fill=${this.margin ? 'gray' : 'lightgray'}></li-button>
+                    <li-button size="26" id="margin" name="crop-original" @click="${this.onclick}" style="margin-right:8px" border="none" title="margin" fill=${this.margin ? 'gray' : 'lightgray'}></li-button>
                     <li-button size="26" id="border" name="select-all" @click="${this.onclick}" style="margin-right:8px" border="none" title="show border" fill=${this.showBorder ? 'gray' : 'lightgray'}></li-button>
                     <li-button size="26" id="share" name="launch" @click="${this.onclick}" style="margin-right:8px" border="none" title="share"></li-button>
                 </div>
@@ -52,7 +52,7 @@ customElements.define('li-wikis', class LiWikis extends LiElement {
     static get properties() {
         return {
             name: { type: String, local: true },
-            showBorder: { type: Boolean, default: false, local: true, save: true },
+            showBorder: { type: Boolean, default: true, local: true, save: true },
             margin: { type: Number, default: 0, local: true, save: true },
             notebook: { type: Object, local: true },
             flatArticles: { type: Array, local: true },

@@ -45,8 +45,11 @@ customElements.define('li-jupyter', class LiJupyter extends LiElement {
             notebook: { type: Object, default: {}, local: true },
             focusedCell: { type: Object, local: true },
             editedCell: { type: Object, local: true },
+            jupiterUrl: { type: String, local: true }
         }
     }
+    get jupiterUrl() { return this.$url }
+    set jupiterUrl(v) { return this._jupiterUrl = v }
 
     updated(changedProperties) {
         if (changedProperties.has('url') || changedProperties.has('lzs')) this.loadURL();
@@ -328,6 +331,7 @@ customElements.define('li-jupyter-cell-toolbar', class LiJupyterCellToolbar exte
                 <li-button name="settings" border=0 size=16></li-button>
             ` : html``}
             <div style="flex: 1;"></div>
+            <li-button name="launch" @click="${this.share}" style="margin-right:2px" border="none" title="share" size=16></li-button>
             <li-button name="delete" @click=${this.tapDelete} title="delete" border=0 size=16></li-button>
         `
     }
@@ -340,7 +344,8 @@ customElements.define('li-jupyter-cell-toolbar', class LiJupyterCellToolbar exte
             focusedCell: { type: Object, local: true },
             editedCell: { type: Object, local: true },
             cell: { type: Object },
-            idx: { type: Number, default: 0 }
+            idx: { type: Number, default: 0 },
+            jupiterUrl: { type: String, local: true }
         }
     }
     get order() { return this.cell.order || this.idx }
@@ -357,6 +362,15 @@ customElements.define('li-jupyter-cell-toolbar', class LiJupyterCellToolbar exte
             this.notebook.cells.sort((a, b) => a.order - b.order).map((i, idx) => i.order = idx);
             this.focusedCell = this.notebook.cells[(this.cell.order > this.notebook.cells.length - 1) ? this.notebook.cells.length - 1 : this.cell.order];
             this.$update();
+        }
+    }
+    share() {
+        const notebook = { ...this.notebook };
+        notebook.cells = [this.cell];
+        const str = JSON.stringify(notebook);
+        if (str) {
+            let url = this.jupiterUrl.replace('jupyter.js', 'index.html#?lzs=') + LZString.compressToEncodedURIComponent(str);
+            window.open(url, '_blank').focus();
         }
     }
 })
