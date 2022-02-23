@@ -352,8 +352,7 @@ customElements.define('li-jupyter-cell-toolbar', class LiJupyterCellToolbar exte
         this.$update();
     }
     tapDelete() {
-        if ((this.cell?.sourceHTML?.trim() || !this.cell?.sourceJS ?.trim()|| !this.cell?.sourceCSS?.trim()) && !window.confirm(`Do you really want delete current cell ?`)) return;
-        if (this.cell?.source?.trim() === '' || !this.cell.source || window.confirm(`Do you really want delete current cell ?`)) {
+        if (window.confirm(`Do you really want delete current cell ?`)) {
             this.notebook.cells.splice(this.cell.order, 1);
             this.notebook.cells.sort((a, b) => a.order - b.order).map((i, idx) => i.order = idx);
             this.focusedCell = this.notebook.cells[(this.cell.order > this.notebook.cells.length - 1) ? this.notebook.cells.length - 1 : this.cell.order];
@@ -506,7 +505,7 @@ customElements.define('li-jupyter-cell-html-executable', class LiJupyterCellHtml
         return html`
             <div style="position: relative; display: flex; flex-direction: column; overflow: hidden; width: 100%; height: ${this.cell?.cell_h || '200px'}">
                 <div style="display: flex; overflow: hidden; width: 100%; height: 100%">
-                    <div style="width: 50%; overflow: auto">
+                    <div style="width: ${this.cell?.cell_w ? this.cell?.cell_w + '%' : '50%'}; overflow: auto">
                         <div style="display: flex; flex-direction: column; width: 100%; overflow: auto; height: 100%; position: relative">
                             <div style="display: flex; background: lightgray; padding: 4px;position: sticky; top: 0; z-index: 9">
                                 <span @click=${() => this.mode = 'html'} class="${this.mode === 'html' ? 'mode' : ''}">html</span>
@@ -545,10 +544,18 @@ customElements.define('li-jupyter-cell-html-executable', class LiJupyterCellHtml
     constructor() {
         super();
         this.listen('endSplitterMove', (e) => {
-            if (!this.readOnly) this.cell.h = e.detail.h;
+            if (!this.readOnly) {
+                if (e.detail.direction === 'horizontal') {
+                    this.cell.cell_h = e.detail.h;
+                    // console.log('this.cell.cell_h', this.cell.h);
+                }
+                if (e.detail.direction === 'vertical') {
+                    this.cell.cell_w = e.detail.w;
+                    // console.log('this.cell.cell_w', this.cell.h);
+                }
+            }
             this._srcdoc = this._srcdoc ? '' : ' ';
             this.$update();
-            // console.log(this.cell.h);
         })
     }
     firstUpdated() {
