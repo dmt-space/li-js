@@ -105,7 +105,7 @@ customElements.define('li-db', class LiDb extends LiElement {
             changedItemsID: { type: Array, default: [], local: true },
             changedItems: { type: Object, default: {}, local: true },
             deletedItemsID: { type: Array, default: [], local: true },
-            deletedItems: { type: Object, default: {}, local: true },
+            deletedItems: { type: Object, default: {}, local: true }
         }
     }
     get needSave() { return this.changedItemsID.length || this.deletedItemsID.length };
@@ -139,9 +139,16 @@ customElements.define('li-db', class LiDb extends LiElement {
         if (e.has('selectedArticle')) {
             const fn = (e, item) => {
                 if (this.readOnly) return;
-                e.forEach((value, key) => item.doc[key] = value);
-                this.changedItemsID.add(item._id);
-                this.changedItems[item._id] = item;
+                e.forEach((value, key) => {
+                    if (key === '_deleted' && value) {
+                        this.deletedItemsID.add(item._id);
+                        this.deletedItems[item._id] = item;
+                    } else {
+                        item.doc[key] = value;
+                        this.changedItemsID.add(item._id);
+                        this.changedItems[item._id] = item;
+                    }
+                });
                 this.$update();
             }
             this.notebook  = undefined;
@@ -317,10 +324,20 @@ customElements.define('li-db', class LiDb extends LiElement {
         if (this.deletedItemsID?.length) {
             const items = await this.dbLocal.allDocs({ keys: this.deletedItemsID, include_docs: true });
             const res = [];
-            items.rows.map(i => {
+            items.rows.map(async i => {
                 if (i.doc) {
                     i.doc._deleted = true;
                     res.add(i.doc);
+                    if (i.doc.partsId) {
+                        const parts = await this.dbLocal.allDocs({ keys: i.doc.partsId, include_docs: true });
+                        // console.log(parts.rows);
+                        parts.rows.map(e => {
+                            if (e.doc) {
+                                e.doc._deleted = true;
+                                res.add(e.doc);
+                            }
+                        })
+                    }
                 }
             })
             await this.dbLocal.bulkDocs(res);
@@ -351,7 +368,7 @@ customElements.define('li-db-three', class LiDbThree extends LiElement {
                 <li-button id="camera" name="camera" title="save tree state" @click="${this.btnClick}" size="20"></li-button>
                 <div style="flex: 1"></div>
                 ${this.readOnly ? html`` : html`
-                    <li-button id="clearDeleted" name="restore" title="clear deleted" size="20" @click=${this.btnClick}></li-button>
+                    <li-button id="clearDeleted" name="cached" title="clear deleted" size="20" @click=${this.btnClick}></li-button>
                     <li-button id="delete" name="delete" title="delete" size="20" @click=${this.btnClick} fill="${this.needSave ? 'red' : ''}" .color="${this.needSave ? 'red' : 'gray'}"></li-button>
                     <li-button id="addArticle" name="library-add" title="add new" size="20" @click=${this.btnClick}></li-button>
                 `}

@@ -59,15 +59,24 @@ customElements.define('li-wikis', class LiWikis extends LiElement {
         }
     }
 
-    firstUpdated() {
-        super.firstUpdated();
-        setTimeout(async () => {
-            if (Object.keys(this.flatArticles).length === 1 && !this.flatArticles['$wiki:articles'].doc.partsId?.length) {
-                let demo = await import('./jupyter-demo.js');
-                this.notebook = demo.default;
+    // firstUpdated() {
+    //     super.firstUpdated();
+    //     setTimeout(async () => {
+    //         if (Object.keys(this.flatArticles).length === 1 && !this.flatArticles['$wiki:articles'].doc.partsId?.length) {
+    //             let demo = await import('./jupyter-demo.js');
+    //             this.notebook = demo.default;
+    //         }
+    //     }, 500);
+    // }
+    async updated(e) {
+        if (e.has('flatArticles')) {
+            if (this.flatArticles && Object.keys(this.flatArticles)?.length === 1 && !this.flatArticles?.['$wiki:articles'].doc.partsId?.length) {
+                setTimeout(async () => {
+                    let demo = await import('./jupyter-demo.js');
+                    this.notebook = demo.default;
+                }, 100);
             }
-        }, 500);
-
+        }
     }
 
     onclick(e) {
