@@ -40,7 +40,7 @@ customElements.define('li-jupyter', class LiJupyter extends LiElement {
             isReady: { type: Boolean, default: false },
             url: { type: String, default: '' },
             lzs: { type: String, default: '' },
-            showBorder: { type: Boolean, default: false, local: true, save: true },
+            showBorder: { type: Boolean, default: true, local: true, save: true },
             readOnly: { type: Boolean, default: false, local: true },
             notebook: { type: Object, default: {}, local: true },
             focusedCell: { type: Object, local: true },
@@ -53,6 +53,7 @@ customElements.define('li-jupyter', class LiJupyter extends LiElement {
 
     updated(changedProperties) {
         if (changedProperties.has('url') || changedProperties.has('lzs')) this.loadURL();
+        if (changedProperties.has('notebook')) this.setIsReady();
         if (changedProperties.has('focusedCell')) this.editedCell = undefined;
         if (changedProperties.has('readOnly')) this.focusedCell = undefined;
     }
@@ -74,7 +75,10 @@ customElements.define('li-jupyter', class LiJupyter extends LiElement {
             this.notebook = json;
         }
         this.notebook?.cells?.map((i, idx) => i.order ||= idx);
-        this.isReady = true;
+        this.setIsReady();
+    }
+    setIsReady() {
+        setTimeout(() => this.isReady = true, 300 );
         this.$update();
     }
     share() {
@@ -120,7 +124,7 @@ customElements.define('li-jupyter-cell-addbutton', class LiJupyterAddButton exte
             .lbl {
                 position: absolute;
                 top: -14px;
-                left: 24px;
+                left: 64px;
                 z-index: 31;
                 font-size: 12px;
                 cursor: pointer;
@@ -131,9 +135,15 @@ customElements.define('li-jupyter-cell-addbutton', class LiJupyterAddButton exte
 
     render() {
         return html`
-            <li-button class="btn" name="add" size=16 radius="50%" title="add cell" @click=${() => this.showCellViews('add')} borderColor="dodgerblue"
+            <li-button class="btn" name="add" size=16 radius="50%" title="add cell" @click=${() => this.showCellViews('add')} borderColor="dodgerblue" fill="dodgerblue"
                     style="top: ${this.position === 'top' ? '-16px' : 'unset'}; bottom: ${this.position !== 'top' ? '-16px' : 'unset'};"></li-button>
             ${this.position === 'top' ? html`
+                ${!this.readOnly && this.cell && this.focusedCell === this.cell ? html`
+                    <li-button class="btn" name="close" size=16 radius="50%" title="unselect" borderColor="dodgerblue"
+                            @click=${() => { this.focusedCell = undefined; this.$update() }} style="top: -16px; left: 20px"></li-button>
+                    <li-button class="btn" name="edit" size=16 scale=.8 radius="50%" title="edit mode" borderColor="dodgerblue" fill=${this.editedCell === this.cell ? 'red' : 'gray'}
+                            @click=${() => { this.editedCell = this.editedCell === this.cell ? undefined : this.cell; this.$update() }} style="top: -16px; left: 40px"></li-button>
+                ` : html``}
                 <label class="lbl" @click=${() => this.showCellViews('select type')} title="select cell type">${this.cell?.label || this.cell?.cell_type || this.cell?.cell_name}</label>
             ` : html``}
         `
@@ -143,7 +153,10 @@ customElements.define('li-jupyter-cell-addbutton', class LiJupyterAddButton exte
         return {
             notebook: { type: Object, local: true },
             cell: { type: Object },
-            position: { type: String, default: 'top' }
+            position: { type: String, default: 'top' },
+            readOnly: { type: Boolean, local: true },
+            focusedCell: { type: Object, local: true },
+            editedCell: { type: Object, local: true },
         }
     }
 
@@ -191,9 +204,9 @@ class LiJupyterListViews extends LiElement {
     }
     get cellViews() {
         return [
-            { cell_type: 'markdown', cell_extType: 'md', source: '', label: 'md-showdown' },
             { cell_type: 'html', cell_extType: 'html', source: '', label: 'html-pell-editor' },
             { cell_type: 'html-cde', cell_extType: 'html-cde', source: '', label: 'html-CDEditor' },
+            { cell_type: 'markdown', cell_extType: 'md', source: '', label: 'md-showdown' },
             { cell_type: 'code', cell_extType: 'code', source: '', label: 'code' },
             { cell_type: 'html-executable', cell_extType: 'html-executable', source: '', label: 'code-html-executable' },
         ]
@@ -290,8 +303,8 @@ customElements.define('li-jupyter-cell', class LiJupyterCell extends LiElement {
     }
     dblclick(e) {
         if (this.readOnly) return;
-        this.editedCell = this.editedCell === this.cell ? undefined : this.cell;
-        this.$update();
+        // this.editedCell = this.editedCell === this.cell ? undefined : this.cell;
+        // this.$update();
     }
 })
 
@@ -305,8 +318,9 @@ customElements.define('li-jupyter-cell-toolbar', class LiJupyterCellToolbar exte
                 top: -18px;
                 z-index: 21;
                 box-shadow: 0 0 0 1px dodgerblue;
+                border-radius: 2px;
                 background: white;
-                width: 200px;
+                width: 160px;
                 height: 24px;
             }
             li-button {
@@ -322,17 +336,16 @@ customElements.define('li-jupyter-cell-toolbar', class LiJupyterCellToolbar exte
 
     render() {
         return html`
-            <li-button name="close" @click=${() => { this.focusedCell = undefined; this.$update() }} border=0 size=16></li-button>
+            <li-button name="mode-edit" @click=${() => { this.editedCell = this.editedCell === this.cell ? undefined : this.cell; this.$update() }} fill=${this.editedCell === this.cell ? 'red' : ''} title="edit mode" border=0 size=16></li-button>
             <li-button name="arrow-back" @click=${(e) => this.tapOrder(e, -1.1)} ?disabled=${this.order <= 0} title="move up" border=0 size=16 rotate=90></li-button>
             <li-button name="arrow-forward"  @click=${(e) => this.tapOrder(e, 1.1)} ?disabled=${this.order >= this.notebook?.cells?.length - 1} title="move down" border=0 size=16 rotate=90></li-button>
-            <li-button name="select-all" title="show cells border" @click=${() => { this.showBorder = !this.showBorder; this.$update(); }} border=0 size=16></li-button>
-            <li-button name="mode-edit" @click=${() => { this.editedCell = this.editedCell === this.cell ? undefined : this.cell; this.$update() }} fill=${this.editedCell === this.cell ? 'red' : ''} title="edit mode" border=0 size=16></li-button>
             ${this.editedCell === this.cell ? html`
                 <li-button name="settings" border=0 size=16></li-button>
             ` : html``}
             <div style="flex: 1;"></div>
             <li-button name="launch" @click="${this.share}" style="margin-right:2px" border="none" title="share" size=16></li-button>
             <li-button name="delete" @click=${this.tapDelete} title="delete" border=0 size=16></li-button>
+            <li-button name="close" @click=${() => { this.focusedCell = undefined; this.$update() }} border=0 size=16 title="unselect"></li-button>
         `
     }
 
@@ -358,6 +371,7 @@ customElements.define('li-jupyter-cell-toolbar', class LiJupyterCellToolbar exte
     }
     tapDelete() {
         if (window.confirm(`Do you really want delete current cell ?`)) {
+            this.cell._deleted = true;
             this.notebook.cells.splice(this.cell.order, 1);
             this.notebook.cells.sort((a, b) => a.order - b.order).map((i, idx) => i.order = idx);
             this.focusedCell = this.notebook.cells[(this.cell.order > this.notebook.cells.length - 1) ? this.notebook.cells.length - 1 : this.cell.order];
@@ -517,7 +531,7 @@ customElements.define('li-jupyter-cell-html-executable', class LiJupyterCellHtml
 
     render() {
         return html`
-            <div style="position: relative; display: flex; flex-direction: column; overflow: hidden; width: 100%; height: ${this.cell?.cell_h || '200px'}">
+            <div style="position: relative; display: flex; flex-direction: column; overflow: hidden; width: 100%; height: ${this.cell?.cell_h || '200px'}; min-height: 26px">
                 <div style="display: flex; overflow: hidden; width: 100%; height: 100%">
                     <div style="width: ${this.cell?.cell_w >= 0 ? this.cell?.cell_w + '%' : '50%'}; overflow: auto">
                         <div style="display: flex; flex-direction: column; width: 100%; overflow: auto; height: 100%; position: relative">
@@ -532,12 +546,12 @@ customElements.define('li-jupyter-cell-html-executable', class LiJupyterCellHtml
                             <li-editor-ace class="ace" style="width: 100%" theme=${this.mode === 'html' ? 'cobalt' : this.mode === 'javascript' ? 'solarized_light' : 'dawn'} mode=${this.mode}></li-editor-ace>
                         </div>
                     </div>
-                    <li-splitter size="3px" color="dodgerblue" style="opacity: .3"></li-splitter>
-                    <div style="flex: 1; overflow: auto">
+                    <li-splitter size="${this.cell?.hideSplV ? 0 : 3}px" color="dodgerblue" style="opacity: .3"></li-splitter>
+                    <div style="flex: 1; overflow: auto; width: 100%;">
                         <iframe srcdoc=${this.srcdoc || ''} style="border: none; width: 100%; height: 100%"></iframe>
                     </div>
                 </div>
-                <li-splitter direction="horizontal" size="3px" color="dodgerblue" style="opacity: .3" resize></li-splitter>
+                <li-splitter direction="horizontal" size="${this.cell?.hideSplH ? 0 : 3}px" color="dodgerblue" style="opacity: .3" resize></li-splitter>
                 <div style="display: flex; overflow: auto; flex: 1; width: 100%"></div>
             </div>
         `
@@ -548,7 +562,7 @@ customElements.define('li-jupyter-cell-html-executable', class LiJupyterCellHtml
             readOnly: { type: Boolean, local: true },
             editedCell: { type: Object, local: true, notify: true },
             cell: { type: Object },
-            mode: { type: String, default: 'html' }
+            mode: { type: String, default: 'html' },
         }
     }
     get srcdoc() {
@@ -561,6 +575,7 @@ customElements.define('li-jupyter-cell-html-executable', class LiJupyterCellHtml
             if (!this.readOnly) {
                 if (e.detail.direction === 'horizontal') {
                     this.cell.cell_h = e.detail.h;
+                    this.cell.cell_h = this.cell.cell_h < 26 ? 26 : this.cell.cell_h;
                     console.log('h = ', this.cell.cell_h);
                 }
                 if (e.detail.direction === 'vertical') {

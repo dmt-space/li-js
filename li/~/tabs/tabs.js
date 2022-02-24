@@ -1,6 +1,6 @@
-import { LiElement, html, css } from '../../li.js';
+import { LiElement, html, css } from '../../../li.js';
 
-import '../db-cell/db-cell.js';
+import '../../db-cell/db-cell.js';
 
 customElements.define('li-tabs', class LiTabs extends LiElement {
     static get properties() {
