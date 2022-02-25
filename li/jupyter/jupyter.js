@@ -78,7 +78,7 @@ customElements.define('li-jupyter', class LiJupyter extends LiElement {
         this.setIsReady();
     }
     setIsReady() {
-        setTimeout(() => this.isReady = true, 300 );
+        setTimeout(() => this.isReady = true, 300);
         this.$update();
     }
     share() {
@@ -205,6 +205,7 @@ class LiJupyterListViews extends LiElement {
     get cellViews() {
         return [
             { cell_type: 'html', cell_extType: 'html', source: '', label: 'html-pell-editor' },
+            { cell_type: 'html-tiny', cell_extType: 'html-tiny', source: '', label: 'html-TinyMCE-5' },
             { cell_type: 'html-cde', cell_extType: 'html-cde', source: '', label: 'html-CDEditor' },
             { cell_type: 'markdown', cell_extType: 'md', source: '', label: 'md-showdown' },
             { cell_type: 'code', cell_extType: 'code', source: '', label: 'code' },
@@ -277,22 +278,24 @@ customElements.define('li-jupyter-cell', class LiJupyterCell extends LiElement {
     get id() { return 'cell-' + (this.cell?.order || this.idx || 0) }
     get cellType() {
         if (this.cell?.cell_type === 'markdown')
-            return html`<li-jupyter-cell-markdown @click=${this.click} @dblclick=${this.dblclick} .cell=${this.cell}></li-jupyter-cell-markdown>`;
+            return html`<li-jupyter-cell-markdown @click=${this.click} .cell=${this.cell}></li-jupyter-cell-markdown>`;
         if (this.cell?.cell_type === 'html')
-            return html`<li-jupyter-cell-html @click=${this.click} @dblclick=${this.dblclick} .cell=${this.cell}></li-jupyter-cell-html>`;
+            return html`<li-jupyter-cell-html @click=${this.click} .cell=${this.cell}></li-jupyter-cell-html>`;
+        if (this.cell?.cell_type === 'html-tiny')
+            return html`<li-jupyter-cell-html-tiny @click=${this.click} .cell=${this.cell}></li-jupyter-cell-html-tiny>`;
         if (this.cell?.cell_type === 'html-cde')
-            return html`<li-jupyter-cell-html-cde @click=${this.click} @dblclick=${this.dblclick} .cell=${this.cell}></li-jupyter-cell-html-cde>`;
+            return html`<li-jupyter-cell-html-cde @click=${this.click} .cell=${this.cell}></li-jupyter-cell-html-cde>`;
         if (this.cell?.cell_type === 'code')
-            return html`<li-jupyter-cell-code @click=${this.click} @dblclick=${this.dblclick} .cell=${this.cell}></li-jupyter-cell-code>`;
+            return html`<li-jupyter-cell-code @click=${this.click} .cell=${this.cell}></li-jupyter-cell-code>`;
         if (this.cell?.cell_type === 'html-executable')
-            return html`<li-jupyter-cell-html-executable @click=${this.click} @dblclick=${this.dblclick} .cell=${this.cell}></li-jupyter-cell-html-executable>`;
+            return html`<li-jupyter-cell-html-executable @click=${this.click} .cell=${this.cell}></li-jupyter-cell-html-executable>`;
 
         if (this.cell?.cell_name === 'simplemde' || this.cell?.cell_name === 'showdown')
-            return html`<li-jupyter-cell-markdown @click=${this.click} @dblclick=${this.dblclick} .cell=${this.cell}></li-jupyter-cell-markdown>`;
+            return html`<li-jupyter-cell-markdown @click=${this.click} .cell=${this.cell}></li-jupyter-cell-markdown>`;
         if (this.cell?.cell_name === 'html-editor' || this.cell?.cell_name === 'suneditor' || this.cell?.cell_name === 'html')
-            return html`<li-jupyter-cell-html @click=${this.click} @dblclick=${this.dblclick} .cell=${this.cell}></li-jupyter-cell-html>`;
+            return html`<li-jupyter-cell-html @click=${this.click} .cell=${this.cell}></li-jupyter-cell-html>`;
         if (this.cell?.cell_name === 'iframe')
-            return html`<li-jupyter-cell-html-executable @click=${this.click} @dblclick=${this.dblclick} .cell=${this.cell}></li-jupyter-cell-html-executable>`;
+            return html`<li-jupyter-cell-html-executable @click=${this.click} .cell=${this.cell}></li-jupyter-cell-html-executable>`;
 
         return html`<div style="min-height: 28px;">${this.cell?.value || this.cell?.sourse}</div>`;
     }
@@ -300,11 +303,6 @@ customElements.define('li-jupyter-cell', class LiJupyterCell extends LiElement {
         if (this.readOnly) return;
         this.focusedCell = this.cell;
         this.$update();
-    }
-    dblclick(e) {
-        if (this.readOnly) return;
-        // this.editedCell = this.editedCell === this.cell ? undefined : this.cell;
-        // this.$update();
     }
 })
 
@@ -651,15 +649,104 @@ customElements.define('li-jupyter-cell-html-cde', class LiJupyterCellHtmlCDE ext
             cell: { type: Object }
         }
     }
-    get srcEditor() { return 'https://cdn.ckeditor.com/4.13.0/full/ckeditor.js' }
-    get initEditor() { return `let editor = CKEDITOR.replace('editor');` }
-    get eventChange() { return `editor.on('change',function(e){document.dispatchEvent(new CustomEvent('change',{detail: e.editor.getData()}));});` }
-    get events() { return `editor.on( 'instanceReady',function(event){if(event.editor.getCommand('maximize').state==CKEDITOR.TRISTATE_OFF);event.editor.execCommand('maximize');});` } get srcdoc() { return `<style>::-webkit-scrollbar { width: 4px; height: 4px; };::-webkit-scrollbar-track { -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3); }::-webkit-scrollbar-thumb { border-radius: 10px; background: var(--body-background); -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5); }</style><div id="editor">\r\n<p>${this.cell?.source || ''}</p>\r\n</div>\r\n\x3Cscript src="${this.srcEditor}">\x3C/script>\r\n\x3Cscript>\r\n${this.initEditor}\r\n${this.eventChange}\r\n${this.events}\r\n\x3C/script>\r\n` }
-    get srcdoc() { return `<style>::-webkit-scrollbar { width: 4px; height: 4px; };::-webkit-scrollbar-track { -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3); }::-webkit-scrollbar-thumb { border-radius: 10px; background: var(--body-background); -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5); }</style><div id="editor">\r\n<p>${this.cell?.source || ''}</p>\r\n</div>\r\n\x3Cscript src="${this.srcEditor}">\x3C/script>\r\n\x3Cscript>\r\n${this.initEditor}\r\n${this.eventChange}\r\n${this.events}\r\n\x3C/script>\r\n` }
+
+    get srcdoc() {
+        return `
+<style>
+    ::-webkit-scrollbar { width: 4px; height: 4px; };
+    ::-webkit-scrollbar-track { -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3); }
+    ::-webkit-scrollbar-thumb { border-radius: 10px; 
+</style>
+<div id="editor">
+    <p>${this.cell?.source || ''}</p>
+</div>
+<script src="https://cdn.ckeditor.com/4.13.0/full/ckeditor.js"></script>
+<script>
+    let editor = CKEDITOR.replace('editor');
+    editor.on('change', (e) => {
+        document.dispatchEvent(new CustomEvent('change', { detail: e.editor.getData() }));
+    })
+    editor.on('instanceReady', (e) => {
+        if(e.editor.getCommand('maximize').state==CKEDITOR.TRISTATE_OFF) e.editor.execCommand('maximize');
+    })    
+</script>
+    `}
 
     firstUpdated() {
         super.firstUpdated();
         this.listen('change', (e) => this.cell.source = e.detail);
+        this.listen('editedCell-changed', () => {
+            requestAnimationFrame(() => {
+                if (this.editedCell && this.editedCell === this.cell) {
+                    const iframe = this.$qs('iframe');
+                    iframe.srcdoc = this.srcdoc;
+                    requestAnimationFrame(() => (iframe.contentDocument || iframe.contentWindow)
+                        .addEventListener("change", (e) => {
+                            this.cell.source = e.detail;
+                            this.$update();
+                        }));
+                }
+            })
+        })
+    }
+})
+
+customElements.define('li-jupyter-cell-html-tiny', class LiJupyterCellHtmlTiny extends LiElement {
+    static get styles() {
+        return [editorCSS, css``]
+    }
+
+    render() {
+        return html`
+            ${this.readOnly || this.editedCell !== this.cell ? html`
+                <div .innerHTML=${this.cell.source} style="width: 100%; padding: 8px;"></div>
+            ` : html`
+                <div style="display: flex; overflow: hidden; width: 100%">
+                    <div style="width: 50%; height: 80vh; overflow: auto">
+                        <iframe style="border: none; width: 100%; height: 80vh; overflow: hidden;"></iframe>
+                    </div>
+                    <li-splitter size="3px" color="dodgerblue" style="opacity: .3"></li-splitter>
+                    <div style="flex: 1; height: 80vh">
+                        <div .innerHTML=${this.cell.source}></div>
+                    </div>
+                </div>
+            `}
+        `
+    }
+
+    static get properties() {
+        return {
+            readOnly: { type: Boolean, local: true },
+            editedCell: { type: Object, local: true, notify: true },
+            cell: { type: Object },
+            readOnly: { type: Boolean }
+        }
+    }
+
+    get srcdoc() {
+        return `
+<script src='https://cdn.tiny.cloud/1/0dmt0rtivjr59ocff6ei6iqaicibk0ej2jwub5siiycmlk84/tinymce/5/tinymce.min.js' referrerpolicy="origin"></script>
+<script>
+    tinymce.init({ 
+        selector: '#mytextarea', 
+        setup: function(ed) {
+            ed.on('keyup', function(e) {
+                document.dispatchEvent(new CustomEvent('change', { detail: ed.getContent() }));
+            })
+        },
+        resize: false
+    })
+</script>
+<form method="post">
+    <textarea id="mytextarea" name="mytextarea" style="width: 100%; height: calc(100vh - 24px);">
+        ${this.cell?.source || ''}
+    </textarea>
+</form>
+    ` }
+
+    firstUpdated() {
+        super.firstUpdated();
+        LI.listen('change', (e) => this.cell.source = e.detail);
         this.listen('editedCell-changed', () => {
             requestAnimationFrame(() => {
                 if (this.editedCell && this.editedCell === this.cell) {
