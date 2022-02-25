@@ -176,7 +176,7 @@ class LiJupyterListViews extends LiElement {
                 min-width: 140px;
                 position: relative;
                 background: white;
-                border: 1px solid lightgray;
+                border: 1px solid gray;
                 color: gray;
                 font-family: Arial;
             }
@@ -185,8 +185,8 @@ class LiJupyterListViews extends LiElement {
 
     render() {
         return html`
-            <div style="text-align: center; padding: 4px; border-bottom: 1px solid lightgray;">${this.view} cell</div>
-            <div style="display: flex; flex-direction: column; padding: 4px;">
+            <div style="text-align: center; padding: 4px; border-bottom: 1px solid gray;  background: lightgray">${this.view} cell</div>
+            <div style="display: flex; flex-direction: column;">
                 ${this.cellViews.map((i, idx) => html`
                     <li-button width="auto" textAlign="left" border=0 @click=${() => this.addCell(i)} style="padding: 2px">${(idx + 1) + '. ' + i.label}</li-button>
                 `)}
@@ -205,7 +205,7 @@ class LiJupyterListViews extends LiElement {
     get cellViews() {
         return [
             { cell_type: 'html', cell_extType: 'html', source: '', label: 'html-pell-editor' },
-            { cell_type: 'html-tiny', cell_extType: 'html-tiny', source: '', label: 'html-TinyMCE-5' },
+            { cell_type: 'html-tiny', cell_extType: 'html-tiny', source: '', label: 'html-TinyMCE' },
             { cell_type: 'html-cde', cell_extType: 'html-cde', source: '', label: 'html-CDEditor' },
             { cell_type: 'markdown', cell_extType: 'md', source: '', label: 'md-showdown' },
             { cell_type: 'code', cell_extType: 'code', source: '', label: 'code' },
@@ -706,7 +706,7 @@ customElements.define('li-jupyter-cell-html-tiny', class LiJupyterCellHtmlTiny e
                         <iframe style="border: none; width: 100%; height: 80vh; overflow: hidden;"></iframe>
                     </div>
                     <li-splitter size="3px" color="dodgerblue" style="opacity: .3"></li-splitter>
-                    <div style="flex: 1; height: 80vh">
+                    <div style="flex: 1; height: 80vh; overflow: auto">
                         <div .innerHTML=${this.cell.source}></div>
                     </div>
                 </div>
@@ -733,8 +733,20 @@ customElements.define('li-jupyter-cell-html-tiny', class LiJupyterCellHtmlTiny e
             ed.on('keyup', function(e) {
                 document.dispatchEvent(new CustomEvent('change', { detail: ed.getContent() }));
             })
+            ed.on('change', function(e) {
+                document.dispatchEvent(new CustomEvent('change', { detail: ed.getContent() }));
+            })
+            ed.on('init', function(e) {
+                ed.execCommand('mceFullScreen');
+            })
         },
-        resize: false
+        resize: false,
+        plugins: [
+            'fullscreen',
+            'advlist autolink link image lists charmap print preview hr anchor pagebreak',
+            'searchreplace wordcount visualblocks visualchars code insertdatetime media table mediaembed nonbreaking',
+            'table emoticons template help pageembed permanentpen advtable',
+        ]
     })
 </script>
 <form method="post">
@@ -743,7 +755,6 @@ customElements.define('li-jupyter-cell-html-tiny', class LiJupyterCellHtmlTiny e
     </textarea>
 </form>
     ` }
-
     firstUpdated() {
         super.firstUpdated();
         LI.listen('change', (e) => this.cell.source = e.detail);
