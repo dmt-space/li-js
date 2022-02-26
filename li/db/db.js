@@ -5,6 +5,7 @@ import '../layout-tree/layout-tree.js';
 import '../table/table.js';
 import '../../lib/pouchdb/pouchdb.js';
 import '../../lib/li-utils/utils.js';
+import { LZString } from '../../lib/lz-string/lz-string.js';
 
 const rowPanelCSS = css` .row-panel { display: flex; border-bottom: 1px solid lightgray; padding: 4px 2px; margin-bottom: 2px; }`;
 const scrollCSS = css`::-webkit-scrollbar { width: 4px; height: 4px; } ::-webkit-scrollbar-track { background: lightgray; } ::-webkit-scrollbar-thumb {  background-color: gray; }`;
@@ -151,8 +152,8 @@ customElements.define('li-db', class LiDb extends LiElement {
                 });
                 this.$update();
             }
-            this.notebook  = undefined;
-            if (this.selectedArticle.notebook) { 
+            this.notebook = undefined;
+            if (this.selectedArticle.notebook) {
                 setTimeout(() => {
                     this.notebook = this.selectedArticle.notebook;
                     this.$update();
@@ -164,19 +165,21 @@ customElements.define('li-db', class LiDb extends LiElement {
             const parts = await this.dbLocal.allDocs({ keys: this.selectedArticle.partsId || [], include_docs: true });
             parts.rows.map((i, idx) => {
                 if (i.doc) {
-                    const item = new ITEM(i.doc, { type: 'editors', isUse: true });
+                    let lzs = LZString.decompressFromEncodedURIComponent((i.doc.lzs || ''))
+                    let doc = lzs ? lzs = JSON.parse(lzs) : i.doc;
+                    const item = new ITEM(doc, { type: 'editors', isUse: true });
                     this.selectedArticle._items.push(item);
                     const cell = icaro({
                         _id: item._id,
-                        label: i.doc.label,
-                        cell_name: i.doc.cell_name || i.doc.name,
-                        source: i.doc.source || i.doc.value || '',
-                        cell_h: i.doc.cell_h || i.doc.h,
-                        order: i.doc.order || idx,
-                        cell_type: i.doc.cell_type,
-                        sourceHTML: i.doc.sourceHTML || (i.doc.label === 'iframe' ? i.doc.value : ''),
-                        sourceJS: i.doc.sourceJS || '',
-                        sourceCSS: i.doc.sourceCSS || '',
+                        label: doc.label,
+                        cell_name: doc.cell_name || doc.name,
+                        source: doc.source || doc.value || '',
+                        cell_h: doc.cell_h || doc.h,
+                        order: doc.order || idx,
+                        cell_type: doc.cell_type,
+                        sourceHTML: doc.sourceHTML || (doc.label === 'iframe' ? doc.value : ''),
+                        sourceJS: doc.sourceJS || '',
+                        sourceCSS: doc.sourceCSS || '',
                     })
                     this.selectedArticle.notebook.cells.push(cell);
                     cell.listen(e => fn(e, item));
@@ -309,14 +312,27 @@ customElements.define('li-db', class LiDb extends LiElement {
             const res = [];
             items.rows.map(i => {
                 if (i.doc) {
-                    res.add({ ...i.doc, ...this.changedItems[i.key].doc });
+                    if (i.doc._id.startsWith('editors')) {
+                        let lzs = LZString.compressToEncodedURIComponent(JSON.stringify(this.changedItems[i.doc._id].doc));
+                        res.add({ _id: i.doc._id, _rev: i.doc._rev, lzs })
+                    } else {
+                        res.add({ ...i.doc, ...this.changedItems[i.key].doc });
+                    }
                     this.changedItemsID.remove(i.key);
                     if (this.changedItems[i.key] !== this.selectedArticle && this.changedItems[i.key].notebook) {
                         this.changedItems[i.key]._items = this.changedItems[i.key].cells = this.changedItems[i.key].notebook = undefined;
                     }
                 }
             })
-            this.changedItemsID.forEach(i => res.add(this.changedItems[i].doc));
+            this.changedItemsID.forEach(i => {
+                let doc = { ...this.changedItems[i].doc };
+                if (doc._id.startsWith('editors')) {
+                    let lzs = LZString.compressToEncodedURIComponent(JSON.stringify(doc));
+                    res.add({ _id: doc._id, lzs })
+                } else {
+                    res.add(doc);
+                }
+            })
             await this.dbLocal.bulkDocs(res);
             this.changedItemsID = [];
             this.changedItems = {};
@@ -657,6 +673,7 @@ customElements.define('li-db-settings', class LiSettings extends LiElement {
                         parent = this.selectedArticle._id,
                         arr = LIUtils.arrAllChildren(this.selectedArticle);
                     keys.add(parent);
+                    (this.selectedArticle.doc.partsId || []).map(id => keys.add(id));
                     arr.map(i => {
                         keys.add(i._id);
                         (i.doc.partsId || []).map(id => keys.add(id));
@@ -678,6 +695,9 @@ customElements.define('li-db-settings', class LiSettings extends LiElement {
                 const importToFocused = this.$qs('#focused-import').toggled;
                 if (importToFocused && !window.confirm(`Do you really want import to focused article ?`)) return;
                 if (!importToFocused && !window.confirm(`Do you really want rewrite current Database ?`)) return;
+                this.replication = false;
+                this.replicationHandler.cancel();
+                this.replicationHandler = undefined;
                 if (file) {
                     const reader = new FileReader();
                     reader.onload = async (e) => {
