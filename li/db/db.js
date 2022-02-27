@@ -165,7 +165,7 @@ customElements.define('li-db', class LiDb extends LiElement {
             const parts = await this.dbLocal.allDocs({ keys: this.selectedArticle.partsId || [], include_docs: true });
             parts.rows.map((i, idx) => {
                 if (i.doc) {
-                    let lzs = LZString.decompressFromEncodedURIComponent((i.doc.lzs || ''))
+                    let lzs = LZString.decompressFromUTF16((i.doc.lzs || ''))
                     let doc = lzs ? lzs = JSON.parse(lzs) : i.doc;
                     const item = new ITEM(doc, { type: 'editors', isUse: true });
                     this.selectedArticle._items.push(item);
@@ -313,7 +313,7 @@ customElements.define('li-db', class LiDb extends LiElement {
             items.rows.map(i => {
                 if (i.doc) {
                     if (i.doc._id.startsWith('editors')) {
-                        let lzs = LZString.compressToEncodedURIComponent(JSON.stringify(this.changedItems[i.doc._id].doc));
+                        let lzs = LZString.compressToUTF16(JSON.stringify(this.changedItems[i.doc._id].doc));
                         res.add({ _id: i.doc._id, _rev: i.doc._rev, lzs })
                     } else {
                         res.add({ ...i.doc, ...this.changedItems[i.key].doc });
@@ -327,7 +327,7 @@ customElements.define('li-db', class LiDb extends LiElement {
             this.changedItemsID.forEach(i => {
                 let doc = { ...this.changedItems[i].doc };
                 if (doc._id.startsWith('editors')) {
-                    let lzs = LZString.compressToEncodedURIComponent(JSON.stringify(doc));
+                    let lzs = LZString.compressToUTF16(JSON.stringify(doc));
                     res.add({ _id: doc._id, lzs })
                 } else {
                     res.add(doc);
@@ -561,18 +561,25 @@ customElements.define('li-db-settings', class LiSettings extends LiElement {
                 ${this.allowExport && this.dbLocal ? html`
                     <div class="row-panel" style="display: flex; flex-direction: column;">
                         <div style="color:gray; opacity: 0.7; text-decoration: underline; padding: 4px 2px 6px 0;">Export database:</div>
-                        <div style="display: flex; align-items: center;"><li-checkbox id="focused-export"></li-checkbox>Export focused in tree</div>
+                        <div style="display: flex; align-items: center;"><li-checkbox id="focused-export"></li-checkbox>Export checked in focused article</div>
                         <li-button id="export" height="auto" width="auto" padding="4px" @click=${this.btnClick}>Export db (or focused) to file</li-button>
                     </div>
                 ` : html``}
                 ${this.allowImport && this.dbLocal ? html`
                     <div class="row-panel" style="display: flex; flex-direction: column;">
                         <div style="color:gray; opacity: 0.7; text-decoration: underline; padding: 4px 2px 6px 0;">Import database:</div>
-                        <div style="display: flex; align-items: center;"><li-checkbox id="focused-import"></li-checkbox>Import to focused in tree</div>
+                        <div style="display: flex; align-items: center;"><li-checkbox id="focused-import"></li-checkbox>Import to focused article</div>
                         <li-button for="import" height="auto" width="auto" padding="4px" @click=${() => { this.$id('import').click() }}>Импорт db</li-button>
                         <input id="import" type="file" id="import" @change=${this.btnClick} style="display: none"/>
                     </div>
                 ` : html``}
+                <div class="row-panel" style="display: flex; flex-direction: column;">
+                    <div style="color:gray; opacity: 0.7; text-decoration: underline; padding: 4px 2px 6px 0;">Copy to new compress database:</div>
+                    <div class="row-panel" style="display: flex; align-items: center; margin-bottom: 4px"><div style="width: 100px;">db name:</div><input .value="${this.newName}" @change="${this.setNewDbName}"></div>
+                    <div style="display: flex; align-items: center;"><li-checkbox id="copy-replicate"></li-checkbox>Replicate to new remote db</div>
+                    <div style="display: flex; align-items: center;"><li-checkbox id="copy-selected"></li-checkbox>Copy checked in focused article</div>
+                    <li-button id="copy" height="auto" width="auto" padding="4px" @click=${this.btnClick}>Copy to new db</li-button>
+                </div>
             </div>
         `
     }
@@ -589,9 +596,12 @@ customElements.define('li-db-settings', class LiSettings extends LiElement {
             dbRemote: { type: Object, local: true },
             replicationHandler: { type: Object, local: true },
             dbPanel: { type: String, local: true },
-            selectedArticle: { type: Object, local: true }
+            selectedArticle: { type: Object, local: true },
+            flatArticles: { type: Object, local: true }
         }
     }
+    get newName() { return this._newName || this.name + '_copy' }
+    set newName(v) { this._newName = v }
 
     setDbName(e) {
         this.name = e.target.value;
@@ -613,6 +623,9 @@ customElements.define('li-db-settings', class LiSettings extends LiElement {
             this.replicationHandler = undefined;
         }
         this.$update();
+    }
+    setNewDbName(e) {
+        this._newName = e.target.value;
     }
     btnClick(e) {
         const id = e.target.id;
@@ -675,8 +688,10 @@ customElements.define('li-db-settings', class LiSettings extends LiElement {
                     keys.add(parent);
                     (this.selectedArticle.doc.partsId || []).map(id => keys.add(id));
                     arr.map(i => {
-                        keys.add(i._id);
-                        (i.doc.partsId || []).map(id => keys.add(id));
+                        if (i.checked) {
+                            keys.add(i._id);
+                            (i.doc.partsId || []).map(id => keys.add(id));
+                        }
                     })
                     await this.dbLocal.allDocs({ include_docs: true, keys }, (error, doc) => {
                         if (error) console.error(error);
@@ -696,7 +711,7 @@ customElements.define('li-db-settings', class LiSettings extends LiElement {
                 if (importToFocused && !window.confirm(`Do you really want import to focused article ?`)) return;
                 if (!importToFocused && !window.confirm(`Do you really want rewrite current Database ?`)) return;
                 this.replication = false;
-                this.replicationHandler.cancel();
+                this.replicationHandler?.cancel();
                 this.replicationHandler = undefined;
                 if (file) {
                     const reader = new FileReader();
@@ -730,6 +745,53 @@ customElements.define('li-db-settings', class LiSettings extends LiElement {
                     };
                     reader.readAsText(file);
                 }
+            },
+            copy: async () => {
+                const prefix = 'lidb_';
+                const dbLocalNew = new PouchDB(prefix + this.newName);
+                if (this.$qs('#copy-replicate').toggled) {
+                    const dbRemoteNew = new PouchDB(this.url + prefix + this.newName);
+                    this.replicationHandlerNew = dbLocalNew.sync(dbRemoteNew, { live: true });
+                }
+                let items;
+                const copy_selected = this.$qs('#copy-selected').toggled;
+                const parent = this.selectedArticle._id;
+                if (copy_selected) {
+                    const keys = [];
+                    const arr = LIUtils.arrAllChildren(this.selectedArticle);
+                    keys.add(parent);
+                    (this.selectedArticle.doc.partsId || []).map(id => keys.add(id));
+                    arr.map(i => {
+                        if (i.checked) {
+                            keys.add(i._id);
+                            (i.doc.partsId || []).map(id => keys.add(id));
+                        }
+                    })
+                    items = await this.dbLocal.allDocs({ keys, include_docs: true });
+                } else {
+                    items = await this.dbLocal.allDocs({ include_docs: true });
+                }
+                const res = [];
+                const root = '$wiki:articles'
+                items.rows.map(i => {
+                    if (i.doc) {
+                        if (copy_selected) {
+                            if (i.doc.parentId === parent) i.doc.parentId = root;
+                            if (i.doc._id === parent) i.doc._id = root;
+                        }
+                        delete i.doc._rev;
+                        if (i.doc._id.startsWith('editors')) {
+                            let lzs = LZString.decompressFromUTF16((i.doc.lzs || ''))
+                            let doc = lzs ? JSON.parse(lzs) : i.doc;
+                            lzs = LZString.compressToUTF16(JSON.stringify(doc));
+                            res.add({ _id: i.doc._id, lzs })
+                        } else {
+                            res.add({ ...i.doc });
+                        }
+                    }
+                })
+                await dbLocalNew.bulkDocs(res);
+                console.log('done copy');
             }
         }
         action[id] && action[id](e);
