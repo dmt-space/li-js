@@ -44,7 +44,6 @@
                         <li-button for="load" width="auto" border=0 @click=${() => this.$qs('#load').click()} title="load json">load</li-button>
                         <input id="load" type="file" style="display: none" @change=${(e) => this.jupyter.loadFile(e)}/>
                         <li-button width="auto" border=0 @click=${() => this.showBorder = !this.showBorder} color=${this.showBorder ? 'dodgerblue' : 'lightgray'} title="show border">border</li-button>
-                        <li-button width="auto" border=0 @click=${() => this.collapsed = !this.collapsed} color=${this.collapsed ? 'dodgerblue' : 'lightgray'} title="collapse all">collapsed</li-button>
                         <li-button width="auto" border=0 @click=${() => this.readOnly = !this.readOnly} back=${this.readOnly ? '' : '#e9ffdb'} color=${this.readOnly ? 'lightgray' : 'green'} title="enable edit">editable</li-button>
                         <li-button width="auto" border=0 @click=${() => this.jupyter.clearAll()} color=${this.readOnly ? 'lightgray' : 'gray'} title="cleasr all data">clear</li-button>
                         <li-button width="auto" border=0 @click=${() => this.jupyter.loadURL()} title="restore view">restore</li-button>
