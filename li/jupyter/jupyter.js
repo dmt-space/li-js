@@ -45,7 +45,8 @@ customElements.define('li-jupyter', class LiJupyter extends LiElement {
             notebook: { type: Object, default: {}, local: true },
             focusedCell: { type: Object, local: true },
             editedCell: { type: Object, local: true },
-            jupiterUrl: { type: String, local: true }
+            jupiterUrl: { type: String, local: true },
+            collapsed: { type: Boolean, local: true },
         }
     }
     get jupiterUrl() { return this.$url }
@@ -246,14 +247,27 @@ customElements.define('li-jupyter-cell', class LiJupyterCell extends LiElement {
             .focused {
                 box-shadow: 0 0 0 1px dodgerblue;
             }
+            .row {
+                cursor: pointer;
+                padding: 5px;
+                color: lightgray;
+                font-size: 12px;
+            }
         `;
     }
 
     render() {
         return html`
-            <div id="${this.id}" class="cell ${this.focused}" style="order: ${this.cell?.order || 0}; box-shadow: ${this.showBorder && this.focusedCell !== this.cell ? '0px 0px 0px 1px lightgray' : ''};">
-                ${this.cellType}
-            </div>
+            ${this.collapsed && this.editedCell !== this.cell ? html`
+                <div id="${this.id}" class="cell ${this.focused} row" @click=${this.click}
+                        style="order: ${this.cell?.order || 0}; box-shadow: ${this.showBorder && this.focusedCell !== this.cell ? '0px 0px 0px 1px lightgray' : ''};">
+                    ${this.cell?.label || this.cell?.cell_type || ''}
+                </div>
+            ` : html`
+                <div id="${this.id}" class="cell ${this.focused}" style="order: ${this.cell?.order || 0}; box-shadow: ${this.showBorder && this.focusedCell !== this.cell ? '0px 0px 0px 1px lightgray' : ''};">
+                    ${this.cellType}
+                </div>
+            `}
             ${!this.readOnly && this.cell && this.focusedCell === this.cell ? html`
                 <li-jupyter-cell-toolbar .cell=${this.cell} idx=${this.idx}></li-jupyter-cell-toolbar>
                 <li-jupyter-cell-addbutton .cell=${this.cell}></li-jupyter-cell-addbutton>
@@ -271,6 +285,7 @@ customElements.define('li-jupyter-cell', class LiJupyterCell extends LiElement {
             editedCell: { type: Object, local: true },
             cell: { type: Object, default: undefined },
             idx: { type: Number, default: 0 },
+            collapsed: { type: Boolean, local: true },
         }
     }
     get focused() { return !this.readOnly && this.focusedCell === this.cell ? 'focused' : '' }

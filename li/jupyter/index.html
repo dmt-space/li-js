@@ -38,16 +38,17 @@
         render() {
             return html`
                 ${this.notebook?.hideTopPanel ? html`` : html`
-                    <div style="display: flex; flex-direction: row-reverse; border-bottom: 1px solid gray; position: sticky; top: 0; background: white; z-index: 41;">
-                        <li-button width="auto" border=0 @click=${() => this.jupyter.share()}>share</li-button>
-                        <li-button width="auto" border=0 @click=${(e) => this.jupyter.saveFile(e)}>save json</li-button>
-                        <li-button for="load" width="auto" border=0 @click=${() => this.$qs('#load').click()}>load json</li-button>
+                    <div style="display: flex; flex-direction: row-reverse; border-bottom: 1px solid gray; position: sticky; top: 0; background: white; z-index: 41; flex-wrap: wrap;">
+                        <li-button width="auto" border=0 @click=${() => this.jupyter.share()} title="share to new tab">share</li-button>
+                        <li-button width="auto" border=0 @click=${(e) => this.jupyter.saveFile(e)} title="save json">save</li-button>
+                        <li-button for="load" width="auto" border=0 @click=${() => this.$qs('#load').click()} title="load json">load</li-button>
                         <input id="load" type="file" style="display: none" @change=${(e) => this.jupyter.loadFile(e)}/>
-                        <li-button width="auto" border=0 @click=${() => this.readOnly = !this.readOnly} back=${this.readOnly ? '' : '#e9ffdb'} color=${this.readOnly ? 'lightgray' : 'green'}>enable edit</li-button>
-                        <li-button width="auto" border=0 @click=${() => this.showBorder = !this.showBorder} color=${this.showBorder ? 'gray' : 'lightgray'}>show border</li-button>
-                        <li-button width="auto" border=0 @click=${() => this.jupyter.loadURL()} >restore view</li-button>
-                        <li-button width="auto" border=0 @click=${() => this.jupyter.clearAll()} color=${this.readOnly ? 'lightgray' : 'gray'}>clear all data</li-button>
-                        <li-button width="auto" border=0 @click=${() => document.location.reload()} >reload page</li-button>
+                        <li-button width="auto" border=0 @click=${() => this.showBorder = !this.showBorder} color=${this.showBorder ? 'dodgerblue' : 'lightgray'} title="show border">border</li-button>
+                        <li-button width="auto" border=0 @click=${() => this.collapsed = !this.collapsed} color=${this.collapsed ? 'dodgerblue' : 'lightgray'} title="collapse all">collapsed</li-button>
+                        <li-button width="auto" border=0 @click=${() => this.readOnly = !this.readOnly} back=${this.readOnly ? '' : '#e9ffdb'} color=${this.readOnly ? 'lightgray' : 'green'} title="enable edit">editable</li-button>
+                        <li-button width="auto" border=0 @click=${() => this.jupyter.clearAll()} color=${this.readOnly ? 'lightgray' : 'gray'} title="cleasr all data">clear</li-button>
+                        <li-button width="auto" border=0 @click=${() => this.jupyter.loadURL()} title="restore view">restore</li-button>
+                        <li-button width="auto" border=0 @click=${() => document.location.reload()} title="reload page">reload</li-button>
                     </div>
                 `}
                 <div style="position: relative; overflow: auto; padding: 4px;">
@@ -59,7 +60,8 @@
             return {
                 readOnly: { type: Boolean, local: true },
                 showBorder: { type: Boolean, local: true },
-                notebook: { type: Object, local: true }
+                notebook: { type: Object, local: true },
+                collapsed: { type: Boolean, local: true }
             }
         }
         get jupyter() { return this.$qs('li-jupyter') || {} }
