@@ -125,7 +125,7 @@ customElements.define('li-jupyter-cell-addbutton', class LiJupyterAddButton exte
             .lbl {
                 position: absolute;
                 top: -14px;
-                left: 64px;
+                left: 84px;
                 z-index: 31;
                 font-size: 12px;
                 cursor: pointer;
@@ -142,8 +142,10 @@ customElements.define('li-jupyter-cell-addbutton', class LiJupyterAddButton exte
                 ${!this.readOnly && this.cell && this.focusedCell === this.cell ? html`
                     <li-button class="btn" name="close" size=16 radius="50%" title="unselect" borderColor="dodgerblue"
                             @click=${() => { this.focusedCell = undefined; this.$update() }} style="top: -16px; left: 20px"></li-button>
+                    <li-button class="btn" name="crop-7-5" size=16 radius="50%" title="collapse" borderColor="dodgerblue"
+                            @click=${() => { this.collapsed = !this.collapsed; }} style="top: -16px; left: 40px" fill=${this.collapsed ? 'dodgerblue' : 'lightgray'}></li-button>
                     <li-button class="btn" name="edit" size=16 scale=.8 radius="50%" title="edit mode" borderColor="dodgerblue" fill=${this.editedCell === this.cell ? 'red' : 'gray'}
-                            @click=${() => { this.editedCell = this.editedCell === this.cell ? undefined : this.cell; this.$update() }} style="top: -16px; left: 40px"></li-button>
+                            @click=${() => { this.editedCell = this.editedCell === this.cell ? undefined : this.cell; this.$update() }} style="top: -16px; left: 60px"></li-button>
                 ` : html``}
                 <label class="lbl" @click=${() => this.showCellViews('select type')} title="select cell type">${this.cell?.label || this.cell?.cell_type || this.cell?.cell_name}</label>
             ` : html``}
@@ -158,6 +160,7 @@ customElements.define('li-jupyter-cell-addbutton', class LiJupyterAddButton exte
             readOnly: { type: Boolean, local: true },
             focusedCell: { type: Object, local: true },
             editedCell: { type: Object, local: true },
+            collapsed: { type: Boolean, local: true },
         }
     }
 
@@ -258,7 +261,7 @@ customElements.define('li-jupyter-cell', class LiJupyterCell extends LiElement {
 
     render() {
         return html`
-            ${this.collapsed && this.editedCell !== this.cell ? html`
+            ${!this.readOnly && this.collapsed && this.editedCell !== this.cell ? html`
                 <div id="${this.id}" class="cell ${this.focused} row" @click=${this.click}
                         style="order: ${this.cell?.order || 0}; box-shadow: ${this.showBorder && this.focusedCell !== this.cell ? '0px 0px 0px 1px lightgray' : ''};">
                     ${this.cell?.label || this.cell?.cell_type || ''}
