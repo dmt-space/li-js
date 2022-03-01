@@ -209,6 +209,7 @@ class LiJupyterListViews extends LiElement {
     get cellViews() {
         return [
             { cell_type: 'html', cell_extType: 'html', source: '', label: 'html-pell-editor' },
+            { cell_type: 'html-jodit', cell_extType: 'html-jodit', source: '', label: 'html-jodit' },
             { cell_type: 'html-cde', cell_extType: 'html-cde', source: '', label: 'html-CDEditor' },
             { cell_type: 'markdown', cell_extType: 'md', source: '', label: 'md-showdown' },
             { cell_type: 'code', cell_extType: 'code', source: '', label: 'code' },
@@ -245,12 +246,14 @@ customElements.define('li-jupyter-cell', class LiJupyterCell extends LiElement {
             .cell {
                 display: flex;
                 position: relative;
-                width: 100%
+                width: 100%;
             }
             .focused {
                 box-shadow: 0 0 0 1px dodgerblue;
             }
             .row {
+                width: 100%;
+                height: 100%;
                 cursor: pointer;
                 padding: 5px;
                 color: lightgray;
@@ -261,16 +264,13 @@ customElements.define('li-jupyter-cell', class LiJupyterCell extends LiElement {
 
     render() {
         return html`
-            ${!this.readOnly && this.collapsed && this.editedCell !== this.cell ? html`
-                <div id="${this.id}" class="cell ${this.focused} row" @click=${this.click}
-                        style="order: ${this.cell?.order || 0}; box-shadow: ${this.showBorder && this.focusedCell !== this.cell ? '0px 0px 0px 1px lightgray' : ''};">
-                    ${this.cell?.label || this.cell?.cell_type || ''}
-                </div>
-            ` : html`
-                <div id="${this.id}" class="cell ${this.focused}" style="order: ${this.cell?.order || 0}; box-shadow: ${this.showBorder && this.focusedCell !== this.cell ? '0px 0px 0px 1px lightgray' : ''};">
+            <div id="${this.id}" class="cell ${this.focused}" style="order: ${this.cell?.order || 0}; box-shadow: ${this.showBorder && this.focusedCell !== this.cell ? '0px 0px 0px 1px lightgray' : ''};">
+                ${!this.readOnly && this.collapsed && this.editedCell !== this.cell ? html`
+                    <div class="row" @click=${this.click}>${this.cell?.label || this.cell?.cell_type || ''}</div>
+                ` : html`
                     ${this.cellType}
-                </div>
-            `}
+                `}
+            </div>
             ${!this.readOnly && this.cell && this.focusedCell === this.cell ? html`
                 <li-jupyter-cell-toolbar .cell=${this.cell} idx=${this.idx}></li-jupyter-cell-toolbar>
                 <li-jupyter-cell-addbutton .cell=${this.cell}></li-jupyter-cell-addbutton>
@@ -298,6 +298,8 @@ customElements.define('li-jupyter-cell', class LiJupyterCell extends LiElement {
             return html`<li-jupyter-cell-markdown @click=${this.click} .cell=${this.cell}></li-jupyter-cell-markdown>`;
         if (this.cell?.cell_type === 'html')
             return html`<li-jupyter-cell-html @click=${this.click} .cell=${this.cell}></li-jupyter-cell-html>`;
+        if (this.cell?.cell_type === 'html-jodit')
+            return html`<li-jupyter-cell-html-jodit @click=${this.click} .cell=${this.cell}></li-jupyter-cell-html-jodit>`;
         if (this.cell?.cell_type === 'html-cde')
             return html`<li-jupyter-cell-html-cde @click=${this.click} .cell=${this.cell}></li-jupyter-cell-html-cde>`;
         if (this.cell?.cell_type === 'code')
@@ -413,7 +415,7 @@ customElements.define('li-jupyter-cell-markdown', class LiJupyterCellMarkdown ex
                 <li-viewer-md src=${this.cell?.source} style="width: 100%"></li-viewer-md>
             ` : html`
                 <div style="display: flex; overflow: hidden; width: 100%; height: 100%">
-                    <div style="max-height: 80vh; width: 50%; overflow: auto">
+                    <div style="max-height: ${this._h}vh; width: 50%; overflow: auto">
                         <li-editor-ace class="ace" style="width: 100%; height: 100%" theme="solarized_light" mode="markdown"></li-editor-ace> 
                     </div>
                     <li-splitter size="3px" color="dodgerblue" style="opacity: .3"></li-splitter>
@@ -429,7 +431,8 @@ customElements.define('li-jupyter-cell-markdown', class LiJupyterCellMarkdown ex
         return {
             readOnly: { type: Boolean, local: true },
             editedCell: { type: Object, local: true, notify: true },
-            cell: { type: Object }
+            cell: { type: Object },
+            _h: { type: Number, default: 0 }
         }
     }
 
@@ -440,11 +443,13 @@ customElements.define('li-jupyter-cell-markdown', class LiJupyterCellMarkdown ex
             this.$update();
         })
         this.listen('editedCell-changed', () => {
+            this._h = 0;
             requestAnimationFrame(() => {
                 if (this.editedCell && this.editedCell === this.cell) {
                     const ace = this.$qs('li-editor-ace');
                     ace.options = { highlightActiveLine: false, showPrintMargin: false, minLines: 1, fontSize: 16 };
                     ace.src = this.cell.source;
+                    this._h = 80;
                 }
             })
         })
@@ -645,7 +650,7 @@ customElements.define('li-jupyter-cell-html-cde', class LiJupyterCellHtmlCDE ext
                 <div .innerHTML=${this.cell.source} style="width: 100%; padding: 8px;"></div>
             ` : html`
                 <div style="display: flex; overflow: hidden; width: 100%">
-                    <div style="width: 50%; height: 80vh; overflow: auto">
+                    <div style="width: 50%; height: ${this._h}vh; overflow: auto">
                         <iframe style="border: none; width: 100%; height: 80vh"></iframe>
                     </div>
                     <li-splitter size="3px" color="dodgerblue" style="opacity: .3"></li-splitter>
@@ -661,21 +666,18 @@ customElements.define('li-jupyter-cell-html-cde', class LiJupyterCellHtmlCDE ext
         return {
             readOnly: { type: Boolean, local: true },
             editedCell: { type: Object, local: true, notify: true },
-            cell: { type: Object }
+            cell: { type: Object },
+            _h: { type: Number, default: 0 }
         }
     }
 
     get srcdoc() {
         return `
 <style>
-    ::-webkit-scrollbar { width: 4px; height: 4px; };
-    ::-webkit-scrollbar-track { -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3); }
-    ::-webkit-scrollbar-thumb { border-radius: 10px; 
+    html::-webkit-scrollbar { width: 4px; height: 4px; } ::-webkit-scrollbar-track { -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3); } ::-webkit-scrollbar-thumb { border-radius: 10px; }
 </style>
-<div id="editor">
-    <p>${this.cell?.source || ''}</p>
-</div>
-<script src="https://cdn.ckeditor.com/4.13.0/full/ckeditor.js"></script>
+<div id="editor" style="height: 800px; overflow: hidden">${this.cell?.source || ''}</div>
+<script src="https://cdn.ckeditor.com/4.17.2/full/ckeditor.js"></script>
 <script>
     let editor = CKEDITOR.replace('editor');
     editor.on('change', (e) => {
@@ -683,13 +685,13 @@ customElements.define('li-jupyter-cell-html-cde', class LiJupyterCellHtmlCDE ext
     })
     editor.on('instanceReady', (e) => {
         if(e.editor.getCommand('maximize').state==CKEDITOR.TRISTATE_OFF) e.editor.execCommand('maximize');
-    })    
+    }) 
 </script>
     `}
 
     firstUpdated() {
         super.firstUpdated();
-        this.listen('change', (e) => this.cell.source = e.detail);
+        // this.listen('change', (e) => this.cell.source = e.detail);
         this.listen('editedCell-changed', () => {
             requestAnimationFrame(() => {
                 if (this.editedCell && this.editedCell === this.cell) {
@@ -700,6 +702,77 @@ customElements.define('li-jupyter-cell-html-cde', class LiJupyterCellHtmlCDE ext
                             this.cell.source = e.detail;
                             this.$update();
                         }));
+                    this._h = 80;
+                }
+            })
+        })
+    }
+})
+
+
+customElements.define('li-jupyter-cell-html-jodit', class LiJupyterCellHtmlJodit extends LiElement {
+    static get styles() {
+        return [editorCSS, css``]
+    }
+
+    render() {
+        return html`
+            ${this.readOnly || this.editedCell !== this.cell ? html`
+                <div .innerHTML=${this.cell.source} style="width: 100%; padding: 8px;"></div>
+            ` : html`
+                <div style="display: flex; overflow: hidden; width: 100%">
+                    <div style="width: 50%; height: ${this._h}vh; overflow: hidden; position: relative;">
+                        <iframe style="border: none; width: 100%; height: 80vh;"></iframe>
+                    </div>
+                    <li-splitter size="3px" color="dodgerblue" style="opacity: .3"></li-splitter>
+                    <div style="flex: 1; height: 80vh; overflow: auto">
+                        <div .innerHTML=${this.cell.source} style="width: 100%"></div>
+                    </div>
+                </div>
+            `}
+        `
+    }
+
+    static get properties() {
+        return {
+            readOnly: { type: Boolean, local: true },
+            editedCell: { type: Object, local: true, notify: true },
+            cell: { type: Object },
+            _h: { type: Number, default: 0 }
+        }
+    }
+
+    get srcdoc() {
+        return `
+    <textarea id="editor" name="editor">${this.cell?.source || ''}</textarea>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jodit/3.13.4/jodit.es2018.min.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jodit/3.13.4/jodit.es2018.min.js"></script>
+    <script type="module">
+        const editor = Jodit.make('#editor', {
+            toolbarButtonSize: "small"
+        });
+        editor.events.on('change.textLength', (e) => {
+            document.dispatchEvent(new CustomEvent('change', { detail: e }));
+        })
+        editor.fullsize = true;
+    </script>
+    `}
+
+    firstUpdated() {
+        super.firstUpdated();
+        // this.listen('change', (e) => this.cell.source = e.detail);
+        this.listen('editedCell-changed', () => {
+            requestAnimationFrame(() => {
+                if (this.editedCell && this.editedCell === this.cell) {
+                    const iframe = this.$qs('iframe');
+                    iframe.srcdoc = this.srcdoc;
+                    requestAnimationFrame(() => (iframe.contentDocument || iframe.contentWindow)
+                        .addEventListener("change", (e) => {
+                            if (e.detail !== undefined)
+                                this.cell.source = e.detail;
+                            this.$update();
+                        }));
+                    this._h = 80;
                 }
             })
         })
