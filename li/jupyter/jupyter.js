@@ -593,7 +593,7 @@ ${this.cell?.sourceHTML || ''}
 <script type="module">
     // import { Observable } from 'https://resu062.github.io/li-js/lib/object-observer/object-observer.js';
     import { Observable } from 'https://libs.gullerya.com/object-observer/5.0.0/object-observer.min.js';
-    const json = Observable.from(${this.cell?.sourceJSON || '{}'});
+    let json = Observable.from(${this.cell?.sourceJSON || '{}'});
     Observable.observe(json, e => {
         const detail = JSON.stringify(json, null, 4);
         document.dispatchEvent(new CustomEvent('changeJSON', { detail }));
