@@ -25,9 +25,14 @@ Main aspects and features:
   - intrinsic `TypedArray` mutation methods supported: `reverse`, `sort`, `fill`, `set`, `copyWithin`
   - massive mutations delivered in a single callback, usually having an array of an atomic changes
 - intrinsic mutation methods of `Map`, `WeakMap`, `Set`, `WeakSet` (`set`, `delete`) etc __are not__ observed (see this [issue](https://github.com/gullerya/object-observer/issues/1) for more details)
-- following host objects (and their extensions) are __skipped__ from cloning / turning into observables: `Date`, `Blob`, `Error`
+- following host objects (and their extensions) are __skipped__ from cloning / turning into observables: `Date`
 
-Supported: ![CHROME](docs/browser-icons/chrome.png)<sub>61+</sub> | ![FIREFOX](docs/browser-icons/firefox.png)<sub>60+</sub> | ![EDGE](docs/browser-icons/edge.png)<sub>16+</sub> | ![NODE JS](docs/browser-icons/nodejs.png) <sub>8.10.0+</sub>
+Supported:
+![CHROME](docs/browser-icons/chrome.png)<sub>71+</sub> |
+![FIREFOX](docs/browser-icons/firefox.png)<sub>65+</sub> |
+![EDGE](docs/browser-icons/edge-chromium.png)<sub>79+</sub> |
+![SAFARI](docs/browser-icons/safari-ios.png)<sub>12.1</sub> |
+![NODE JS](docs/browser-icons/nodejs.png) <sub>12.0.0+</sub>
 
 Performance report can be found [here](docs/performance-report.md).
 
@@ -72,8 +77,6 @@ This API is resonating with DOM's `MutationObserver`, `ResizeObserver` etc from 
 Under the hood it uses the same `Observable` mechanics.
 Read docs about this API flavor [here](docs/dom-like-api.md).
 
-> This is __experimental__ API until specified otherwise.
-
 Starting from 4.3.x `object-observer` is cross-instance operable.
 Observables created by different instances of the library will still be detected correctly as such and handled correctly by any of the instances.
 
@@ -90,7 +93,7 @@ const
     order = { type: 'book', pid: 102, ammount: 5, remark: 'remove me' },
     observableOrder = Observable.from(order);
 
-observableOrder.observe(changes => {
+Observable.observe(observableOrder, changes => {
     changes.forEach(change => {
         console.log(change);
     });
@@ -128,7 +131,7 @@ Object.assign(observableOrder, { amount: 1, remark: 'less is more' }, { async: t
 let a = [ 1, 2, 3, 4, 5 ],
     observableA = Observable.from(a);
 
-observableA.observe(changes => {
+Observable.observe(observableA, changes => {
     changes.forEach(change => {
         console.log(change);
     });
@@ -220,15 +223,15 @@ let user = {
 //  path
 //
 //  going to observe ONLY the changes of 'firstName'
-oUser.observe(callback, {path: 'firstName'});
+Observable.observe(oUser, callback, {path: 'firstName'});
 
 //  going to observe ONLY the changes of 'address.city'
-oUser.observe(callback, {path: 'address.city'});
+Observable.observe(oUser, callback, {path: 'address.city'});
 
 //  pathsOf
 //
 //  going to observe the changes of 'address' own properties ('city', 'block') but not else
-oUser.observe(callback, {pathsOf: 'address'});
+Observable.observe(oUser, callback, {pathsOf: 'address'});
 //  here we'll be notified on changes of
 //    address.city
 //    address.extra
@@ -236,7 +239,7 @@ oUser.observe(callback, {pathsOf: 'address'});
 //  pathsFrom
 //
 //  going to observe the changes from 'address' and deeper
-oUser.observe(callback, {pathsFrom: 'address'});
+Observable.observe(oUser, callback, {pathsFrom: 'address'});
 //  here we'll be notified on changes of
 //    address
 //    address.city
