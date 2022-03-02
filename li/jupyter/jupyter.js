@@ -557,19 +557,20 @@ customElements.define('li-jupyter-cell-html-executable', class LiJupyterCellHtml
                                 <span @click=${() => this.mode = 'html'} class="${this.mode === 'html' ? 'mode' : ''}">html</span>
                                 <span @click=${() => this.mode = 'javascript'} class="${this.mode === 'javascript' ? 'mode' : ''}">javascript</span>
                                 <span @click=${() => this.mode = 'css'} class="${this.mode === 'css' ? 'mode' : ''}">css</span>
+                                <span @click=${() => this.mode = 'json'} class="${this.mode === 'json' ? 'mode' : ''}">json</span>
                                 <div style="flex: 1"></div>
-                                <li-button size=12 name="content-cut" @click=${(e) => { this.cell.sourceHTML = this.cell.sourceJS = this.cell.sourceCSS = ''; this.setValue() }} title="clear all"></li-button>
-                                <li-button size=12 name="refresh" @click=${(e) => { this._srcdoc = this._srcdoc ? '' : ' '; this.$update() }} style="margin-left: 6px" title="refresh"></li-button>
+                                <li-button size=12 name="content-cut" @click=${(e) => { this.cell.sourceHTML = this.cell.sourceJS = this.cell.sourceCSS = this.cell._sourceJSON = ''; this.cell.sourceJSON = '{}'; this.setValue() }} title="clear all"></li-button>
+                                <li-button size=12 name="refresh" @click=${(e) => { this.listenIframe(); this._sourceJSON = ''; this._srcdoc = this._srcdoc ? '' : ' '; this.$update() }} style="margin-left: 6px" title="refresh"></li-button>
                             </div>
-                            <li-editor-ace class="ace" style="width: 100%" theme=${this.mode === 'html' ? 'cobalt' : this.mode === 'javascript' ? 'solarized_light' : 'dawn'} mode=${this.mode}></li-editor-ace>
+                            <li-editor-ace class="ace" style="width: 100%" theme=${this.mode === 'html' ? 'cobalt' : this.mode === 'javascript' ? 'solarized_light' : this.mode === 'css' ? 'dawn' : 'chrome'} mode=${this.mode}></li-editor-ace>
                         </div>
                     </div>
-                    <li-splitter size="${this.cell?.splitterV >= 0 ? this.cell?.splitterV : 3}px" color="dodgerblue" style="opacity: .3"></li-splitter>
+                    <li-splitter size="${this.cell?.splitterV >= 0 ? this.cell?.splitterV : 3}px" color="${this.cell.cell_w <=2 ? 'transparent' : 'dodgerblue'}" style="opacity: .3"></li-splitter>
                     <div style="flex: 1; overflow: auto; width: 100%;">
                         <iframe srcdoc=${this.srcdoc || ''} style="border: none; width: 100%; height: 100%"></iframe>
                     </div>
                 </div>
-                <li-splitter direction="horizontal" size="${this.cell?.splitterH >= 0 ? this.cell?.splitterH : 3}px" color="dodgerblue" style="opacity: .3" resize></li-splitter>
+                <li-splitter direction="horizontal" size="${this.cell?.splitterH >= 0 ? this.cell?.splitterH : 3}px" color="transparent" style="opacity: .3" resize></li-splitter>
                 <div style="display: flex; overflow: auto; flex: 1; width: 100%"></div>
             </div>
         `
@@ -584,8 +585,22 @@ customElements.define('li-jupyter-cell-html-executable', class LiJupyterCellHtml
         }
     }
     get srcdoc() {
-        return `<style>${this.cell?.sourceCSS || ''}</style>${this.cell?.sourceHTML || ''}<script type="module">${this.cell?.sourceJS || ''}</script>${this._srcdoc || ''}`
-    }
+        return `
+<style>
+    ${this.cell?.sourceCSS || ''}
+</style>${this.cell?.sourceHTML || ''}
+<script type="module">
+    // import 'https://resu062.github.io/li-js/lib/icaro/icaro.js';
+    import { Observable } from 'https://resu062.github.io/li-js/lib/object-observer/object-observer.js';
+    const json = Observable.from(${this.cell?.sourceJSON || {}});
+    json.observe(e => {
+        const detail = JSON.stringify(json, null, 4);
+        document.dispatchEvent(new CustomEvent('changeJSON', { detail }));
+    })
+    ${this.cell?.sourceJS || ''}
+</script>
+${this._srcdoc || ''}
+    `}
 
     constructor() {
         super();
@@ -608,7 +623,12 @@ customElements.define('li-jupyter-cell-html-executable', class LiJupyterCellHtml
     }
     firstUpdated() {
         super.firstUpdated();
+        this._lastMode = this.mode;
         this.listen('change', (e) => {
+            if (this._lastMode !== this.mode) {
+                this._lastMode = this.mode;
+                return;
+            }
             const v = e.detail;
             if (this.mode === 'javascript')
                 this.cell.sourceJS = v || '';
@@ -616,8 +636,11 @@ customElements.define('li-jupyter-cell-html-executable', class LiJupyterCellHtml
                 this.cell.sourceHTML = v || '';
             if (this.mode === 'css')
                 this.cell.sourceCSS = v || '';
+            if (this.mode === 'json')
+                this.cell.sourceJSON = v || '{}';
             this.$update();
         })
+        this.listenIframe();
         setTimeout(() => {
             const ace = this.$qs('li-editor-ace');
             ace.options = { highlightActiveLine: false, showPrintMargin: false, minLines: 1, fontSize: 16 };
@@ -635,7 +658,19 @@ customElements.define('li-jupyter-cell-html-executable', class LiJupyterCellHtml
             ace.value = this.cell.sourceHTML || '';
         if (mode === 'css')
             ace.value = this.cell.sourceCSS || '';
+        if (mode === 'json')
+            ace.value = this.cell._sourceJSON || this.cell.sourceJSON || '{}';
         this.$update();
+        this.listenIframe();
+    }
+    listenIframe() {
+        setTimeout(() => {
+            const iframe = this.$qs('iframe');
+            (iframe.contentDocument || iframe.contentWindow).addEventListener("changeJSON", (e) => {
+                this.cell._sourceJSON = e.detail;
+                this.$update();
+            })
+        }, 500)
     }
 })
 
