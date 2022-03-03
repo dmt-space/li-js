@@ -4,62 +4,53 @@
         {
             "cell_type": "markdown",
             "source": "# li-jupyter-notebook\n",
-            "order": 0
+            "order": 0,
+            "label": "md-Showdown"
         },
         {
             "cell_type": "html",
             "source": "<b><font face=\"Comic Sans MS, cursive\" color=\"#0091ff\">I'm an HTML viewer with a Pell editor...</font></b>",
             "color": "#16C60C",
-            "order": 1
+            "order": 1,
+            "label": "html-Pell-editor"
         },
         {
-            "cell_type": "html-jodit",
-            "cell_extType": "html-jodit",
-            "source": "<strong>\n        <font face=\"Comic Sans MS, cursive\" color=\"#0091ff\" style=\"color: rgb(153, 0, 255);\">I'm an HTML viewer with a Jodit&nbsp;editor...</font>\n    </strong>",
-            "label": "html-jodit",
-            "order": 2
-        },
-        {
-            "cell_type": "html-cde",
-            "color": "#16C60C",
-            "order": 3,
-            "source": "<p><strong><strong><span style=\"color:#006600; font-family:Comic Sans MS,cursive\">I&#39;m an HTML viewer with a CDEditor ...</span></strong></strong></p>\n"
-        },
-        {
-            "order": 4,
+            "order": 2,
             "cell_type": "html",
             "cell_extType": "html",
             "source": "<font color=\"#f00505\"><b>Auto executable code in document :</b></font>",
-            "label": "html-pell-editor"
+            "label": "html-Pell-editor"
         },
         {
             "cell_type": "html-executable",
             "cell_extType": "html-executable",
             "sourceHTML": "<script src=\"https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js\"></script>\n\n<h1>Wireframe Cube (WebGL - ThreeJS)</h1>\n\n\n<!-- this is resizable cell -->\n\n",
-            "sourceJS": "var width, height, scene, camera, renderer, cube, xRot, yRot, zRot, triangles;\n\nfunction init() {\n  xRot = yRot = zRot = 0.001;\n  triangles = 20;\n  width = window.innerWidth;\n  height = window.innerHeight;\n  scene = new THREE.Scene();\n  camera = new THREE.PerspectiveCamera(60, width / height, 1, 3000);\n  camera.position.z = 1000;\n  renderer = new THREE.WebGLRenderer();\n  renderer.setSize(width, height);\n  document.body.appendChild(renderer.domElement);\n};\n\nfunction createCube() {\n  cube = new THREE.Mesh(new THREE.BoxGeometry(700, 700, 700, triangles,triangles,triangles), new THREE.MeshBasicMaterial({\n    color: 0x0099ff,\n    wireframe: true\n  }));\n  scene.add(cube);\n};\n\nfunction update() {\n  requestAnimationFrame(update);\n  cube.rotation.x += xRot;\n  cube.rotation.y += yRot;\n  cube.rotation.z += zRot;\n  renderer.render(scene, camera);\n}\n\ninit();\ncreateCube();\nupdate();\n",
+            "sourceJS": "var width, height, scene, camera, renderer, cube, xRot, yRot, zRot, triangles;\n\nfunction init() {\n  xRot = yRot = zRot = 0.001;\n  triangles = 20;\n  width = window.innerWidth;\n  height = window.innerHeight;\n  scene = new THREE.Scene();\n  camera = new THREE.PerspectiveCamera(60, width / height, 1, 3000);\n  camera.position.z = 1200;\n  renderer = new THREE.WebGLRenderer();\n  renderer.setSize(width, height);\n  document.body.appendChild(renderer.domElement);\n};\n\nfunction createCube() {\n  cube = new THREE.Mesh(new THREE.BoxGeometry(700, 700, 700, triangles,triangles,triangles), new THREE.MeshBasicMaterial({\n    color: 0x0099ff,\n    wireframe: true\n  }));\n  scene.add(cube);\n};\n\nfunction update() {\n  requestAnimationFrame(update);\n  cube.rotation.x += xRot;\n  cube.rotation.y += yRot;\n  cube.rotation.z += zRot;\n  renderer.render(scene, camera);\n}\n\ninit();\ncreateCube();\nupdate();\n",
             "sourceCSS": "body {\n  padding: 0px;\n  margin: 0px;\n  background-color: #000;\n}\n\nh1 {\n  position: absolute;\n  top: 1%;\n  left: 1%;\n  font-family: \"Century Gothic\";\n  color: orange;\n  font-weight: 100;\n  font-variant: small-caps;\n}\n",
-            "cell_h": 400,
-            "order": 5
+            "cell_h": 681.52734375,
+            "order": 3,
+            "label": "code-html-executable"
         },
         {
-            "order": 6,
+            "order": 4,
             "cell_type": "html",
             "cell_extType": "html",
             "source": "<div><b><font color=\"#f50505\">Sample code cells :</font></b></div>",
-            "label": "html-pell-editor"
+            "label": "html-Pell-editor"
         },
         {
             "cell_type": "code",
             "source": "var str = \"hello world\"\nstr.split('').forEach(c => {\n    console.log(c)\n})",
-            "order": 7
+            "order": 5
         },
         {
             "cell_type": "markdown",
             "source": "## Sample markdown document\r\n\r\n ![](https://resu062.github.io/li-js/lib/li.png =150x150)\r\n\r\n### Code javascript:\r\n\r\n```javascript \r\nfunction createCube() {\r\n  cube = new THREE.Mesh(new THREE.BoxGeometry(700, 700, 700, triangles,triangles,triangles), new THREE.MeshBasicMaterial({\r\n    color: 0x0099ff,\r\n    wireframe: true\r\n  }));\r\n  scene.add(cube);\r\n};\r\n```\r\n# This is level 1 (article title)\r\n## This is level 2\r\n### This is level 3\r\n#### This is level 4\r\n##### This is level 5\r\n\r\nThis text is **bold**.\r\nThis text is *italic*.\r\nThis text is both ***bold and italic***.\r\n   \r\nThis is not \\*italicized\\* type.\r\n\r\n1. This is step 1.\r\n1. This is the next step.\r\n1. This is yet another step, the third.\r\n\r\n* First item in an unordered list.\r\n* Another item.\r\n* Here we go again.\r\n\r\nMake sure that your table looks like this: \r\n\r\n\r\n| Header | Another header | Yet another header |\r\n|--- |--- |--- |\r\n| row 1 | column 2 | column 3 |\r\n| row 2 | row 2 column 2 | row 2 column 3 |\r\n\r\n\r\nor ...\r\n\r\n\r\n***",
-            "order": 8
+            "order": 6,
+            "label": "md-Showdown"
         },
         {
-            "order": 10,
+            "order": 7,
             "cell_type": "html-executable",
             "cell_extType": "html-executable",
             "source": "",
@@ -71,6 +62,27 @@
             "sourceHTML": "<li-todo id=\"li_todo\"></li-todo>\n",
             "cell_w": 0,
             "_sourceJSON": "{\n    \"list\": [\n        {\n            \"todo\": \"new todo\",\n            \"check\": false\n        },\n        {\n            \"todo\": \"new todo\",\n            \"check\": false\n        },\n        {\n            \"todo\": \"new todo\",\n            \"check\": false\n        }\n    ]\n}"
+        },
+        {
+            "cell_type": "html-cde",
+            "label": "html-CDEditor",
+            "color": "#16C60C",
+            "order": 8,
+            "source": "<p><strong><strong><span style=\"color:#006600; font-family:Comic Sans MS,cursive\">I&#39;m an HTML viewer with a CDEditor ...</span></strong></strong></p>\n"
+        },
+        {
+            "cell_type": "html-jodit",
+            "cell_extType": "html-jodit",
+            "source": "<p><strong>\n        <font face=\"Comic Sans MS, cursive\" color=\"#0091ff\" style=\"color: rgb(153, 0, 255);\">I'm an HTML viewer with a Jodit&nbsp;editor...</font>\n    </strong></p>",
+            "label": "html-Jodit-editor",
+            "order": 9
+        },
+        {
+            "order": 10,
+            "cell_type": "html-tiny",
+            "cell_extType": "html-tiny",
+            "source": "<p><strong><span style=\"color: orange; font-family: Comic Sans MS, cursive;\">I'm an HTML viewer with a TinyMCE editor...</span></strong></p>",
+            "label": "html-TinyMCE"
         }
     ]
 }

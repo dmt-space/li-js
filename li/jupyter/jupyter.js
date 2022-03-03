@@ -208,12 +208,13 @@ class LiJupyterListViews extends LiElement {
     }
     get cellViews() {
         return [
-            { cell_type: 'html', cell_extType: 'html', source: '', label: 'html-pell-editor' },
-            { cell_type: 'html-jodit', cell_extType: 'html-jodit', source: '', label: 'html-jodit' },
-            { cell_type: 'html-cde', cell_extType: 'html-cde', source: '', label: 'html-CDEditor' },
-            { cell_type: 'markdown', cell_extType: 'md', source: '', label: 'md-showdown' },
+            { cell_type: 'html', cell_extType: 'html', source: '', label: 'html-Pell-editor' },
+            { cell_type: 'markdown', cell_extType: 'md', source: '', label: 'md-Showdown' },
             { cell_type: 'code', cell_extType: 'code', source: '', label: 'code' },
             { cell_type: 'html-executable', cell_extType: 'html-executable', source: '', label: 'code-html-executable' },
+            { cell_type: 'html-cde', cell_extType: 'html-cde', source: '', label: 'html-CDEditor' },
+            { cell_type: 'html-jodit', cell_extType: 'html-jodit', source: '', label: 'html-Jodit-editor' },
+            { cell_type: 'html-tiny', cell_extType: 'html-tiny', source: '', label: 'html-TinyMCE' }
         ]
     }
 
@@ -294,27 +295,23 @@ customElements.define('li-jupyter-cell', class LiJupyterCell extends LiElement {
     get focused() { return !this.readOnly && this.focusedCell === this.cell ? 'focused' : '' }
     get id() { return 'cell-' + (this.cell?.order || this.idx || 0) }
     get cellType() {
-        if (this.cell?.cell_type === 'markdown')
-            return html`<li-jupyter-cell-markdown @click=${this.click} .cell=${this.cell}></li-jupyter-cell-markdown>`;
-        if (this.cell?.cell_type === 'html')
+        if (this.cell?.cell_type === 'html' || this.cell?.cell_name === 'html-editor' || this.cell?.cell_name === 'suneditor')
             return html`<li-jupyter-cell-html @click=${this.click} .cell=${this.cell}></li-jupyter-cell-html>`;
-        if (this.cell?.cell_type === 'html-jodit')
-            return html`<li-jupyter-cell-html-jodit @click=${this.click} .cell=${this.cell}></li-jupyter-cell-html-jodit>`;
-        if (this.cell?.cell_type === 'html-cde')
-            return html`<li-jupyter-cell-html-cde @click=${this.click} .cell=${this.cell}></li-jupyter-cell-html-cde>`;
+        if (this.cell?.cell_type === 'markdown' || this.cell?.cell_name === 'simplemde' || this.cell?.cell_name === 'showdown')
+            return html`<li-jupyter-cell-markdown @click=${this.click} .cell=${this.cell}></li-jupyter-cell-markdown>`;
         if (this.cell?.cell_type === 'code')
             return html`<li-jupyter-cell-code @click=${this.click} .cell=${this.cell}></li-jupyter-cell-code>`;
-        if (this.cell?.cell_type === 'html-executable')
+        if (this.cell?.cell_type === 'html-executable' || this.cell?.cell_name === 'iframe')
             return html`<li-jupyter-cell-html-executable @click=${this.click} .cell=${this.cell}></li-jupyter-cell-html-executable>`;
 
-        if (this.cell?.cell_name === 'simplemde' || this.cell?.cell_name === 'showdown')
-            return html`<li-jupyter-cell-markdown @click=${this.click} .cell=${this.cell}></li-jupyter-cell-markdown>`;
-        if (this.cell?.cell_name === 'html-editor' || this.cell?.cell_name === 'suneditor' || this.cell?.cell_name === 'html')
-            return html`<li-jupyter-cell-html @click=${this.click} .cell=${this.cell}></li-jupyter-cell-html>`;
-        if (this.cell?.cell_name === 'iframe')
-            return html`<li-jupyter-cell-html-executable @click=${this.click} .cell=${this.cell}></li-jupyter-cell-html-executable>`;
+        if (this.cell?.cell_type === 'html-cde')
+            return html`<li-jupyter-cell-html-cde @click=${this.click} .cell=${this.cell}></li-jupyter-cell-html-cde>`;
+        if (this.cell?.cell_type === 'html-jodit')
+            return html`<li-jupyter-cell-html-jodit @click=${this.click} .cell=${this.cell}></li-jupyter-cell-html-jodit>`;
+        if (this.cell?.cell_type === 'html-tiny')
+            return html`<li-jupyter-cell-html-tiny @click=${this.click} .cell=${this.cell}></li-jupyter-cell-html-tiny>`;
 
-        return html`<div style="min-height: 28px;">${this.cell?.value || this.cell?.sourse}</div>`;
+        return html`<div style="min-height: 28px;">${this.cell?.sourse || this.cell?.value}</div>`;
     }
     click(e) {
         if (this.readOnly) return;
@@ -551,7 +548,7 @@ customElements.define('li-jupyter-cell-html-executable', class LiJupyterCellHtml
         return html`
             <div style="position: relative; display: flex; flex-direction: column; overflow: hidden; width: 100%; height: ${this.cell?.cell_h || '200px'}; min-height: 26px">
                 <div style="display: flex; overflow: hidden; width: 100%; height: 100%">
-                    <div style="width: ${this.cell?.cell_w >= 0 ? this.cell?.cell_w + '%' : '50%'}; overflow: auto">
+                    <div style="width: ${this.cell?.cell_w === 0 || this.cell?.cell_w > 0 ? this.cell?.cell_w + '%' : '50%'}; overflow: auto">
                         <div style="display: flex; flex-direction: column; width: 100%; overflow: auto; height: 100%; position: relative">
                             <div style="display: flex; background: lightgray; padding: 4px;position: sticky; top: 0; z-index: 9">
                                 <span @click=${() => this.mode = 'html'} class="${this.mode === 'html' ? 'mode' : ''}">html</span>
@@ -676,10 +673,8 @@ ${this._srcdoc || ''}
     }
 })
 
-customElements.define('li-jupyter-cell-html-cde', class LiJupyterCellHtmlCDE extends LiElement {
-    static get styles() {
-        return [editorCSS, css``]
-    }
+class LiJupyterCellTemp extends LiElement {
+    static get styles() { return [editorCSS, css``] }
 
     render() {
         return html`
@@ -687,12 +682,12 @@ customElements.define('li-jupyter-cell-html-cde', class LiJupyterCellHtmlCDE ext
                 <div .innerHTML=${this.cell.source} style="width: 100%; padding: 8px;"></div>
             ` : html`
                 <div style="display: flex; overflow: hidden; width: 100%">
-                    <div style="width: 50%; height: ${this._h}vh; overflow: auto">
-                        <iframe style="border: none; width: 100%; height: 80vh"></iframe>
+                    <div style="width: 50%; height: ${this._h}vh; overflow: hidden; position: relative;">
+                        <iframe style="border: none; width: 100%; height: 80vh;"></iframe>
                     </div>
                     <li-splitter size="3px" color="dodgerblue" style="opacity: .3"></li-splitter>
                     <div style="flex: 1; height: 80vh; overflow: auto">
-                        <div .innerHTML=${this.cell.source} style="width: 100%"></div>
+                        <div .innerHTML=${this.cell?.source} style="width: 100%"></div>
                     </div>
                 </div>
             `}
@@ -708,6 +703,28 @@ customElements.define('li-jupyter-cell-html-cde', class LiJupyterCellHtmlCDE ext
         }
     }
 
+    firstUpdated() {
+        super.firstUpdated();
+        // this.listen('change', (e) => this.cell.source = e.detail);
+        this.listen('editedCell-changed', () => {
+            if (this.editedCell && this.editedCell === this.cell) {
+                requestAnimationFrame(() => {
+                    const iframe = this.$qs('iframe');
+                    iframe.srcdoc = this.srcdoc;
+                    setTimeout(() => (iframe.contentDocument || iframe.contentWindow)
+                        .addEventListener("change", (e) => {
+                            if (e.detail !== undefined)
+                                this.cell.source = e.detail;
+                            this.$update();
+                        }), 1000);
+                    this._h = 80;
+                })
+            }
+        })
+    }
+}
+
+customElements.define('li-jupyter-cell-html-cde', class LiJupyterCellHtmlCDE extends LiJupyterCellTemp {
     get srcdoc() {
         return `
 <style>
@@ -725,93 +742,61 @@ customElements.define('li-jupyter-cell-html-cde', class LiJupyterCellHtmlCDE ext
     }) 
 </script>
     `}
-
-    firstUpdated() {
-        super.firstUpdated();
-        // this.listen('change', (e) => this.cell.source = e.detail);
-        this.listen('editedCell-changed', () => {
-            requestAnimationFrame(() => {
-                if (this.editedCell && this.editedCell === this.cell) {
-                    const iframe = this.$qs('iframe');
-                    iframe.srcdoc = this.srcdoc;
-                    requestAnimationFrame(() => (iframe.contentDocument || iframe.contentWindow)
-                        .addEventListener("change", (e) => {
-                            this.cell.source = e.detail;
-                            this.$update();
-                        }));
-                    this._h = 80;
-                }
-            })
-        })
-    }
 })
 
-
-customElements.define('li-jupyter-cell-html-jodit', class LiJupyterCellHtmlJodit extends LiElement {
-    static get styles() {
-        return [editorCSS, css``]
-    }
-
-    render() {
-        return html`
-            ${this.readOnly || this.editedCell !== this.cell ? html`
-                <div .innerHTML=${this.cell.source} style="width: 100%; padding: 8px;"></div>
-            ` : html`
-                <div style="display: flex; overflow: hidden; width: 100%">
-                    <div style="width: 50%; height: ${this._h}vh; overflow: hidden; position: relative;">
-                        <iframe style="border: none; width: 100%; height: 80vh;"></iframe>
-                    </div>
-                    <li-splitter size="3px" color="dodgerblue" style="opacity: .3"></li-splitter>
-                    <div style="flex: 1; height: 80vh; overflow: auto">
-                        <div .innerHTML=${this.cell.source} style="width: 100%"></div>
-                    </div>
-                </div>
-            `}
-        `
-    }
-
-    static get properties() {
-        return {
-            readOnly: { type: Boolean, local: true },
-            editedCell: { type: Object, local: true, notify: true },
-            cell: { type: Object },
-            _h: { type: Number, default: 0 }
-        }
-    }
-
+customElements.define('li-jupyter-cell-html-jodit', class LiJupyterCellHtmlJodit extends LiJupyterCellTemp {
     get srcdoc() {
         return `
-    <textarea id="editor" name="editor">${this.cell?.source || ''}</textarea>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jodit/3.13.4/jodit.es2018.min.css"/>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jodit/3.13.4/jodit.es2018.min.js"></script>
+<textarea id="editor" name="editor">${this.cell?.source || ''}</textarea>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jodit/3.13.4/jodit.es2018.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jodit/3.13.4/jodit.es2018.min.js"></script>
+<script type="module">
+    const editor = Jodit.make('#editor', {
+        toolbarButtonSize: "small"
+    });
+    editor.events.on('change.textLength', (e) => {
+        document.dispatchEvent(new CustomEvent('change', { detail: e }));
+    })
+    editor.fullsize = true;
+</script>
+    `}
+})
+
+customElements.define('li-jupyter-cell-html-tiny', class LiJupyterCellHtmlTiny extends LiJupyterCellTemp {
+    get srcdoc() {
+        return `
+    <style> body, html { margin: 0 }</style>
+    <textarea name="content" id="mytextarea">${this.cell?.source || ''}</textarea>
+    <script src="https://cdn.tiny.cloud/1/0dmt0rtivjr59ocff6ei6iqaicibk0ej2jwub5siiycmlk84/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
     <script type="module">
-        const editor = Jodit.make('#editor', {
-            toolbarButtonSize: "small"
+        tinymce.init({
+            selector: 'textarea#mytextarea',
+            height: '100vh',
+            menubar: true,
+            plugins: [
+                'advlist autolink link image lists charmap print preview hr anchor pagebreak spellchecker',
+                'searchreplace wordcount visualblocks visualchars code fullscreen insertdatetime media table powerpaste paste mediaembed nonbreaking',
+                'table emoticons template help pageembed permanentpen advtable',
+            ],
+            toolbar: 'undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | link | ' +
+                'bullist numlist outdent indent | image | print preview media fullpage | ' +
+                'forecolor backcolor emoticons | help' +
+                'casechange checklist code formatpainter pageembed permanentpen paste powerpaste table | vanna',
+
+            menubar: 'favs file edit view insert format tools table help',
+            menu: {
+                favs: {
+                    title: 'My Favorites',
+                    items: 'paste | powerpaste | code visualaid | searchreplace | spellchecker | emoticons',
+                },
+            },
+            paste_webkit_styles: 'color font-size',
+            extended_valid_elements: 'script[language|src|async|defer|type|charset]',
+            setup: (editor) => {
+                editor.on('change', () => { document.dispatchEvent(new CustomEvent('change', { detail: editor.getContent() })) });
+                editor.on('keyup', () => { document.dispatchEvent(new CustomEvent('change', { detail: editor.getContent() })) });
+            },
         });
-        editor.events.on('change.textLength', (e) => {
-            document.dispatchEvent(new CustomEvent('change', { detail: e }));
-        })
-        editor.fullsize = true;
     </script>
     `}
-
-    firstUpdated() {
-        super.firstUpdated();
-        // this.listen('change', (e) => this.cell.source = e.detail);
-        this.listen('editedCell-changed', () => {
-            requestAnimationFrame(() => {
-                if (this.editedCell && this.editedCell === this.cell) {
-                    const iframe = this.$qs('iframe');
-                    iframe.srcdoc = this.srcdoc;
-                    requestAnimationFrame(() => (iframe.contentDocument || iframe.contentWindow)
-                        .addEventListener("change", (e) => {
-                            if (e.detail !== undefined)
-                                this.cell.source = e.detail;
-                            this.$update();
-                        }));
-                    this._h = 80;
-                }
-            })
-        })
-    }
 })
