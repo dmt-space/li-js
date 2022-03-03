@@ -554,17 +554,20 @@ customElements.define('li-jupyter-cell-html-executable', class LiJupyterCellHtml
                                 <span @click=${() => this.mode = 'html'} class="${this.mode === 'html' ? 'mode' : ''}">html</span>
                                 <span @click=${() => this.mode = 'javascript'} class="${this.mode === 'javascript' ? 'mode' : ''}">javascript</span>
                                 <span @click=${() => this.mode = 'css'} class="${this.mode === 'css' ? 'mode' : ''}">css</span>
-                                <span @click=${() => this.mode = 'json'} class="${this.mode === 'json' ? 'mode' : ''}">json</span>
+                                ${this.cell?.useJson ? html`
+                                    <span @click=${() => this.mode = 'json'} class="${this.mode === 'json' ? 'mode' : ''}">json</span>
+                                ` : html``}
+                                <li-button size=12 name="code" @click=${(e) => { this.cell.useJson = !this.cell.useJson; this.$update() }} title="useJSON" style="margin-left: 8px;"></li-button>
                                 <div style="flex: 1"></div>
-                                <li-button size=12 name="content-cut" @click=${(e) => { this.cell.sourceHTML = this.cell.sourceJS = this.cell.sourceCSS = this.cell._sourceJSON = ''; this.cell.sourceJSON = '{}'; this.setValue() }} title="clear all"></li-button>
-                                <li-button size=12 name="refresh" @click=${(e) => { this.listenIframe(); this._sourceJSON = ''; this._srcdoc = this._srcdoc ? '' : ' '; this.$update() }} style="margin-left: 6px" title="refresh"></li-button>
+                                <li-button size=12 name="content-cut" @click=${(e) => { this.cell.sourceHTML = this.cell.sourceJS = this.cell.sourceCSS = this._sourceJSON = ''; this.cell.sourceJSON = '{}'; this.listenIframe(true); this.$qs('li-editor-ace').value = ''}} title="clear all"></li-button>
+                                <li-button size=12 name="refresh" @click=${(e) => { this.listenIframe(true) }} style="margin-left: 6px" title="refresh"></li-button>
                             </div>
                             <li-editor-ace class="ace" style="width: 100%" theme=${this.mode === 'html' ? 'cobalt' : this.mode === 'javascript' ? 'solarized_light' : this.mode === 'css' ? 'dawn' : 'chrome'} mode=${this.mode}></li-editor-ace>
                         </div>
                     </div>
                     <li-splitter size="${this.cell?.splitterV >= 0 ? this.cell?.splitterV : 3}px" color="${this.cell.cell_w <= 3 ? 'transparent' : 'dodgerblue'}" style="opacity: .3"></li-splitter>
                     <div style="flex: 1; overflow: auto; width: 100%;">
-                        <iframe srcdoc=${this.srcdoc || ''} style="border: none; width: 100%; height: 100%"></iframe>
+                        <iframe style="border: none; width: 100%; height: 100%"></iframe>
                     </div>
                 </div>
                 <li-splitter direction="horizontal" size="${this.cell?.splitterH >= 0 ? this.cell?.splitterH : 3}px" color="transparent" style="opacity: .3" resize></li-splitter>
@@ -578,7 +581,7 @@ customElements.define('li-jupyter-cell-html-executable', class LiJupyterCellHtml
             readOnly: { type: Boolean, local: true },
             editedCell: { type: Object, local: true, notify: true },
             cell: { type: Object },
-            mode: { type: String, default: 'html' },
+            mode: { type: String, default: 'html' }
         }
     }
     get srcdoc() {
@@ -588,18 +591,23 @@ customElements.define('li-jupyter-cell-html-executable', class LiJupyterCellHtml
 </style>
 ${this.cell?.sourceHTML || ''}
 <script type="module">
-    // import { Observable } from 'https://resu062.github.io/li-js/lib/object-observer/object-observer.js';
-    import { Observable } from 'https://libs.gullerya.com/object-observer/5.0.0/object-observer.min.js';
-    let json = Observable.from(${this.cell?.sourceJSON || '{}'});
-    Observable.observe(json, e => {
-        const detail = JSON.stringify(json, null, 4);
-        document.dispatchEvent(new CustomEvent('changeJSON', { detail }));
-    })
+    ${this.sourceJSON}
     ${this.cell?.sourceJS || ''}
 </script>
-${this._srcdoc || ''}
-    `}
-
+        `
+    }
+    get sourceJSON() {
+        if (this.cell?.useJson || this.cell?.sourceJSON) return `
+// import { Observable } from 'https://resu062.github.io/li-js/lib/object-observer/object-observer.js';
+import { Observable } from 'https://libs.gullerya.com/object-observer/5.0.0/object-observer.min.js';
+let json = Observable.from(${this._sourceJSON || '{}'});
+Observable.observe(json, e => {
+    const detail = JSON.stringify(json, null, 4);
+    document.dispatchEvent(new CustomEvent('changeJSON', { detail }));
+})
+        `
+        return '';
+    }
     constructor() {
         super();
         this.listen('endSplitterMove', (e) => {
@@ -607,26 +615,20 @@ ${this._srcdoc || ''}
                 if (e.detail.direction === 'horizontal') {
                     this.cell.cell_h = e.detail.h;
                     this.cell.cell_h = this.cell.cell_h < 26 ? 26 : this.cell.cell_h;
-                    // console.log('h = ', this.cell.cell_h);
                 }
                 if (e.detail.direction === 'vertical') {
                     this.cell.cell_w = e.detail.w;
                     this.cell.cell_w = this.cell.cell_w <= 3 ? 0 : this.cell.cell_w;
-                    // console.log('w = ', this.cell.cell_w);
                 }
             }
-            this._srcdoc = this._srcdoc ? '' : ' ';
-            this.$update();
+            this.listenIframe(true);
         })
     }
     firstUpdated() {
         super.firstUpdated();
-        this._lastMode = this.mode;
+        this._sourceJSON = this.cell.sourceJSON || '{}';
         this.listen('change', (e) => {
-            if (this._lastMode !== this.mode) {
-                this._lastMode = this.mode;
-                return;
-            }
+            if (this._setAceValue) return;
             const v = e.detail;
             if (this.mode === 'javascript')
                 this.cell.sourceJS = v || '';
@@ -635,20 +637,21 @@ ${this._srcdoc || ''}
             if (this.mode === 'css')
                 this.cell.sourceCSS = v || '';
             if (this.mode === 'json')
-                this.cell.sourceJSON = v || '{}';
-            this.$update();
+                this._sourceJSON = this.cell.sourceJSON = v || '{}';
+            this.listenIframe(true);
         })
-        this.listenIframe();
         setTimeout(() => {
             const ace = this.$qs('li-editor-ace');
             ace.options = { highlightActiveLine: false, showPrintMargin: false, minLines: 1, fontSize: 16 };
-            this.setValue();
+            this.setAceValue();
+            this.listenIframe(true);
         })
     }
     updated(changedProperties) {
-        if (changedProperties.has('mode')) this.setValue();
+        if (changedProperties.has('mode')) this.setAceValue();
     }
-    setValue(mode = this.mode) {
+    setAceValue(mode = this.mode) {
+        this._setAceValue = true;
         const ace = this.$qs('li-editor-ace');
         if (mode === 'javascript')
             ace.value = this.cell.sourceJS || '';
@@ -657,19 +660,25 @@ ${this._srcdoc || ''}
         if (mode === 'css')
             ace.value = this.cell.sourceCSS || '';
         if (mode === 'json')
-            ace.value = this.cell._sourceJSON || this.cell.sourceJSON || '{}';
-        this.$update();
-        this.listenIframe();
+            ace.value = this._sourceJSON || this.cell.sourceJSON || '{}';
+        setTimeout(() => this._setAceValue = false, 100);
     }
-    listenIframe() {
+    listenIframe(update) {
         setTimeout(() => {
             const iframe = this.$qs('iframe');
-            (iframe.contentDocument || iframe.contentWindow).addEventListener("changeJSON", (e) => {
-                this.cell._sourceJSON = e.detail;
-                // console.log('..... changeJSON from iFrame: ', e.detail)
-                this.$update();
-            })
-        }, 500)
+            iframe.srcdoc = update ? this.srcdoc : iframe.srcdoc || this.srcdoc;
+            setTimeout(() => {
+                (iframe.contentDocument || iframe.contentWindow).addEventListener("changeJSON", (e) => {
+                    this._sourceJSON = this.cell.sourceJSON = e.detail;
+                    if (this.mode === 'json') {
+                        this.setAceValue();
+                        // console.log('..... changeJSON from iFrame: ', e.detail)
+                        this.$update();
+                    }
+                })
+            }, 500)
+            this.$update();
+        }, 100)
     }
 })
 
