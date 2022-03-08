@@ -141,7 +141,6 @@ customElements.define('li-db', class LiDb extends LiElement {
             const fn = (e, item) => {
                 if (this.readOnly) return;
                 e.forEach((value, key) => {
-                    if (key === '_sourceJSON') key = 'sourceJSON';
                     if (key === '_deleted' && value) {
                         this.deletedItemsID.add(item._id);
                         this.deletedItems[item._id] = item;
@@ -183,7 +182,7 @@ customElements.define('li-db', class LiDb extends LiElement {
                         sourceJS: doc.sourceJS || '',
                         sourceCSS: doc.sourceCSS || '',
                         sourceJSON: doc.sourceJSON || '{}',
-                        _sourceJSON: '',
+                        useJson: doc.useJson || false
                     })
                     this.selectedArticle.notebook.cells.push(cell);
                     cell.listen(e => fn(e, item));
