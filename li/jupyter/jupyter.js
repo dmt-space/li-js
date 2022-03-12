@@ -756,17 +756,25 @@ customElements.define('li-jupyter-cell-html-cde', class LiJupyterCellHtmlCDE ext
 customElements.define('li-jupyter-cell-html-jodit', class LiJupyterCellHtmlJodit extends LiJupyterCellTemp {
     get srcdoc() {
         return `
+<style>
+    ::-webkit-scrollbar { width: 4px; height: 4px; } ::-webkit-scrollbar-track { -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3); } ::-webkit-scrollbar-thumb { border-radius: 10px; }
+body, html { 
+    margin: 0;
+    min-width: 100%;
+    min-height: 100%;
+}
+</style>
 <textarea id="editor" name="editor">${this.cell?.source || ''}</textarea>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jodit/3.13.4/jodit.es2018.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jodit/3.13.4/jodit.es2018.min.js"></script>
 <script type="module">
     const editor = Jodit.make('#editor', {
-        toolbarButtonSize: "small"
+        toolbarButtonSize: "small",
+        fullsize: true
     });
     editor.events.on('change.textLength', (e) => {
         document.dispatchEvent(new CustomEvent('change', { detail: e }));
     })
-    editor.fullsize = true;
 </script>
     `}
 })
