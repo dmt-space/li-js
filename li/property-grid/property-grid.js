@@ -34,6 +34,7 @@ customElements.define('li-property-grid', class LiPropertyGrid extends LiElement
 
     updated(changedProperties) {
         if (changedProperties.has('io') && this.io) this.getData();
+        // console.log(changedProperties)
     }
 
     get args() { return { expert: this.expertMode, group: this.group, sort: this.sort, showFunction: this.showFunction, categories: this.categories } }
@@ -167,9 +168,7 @@ customElements.define('li-property-grid', class LiPropertyGrid extends LiElement
 
     async getData() {
         this.item = [];
-        //this.$update();
         const io = this.isShowFocused ? this.focused.el || this.focused || this.io : this.io;
-        io.to$update && io.to$update(this);
         this._io = await makeData(io, this.args);
         const obj = {};
         this.ioLength = 0;
@@ -321,7 +320,7 @@ customElements.define('li-property-tree', class LiPropertyTree extends LiElement
             if (e.target.type === 'checkbox') i.obj[i.key] = e.target.checked;
             else i.obj[i.key] = e.target.value;
             this.$fire('changedInPropertyGrid');
-            this.io?.$update();
+            this.io?.$update && this.io.$update();
         }
     }
     _dblclick(e, item) {

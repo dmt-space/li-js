@@ -55,21 +55,18 @@ customElements.define('li-panel-simple', class LiPanelSimple extends LiElement {
                 `)}
             </div>
             ${this.src?.open || this.src?.opened ? html`
-                <div class="panel_content">
-                    <slot>${this.src.content}</slot>
+                <div class="panel_content" style="flex: 1; overflow: auto;">
+                    <slot>${this.src?.content}</slot>
                 </div>
             ` : html``}
         `
     }
 
-    constructor() {
-        super();
-    }
     connectedCallback() {
         super.connectedCallback();
         document.addEventListener("li-panel-simple-click", (e) => {
             const src = e?.detail?.src;
-            if (e?.detail?.uuid === this.uuid && src?.oneShow && src.oneShow === this.src.oneShow) {
+            if (e?.detail?.uuid === this.uuid && src?.oneShow && src.oneShow === this.src?.oneShow) {
                 this.src.opened = this.src === src;
             }
         });
@@ -78,28 +75,22 @@ customElements.define('li-panel-simple', class LiPanelSimple extends LiElement {
         super.disconnectedCallback();
         document.removeEventListener("li-panel-simple-click");
     }
-    firstUpdated() {
-        super.firstUpdated();
-    }
-    updated(changedProperties) {
-        if (changedProperties.has('')) { };
-    }
 
     static get properties() {
         return {
-            src: { type: Object, default: {} },
+            src: { type: Object, default: { } },
+            uuid: { type: Object, local: true }
         }
     }
 
     onopened() {
-        if (this.src.oneShow) {
+        if (this.src?.oneShow) {
             document.dispatchEvent(new CustomEvent("li-panel-simple-click", {
                 detail: { src: this.src, uuid: this.uuid }
             }))
         } else {
             this.src.opened = !this.src.opened;
-            this.$update();
-            console.log(this.src.opened)
         }
+        this.$update();
     }
 })
