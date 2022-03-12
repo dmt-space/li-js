@@ -122,7 +122,7 @@ customElements.define('li-button', class LiButton extends LiElement {
                     background-color: ${this.back};
                     overflow: hidden;
                     padding: ${this.padding}"
-                    @click="${() => this.toggled = !this.toggled}">
+                    @click="${() => {this.toggled = !this.toggled; this.$update()}}">
                 ${this.icon || this.name ? this._icon : ''}
                 <div style="color: ${this.color}; user-select: none; flex: 1">
                     ${this.label}

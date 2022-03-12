@@ -1,0 +1,54 @@
+<meta charset="utf-8">
+<title>li-editor-template-demo</title>
+
+<style>
+    html,
+    body {
+        color: gray;
+        font-family: Arial;
+        margin: 0;
+        padding: 0;
+        height: 100%;
+    }
+</style>
+
+<li-editor-template id="li_jodit"></li-editor-template>
+
+<script type="module">
+    import './editor-template.js';
+    li_jodit.srcdoc = `
+<style> body, html { margin: 0 }</style>
+<textarea name="content" id="mytextarea">${li_jodit.source || ''}</textarea>
+<script src="https://cdn.tiny.cloud/1/0dmt0rtivjr59ocff6ei6iqaicibk0ej2jwub5siiycmlk84/tinymce/5/tinymce.min.js" referrerpolicy="origin"><\/script>
+<script type="module">
+    tinymce.init({
+        selector: 'textarea#mytextarea',
+        height: '100vh',
+        menubar: true,
+        plugins: [
+            'advlist autolink link image lists charmap print preview hr anchor pagebreak',
+            'searchreplace wordcount visualblocks visualchars code fullscreen insertdatetime media table powerpaste mediaembed nonbreaking',
+            'table emoticons template help pageembed permanentpen advtable',
+        ],
+        toolbar: 'undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | link | ' +
+            'bullist numlist outdent indent | image | print preview media fullpage | ' +
+            'forecolor backcolor emoticons | help' +
+            'casechange checklist code formatpainter pageembed permanentpen powerpaste table | vanna',
+
+        menubar: 'favs file edit view insert format tools table help',
+        menu: {
+            favs: {
+                title: 'My Favorites',
+                items: 'powerpaste | code visualaid | searchreplace | emoticons',
+            },
+        },
+        paste_webkit_styles: 'color font-size',
+        extended_valid_elements: 'script[language|src|async|defer|type|charset]',
+        setup: (editor) => {
+            editor.on('change', () => { document.dispatchEvent(new CustomEvent('change', { detail: editor.getContent() })) });
+            editor.on('keyup', () => { document.dispatchEvent(new CustomEvent('change', { detail: editor.getContent() })) });
+        },
+    });
+<\/script>
+    `
+</script>
