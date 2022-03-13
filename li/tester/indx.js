@@ -27,8 +27,11 @@ export const indx = {
     'li-splitter': { type: 'comp', label: 'li-splitter', props: { iframe: '../splitter/index.html' } },
     splitter: [{ label: 'index', url: url + '/splitter' }],
 
+    'li-panel-simple': { type: 'comp', label: 'li-panel-simple', props: { iframe: '../panel-simple/index.html' } },
+    'panel-simple': [{ label: 'index', url: url + '/panel-simple' }],
+
     'li-accordion': { type: 'comp', label: 'li-accordion', props: { iframe: '../accordion/index.html' } },
-    accordion: [{ label: 'index', url: url + '/accordion' }, { label: 'index-2', url: url + '/accordion/index-2.html' }],
+    accordion: [{ label: 'index', url: url + '/accordion' }, { label: 'index-2 (mutipanel)', url: url + '/accordion/index-2.html' }],
 
     'li-dropdown': { type: 'comp', label: 'li-dropdown', props: { iframe: '../dropdown/index-3.html' } },
     dropdown: [{ label: 'index', url: url + '/dropdown' }, { label: 'index-2', url: url + '/dropdown/index-2.html' }, { label: 'index-3', url: url + '/dropdown/index-3.html' }],

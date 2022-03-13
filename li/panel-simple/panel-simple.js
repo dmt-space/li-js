@@ -38,25 +38,34 @@ customElements.define('li-panel-simple', class LiPanelSimple extends LiElement {
         return html`
             <style>
                 :host {
-                    flex: ${this.src?.open || this.src?.opened ? 1 : 0};
+                    flex: ${this.src?.open || this.src.opened ? 1 : 0};
                 }
             </style>
-            <div class="panel_header" @click=${this.onopened}>
-                ${this.src?.open ? html`` : html`
-                    <li-icon name="arrow-drop-down" rotate=${this.src?.opened ? 0 : 270} size="18"></li-icon> 
-                `}
-                ${this.src?.icon ? html`
-                    <li-icon name=${this.src?.icon} size="16" style="padding-left: 4px;"></li-icon>
-                ` : html``}  
-                <span style="padding-left: 8px">${this.src?.label || 'li-panel-simple'}</span>
-                <div class="flex"></div>
-                ${Object.keys(this.src?.btns || {}).map(key => html`
-                    <li-button class="btn" name=${this.src?.btns[key]} size="16" title=${key}></li-button>
+            <div class="panel_header" @click=${this.opened}>
+                ${(this.tabs || []).map((i, idx) => html`
+                    ${this.src?.open || i.open || idx > 0 ? html`` : html`
+                        <li-icon name="arrow-drop-down" rotate=${this.src.opened ? 0 : 270} size="18"></li-icon> 
+                    `}
+                    ${i.icon ? html`
+                        <li-icon name=${i.icon || ''} size="16" @click=${(e) => this.tabclick(e, idx)} style="padding: 0 4px; opacity: ${this.idx === idx ? 1 : .3}"></li-icon>
+                    ` : html``}
+                    ${i.label ? html`
+                        <span @click=${(e) => this.tabclick(e, idx)} style="padding: 0 4px 0 4px; opacity: ${this.idx === idx ? 1 : .3}">${i.label || ''}</span>
+                    ` : html``}  
+                    <div style="height: 100%; width: 1px; border-right: ${this.tabs.length > 1 ? '1px solid darkgray' : 'unset'};"></div>
                 `)}
+                <div style="flex: 1"></div>
+                ${this.src?.open || this.src?.opened ? html`
+                    ${(this.tabs[this.idx]?.btns || []).map(btn => html`
+                        <li-button class="btn" size=18 width=${btn.width || 'auto'} name=${btn.icon} title=${btn.title || btn.label || btn.icon} @click=${this.btnclick} radius="2px" scale=.8
+                            style="font-size: 14px">${btn.label || ''}</li-button>
+                    `)}
+                    <div style="width: 4px"></div>
+                ` : html``}
             </div>
             ${this.src?.open || this.src?.opened ? html`
                 <div class="panel_content" style="flex: 1; overflow: auto;">
-                    <slot>${this.src?.content}</slot>
+                    <slot>${this.tabs[this.idx].content}</slot>
                 </div>
             ` : html``}
         `
@@ -66,7 +75,7 @@ customElements.define('li-panel-simple', class LiPanelSimple extends LiElement {
         super.connectedCallback();
         document.addEventListener("li-panel-simple-click", (e) => {
             const src = e?.detail?.src;
-            if (e?.detail?.uuid === this.uuid && src?.oneShow && src.oneShow === this.src?.oneShow) {
+            if (e?.detail?.uuid === this.uuid && src?.single && src.single === this.src?.single) {
                 this.src.opened = this.src === src;
             }
         });
@@ -78,19 +87,35 @@ customElements.define('li-panel-simple', class LiPanelSimple extends LiElement {
 
     static get properties() {
         return {
-            src: { type: Object, default: { } },
-            uuid: { type: Object, local: true }
+            src: { type: Object, default: {} },
+            uuid: { type: Object, local: true },
+            idx: { type: Number, default: 0 }
         }
     }
+    get tabs() { return this.src?.tabs || (this.src ? [this.src] : []) }
 
-    onopened() {
-        if (this.src?.oneShow) {
+    opened() {
+        if (this.src?.single) {
             document.dispatchEvent(new CustomEvent("li-panel-simple-click", {
                 detail: { src: this.src, uuid: this.uuid }
             }))
         } else {
-            this.src.opened = !this.src.opened;
+            this.src.opened = !this.src?.opened;
         }
         this.$update();
+    }
+    btnclick(e) {
+        e.stopPropagation();
+        this.fire('li-panel-simple-click', { uuid: this.uuid, btn: e.target.title, src: this.src });
+    }
+    tabclick(e, idx) {
+        e.stopPropagation();
+        if (this.tabs.length > 1) {
+            this.idx = idx;
+            this.src.opened = true;
+            this.$update();
+        } else {
+            this.opened();
+        }
     }
 })

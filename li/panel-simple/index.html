@@ -20,6 +20,7 @@
     import { LiElement, html, css } from '../../li.js';
     import './panel-simple.js';
     import '../splitter/splitter.js';
+    import '../editor-ace/editor-ace.js';
 
     customElements.define('li-panel-simple-demo', class LiDemo extends LiElement {
         static get styles() {
@@ -50,7 +51,10 @@
                     <div class="horizontal" style="overflow: hidden; height: 50%;">
                         <div class="vertical" style="width: 60%; overflow: hidden;  max-width: calc(100% - 3px);">
                             <li-panel-simple .src=${this.panels.p_001}></li-panel-simple>
-                            <li-panel-simple .src=${this.panels.p_002}></li-panel-simple>
+                            <li-panel-simple .src=${this.panels.tabs1}></li-panel-simple>
+                            <li-panel-simple .src=${this.panels.p_002}>
+                                <li-editor-ace theme="clouds" .options=${{ fontSize: 16 }} src=${this.panels.p_002.content}></li-editor-ace>
+                            </li-panel-simple>
                         </div>
                         <li-splitter size="3px" color="darkgray" style="opacity: .3"></li-splitter>
                         <div class="vertical flex" style="overflow: hidden; flex: 1">
@@ -61,12 +65,14 @@
                     </div>
                     <li-splitter direction="horizontal" size="3px" color="darkgray" style="opacity: .3"></li-splitter>
                     <div class="horizontal flex" style="overflow: hidden">
-                        <div class="vertical" style="width:30%; overflow: hidden;  max-width: calc(100% - 3px);">
-                            <li-panel-simple .src=${this.panels.p_006}></li-panel-simple>
+                        <div class="vertical" style="width:50%; overflow: hidden;  max-width: calc(100% - 3px);">
+                            <li-panel-simple .src=${this.panels.p_006}>
+                                <li-editor-ace theme="cobalt" .options=${{ fontSize: 16 }} src=${this.panels.p_006.content}></li-editor-ace>
+                            </li-panel-simple>
                         </div>
                         <li-splitter size="3px" color="darkgray" style="opacity: .3"></li-splitter>
                         <div class="vertical flex" style="overflow: hidden; flex: 1">
-                            <li-panel-simple .src=${this.panels.p_007}></li-panel-simple>
+                            <li-panel-simple .src=${this.panels.tabs3}></li-panel-simple>
                         </div>
                     </div>
                 </div>
@@ -76,19 +82,101 @@
         firstUpdated() {
             super.firstUpdated();
             this.uuid = this.id || LI.uuid();
+            this.listen('li-panel-simple-click', e => {
+                console.log(e.detail);
+            })
         }
 
         static get properties() {
             return {
                 panels: {
                     type: Object, default: {
-                        p_001: { label: 'li-panel-simple-001 (muliti open)', opened: false, content: 'Panel-001 ...', icon: 'create' },
-                        p_002: { label: 'li-panel-simple-002 (multi) open', opened: true, content: 'Panel-002 ...', icon: 'content-paste' },
-                        p_003: { label: 'li-panel-simple-003 (only one open)', opened: false, content: 'Panel-003 ...', icon: 'android', oneShow: 'top-right' },
-                        p_004: { label: 'li-panel-simple-004 (only one open)', opened: false, content: 'Panel-004 ...', icon: 'attachment', oneShow: 'top-right' },
-                        p_005: { label: 'li-panel-simple-005 (only one open)', opened: true, content: 'Panel-005 ...', icon: 'settings', oneShow: 'top-right' },
+                        p_001: {
+                            label: 'li-panel-simple-001 (muliti open)', opened: false, content: 'Panel-001 ...', icon: 'create',
+                            btns: [
+                                { icon: 'add' },
+                                { icon: 'remove' },
+                                { icon: 'refresh' }
+                            ]
+                        },
+                        p_002: {
+                            label: 'li-panel-simple-002 (multi open)', opened: true, content: 'Panel-002 ...', icon: 'content-paste',
+                            btns: [
+                                { label: 'button', width: '50px' },
+                                { icon: 'settings', label: 'settings', width: '72px' }
+                            ]
+                        },
+                        p_003: { label: 'li-panel-simple-003 (only single open)', opened: false, content: 'Panel-003 ...', icon: 'android', single: 'top-right' },
+                        p_004: { label: 'li-panel-simple-004 (only single open)', opened: false, content: 'Panel-004 ...', icon: 'attachment', single: 'top-right' },
+                        p_005: { label: 'li-panel-simple-005 (only single open)', opened: true, content: 'Panel-005 ...', icon: 'settings', single: 'top-right' },
                         p_006: { label: 'li-panel-simple-006 (allways open)', open: true, content: 'Panel-006 ...', icon: 'done-all' },
-                        p_007: { label: 'li-panel-simple-007 (allways open)', open: true, content: 'Panel-007...', icon: 'done' }
+                        tabs1: {
+                            tabs: [
+                                {
+                                    label: 'tab1', content: 'Tab-001...',
+                                    btns: [
+                                        { icon: 'auto_stories' }
+                                    ],
+                                },
+                                {
+                                    label: 'tab2', content: 'Tab-002...',
+                                    btns: [
+                                        { icon: 'arrow-back' },
+                                        { icon: 'arrow-forward' }
+                                    ],
+                                },
+                                {
+                                    label: 'tab3', content: 'Tab-003...', icon: 'alarm',
+                                    btns: [
+                                        { icon: 'alarm' },
+                                        { icon: 'alarm-add' },
+                                        { icon: 'alarm-on' }
+                                    ],
+                                }
+                            ]
+                        },
+                        tabs3: {
+                            open: true,
+                            tabs: [
+                            {
+                                    label: 'tab1', content: 'Tab-001...',
+                                    icon: 'done',
+                                    btns: [
+                                        { icon: 'auto_stories' }
+                                    ],
+                                },
+                                {
+                                    label: 'tab2', content: 'Tab-002...',
+                                    icon: 'done-all',
+                                    btns: [
+                                        { icon: 'arrow-back' },
+                                        { icon: 'arrow-forward' }
+                                    ],
+                                },
+                                {
+                                    label: 'tab3', content: 'Tab-003...',
+                                    icon: 'settings',
+                                    btns: [
+                                        { icon: 'alarm' },
+                                        { icon: 'alarm-add' },
+                                        { icon: 'alarm-on' }
+                                    ],
+                                },
+                                {
+                                    content: 'Tab-004...',
+                                    icon: 'settings',
+                                    btns: [
+                                        { icon: 'close' }
+                                    ],
+                                },
+                                {
+                                    label: 'tab5', content: 'Tab-005...',
+                                    btns: [
+                                        { icon: 'android' }
+                                    ],
+                                }
+                            ]
+                        },
                     }
                 },
                 uuid: { type: Object, local: true }
