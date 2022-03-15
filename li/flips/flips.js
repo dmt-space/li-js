@@ -172,12 +172,10 @@ customElements.define('li-flips', class LiFlips extends LiElement {
             this.card2 = { id, value };
             if (this.card1.value === this.card2.value) {
                 this.solved ||= [];
-                if (this.autoClose) {
-                    setTimeout(() => {
-                        this.solved.push(this.card1.id, this.card2.id);
-                        this.card1 = this.card2 = undefined;
-                    }, this.timeToClose);
-                }
+                setTimeout(() => {
+                    this.solved.push(this.card1.id, this.card2.id);
+                    this.card1 = this.card2 = undefined;
+                }, this.timeToClose);
             } else {
                 if (this.autoClose) {
                     setTimeout(() => {
