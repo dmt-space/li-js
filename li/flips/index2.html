@@ -20,9 +20,11 @@
 
 <li-layout-app id="my-flips-app" hide="l">
     <li-flips id="flips" slot="app-main"></li-flips>
-    <li-property-grid id="pg" slot="app-right" show-buttons="false"></li-property-grid>
+    <li-property-grid id="pg" slot="app-right"></li-property-grid>
 </li-layout-app>
 
 <script>
     pg.io = flips;
+    pg.showButtons = false;
+    pg.categories = ['props'];
 </script>
