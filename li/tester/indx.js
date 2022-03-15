@@ -261,6 +261,9 @@ export const indx = {
     'li-tetris': { type: 'apps', label: 'TETRIS', props: { iframe: '../tetris/index.html' } },
     'tetris': [{ label: 'index', url: url + '/tetris' }],
 
+    'li-flips': { type: 'apps', label: 'FLIPS' },
+    'flips': [{ label: 'index', url: url + '/flips' }, { label: 'index2', url: url + '/flips/index2.html' }],
+
     'li-l-system': { type: 'apps', label: 'L-System', props: { iframe: '../l-system/index.html' } },
     'l-system': [{ label: 'index', url: url + '/l-system/index.html' }],
 
