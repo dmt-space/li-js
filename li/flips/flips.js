@@ -16,12 +16,22 @@ customElements.define('li-flips', class LiFlips extends LiElement {
                 justify-content: center;
                 background-color: lightgray;
                 border: 1px solid darkgray;
+                width: 100vmin;
+                max-height: 100vmin;
+                position: relative;
+                flex: 1;
+                margin: 10px;
+                padding: 5px;
             }
             .row {
                 display: flex;
+                flex: 1;
+            
             }
             .cell {
                 display: flex;
+                flex: 1;
+                margin: 5px;
                 background-color: transparent;
                 perspective: 1000px;
                 cursor: pointer;
@@ -47,6 +57,7 @@ customElements.define('li-flips', class LiFlips extends LiElement {
                 height: 100%;
                 -webkit-backface-visibility: hidden;
                 backface-visibility: hidden;
+                font-size: 4vmin;
             }
             .cell-back {
                 background-color: #bbb;
@@ -70,29 +81,18 @@ customElements.define('li-flips', class LiFlips extends LiElement {
     render() {
         return html`
             <style>
-                .board {
-                    padding: ${(this.margin || 5) / 2}px;
-                }
                 .solved {
                     opacity: ${this.showSolved ? .3 : 0};
                 }
                 .cell:hover .cell-inner {
                     transform: ${this.babyMode ? 'rotateY(180deg)' : ''};
                 }
-                .cell {
-                    width: ${this.width || 100}px;
-                    height: ${this.height || 100}px;
-                    margin: ${this.margin || 10}px;
-                }
-                .cell-front {
-                    font-size: ${this.fontSize || 48}px;
-                }
             </style>
             <div class="board">
                 ${[...Array(+this.row).keys()].map(row => html`
                     <div class="row">
-                        ${[...Array(+this.column).keys()].map(column => { 
-                            let idx = this.column * row + column; 
+                        ${[...Array(+this.column).keys()].map(column => {
+                            let idx = this.column * row + column;
                             return html`
                                 <div class="cell
                                         ${(this.showSolved && this.solved.includes(idx) || idx === this.card1?.id || idx === this.card2?.id) ? 'selected' : ''}
@@ -120,8 +120,8 @@ customElements.define('li-flips', class LiFlips extends LiElement {
         }, 100);
     }
     updated(e) {
-        if (e.has('row') || e.has('column') || e.has('showSolved') || e.has('autoClose') || e.has('timeToClose')  || e.has('babyMode') 
-            || e.has('width') || e.has('height') || e.has('margin') || e.has('fontSize')) 
+        if (e.has('row') || e.has('column') || e.has('showSolved') || e.has('autoClose') || e.has('timeToClose') || e.has('babyMode')
+            || e.has('width') || e.has('height') || e.has('margin') || e.has('fontSize'))
             this.init();
     }
 
@@ -129,10 +129,6 @@ customElements.define('li-flips', class LiFlips extends LiElement {
         return {
             row: { type: Number, default: 5, save: true, category: 'settings' },
             column: { type: Number, default: 5, save: true, category: 'settings' },
-            width: { type: Number, default: 100, save: true, category: 'settings' },
-            height: { type: Number, default: 100, save: true, category: 'settings' },
-            margin: { type: Number, default: 5, save: true, category: 'settings' },
-            fontSize: { type: Number, default: 48, save: true, category: 'settings' },
             showSolved: { type: Boolean, default: true, save: true, category: 'settings' },
             autoClose: { type: Boolean, default: true, save: true, category: 'settings' },
             timeToClose: { type: Number, default: 750, save: true, category: 'settings' },
