@@ -1,0 +1,28 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script type="module" src="./flips.js"></script>
+<script type="module" src="../layout-app/layout-app.js"></script>
+<script type="module" src="../property-grid/property-grid.js"></script>
+
+<style>
+    html * {
+        font-family: Arial;
+    }
+
+    html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        position: relative;
+    }
+</style>
+
+<li-layout-app id="my-flips-app" hide="l">
+    <li-flips id="flips" slot="app-main"></li-flips>
+    <li-property-grid id="pg" slot="app-right" show-buttons="false"></li-property-grid>
+</li-layout-app>
+
+<script>
+    pg.io = flips;
+</script>
