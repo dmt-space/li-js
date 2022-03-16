@@ -239,7 +239,8 @@ customElements.define('li-flips', class LiFlips extends LiElement {
         }
         let length = (this.row * this.column) - (this.odd ? 1 : 0);
         this.step = 360 / (length / 2);
-        const arr = this.mode === 'digital' ? [] : this.mode === 'ABC...' ? alphabet : this.mode === 'АБВ...' ? rusAlphabet : this.mode === '1...9' ? digital1_9 : this.mode === 'images' ? images : digital;
+        const mode = { images, '1...9': digital1_9, 'ABC...': alphabet, 'АБВ...': rusAlphabet };
+        const arr = mode[this.mode] || images;
         for (let i = 0; i < length / 2; i++) {
             const color = i * this.step;
             if (this.mode === 'digital') this.cards.push({ v: i, c: color }, { v: i, c: color })
@@ -255,7 +256,10 @@ customElements.define('li-flips', class LiFlips extends LiElement {
         this.$update();
     }
     setMode() {
-        this.mode = this.mode === 'digital' ? 'ABC...' : this.mode === 'ABC...' ? 'АБВ...' : this.mode === 'АБВ...' ? '1...9' : this.mode === '1...9' ? 'images' : 'digital';
+        const mode = [ 'images', '1...9', 'digital', 'ABC...', 'АБВ...'];
+        let idx = mode.indexOf(this.mode);
+        idx = ++idx >= mode.length ? 0 : idx;
+        this.mode = mode[idx];
     }
     onclick(e, id, value) {
         if (!this.autoClose && this.card1 && this.card2) this.card1 = this.card2 = undefined;
