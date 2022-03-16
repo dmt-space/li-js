@@ -158,14 +158,14 @@ customElements.define('li-flips', class LiFlips extends LiElement {
                                     <div class='cell-inner'>
                                         <div class='cell-front ${idx === this.odd ? 'odd' : ''}' style="color: hsla(${this.cards?.[idx]?.c || 0}, 60%, 50%, 1);">
                                             ${this.mode === 'images' ? html`
-                                                <img src=${idx === this.odd ? '/lib/li.png' : this.cards?.[idx]?.v} style="width: 100%;max-height: 100%;">
+                                                <img src=${idx === this.odd ? '../../lib/li.png' : this.cards?.[idx]?.v} style="width: 100%;max-height: 100%;">
                                             ` : html`
                                                 ${this.cards?.[idx]?.v}
                                             `}
                                         </div>
                                         <div class='cell-back ${idx === this.odd ? 'odd' : ''}'>
                                             ${idx === this.odd ? html`
-                                                <img src="/lib/li.png" style="width: 100%;max-height: 100%;">
+                                                <img src="../../lib/li.png" style="width: 100%;max-height: 100%;">
                                             ` : html``}
                                         </div>
                                     </div>
@@ -232,7 +232,7 @@ customElements.define('li-flips', class LiFlips extends LiElement {
         const rusAlphabet = ['А', 'Б', 'В', 'Г', 'Д', 'Е', 'Ё', 'Ж', 'З', 'И', 'Й', 'К', 'Л', 'М', 'Н', 'О', 'П', 'Р', 'С', 'Т', 'У', 'Ф', 'Х', 'Ц', 'Ч', 'Ш', 'Щ', 'Ъ', 'Ы', 'Ь', 'Э', 'Ю', 'Я'];
         const digital1_9 = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
         const images = [];
-        const url = this.$url.replace('flips.js', './cards/_cards-');
+        const url = this.$url.replace('flips.js', 'cards/cards-');
         for (let i = 1; i <= 140; i++) {
             images.push(url + (i < 10 ? '00' + i : i < 100 ? '0' + i : i) + '.jpg'); 
         }
