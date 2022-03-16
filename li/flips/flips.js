@@ -144,7 +144,7 @@ customElements.define('li-flips', class LiFlips extends LiElement {
                                             ${this.mode === 'images' ? html`
                                                 <img src=${idx === this.odd ? '/lib/li.png' : this.cards?.[idx]?.v} style="width: 100%;max-height: 100%;">
                                             ` : html`
-                                                ${this.cards?.[idx]?.v || ''}
+                                                ${this.cards?.[idx]?.v}
                                             `}
                                         </div>
                                         <div class='cell-back ${idx === this.odd ? 'odd' : ''}'>
