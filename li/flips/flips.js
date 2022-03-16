@@ -1,13 +1,37 @@
 import { LiElement, html, css } from '../../li.js';
 
+import '../icon/icon.js';
+import '../button/button.js';
+
 customElements.define('li-flips', class LiFlips extends LiElement {
     static get styles() {
         return css`
             :host {
+                position: relative;
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
                 height: 100%;
+            }
+            header {
+                position: absolute;
+                top: 0;
+                min-width: 100%;
+                display: flex;
+                flex: 1;
+                align-items: center;
+                border-bottom: 1px solid lightgray;
+                padding: 2px;
+                z-index: 9;
+                flex-wrap: wrap;
+            }
+            .txt {
+                border: none;
+                outline: none; 
+                text-align: center;
+                font-size: 24px;
+                width: 40px;
+                color: gray;
             }
             .board {
                 display: flex;
@@ -20,7 +44,7 @@ customElements.define('li-flips', class LiFlips extends LiElement {
                 max-height: 100vmin;
                 position: relative;
                 flex: 1;
-                margin: 10px;
+                margin: 44px 8px 8px 8px;
                 padding: 5px;
             }
             .row {
@@ -31,7 +55,7 @@ customElements.define('li-flips', class LiFlips extends LiElement {
             .cell {
                 display: flex;
                 flex: 1;
-                margin: 5px;
+                margin: calc(1px + 1vmin/2);
                 background-color: transparent;
                 perspective: 1000px;
                 cursor: pointer;
@@ -57,7 +81,7 @@ customElements.define('li-flips', class LiFlips extends LiElement {
                 height: 100%;
                 -webkit-backface-visibility: hidden;
                 backface-visibility: hidden;
-                font-size: 4vmin;
+                /* font-size: 4vmin; */
             }
             .cell-back {
                 background-color: #bbb;
@@ -73,7 +97,11 @@ customElements.define('li-flips', class LiFlips extends LiElement {
                 transform: rotateY(180deg);
             }
             .odd {
-                opacity: 0;
+                color: transparent;
+                font-size: 0;
+                opacity: .3;
+                background-size: cover;
+                background-repeat: no-repeat;
             }
         `;
     }
@@ -87,7 +115,21 @@ customElements.define('li-flips', class LiFlips extends LiElement {
                 .cell:hover .cell-inner {
                     transform: ${this.babyMode ? 'rotateY(180deg)' : ''};
                 }
+                .cell-front, .cell-back {
+                    font-size: ${this.fontSize - 10}px;
+                }
             </style>
+            <header>
+                <li-button name="remove" border="none" size=32 @click=${() => --this.row}></li-button><div class="txt">${this.row}</div><li-button name="add" border="none" size=32  @click=${() => ++this.row}></li-button>
+                <li-button name="remove" border="none" size=32 @click=${() => --this.column} style="margin-left: 8px"></li-button><div class="txt">${this.column}</div><li-button name="add" border="none" size=32  @click=${() => ++this.column}></li-button>
+                <div class="txt" style="flex: 1">flips</div>
+                <li-icon name="done" border="none" size=32 fill="green"></li-icon><div class="txt" style="color: green; width: 100px">${this.isOk}</div>
+                <li-icon name="close" border="none" size=32 fill="red"></li-icon><div class="txt" style="color: red; width: 100px">${this.isError}</div>
+                <li-button name="face" border="none" size=32 @click=${() => this.babyMode = !this.babyMode} title="baby mode" toggledClass="ontoggled" ?toggled=${this.babyMode}></li-button>
+                <li-button name="visibility-off" border="none" size=32 @click=${() => this.showSolved = !this.showSolved} title="show sloved" toggledClass="ontoggled" ?toggled=${!this.showSolved}></li-button>
+                <li-button name="extension" border="none" size=32 @click=${() => ++this.mode} title="mode" style="margin-right: 8px"></li-button>
+            </header>
+
             <div class="board">
                 ${[...Array(+this.row).keys()].map(row => html`
                     <div class="row">
@@ -96,13 +138,18 @@ customElements.define('li-flips', class LiFlips extends LiElement {
                             return html`
                                 <div class="cell
                                         ${(this.showSolved && this.solved.includes(idx) || idx === this.card1?.id || idx === this.card2?.id) ? 'selected' : ''}
-                                        ${this.solved.includes(idx) ? 'solved' : ''}" id=${idx} @click=${e => this.onclick(e, idx, this.cards?.[idx])}>
+                                        ${this.solved.includes(idx) ? 'solved' : ''}" id=${'cell_' + idx} @click=${e => this.onclick(e, idx, this.cards?.[idx])}>
                                     <div class="cell-inner">
                                         <div class="cell-front ${idx === this.odd ? 'odd' : ''}">
                                             ${this.cards?.[idx]}
+                                            ${idx === this.odd ? html`
+                                                <img src="/lib/li.png" style="width: 100%;max-height: 100%">
+                                            ` : html``}
                                         </div>
                                         <div class="cell-back ${idx === this.odd ? 'odd' : ''}">
-                                            
+                                            ${idx === this.odd ? html`
+                                                <img src="/lib/li.png" style="width: 100%;max-height: 100%">
+                                            ` : html``}
                                         </div>
                                     </div>
                                 </div>
@@ -118,10 +165,18 @@ customElements.define('li-flips', class LiFlips extends LiElement {
         setTimeout(() => {
             this.init();
         }, 100);
+        window.addEventListener("resize", () => {
+            LI.throttle('resize', () => {
+                this.fontSize = Math.min(this.$qs('#cell_0').offsetWidth, this.$qs('#cell_0').offsetHeight);
+            }, 300);
+        }, false);
     }
     updated(e) {
-        if (e.has('row') || e.has('column') || e.has('showSolved') || e.has('autoClose') || e.has('timeToClose') || e.has('babyMode')
-            || e.has('width') || e.has('height') || e.has('margin') || e.has('fontSize'))
+        if (e.has('row') || e.has('column')) {
+            this.row = this.row < 2 ? 2 : this.row > 10 ? 10 : this.row;
+            this.column = this.column < 2 ? 2 : this.column > 10 ? 10 : this.column;
+        }
+        if (e.has('row') || e.has('column') || e.has('showSolved') || e.has('babyMode'))
             this.init();
     }
 
@@ -130,9 +185,13 @@ customElements.define('li-flips', class LiFlips extends LiElement {
             row: { type: Number, default: 5, save: true, category: 'settings' },
             column: { type: Number, default: 5, save: true, category: 'settings' },
             showSolved: { type: Boolean, default: true, save: true, category: 'settings' },
-            autoClose: { type: Boolean, default: true, save: true, category: 'settings' },
-            timeToClose: { type: Number, default: 750, save: true, category: 'settings' },
+            mode: { type: String, default: '', save: true, category: 'settings' },
+            autoClose: { type: Boolean, default: true, category: 'settings' },
+            timeToClose: { type: Number, default: 750, category: 'settings' },
             babyMode: { type: Boolean, default: false, save: true, category: 'settings' },
+            fontSize: { type: Number, default: 32, category: 'settings' },
+            isOk: { type: Number, default: 0 },
+            isError: { type: Number, default: 0 },
             cards: { type: Array },
             card1: { type: Object },
             card2: { type: Object },
@@ -144,6 +203,8 @@ customElements.define('li-flips', class LiFlips extends LiElement {
     }
 
     init() {
+        this.fontSize = Math.min(this.$qs('#cell_0').offsetWidth, this.$qs('#cell_0').offsetHeight);
+        this.isOk = this.isError = 0;
         this.card1 = this.card2 = undefined;
         this.solved = [];
         this.cards = [];
@@ -169,10 +230,12 @@ customElements.define('li-flips', class LiFlips extends LiElement {
             if (this.card1.value === this.card2.value) {
                 this.solved ||= [];
                 setTimeout(() => {
+                    ++this.isOk;
                     this.solved.push(this.card1.id, this.card2.id);
                     this.card1 = this.card2 = undefined;
                 }, this.timeToClose);
             } else {
+                ++this.isError;
                 if (this.autoClose) {
                     setTimeout(() => {
                         this.card1 = this.card2 = undefined;
