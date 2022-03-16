@@ -81,7 +81,7 @@ customElements.define('li-flips', class LiFlips extends LiElement {
                 height: 100%;
                 -webkit-backface-visibility: hidden;
                 backface-visibility: hidden;
-                /* font-size: 4vmin; */
+                font-weight: 500;
             }
             .cell-back {
                 background-color: #bbb;
@@ -92,7 +92,6 @@ customElements.define('li-flips', class LiFlips extends LiElement {
                 align-items: center;
                 justify-content: center;
                 flex: 1;
-                color: darkcyan;
                 background-color: white;
                 transform: rotateY(180deg);
             }
@@ -116,39 +115,41 @@ customElements.define('li-flips', class LiFlips extends LiElement {
                     transform: ${this.babyMode ? 'rotateY(180deg)' : ''};
                 }
                 .cell-front, .cell-back {
-                    font-size: ${this.fontSize - 10}px;
+                    font-size: ${this.fontSize - 32}px;
                 }
             </style>
             <header>
-                <li-button name="remove" border="none" size=32 @click=${() => --this.row}></li-button><div class="txt">${this.row}</div><li-button name="add" border="none" size=32  @click=${() => ++this.row}></li-button>
-                <li-button name="remove" border="none" size=32 @click=${() => --this.column} style="margin-left: 8px"></li-button><div class="txt">${this.column}</div><li-button name="add" border="none" size=32  @click=${() => ++this.column}></li-button>
-                <div class="txt" style="flex: 1">flips</div>
-                <li-icon name="done" border="none" size=32 fill="green"></li-icon><div class="txt" style="color: green; width: 100px">${this.isOk}</div>
-                <li-icon name="close" border="none" size=32 fill="red"></li-icon><div class="txt" style="color: red; width: 100px">${this.isError}</div>
-                <li-button name="face" border="none" size=32 @click=${() => this.babyMode = !this.babyMode} title="baby mode" toggledClass="ontoggled" ?toggled=${this.babyMode}></li-button>
-                <li-button name="visibility-off" border="none" size=32 @click=${() => this.showSolved = !this.showSolved} title="show sloved" toggledClass="ontoggled" ?toggled=${!this.showSolved}></li-button>
-                <li-button name="extension" border="none" size=32 @click=${() => ++this.mode} title="mode" style="margin-right: 8px"></li-button>
+                <li-button name='remove' border='none' size=32 @click=${() => --this.row}></li-button><div class='txt'>${this.row}</div><li-button name='add' border='none' size=32  @click=${() => ++this.row}></li-button>
+                <li-button name='remove' border='none' size=32 @click=${() => --this.column} style='margin-left: 8px'></li-button><div class='txt'>${this.column}</div><li-button name='add' border='none' size=32  @click=${() => ++this.column}></li-button>
+                <div class='txt' style='flex: 1'>flips - ${this.mode}</div>
+                <li-icon name='done' border='none' size=32 fill='green'></li-icon><div class='txt' style='color: green; width: 100px'>${this.isOk}</div>
+                <li-icon name='close' border='none' size=32 fill='red'></li-icon><div class='txt' style='color: red; width: 100px'>${this.isError}</div>
+                <li-button name='face' border='none' size=32 @click=${() => this.babyMode = !this.babyMode} title='baby mode' toggledClass='ontoggled' ?toggled=${this.babyMode}></li-button>
+                <li-button name='visibility-off' border='none' size=32 @click=${() => this.showSolved = !this.showSolved} title='show sloved' toggledClass='ontoggled' ?toggled=${!this.showSolved}></li-button>
+                <li-button name='extension' border='none' size=32 @click=${this.setMode} title='mode' style='margin-right: 8px'></li-button>
+                <li-button name='refresh' border='none' size=32 @click=${() => document.location.reload()} title='refresh' style='margin-right: 8px'></li-button>
             </header>
 
-            <div class="board">
+            <div class='board'>
                 ${[...Array(+this.row).keys()].map(row => html`
-                    <div class="row">
+                    <div class='row'>
                         ${[...Array(+this.column).keys()].map(column => {
-                            let idx = this.column * row + column;
-                            return html`
-                                <div class="cell
+            let idx = this.column * row + column;
+            return html`
+                                <div class='cell
                                         ${(this.showSolved && this.solved.includes(idx) || idx === this.card1?.id || idx === this.card2?.id) ? 'selected' : ''}
-                                        ${this.solved.includes(idx) ? 'solved' : ''}" id=${'cell_' + idx} @click=${e => this.onclick(e, idx, this.cards?.[idx])}>
-                                    <div class="cell-inner">
-                                        <div class="cell-front ${idx === this.odd ? 'odd' : ''}">
-                                            ${this.cards?.[idx]}
-                                            ${idx === this.odd ? html`
-                                                <img src="/lib/li.png" style="width: 100%;max-height: 100%">
-                                            ` : html``}
+                                        ${this.solved.includes(idx) ? 'solved' : ''}' id=${'cell_' + idx} @click=${e => this.onclick(e, idx, this.cards?.[idx])}>
+                                    <div class='cell-inner'>
+                                        <div class='cell-front ${idx === this.odd ? 'odd' : ''}' style="color: hsla(${this.cards?.[idx]?.c || 0}, 60%, 50%, 1);">
+                                            ${this.mode === 'images' ? html`
+                                                <img src=${idx === this.odd ? '/lib/li.png' : this.cards?.[idx]?.v} style="width: 100%;max-height: 100%;">
+                                            ` : html`
+                                                ${this.cards?.[idx]?.v || ''}
+                                            `}
                                         </div>
-                                        <div class="cell-back ${idx === this.odd ? 'odd' : ''}">
+                                        <div class='cell-back ${idx === this.odd ? 'odd' : ''}'>
                                             ${idx === this.odd ? html`
-                                                <img src="/lib/li.png" style="width: 100%;max-height: 100%">
+                                                <img src="/lib/li.png" style="width: 100%;max-height: 100%;">
                                             ` : html``}
                                         </div>
                                     </div>
@@ -165,7 +166,7 @@ customElements.define('li-flips', class LiFlips extends LiElement {
         setTimeout(() => {
             this.init();
         }, 100);
-        window.addEventListener("resize", () => {
+        window.addEventListener('resize', () => {
             LI.throttle('resize', () => {
                 this.fontSize = Math.min(this.$qs('#cell_0').offsetWidth, this.$qs('#cell_0').offsetHeight);
             }, 300);
@@ -176,7 +177,7 @@ customElements.define('li-flips', class LiFlips extends LiElement {
             this.row = this.row < 2 ? 2 : this.row > 10 ? 10 : this.row;
             this.column = this.column < 2 ? 2 : this.column > 10 ? 10 : this.column;
         }
-        if (e.has('row') || e.has('column') || e.has('showSolved') || e.has('babyMode'))
+        if (e.has('row') || e.has('column') || e.has('showSolved') || e.has('babyMode') || e.has('mode'))
             this.init();
     }
 
@@ -185,17 +186,18 @@ customElements.define('li-flips', class LiFlips extends LiElement {
             row: { type: Number, default: 5, save: true, category: 'settings' },
             column: { type: Number, default: 5, save: true, category: 'settings' },
             showSolved: { type: Boolean, default: true, save: true, category: 'settings' },
-            mode: { type: String, default: '', save: true, category: 'settings' },
+            mode: { type: String, default: 'images', save: true, category: 'settings' },
             autoClose: { type: Boolean, default: true, category: 'settings' },
             timeToClose: { type: Number, default: 750, category: 'settings' },
             babyMode: { type: Boolean, default: false, save: true, category: 'settings' },
             fontSize: { type: Number, default: 32, category: 'settings' },
             isOk: { type: Number, default: 0 },
             isError: { type: Number, default: 0 },
+            step: { type: Number, default: 0 },
             cards: { type: Array },
             card1: { type: Object },
             card2: { type: Object },
-            solved: { type: Array, default: [] },
+            solved: { type: Array, default: [] }
         }
     }
     get odd() {
@@ -208,9 +210,23 @@ customElements.define('li-flips', class LiFlips extends LiElement {
         this.card1 = this.card2 = undefined;
         this.solved = [];
         this.cards = [];
+        const alphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
+        const rusAlphabet = ['А', 'Б', 'В', 'Г', 'Д', 'Е', 'Ё', 'Ж', 'З', 'И', 'Й', 'К', 'Л', 'М', 'Н', 'О', 'П', 'Р', 'С', 'Т', 'У', 'Ф', 'Х', 'Ц', 'Ч', 'Ш', 'Щ', 'Ъ', 'Ы', 'Ь', 'Э', 'Ю', 'Я'];
+        const digital1_9 = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
+        const images = [];
+        for (let i = 1; i <= 140; i++) {
+            images.push('/lib/media/cards/_cards-' + (i < 10 ? '00' + i : i < 100 ? '0' + i : i) + '.jpg'); 
+        }
         let length = (this.row * this.column) - (this.odd ? 1 : 0);
+        this.step = 360 / (length / 2);
+        const arr = this.mode === 'digital' ? [] : this.mode === 'ABC...' ? alphabet : this.mode === 'АБВ...' ? rusAlphabet : this.mode === '1...9' ? digital1_9 : this.mode === 'images' ? images : digital;
         for (let i = 0; i < length / 2; i++) {
-            this.cards.push(i, i);
+            const color = i * this.step;
+            if (this.mode === 'digital') this.cards.push({ v: i, c: color }, { v: i, c: color })
+            else {
+                const random = arr[Math.floor(Math.random() * arr.length)];
+                this.cards.push({ v: random, c: color }, { v: random, c: color });
+            }
         }
         this.cards = this.cards.sort(() => Math.random() - 0.5);
         if (this.odd) {
@@ -218,16 +234,20 @@ customElements.define('li-flips', class LiFlips extends LiElement {
         }
         this.$update();
     }
+    setMode() {
+        this.mode = this.mode === 'digital' ? 'ABC...' : this.mode === 'ABC...' ? 'АБВ...' : this.mode === 'АБВ...' ? '1...9' : this.mode === '1...9' ? 'images' : 'digital';
+    }
     onclick(e, id, value) {
         if (!this.autoClose && this.card1 && this.card2) this.card1 = this.card2 = undefined;
-        if (this.solved.includes(id) || this.card1?.id === id || value < 0) {
+        if (this.solved.includes(id) || this.card1?.id === id || value.v < 0) {
             return;
         }
         if (!this.card1) {
             this.card1 = { id, value };
         } else if (!this.card2) {
             this.card2 = { id, value };
-            if (this.card1.value === this.card2.value) {
+            const color = this.mode === 'images' || this.card1.value.c === this.card2.value.c;
+            if (this.card1.value.v === this.card2.value.v && color) {
                 this.solved ||= [];
                 setTimeout(() => {
                     ++this.isOk;
