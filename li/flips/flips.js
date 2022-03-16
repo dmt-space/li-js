@@ -2,10 +2,12 @@ import { LiElement, html, css } from '../../li.js';
 
 import '../icon/icon.js';
 import '../button/button.js';
+import confetti from "https://cdn.skypack.dev/canvas-confetti";
 
 customElements.define('li-flips', class LiFlips extends LiElement {
     static get styles() {
         return css`
+            ::-webkit-scrollbar { width: 3px; height: 3px; } ::-webkit-scrollbar-track { -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3); } ::-webkit-scrollbar-thumb { border-radius: 10px; }
             :host {
                 position: relative;
                 display: flex;
@@ -27,6 +29,7 @@ customElements.define('li-flips', class LiFlips extends LiElement {
                 padding: 2px;
                 z-index: 9;
                 max-height: 44px;
+                overflow: hidden;
                 overflow-x: auto;
                 box-sizing: border-box;
                 /* flex-wrap: wrap; */
@@ -53,6 +56,7 @@ customElements.define('li-flips', class LiFlips extends LiElement {
                 flex: 1;
                 margin: 64px 8px 16px 8px;
                 padding: 5px;
+                overflow: hidden;
             }
             .row {
                 display: flex;
@@ -218,6 +222,7 @@ customElements.define('li-flips', class LiFlips extends LiElement {
     }
 
     init() {
+        this._confetti && clearInterval(this._confetti);
         this.fontSize = Math.min(this.$qs('#cell_0').offsetWidth, this.$qs('#cell_0').offsetHeight);
         this.isOk = this.isError = 0;
         this.card1 = this.card2 = undefined;
@@ -227,8 +232,9 @@ customElements.define('li-flips', class LiFlips extends LiElement {
         const rusAlphabet = ['А', 'Б', 'В', 'Г', 'Д', 'Е', 'Ё', 'Ж', 'З', 'И', 'Й', 'К', 'Л', 'М', 'Н', 'О', 'П', 'Р', 'С', 'Т', 'У', 'Ф', 'Х', 'Ц', 'Ч', 'Ш', 'Щ', 'Ъ', 'Ы', 'Ь', 'Э', 'Ю', 'Я'];
         const digital1_9 = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
         const images = [];
+        const url = LI.$url.replace('li.js', 'lib/media/cards/_cards-');
         for (let i = 1; i <= 140; i++) {
-            images.push('/lib/media/cards/_cards-' + (i < 10 ? '00' + i : i < 100 ? '0' + i : i) + '.jpg'); 
+            images.push(url + (i < 10 ? '00' + i : i < 100 ? '0' + i : i) + '.jpg'); 
         }
         let length = (this.row * this.column) - (this.odd ? 1 : 0);
         this.step = 360 / (length / 2);
@@ -267,6 +273,17 @@ customElements.define('li-flips', class LiFlips extends LiElement {
                     this.solved.push(this.card1.id, this.card2.id);
                     this.card1 = this.card2 = undefined;
                     this.end = this.solved.length >= this.cards.length - (this.odd ? 2 : 0);
+                    if (this.end) {
+                        function randomInRange(min, max) { return Math.random() * (max - min) + min; }
+                        this._confetti = setInterval(() => {
+                            confetti({
+                                angle: randomInRange(30, 150),
+                                spread: randomInRange(50, 70),
+                                particleCount: randomInRange(50, 100),
+                                origin: { y: .55 }
+                            });
+                        }, 850);
+                    }
                 }, this.timeToClose);
             } else {
                 ++this.isError;
