@@ -141,7 +141,7 @@ customElements.define('li-flips', class LiFlips extends LiElement {
                     </div>
                 </div>
                 <li-button name='face' border='none' size=32 @click=${() => this.babyMode = !this.babyMode} title='baby mode' toggledClass='ontoggled' ?toggled=${this.babyMode}></li-button>
-                <li-button name='visibility-off' border='none' size=32 @click=${() => this.showSolved = !this.showSolved} title='show sloved' toggledClass='ontoggled' ?toggled=${!this.showSolved}></li-button>
+                <!-- <li-button name='visibility-off' border='none' size=32 @click=${() => this.showSolved = !this.showSolved} title='show solved' toggledClass='ontoggled' ?toggled=${!this.showSolved}></li-button> -->
                 <li-button name='extension' border='none' size=32 @click=${this.setMode} title='mode' style='margin-right: 8px'></li-button>
                 <li-button name='refresh' border='none' size=32 @click=${() => document.location.reload()} title='refresh' style='margin-right: 8px'></li-button>
             </header>
@@ -201,11 +201,11 @@ customElements.define('li-flips', class LiFlips extends LiElement {
         return {
             row: { type: Number, default: 5, save: true, category: 'settings' },
             column: { type: Number, default: 5, save: true, category: 'settings' },
-            showSolved: { type: Boolean, default: true, save: true, category: 'settings' },
             mode: { type: String, default: 'images', save: true, category: 'settings' },
             autoClose: { type: Boolean, default: true, category: 'settings' },
             timeToClose: { type: Number, default: 750, category: 'settings' },
             babyMode: { type: Boolean, default: false, save: true, category: 'settings' },
+            showSolved: { type: Boolean, default: true, category: 'settings' },
             fontSize: { type: Number, default: 32, category: 'settings' },
             isOk: { type: Number, default: 0 },
             isError: { type: Number, default: 0 },
@@ -222,6 +222,7 @@ customElements.define('li-flips', class LiFlips extends LiElement {
     }
 
     init() {
+        this.showSolved = true;
         this._confetti && clearInterval(this._confetti);
         this.fontSize = Math.min(this.$qs('#cell_0').offsetWidth, this.$qs('#cell_0').offsetHeight);
         this.isOk = this.isError = 0;
