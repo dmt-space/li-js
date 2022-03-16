@@ -12,18 +12,24 @@ customElements.define('li-flips', class LiFlips extends LiElement {
                 flex-direction: column;
                 justify-content: center;
                 height: 100%;
+                box-sizing: border-box;
             }
             header {
                 position: absolute;
                 top: 0;
+                max-width: 100%;
                 min-width: 100%;
                 display: flex;
+                /* flex-direction: row-reverse; */
                 flex: 1;
                 align-items: center;
                 border-bottom: 1px solid lightgray;
                 padding: 2px;
                 z-index: 9;
-                flex-wrap: wrap;
+                max-height: 44px;
+                overflow-x: auto;
+                box-sizing: border-box;
+                /* flex-wrap: wrap; */
             }
             .txt {
                 border: none;
@@ -32,6 +38,7 @@ customElements.define('li-flips', class LiFlips extends LiElement {
                 font-size: 24px;
                 width: 40px;
                 color: gray;
+                white-space:nowrap;
             }
             .board {
                 display: flex;
@@ -40,11 +47,11 @@ customElements.define('li-flips', class LiFlips extends LiElement {
                 justify-content: center;
                 background-color: lightgray;
                 border: 1px solid darkgray;
-                width: 100vmin;
-                max-height: 100vmin;
+                width: 95vmin;
+                max-height: 95vmin;
                 position: relative;
                 flex: 1;
-                margin: 44px 8px 8px 8px;
+                margin: 64px 8px 16px 8px;
                 padding: 5px;
             }
             .row {
@@ -121,9 +128,14 @@ customElements.define('li-flips', class LiFlips extends LiElement {
             <header>
                 <li-button name='remove' border='none' size=32 @click=${() => --this.row}></li-button><div class='txt'>${this.row}</div><li-button name='add' border='none' size=32  @click=${() => ++this.row}></li-button>
                 <li-button name='remove' border='none' size=32 @click=${() => --this.column} style='margin-left: 8px'></li-button><div class='txt'>${this.column}</div><li-button name='add' border='none' size=32  @click=${() => ++this.column}></li-button>
-                <div class='txt' style='flex: 1'>flips - ${this.mode}</div>
-                <li-icon name='done' border='none' size=32 fill='green'></li-icon><div class='txt' style='color: green; width: 100px'>${this.isOk}</div>
-                <li-icon name='close' border='none' size=32 fill='red'></li-icon><div class='txt' style='color: red; width: 100px'>${this.isError}</div>
+                <div style="display: flex; flex-direction: column; flex: 1; width: 100%">
+                    <div class='txt' style="width: 100%; ">flips - ${this.mode}</div>
+                    <div style="display: flex; width: 100%; justify-content: center; align-items: center">
+                        <div style="color: green; flex: 1; text-align: right">${this.isOk}</div>
+                        <div> : </div>
+                        <div style="color: red; flex: 1">${this.isError}</div>
+                    </div>
+                </div>
                 <li-button name='face' border='none' size=32 @click=${() => this.babyMode = !this.babyMode} title='baby mode' toggledClass='ontoggled' ?toggled=${this.babyMode}></li-button>
                 <li-button name='visibility-off' border='none' size=32 @click=${() => this.showSolved = !this.showSolved} title='show sloved' toggledClass='ontoggled' ?toggled=${!this.showSolved}></li-button>
                 <li-button name='extension' border='none' size=32 @click=${this.setMode} title='mode' style='margin-right: 8px'></li-button>
