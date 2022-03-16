@@ -116,7 +116,7 @@ customElements.define('li-flips', class LiFlips extends LiElement {
         return html`
             <style>
                 .solved {
-                    opacity: ${this.showSolved ? .3 : 0};
+                    opacity: ${this.end ? 1 : this.showSolved ? .3 : 0};
                 }
                 .cell:hover .cell-inner {
                     transform: ${this.babyMode ? 'rotateY(180deg)' : ''};
@@ -209,7 +209,8 @@ customElements.define('li-flips', class LiFlips extends LiElement {
             cards: { type: Array },
             card1: { type: Object },
             card2: { type: Object },
-            solved: { type: Array, default: [] }
+            solved: { type: Array, default: [] },
+            end: { type: Boolean },
         }
     }
     get odd() {
@@ -265,6 +266,7 @@ customElements.define('li-flips', class LiFlips extends LiElement {
                     ++this.isOk;
                     this.solved.push(this.card1.id, this.card2.id);
                     this.card1 = this.card2 = undefined;
+                    this.end = this.solved.length >= this.cards.length - (this.odd ? 2 : 0);
                 }, this.timeToClose);
             } else {
                 ++this.isError;
