@@ -150,9 +150,9 @@ customElements.define('li-flips', class LiFlips extends LiElement {
                 ${[...Array(+this.row).keys()].map(row => html`
                     <div class='row'>
                         ${[...Array(+this.column).keys()].map(column => {
-            let idx = this.column * row + column;
-            return html`
-                                <div class='cell
+                            let idx = this.column * row + column;
+                            return html`
+                                <div @pointerenter=${e => this.pointerenter(e, idx)} class='cell
                                         ${(this.showSolved && this.solved.includes(idx) || idx === this.card1?.id || idx === this.card2?.id) ? 'selected' : ''}
                                         ${this.solved.includes(idx) ? 'solved' : ''}' id=${'cell_' + idx} @click=${e => this.onclick(e, idx, this.cards?.[idx])}>
                                     <div class='cell-inner'>
@@ -271,6 +271,11 @@ customElements.define('li-flips', class LiFlips extends LiElement {
         if (this.solved.includes(id) || this.card1?.id === id || value.v < 0) {
             return;
         }
+        if (!this.clickEffect) {
+            this.clickEffect = new Audio('./audio/click.mp3');
+            this.clickEffect.volume = 0.2;
+        }
+        this.clickEffect.play();
         if (!this.card1) {
             this.card1 = { id, value };
         } else if (!this.card2) {
@@ -284,6 +289,11 @@ customElements.define('li-flips', class LiFlips extends LiElement {
                     this.card1 = this.card2 = undefined;
                     this.end = this.solved.length >= this.cards.length - (this.odd ? 2 : 0);
                     if (this.end) {
+                        if (!this.endEffect) {
+                            this.endEffect = new Audio('./audio/end.mp3');
+                            this.endEffect.volume = 0.2;
+                        }
+                        this.endEffect.play();
                         function randomInRange(min, max) { return Math.random() * (max - min) + min; }
                         this._confetti = setInterval(() => {
                             confetti({
@@ -293,9 +303,23 @@ customElements.define('li-flips', class LiFlips extends LiElement {
                                 origin: { y: .55 }
                             });
                         }, 850);
+                        setTimeout(() => {
+                            this._confetti && clearInterval(this._confetti);
+                        }, 5000);
+                    } else {
+                        if (!this.okEffect) {
+                            this.okEffect = new Audio('./audio/ok.mp3');
+                            this.okEffect.volume = 0.5;
+                        }
+                        this.okEffect.play();
                     }
                 }, this.timeToClose);
             } else {
+                if (!this.errEffect) {
+                    this.errEffect = new Audio('./audio/error.mp3');
+                    this.errEffect.volume = 0.05;
+                }
+                this.errEffect.play();
                 ++this.isError;
                 if (this.autoClose) {
                     setTimeout(() => {
@@ -305,5 +329,14 @@ customElements.define('li-flips', class LiFlips extends LiElement {
             }
         }
         this.$update();
+    }
+    pointerenter(e, idx) {
+        // if (this.babyMode && !this.end && !this.solved.includes(idx)) {
+        //     if (!this.hoverEffect) {
+        //         this.hoverEffect = new Audio('./audio/hover.mp3');
+        //         this.hoverEffect.volume = 0.3;
+        //     }
+        //     this.hoverEffect.play();
+        // }
     }
 })
