@@ -87,6 +87,9 @@ customElements.define('li-db', class LiDb extends LiElement {
         return {
             name: { type: String, default: 'db', local: true, save: true },
             url: { type: String, default: 'http://admin:54321@localhost:5984/', local: true, save: true },
+            rootLabel: { type: String, default: 'wiki-articles' },
+            sortLabel: { type: String, default: 'articles' },
+            prefix: { type: String, default: 'lidb_', local: true },
             replication: { type: Boolean, default: false, local: true, save: true },
             readOnly: { type: Boolean, default: false, local: true, save: true },
             allowImport: { type: Boolean, default: true, local: true },
@@ -128,7 +131,7 @@ customElements.define('li-db', class LiDb extends LiElement {
             if (this._dbName && this._dbName !== this.name) this.replication = false;
             this.name = this._dbName || this.name;
             if (this.name) {
-                const prefix = 'lidb_';
+                const prefix = this.prefix || 'lidb_';
                 this.dbLocal = new PouchDB(prefix + this.name);
                 this.dbRemote = new PouchDB(this.url + prefix + this.name);
                 if (this.replication) this.replicationHandler = this.dbLocal.sync(this.dbRemote, { live: true });
@@ -218,7 +221,7 @@ customElements.define('li-db', class LiDb extends LiElement {
     async firstInit() {
         try { this.rootArticle = await this.dbLocal.get('$wiki:articles') } catch (error) { }
         if (!this.rootArticle) {
-            await this.dbLocal.put(new ITEM({ _id: '$wiki:articles', type: 'articles', label: 'wiki-articles' }).doc);
+            await this.dbLocal.put(new ITEM({ _id: '$wiki:articles', type: 'articles', label: this.rootLabel || 'wiki-articles' }).doc);
             this.rootArticle = await this.dbLocal.get('$wiki:articles');
         }
         this.rootArticle = new ITEM({ ...this.rootArticle });
@@ -289,7 +292,7 @@ customElements.define('li-db', class LiDb extends LiElement {
                 searchColumns: ['name'],
                 readOnly: true
             },
-            columns: [{ label: '№', name: '$idx', width: 50 }, { label: 'articles', name: 'name', textAlign: 'left', alignItems: 'flex-start', showTitle: true }],
+            columns: [{ label: '№', name: '$idx', width: 50 }, { label: this.sortLabel || 'articles', name: 'name', textAlign: 'left', alignItems: 'flex-start', showTitle: true }],
             rows: rows
         }
     }
@@ -591,6 +594,7 @@ customElements.define('li-db-settings', class LiSettings extends LiElement {
         return {
             name: { type: String, local: true },
             url: { type: String, local: true, },
+            prefix: { type: String, local: true },
             replication: { type: Boolean, local: true },
             readOnly: { type: Boolean, local: true },
             allowImport: { type: Boolean, local: true },
@@ -750,7 +754,7 @@ customElements.define('li-db-settings', class LiSettings extends LiElement {
                 }
             },
             copy: async () => {
-                const prefix = 'lidb_';
+                const prefix = this.prefix || 'lidb_';
                 const dbLocalNew = new PouchDB(prefix + this.newName);
                 if (this.$qs('#copy-replicate').toggled) {
                     const dbRemoteNew = new PouchDB(this.url + prefix + this.newName);
