@@ -1,10 +1,10 @@
 window.globalThis = window.globalThis || window;
 
-// lit: 2.0.0
-import { LitElement } from 'https://unpkg.com/lit@2.0.0/index.js?module';
-export * from 'https://unpkg.com/lit@2.0.0/index.js?module';
-export { styleMap } from 'https://unpkg.com/lit@2.0.0/directives/style-map.js?module';
-export { unsafeHTML } from 'https://unpkg.com/lit@2.0.0/directives/unsafe-html.js?module';
+// lit: 2.2.1
+import { LitElement } from 'https://unpkg.com/lit@2.2.1/index.js?module';
+export * from 'https://unpkg.com/lit@2.2.1/index.js?module';
+export { styleMap } from 'https://unpkg.com/lit@2.2.1/directives/style-map.js?module';
+export { unsafeHTML } from 'https://unpkg.com/lit@2.2.1/directives/unsafe-html.js?module';
 
 // lit-element: 2.5.1, lit-html: 1.4.1
 // import { LitElement } from './lib/lit/min/lit-element.js';

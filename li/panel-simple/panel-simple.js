@@ -65,7 +65,7 @@ customElements.define('li-panel-simple', class LiPanelSimple extends LiElement {
             </div>
             ${this.src?.open || this.src?.opened ? html`
                 <div class="panel_content" style="flex: 1; overflow: auto;">
-                    <slot>${this.tabs[this.idx].content}</slot>
+                    <slot name=${this.tabs[this.idx].label}>${this.tabs[this.idx].content}</slot>
                 </div>
             ` : html``}
         `
