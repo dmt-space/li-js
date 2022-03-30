@@ -460,7 +460,11 @@ customElements.define('li-jupyter-cell-code', class LiJupyterCellCode extends Li
 
     render() {
         return html`
-            <li-editor-ace style="width: 100%; height: 100%" theme=${!this.readOnly && this.editedCell === this.cell ? 'solarized_light' : 'dawn'} mode="javascript"></li-editor-ace>    
+            <div style="display: flex; flex-direction: column; width: 100%; height: ${this.cell?.cell_h || 'unset'}; min-height: 24px; overflow: auto; padding: 2px 2px 0 2px">
+                <li-editor-ace style="width: 100%; height: 100%; min-height: 0px" theme=${!this.readOnly && this.editedCell === this.cell ? 'solarized_light' : 'dawn'} mode="javascript"></li-editor-ace>    
+                <li-splitter direction="horizontal" size="${this.cell?.splitterH >= 0 ? this.cell?.splitterH : 2}px" color="transparent" style="opacity: .3" resize></li-splitter>
+                <div style="display: flex; overflow: auto; width: 100%; max-height: 0px;"></div>
+            </div>
         `
     }
 
@@ -472,6 +476,17 @@ customElements.define('li-jupyter-cell-code', class LiJupyterCellCode extends Li
         }
     }
 
+    constructor() {
+        super();
+        this.listen('endSplitterMove', (e) => {
+            if (!this.readOnly) {
+                if (e.detail.direction === 'horizontal') {
+                    this.cell.cell_h = e.detail.h;
+                    this.cell.cell_h = this.cell.cell_h < 24 ? 24 : this.cell.cell_h;
+                }
+            }
+        })
+    }
     firstUpdated() {
         super.firstUpdated();
         setTimeout(() => {
@@ -546,7 +561,7 @@ customElements.define('li-jupyter-cell-html-executable', class LiJupyterCellHtml
 
     render() {
         return html`
-            <div style="position: relative; display: flex; flex-direction: column; overflow: hidden; width: 100%; height: ${this.cell?.cell_h || '200px'}; min-height: 26px">
+            <div style="position: relative; display: flex; flex-direction: column; overflow: hidden; width: 100%; height: ${this.cell?.cell_h || '200px'}; min-height: 26px; padding: 2px 2px 0 2px;">
                 <div style="display: flex; overflow: hidden; width: 100%; height: 100%">
                     <div style="width: ${this.cell?.cell_w === 0 || this.cell?.cell_w > 0 ? this.cell?.cell_w + '%' : '50%'}; overflow: auto">
                         <div style="display: flex; flex-direction: column; width: 100%; overflow: auto; height: 100%; position: relative">
@@ -565,12 +580,12 @@ customElements.define('li-jupyter-cell-html-executable', class LiJupyterCellHtml
                             <li-editor-ace class="ace" style="width: 100%" theme=${this.mode === 'html' ? 'cobalt' : this.mode === 'javascript' ? 'solarized_light' : this.mode === 'css' ? 'dawn' : 'chrome'} mode=${this.mode}></li-editor-ace>
                         </div>
                     </div>
-                    <li-splitter size="${this.cell?.splitterV >= 0 ? this.cell?.splitterV : 3}px" color="${this.cell.cell_w <= 3 ? 'transparent' : 'dodgerblue'}" style="opacity: .3"></li-splitter>
+                    <li-splitter size="${this.cell?.splitterV >= 0 ? this.cell?.splitterV : 2}px" color="transparent" style="opacity: .3"></li-splitter>
                     <div style="flex: 1; overflow: auto; width: 100%;">
                         <iframe style="border: none; width: 100%; height: 100%"></iframe>
                     </div>
                 </div>
-                <li-splitter direction="horizontal" size="${this.cell?.splitterH >= 0 ? this.cell?.splitterH : 3}px" color="transparent" style="opacity: .3" resize></li-splitter>
+                <li-splitter direction="horizontal" size="${this.cell?.splitterH >= 0 ? this.cell?.splitterH : 2}px" color="transparent" style="opacity: .3" resize></li-splitter>
                 <div style="display: flex; overflow: auto; flex: 1; width: 100%"></div>
             </div>
         `
@@ -618,7 +633,7 @@ Observable.observe(json, e => {
                 }
                 if (e.detail.direction === 'vertical') {
                     this.cell.cell_w = e.detail.w;
-                    this.cell.cell_w = this.cell.cell_w <= 3 ? 0 : this.cell.cell_w;
+                    this.cell.cell_w = this.cell.cell_w < 3 ? 0 : this.cell.cell_w;
                 }
             }
             this.listenIframe(true);
