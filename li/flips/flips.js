@@ -7,7 +7,6 @@ import confetti from "https://cdn.skypack.dev/canvas-confetti";
 customElements.define('li-flips', class LiFlips extends LiElement {
     static get styles() {
         return css`
-            ::-webkit-scrollbar { width: 3px; height: 3px; } ::-webkit-scrollbar-track { -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3); } ::-webkit-scrollbar-thumb { border-radius: 10px; }
             :host {
                 position: relative;
                 display: flex;
@@ -15,6 +14,11 @@ customElements.define('li-flips', class LiFlips extends LiElement {
                 justify-content: center;
                 height: 100%;
                 box-sizing: border-box;
+                -webkit-touch-callout: none;
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                user-select: none;
             }
             header {
                 position: absolute;
@@ -22,7 +26,6 @@ customElements.define('li-flips', class LiFlips extends LiElement {
                 max-width: 100%;
                 min-width: 100%;
                 display: flex;
-                /* flex-direction: row-reverse; */
                 flex: 1;
                 align-items: center;
                 border-bottom: 1px solid lightgray;
@@ -32,14 +35,12 @@ customElements.define('li-flips', class LiFlips extends LiElement {
                 overflow: hidden;
                 overflow-x: auto;
                 box-sizing: border-box;
-                /* flex-wrap: wrap; */
             }
             .txt {
                 border: none;
                 outline: none; 
                 text-align: center;
-                font-size: 24px;
-                width: 40px;
+                font-size: 22px;
                 color: gray;
                 white-space:nowrap;
             }
@@ -109,9 +110,10 @@ customElements.define('li-flips', class LiFlips extends LiElement {
             .odd {
                 color: transparent;
                 font-size: 0;
-                opacity: .3;
+                opacity: 1;
                 background-size: cover;
                 background-repeat: no-repeat;
+                cursor: default;
             }
         `;
     }
@@ -120,45 +122,42 @@ customElements.define('li-flips', class LiFlips extends LiElement {
         return html`
             <style>
                 .solved {
-                    opacity: ${this.end ? 1 : this.showSolved ? .3 : 0};
+                    opacity: ${this.end ? 1 : .3};
                 }
                 .cell:hover .cell-inner {
                     transform: ${this.babyMode ? 'rotateY(180deg)' : ''};
                 }
                 .cell-front, .cell-back {
-                    font-size: ${this.fontSize - 32}px;
+                    font-size: ${14 + this.fontSize - 100 <= 14 ? 14 : 14 + this.fontSize - 100}px;
                 }
             </style>
             <header>
-                <li-button name='remove' border='none' size=32 @click=${() => --this.row}></li-button><div class='txt'>${this.row}</div><li-button name='add' border='none' size=32  @click=${() => ++this.row}></li-button>
-                <li-button name='remove' border='none' size=32 @click=${() => --this.column} style='margin-left: 8px'></li-button><div class='txt'>${this.column}</div><li-button name='add' border='none' size=32  @click=${() => ++this.column}></li-button>
+                <li-button name='remove' border='none' size=28 @click=${() => --this.row}></li-button><div class='txt'>${this.row}</div><li-button name='add' border='none' size=28  @click=${() => ++this.row}></li-button>
+                <li-button name='remove' border='none' size=28 @click=${() => --this.column} style='margin-left: 4px'></li-button><div class='txt'>${this.column}</div><li-button name='add' border='none' size=28  @click=${() => ++this.column}></li-button>
                 <div style="display: flex; flex-direction: column; flex: 1; width: 100%">
                     <div class='txt' style="width: 100%; ">flips - ${this.mode}</div>
                     <div style="display: flex; width: 100%; justify-content: center; align-items: center">
-                        <div style="color: green; flex: 1; text-align: right">${this.isOk}</div>
-                        <div> : </div>
-                        <div style="color: red; flex: 1">${this.isError}</div>
+                        <div style="color: green; flex: 1; text-align: right; font-weight: 600; opacity: .5">${this.isOk}</div>
+                        <div style="padding: 0 4px"> : </div>
+                        <div style="color: red; flex: 1; font-weight: 600; opacity: .5">${this.isError}</div>
                     </div>
                 </div>
-                <li-button name='face' border='none' size=32 @click=${() => this.babyMode = !this.babyMode} title='baby mode' toggledClass='ontoggled' ?toggled=${this.babyMode}></li-button>
-                <!-- <li-button name='visibility-off' border='none' size=32 @click=${() => this.showSolved = !this.showSolved} title='show solved' toggledClass='ontoggled' ?toggled=${!this.showSolved}></li-button> -->
-                <li-button name='extension' border='none' size=32 @click=${this.setMode} title='mode' style='margin-right: 8px'></li-button>
-                <li-button name='refresh' border='none' size=32 @click=${() => document.location.reload()} title='refresh' style='margin-right: 8px'></li-button>
+                <li-button name='face' border='none' size=28 @click=${() => this.babyMode = !this.babyMode} title='baby mode' toggledClass='ontoggled' ?toggled=${this.babyMode}></li-button>
+                <li-button name='extension' border='none' size=28 @click=${this.setMode} title='mode' style='margin-right: 8px'></li-button>
+                <li-button name='refresh' border='none' size=28 @click=${() => document.location.reload()} title='refresh' style='margin-right: 8px'></li-button>
             </header>
-
-            <div class='board'>
+            <div id="board" class='board'>
                 ${[...Array(+this.row).keys()].map(row => html`
                     <div class='row'>
                         ${[...Array(+this.column).keys()].map(column => {
                             let idx = this.column * row + column;
                             return html`
-                                <div @pointerenter=${e => this.pointerenter(e, idx)} class='cell
-                                        ${(this.showSolved && this.solved.includes(idx) || idx === this.card1?.id || idx === this.card2?.id) ? 'selected' : ''}
-                                        ${this.solved.includes(idx) ? 'solved' : ''}' id=${'cell_' + idx} @click=${e => this.onclick(e, idx, this.cards?.[idx])}>
+                                <div class='cell ${(this.solved.includes(idx) || idx === this.card1?.id || idx === this.card2?.id) ? 'selected' : ''} ${this.solved.includes(idx) ? 'solved' : ''}' 
+                                         @click=${e => this.onclick(e, idx, this.cards?.[idx])}>
                                     <div class='cell-inner'>
                                         <div class='cell-front ${idx === this.odd ? 'odd' : ''}' style="color: hsla(${this.cards?.[idx]?.c || 0}, 60%, 50%, 1);">
-                                            ${this.mode === 'images' || this.mode === 'colors' ? html`
-                                                <img src=${idx === this.odd ? '../../lib/li.png' : this.cards?.[idx]?.v} style="width: 100%;max-height: 100%;">
+                                            ${this.mode === 'images' || this.mode === 'colors' || idx === this.odd ? html`
+                                                <img src=${this.cards?.[idx]?.v || '../../lib/li.png'} style="width: 100%;max-height: 100%;">
                                             ` : html`
                                                 ${this.cards?.[idx]?.v}
                                             `}
@@ -177,36 +176,15 @@ customElements.define('li-flips', class LiFlips extends LiElement {
         `
     }
 
-    firstUpdated() {
-        super.firstUpdated();
-        setTimeout(() => {
-            this.init();
-        }, 100);
-        window.addEventListener('resize', () => {
-            LI.throttle('resize', () => {
-                this.fontSize = Math.min(this.$qs('#cell_0').offsetWidth, this.$qs('#cell_0').offsetHeight);
-            }, 300);
-        }, false);
-    }
-    updated(e) {
-        if (e.has('row') || e.has('column')) {
-            this.row = this.row < 2 ? 2 : this.row > 10 ? 10 : this.row;
-            this.column = this.column < 2 ? 2 : this.column > 10 ? 10 : this.column;
-        }
-        if (e.has('row') || e.has('column') || e.has('showSolved') || e.has('babyMode') || e.has('mode'))
-            this.init();
-    }
-
     static get properties() {
         return {
-            row: { type: Number, default: 5, save: true, category: 'settings' },
-            column: { type: Number, default: 5, save: true, category: 'settings' },
+            row: { type: Number, default: 3, save: true, category: 'settings' },
+            column: { type: Number, default: 3, save: true, category: 'settings' },
             mode: { type: String, default: 'images', save: true, category: 'settings' },
             autoClose: { type: Boolean, default: true, category: 'settings' },
             timeToClose: { type: Number, default: 750, category: 'settings' },
             babyMode: { type: Boolean, default: false, save: true, category: 'settings' },
-            showSolved: { type: Boolean, default: true, category: 'settings' },
-            fontSize: { type: Number, default: 32, category: 'settings' },
+            fontSize: { type: Number, default: 32 },
             isOk: { type: Number, default: 0 },
             isError: { type: Number, default: 0 },
             step: { type: Number, default: 0 },
@@ -220,11 +198,33 @@ customElements.define('li-flips', class LiFlips extends LiElement {
     get odd() {
         return (this.row * this.column) % 2 === 0 ? '' : Math.floor(this.row * this.column / 2);
     }
+    get _fontSize() {
+        return Math.min(this.$qs('#board').offsetWidth / this.column + this.column * 4, this.$qs('#board').offsetHeight / this.row + this.row * 4);
+    }
+
+    firstUpdated() {
+        super.firstUpdated();
+        setTimeout(() => {
+            this.init();
+        }, 100);
+        window.addEventListener('resize', () => {
+            LI.throttle('resize', () => {
+                this.fontSize = this._fontSize;
+            }, 300);
+        }, false);
+    }
+    updated(e) {
+        if (e.has('row') || e.has('column')) {
+            this.row = this.row < 2 ? 2 : this.row > 10 ? 10 : this.row;
+            this.column = this.column < 2 ? 2 : this.column > 10 ? 10 : this.column;
+        }
+        if (e.has('row') || e.has('column') || e.has('mode'))
+            this.init();
+    }
 
     init() {
-        this.showSolved = true;
         this._confetti && clearInterval(this._confetti);
-        this.fontSize = Math.min(this.$qs('#cell_0').offsetWidth, this.$qs('#cell_0').offsetHeight);
+        this.fontSize = this._fontSize;
         this.isOk = this.isError = 0;
         this.card1 = this.card2 = undefined;
         this.solved = [];
@@ -267,6 +267,7 @@ customElements.define('li-flips', class LiFlips extends LiElement {
         this.mode = mode[idx];
     }
     onclick(e, id, value) {
+        if (id === this.odd) return;
         if (!this.autoClose && this.card1 && this.card2) this.card1 = this.card2 = undefined;
         if (this.solved.includes(id) || this.card1?.id === id || value.v < 0) {
             return;
@@ -329,14 +330,5 @@ customElements.define('li-flips', class LiFlips extends LiElement {
             }
         }
         this.$update();
-    }
-    pointerenter(e, idx) {
-        // if (this.babyMode && !this.end && !this.solved.includes(idx)) {
-        //     if (!this.hoverEffect) {
-        //         this.hoverEffect = new Audio('./audio/hover.mp3');
-        //         this.hoverEffect.volume = 0.3;
-        //     }
-        //     this.hoverEffect.play();
-        // }
     }
 })
