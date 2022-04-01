@@ -157,14 +157,14 @@ customElements.define('li-flips', class LiFlips extends LiElement {
                                     <div class='cell-inner'>
                                         <div class='cell-front ${idx === this.odd ? 'odd' : ''}' style="color: hsla(${this.cards?.[idx]?.c || 0}, 60%, 50%, 1);">
                                             ${this.mode === 'images' || this.mode === 'colors' || idx === this.odd ? html`
-                                                <img src=${this.cards?.[idx]?.v || '../../lib/li.png'} style="width: 100%;max-height: 100%;">
+                                                <img src=${this.cards?.[idx]?.v || './li.png'} style="width: 100%;max-height: 100%;">
                                             ` : html`
                                                 ${this.cards?.[idx]?.v}
                                             `}
                                         </div>
                                         <div class='cell-back ${idx === this.odd ? 'odd' : ''}'>
                                             ${idx === this.odd ? html`
-                                                <img src="../../lib/li.png" style="width: 100%;max-height: 100%;">
+                                                <img src="./li.png" style="width: 100%;max-height: 100%;">
                                             ` : html``}
                                         </div>
                                     </div>
