@@ -239,7 +239,7 @@ customElements.define('li-flips', class LiFlips extends LiElement {
         }
         const colors = [];
         url = this.$url.replace('flips.js', 'colors/colors-');
-        for (let i = 1; i <= 8; i++) {
+        for (let i = 1; i <= 12; i++) {
             colors.push(url + (i < 10 ? '00' + i : i < 100 ? '0' + i : i) + '.jpg'); 
         }
         let length = (this.row * this.column) - (this.odd ? 1 : 0);
