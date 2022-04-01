@@ -142,7 +142,7 @@ customElements.define('li-flips', class LiFlips extends LiElement {
                         <div style="color: red; flex: 1; font-weight: 600; opacity: .5">${this.isError}</div>
                     </div>
                 </div>
-                <li-button name='face' border='none' size=28 @click=${() => this.babyMode = !this.babyMode} title='baby mode' toggledClass='ontoggled' ?toggled=${this.babyMode}></li-button>
+                <li-button name='face' border='none' size=28 @click=${() => this.babyMode = !this.babyMode} title='baby mode' toggledClass='ontoggled' ?toggled=${this.babyMode} style='margin: 0 8px 0 36px'></li-button>
                 <li-button name='extension' border='none' size=28 @click=${this.setMode} title='mode' style='margin-right: 8px'></li-button>
                 <li-button name='refresh' border='none' size=28 @click=${() => document.location.reload()} title='refresh' style='margin-right: 8px'></li-button>
             </header>
