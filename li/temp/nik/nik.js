@@ -17,16 +17,15 @@ customElements.define('li-apps', class LiApps extends LiElement {
                 align-items: center;
             }
             div {
-                padding: 2px;
-                font-size: 24px;
+                font-size: 20px;
             }
         `;
     }
 
     render() {
         return html`
-            <h2>${this.txt}</h2>
-            <li-date-to-circle type="day" size="140" fontSize="28"></li-date-to-circle>
+            <div style="font-size: 24px; font-weight: 700">${this.txt}</div>
+            <li-date-to-circle type="day" size="100" fontSize="24"></li-date-to-circle>
             <div>
                 <li-date-to-circle type="hour"></li-date-to-circle>
                 <li-date-to-circle type="min"></li-date-to-circle>
@@ -43,7 +42,7 @@ customElements.define('li-apps', class LiApps extends LiElement {
 
     static get properties() {
         return {
-            txt: { type: String, default: 'до 19 декабря 2022 года осталось :' },
+            txt: { type: String, default: '19 декабря 2022 года' },
             dates: { type: String, default: '2022-12-19' },
             s: { type: Number },
             mn: { type: Number },
@@ -89,11 +88,11 @@ customElements.define('li-date-to-circle', class LiDateToCircle extends LiElemen
                 default: 'ms',
                 list: ['day', 'hour', 'min', 'sec', 'ms']
             },
-            size: { type: Number, default: 100 },
+            size: { type: Number, default: 80 },
             padding: { type: Number, default: 8 },
             lineWidth: { type: Number, default: 2 },
             lineColor: { type: String, default: '#4285f4' },
-            fontSize: { type: Number, default: 20 },
+            fontSize: { type: Number, default: 18 },
             fontColor: { type: String, default: 'red' },
             label: { type: String, default: '' },
         }
