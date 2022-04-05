@@ -151,14 +151,14 @@ customElements.define('li-flips', class LiFlips extends LiElement {
                                     <div class='cell-inner'>
                                         <div class='cell-front ${idx === this.odd ? 'odd' : ''}' style="color: hsla(${this.cards?.[idx]?.c || 0}, 60%, 50%, 1);">
                                             ${this.mode === 'images' || this.mode === 'colors' || idx === this.odd ? html`
-                                                <img src=${this.cards?.[idx]?.v || './li.png'} style="width: 100%;max-height: 100%;">
+                                                <img src=${this.cards?.[idx]?.v || this._url + 'li.png'} style="width: 100%;max-height: 100%;">
                                             ` : html`
                                                 ${this.cards?.[idx]?.v}
                                             `}
                                         </div>
                                         <div class='cell-back ${idx === this.odd ? 'odd' : ''}'>
                                             ${idx === this.odd ? html`
-                                                <img src="./li.png" style="width: 100%;max-height: 100%;">
+                                                <img src=${this._url + 'li.png'} style="width: 100%;max-height: 100%;">
                                             ` : html``}
                                         </div>
                                     </div>
@@ -191,6 +191,7 @@ customElements.define('li-flips', class LiFlips extends LiElement {
     }
     get odd() { return (this.row * this.column) % 2 === 0 ? '' : Math.floor(this.row * this.column / 2) }
     get _fontSize() { return Math.min(this.$qs('#board').offsetWidth / this.column + this.column * 4, this.$qs('#board').offsetHeight / this.row + this.row * 4) }
+    get _url() { return this.$url.replace('flips.js', '') }
 
     firstUpdated() {
         super.firstUpdated();
@@ -216,10 +217,10 @@ customElements.define('li-flips', class LiFlips extends LiElement {
         const rusAlphabet = ['А', 'Б', 'В', 'Г', 'Д', 'Е', 'Ё', 'Ж', 'З', 'И', 'Й', 'К', 'Л', 'М', 'Н', 'О', 'П', 'Р', 'С', 'Т', 'У', 'Ф', 'Х', 'Ц', 'Ч', 'Ш', 'Щ', 'Ъ', 'Ы', 'Ь', 'Э', 'Ю', 'Я'];
         const digital1_9 = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
         const images = [];
-        let url = this.$url.replace('flips.js', 'cards/cards-');
+        let url = this._url + 'cards/cards-';
         for (let i = 1; i <= 140; i++) images.push(url + (i < 10 ? '00' + i : i < 100 ? '0' + i : i) + '.jpg');
         const colors = [];
-        url = this.$url.replace('flips.js', 'colors/colors-');
+        url = this._url + 'colors/colors-';
         for (let i = 1; i <= 12; i++) colors.push(url + (i < 10 ? '00' + i : i < 100 ? '0' + i : i) + '.jpg');
         let length = (this.row * this.column) - (this.odd ? 1 : 0);
         this.step = 360 / (length / 2);
@@ -259,7 +260,7 @@ customElements.define('li-flips', class LiFlips extends LiElement {
         if (id === this.odd) return;
         if (!this.autoClose && this.card1 && this.card2) this.card1 = this.card2 = undefined;
         if (this.solved.includes(id) || this.card1?.id === id || value.v < 0) return;
-        this.clickEffect ||= new Audio('./audio/click.mp3');
+        this.clickEffect ||= new Audio(this._url + 'audio/click.mp3');
         this.clickEffect.volume = 0.2;
         this.clickEffect.play();
         if (!this.card1) this.card1 = { id, value };
@@ -274,20 +275,20 @@ customElements.define('li-flips', class LiFlips extends LiElement {
                     this.card1 = this.card2 = undefined;
                     this.end = this.solved.length >= this.cards.length - (this.odd ? 2 : 0);
                     if (this.end) {
-                        this.endEffect ||= new Audio('./audio/end.mp3');
+                        this.endEffect ||= new Audio(this._url + 'audio/end.mp3');
                         this.endEffect.volume = 0.2;
                         this.endEffect.play();
                         function randomInRange(min, max) { return Math.random() * (max - min) + min; }
                         this._confetti = setInterval(() => confetti({ angle: randomInRange(30, 150), spread: randomInRange(50, 70), particleCount: randomInRange(50, 100), origin: { y: .55 } }), 650);
                         setTimeout(() => this._confetti && clearInterval(this._confetti), 2100);
                     } else {
-                        this.okEffect ||= new Audio('./audio/ok.mp3');
+                        this.okEffect ||= new Audio(this._url + 'audio/ok.mp3');
                         this.okEffect.volume = 0.4;
                         this.okEffect.play();
                     }
                 }, this.timeToClose);
             } else {
-                this.errEffect ||= new Audio('./audio/error.mp3');
+                this.errEffect ||= new Audio(this._url + 'audio/error.mp3');
                 this.errEffect.volume = 0.1;
                 this.errEffect.play();
                 ++this.isError;
