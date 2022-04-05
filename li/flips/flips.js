@@ -121,15 +121,9 @@ customElements.define('li-flips', class LiFlips extends LiElement {
     render() {
         return html`
             <style>
-                .solved {
-                    opacity: ${this.end ? 1 : .3};
-                }
-                .cell:hover .cell-inner {
-                    transform: ${this.babyMode ? 'rotateY(180deg)' : ''};
-                }
-                .cell-front, .cell-back {
-                    font-size: ${14 + this.fontSize - 100 <= 14 ? 14 : 14 + this.fontSize - 100}px;
-                }
+                .solved { opacity: ${this.end ? 1 : .3}; }
+                .cell:hover .cell-inner { transform: ${this.babyMode ? 'rotateY(180deg)' : ''}; }
+                .cell-front, .cell-back { font-size: ${14 + this.fontSize - 100 <= 14 ? 14 : 14 + this.fontSize - 100}px; }
             </style>
             <header>
                 <li-button name='remove' border='none' size=28 @click=${() => --this.row}></li-button><div class='txt'>${this.row}</div><li-button name='add' border='none' size=28  @click=${() => ++this.row}></li-button>
@@ -150,7 +144,7 @@ customElements.define('li-flips', class LiFlips extends LiElement {
                 ${[...Array(+this.row).keys()].map(row => html`
                     <div class='row'>
                         ${[...Array(+this.column).keys()].map(column => {
-                            let idx = this.column * row + column;
+                            let idx = this.column * row + column; 
                             return html`
                                 <div class='cell ${(this.solved.includes(idx) || idx === this.card1?.id || idx === this.card2?.id) ? 'selected' : ''} ${this.solved.includes(idx) ? 'solved' : ''}' 
                                          @click=${e => this.onclick(e, idx, this.cards?.[idx])}>
@@ -195,31 +189,20 @@ customElements.define('li-flips', class LiFlips extends LiElement {
             end: { type: Boolean },
         }
     }
-    get odd() {
-        return (this.row * this.column) % 2 === 0 ? '' : Math.floor(this.row * this.column / 2);
-    }
-    get _fontSize() {
-        return Math.min(this.$qs('#board').offsetWidth / this.column + this.column * 4, this.$qs('#board').offsetHeight / this.row + this.row * 4);
-    }
+    get odd() { return (this.row * this.column) % 2 === 0 ? '' : Math.floor(this.row * this.column / 2) }
+    get _fontSize() { return Math.min(this.$qs('#board').offsetWidth / this.column + this.column * 4, this.$qs('#board').offsetHeight / this.row + this.row * 4) }
 
     firstUpdated() {
         super.firstUpdated();
-        setTimeout(() => {
-            this.init();
-        }, 100);
-        window.addEventListener('resize', () => {
-            LI.throttle('resize', () => {
-                this.fontSize = this._fontSize;
-            }, 300);
-        }, false);
+        setTimeout(() => this.init(), 100);
+        window.addEventListener('resize', () => LI.throttle('resize', () => this.fontSize = this._fontSize, 300), false);
     }
     updated(e) {
         if (e.has('row') || e.has('column')) {
             this.row = this.row < 2 ? 2 : this.row > 10 ? 10 : this.row;
             this.column = this.column < 2 ? 2 : this.column > 10 ? 10 : this.column;
         }
-        if (e.has('row') || e.has('column') || e.has('mode'))
-            this.init();
+        if (e.has('row') || e.has('column') || e.has('mode')) this.init();
     }
 
     init() {
@@ -234,34 +217,40 @@ customElements.define('li-flips', class LiFlips extends LiElement {
         const digital1_9 = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
         const images = [];
         let url = this.$url.replace('flips.js', 'cards/cards-');
-        for (let i = 1; i <= 140; i++) {
-            images.push(url + (i < 10 ? '00' + i : i < 100 ? '0' + i : i) + '.jpg'); 
-        }
+        for (let i = 1; i <= 140; i++) images.push(url + (i < 10 ? '00' + i : i < 100 ? '0' + i : i) + '.jpg');
         const colors = [];
         url = this.$url.replace('flips.js', 'colors/colors-');
-        for (let i = 1; i <= 12; i++) {
-            colors.push(url + (i < 10 ? '00' + i : i < 100 ? '0' + i : i) + '.jpg'); 
-        }
+        for (let i = 1; i <= 12; i++) colors.push(url + (i < 10 ? '00' + i : i < 100 ? '0' + i : i) + '.jpg');
         let length = (this.row * this.column) - (this.odd ? 1 : 0);
         this.step = 360 / (length / 2);
         const mode = { images, '1...9': digital1_9, 'ABC...': alphabet, 'АБВ...': rusAlphabet, colors };
         const arr = mode[this.mode] || images;
+        let unique = [];
+        const uniqueCards = [];
         for (let i = 0; i < length / 2; i++) {
             const color = i * this.step;
-            if (this.mode === 'digital') this.cards.push({ v: i, c: color }, { v: i, c: color })
+            if (this.mode === 'digital') uniqueCards.push({ v: i, c: color }, { v: i, c: color });
             else {
-                const random = arr[Math.floor(Math.random() * arr.length)];
-                this.cards.push({ v: random, c: color }, { v: random, c: color });
+                if (unique.length === 0) unique = [...Array(arr.length).keys()];
+                const randomNumber = Math.floor(Math.random() * unique.length);
+                const random = arr[unique[randomNumber]];
+                uniqueCards.push({ v: random, c: color }, { v: random, c: color })
+                unique[randomNumber] = unique[unique.length - 1];
+                unique.pop();
             }
         }
-        this.cards = this.cards.sort(() => Math.random() - 0.5);
-        if (this.odd) {
-            this.cards.splice(this.odd, 0, -1);
+        this.cards = [];
+        while (uniqueCards.length !== 0) {
+            const randomNumber = Math.floor(Math.random() * uniqueCards.length);
+            this.cards.push(uniqueCards[randomNumber]);
+            uniqueCards[randomNumber] = uniqueCards[uniqueCards.length - 1];
+            uniqueCards.pop();
         }
+        this.odd && this.cards.splice(this.odd, 0, -1);
         this.$update();
     }
     setMode() {
-        const mode = [ 'images', '1...9', 'digital', 'ABC...', 'АБВ...', 'colors'];
+        const mode = ['images', '1...9', 'digital', 'ABC...', 'АБВ...', 'colors'];
         let idx = mode.indexOf(this.mode);
         idx = ++idx >= mode.length ? 0 : idx;
         this.mode = mode[idx];
@@ -269,17 +258,12 @@ customElements.define('li-flips', class LiFlips extends LiElement {
     onclick(e, id, value) {
         if (id === this.odd) return;
         if (!this.autoClose && this.card1 && this.card2) this.card1 = this.card2 = undefined;
-        if (this.solved.includes(id) || this.card1?.id === id || value.v < 0) {
-            return;
-        }
-        if (!this.clickEffect) {
-            this.clickEffect = new Audio('./audio/click.mp3');
-            this.clickEffect.volume = 0.2;
-        }
+        if (this.solved.includes(id) || this.card1?.id === id || value.v < 0) return;
+        this.clickEffect ||= new Audio('./audio/click.mp3');
+        this.clickEffect.volume = 0.2;
         this.clickEffect.play();
-        if (!this.card1) {
-            this.card1 = { id, value };
-        } else if (!this.card2) {
+        if (!this.card1) this.card1 = { id, value };
+        else if (!this.card2) {
             this.card2 = { id, value };
             const color = this.mode === 'images' || this.mode === 'colors' || this.card1.value.c === this.card2.value.c;
             if (this.card1.value.v === this.card2.value.v && color) {
@@ -290,43 +274,24 @@ customElements.define('li-flips', class LiFlips extends LiElement {
                     this.card1 = this.card2 = undefined;
                     this.end = this.solved.length >= this.cards.length - (this.odd ? 2 : 0);
                     if (this.end) {
-                        if (!this.endEffect) {
-                            this.endEffect = new Audio('./audio/end.mp3');
-                            this.endEffect.volume = 0.2;
-                        }
+                        this.endEffect ||= new Audio('./audio/end.mp3');
+                        this.endEffect.volume = 0.2;
                         this.endEffect.play();
                         function randomInRange(min, max) { return Math.random() * (max - min) + min; }
-                        this._confetti = setInterval(() => {
-                            confetti({
-                                angle: randomInRange(30, 150),
-                                spread: randomInRange(50, 70),
-                                particleCount: randomInRange(50, 100),
-                                origin: { y: .55 }
-                            });
-                        }, 850);
-                        setTimeout(() => {
-                            this._confetti && clearInterval(this._confetti);
-                        }, 5000);
+                        this._confetti = setInterval(() => confetti({ angle: randomInRange(30, 150), spread: randomInRange(50, 70), particleCount: randomInRange(50, 100), origin: { y: .55 } }), 650);
+                        setTimeout(() => this._confetti && clearInterval(this._confetti), 2100);
                     } else {
-                        if (!this.okEffect) {
-                            this.okEffect = new Audio('./audio/ok.mp3');
-                            this.okEffect.volume = 0.5;
-                        }
+                        this.okEffect ||= new Audio('./audio/ok.mp3');
+                        this.okEffect.volume = 0.4;
                         this.okEffect.play();
                     }
                 }, this.timeToClose);
             } else {
-                if (!this.errEffect) {
-                    this.errEffect = new Audio('./audio/error.mp3');
-                    this.errEffect.volume = 0.05;
-                }
+                this.errEffect ||= new Audio('./audio/error.mp3');
+                this.errEffect.volume = 0.1;
                 this.errEffect.play();
                 ++this.isError;
-                if (this.autoClose) {
-                    setTimeout(() => {
-                        this.card1 = this.card2 = undefined;
-                    }, this.timeToClose);
-                }
+                this.autoClose && setTimeout(() => this.card1 = this.card2 = undefined, this.timeToClose);
             }
         }
         this.$update();
