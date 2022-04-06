@@ -23,28 +23,48 @@ customElements.define('li-timer', class LiTimer extends LiElement {
                 color: blue;
                 font-size: 16px;
             }
+            .vertical {
+                display: flex;
+                flex-direction: column;
+            }
+            .box {
+                box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+                border: 1px solid darkgray;
+                margin: 8px 2px;
+                padding: 8px;
+                justify-content: space-between;
+                align-items: center;
+                border-radius: 4px;
+                text-align: center;
+            }
         `;
     }
 
     render() {
         return html`
-            <div style="font-size: 20px; font-weight: 500; color: blue;">${this.txt}</div>
-            <div style="font-size: 24px; font-weight: 700; color: blue;">${this.date + ' ' + this.time}</div>
-            <div style="font-size: 20px; font-weight: 500; color: blue;">${this.txt2}</div>
-            <li-timer-circle type="day" size="100" fontSize="24"></li-timer-circle>
-            <div>
-                <li-timer-circle type="hour"></li-timer-circle>
-                <li-timer-circle type="min"></li-timer-circle>
-                <li-timer-circle type="sec"></li-timer-circle>
-                <li-timer-circle></li-timer-circle>
+            <div class="vertical box">
+                <div style="font-size: 20px; font-weight: 500; color: blue;">${this.txt}</div>
+                <div style="font-size: 24px; font-weight: 700; color: blue;">${this.date + ' ' + this.time}</div>
+                <div style="font-size: 20px; font-weight: 500; color: blue;">${this.txt2}</div>
             </div>
-            <div class="row"><span class="lbl">секунд: </span>${this.s}</div>
-            <div class="row"><span class="lbl">минут: </span>${this.mn}</div>
-            <div class="row"><span class="lbl">часов: </span>${this.h}</div>
-            <div class="row"><span class="lbl">дней: </span>${this.d}</div>
-            <div class="row"><span class="lbl">недель: </span>${this.w}</div>
-            <div class="row"><span class="lbl">месяцев: </span>${this.m}</div>
-            <div class="row"><span class="lbl">лет: </span>${this.y}</div>
+            <div class="vertical box">
+                <li-timer-circle type="day" size="100" fontSize="24"></li-timer-circle>
+                <div>
+                    <li-timer-circle type="hour"></li-timer-circle>
+                    <li-timer-circle type="min"></li-timer-circle>
+                    <li-timer-circle type="sec"></li-timer-circle>
+                    <li-timer-circle></li-timer-circle>
+                </div>
+            </div>
+            <div class="vertical box">
+                <div class="row"><span class="lbl">секунд: </span>${this.s}</div>
+                <div class="row"><span class="lbl">минут: </span>${this.mn}</div>
+                <div class="row"><span class="lbl">часов: </span>${this.h}</div>
+                <div class="row"><span class="lbl">дней: </span>${this.d}</div>
+                <div class="row"><span class="lbl">недель: </span>${this.w}</div>
+                <div class="row"><span class="lbl">месяцев: </span>${this.m}</div>
+                <div class="row"><span class="lbl">лет: </span>${this.y}</div>
+            </div>
         `
     }
 
@@ -68,7 +88,10 @@ customElements.define('li-timer', class LiTimer extends LiElement {
     }
     firstUpdated() {
         super.firstUpdated();
+        this.init();
+    }
 
+    init() {
         const url = new URL(document.location.href);
         const date = url.searchParams.get('date');
         const time = url.searchParams.get('time');
@@ -80,19 +103,14 @@ customElements.define('li-timer', class LiTimer extends LiElement {
 
         this.end = (new Date(this.date + 'T' + this.time)).getTime();
         this.today = (new Date()).getTime();
-
-        // const x = new Date();
-        // this.currentTimeZoneOffsetInMS = x.getTimezoneOffset() * 60 * 1000;
         let diff = this.end - this.today;
-        // diff += this.currentTimeZoneOffsetInMS;
 
-        this.txt = txt || this.txt || (diff >= 0 ? 'до' : 'с');
-        this.txt2 = txt2 || this.txt2 || (diff >= 0 ? 'осталось' : 'прошло');
+        this.txt = txt || this.txt || (diff >= 0 ? 'осталось до' : 'прошло с');
+        this.txt2 = txt2 || this.txt2 || '';
 
         setInterval(() => {
             this.today = (new Date()).getTime();
             diff = Math.abs(this.end - this.today);
-            // diff += this.currentTimeZoneOffsetInMS;
             this.d = (diff / 1000 / 60 / 60 / 24).toFixed(2);
             this.w = (diff / 1000 / 60 / 60 / 24 / 7).toFixed(2);
             this.m = (diff / 1000 / 60 / 60 / 24 / 30.5).toFixed(2);
@@ -103,12 +121,6 @@ customElements.define('li-timer', class LiTimer extends LiElement {
 })
 
 customElements.define('li-timer-circle', class LiTimerCircle extends LiElement {
-    static get styles() {
-        return css`
-
-        `;
-    }
-
     render() {
         return html`
             <canvas id="circle" width=${this.size} height="${this.size}"></canvas>
@@ -117,11 +129,7 @@ customElements.define('li-timer-circle', class LiTimerCircle extends LiElement {
 
     static get properties() {
         return {
-            type: {
-                type: String,
-                default: 'ms',
-                list: ['day', 'hour', 'min', 'sec', 'ms']
-            },
+            type: { type: String, default: 'ms', list: ['day', 'hour', 'min', 'sec', 'ms'] },
             label: { type: String, default: '' },
             size: { type: Number, default: 80 },
             padding: { type: Number, default: 8 },
@@ -148,38 +156,43 @@ customElements.define('li-timer-circle', class LiTimerCircle extends LiElement {
         this.start = 4.72;
         this.cw = this.ctx.canvas.width;
         this.ch = this.ctx.canvas.height;
-        // const x = new Date();
-        // this.currentTimeZoneOffsetInMS = x.getTimezoneOffset() * 60 * 1000;
+        this.clock = {
+            sec: (t, al, div) => {
+                t = t / 1000 | 0; 
+                al = t % 60;
+                div = 60;
+                this.s = t
+                return { t, al, div };
+            },
+            min: (t, al, div) => {
+                t = t / 1000 / 60 | 0;
+                al = t % 60;
+                div = 60;
+                this.mn = t;
+                return { t, al, div };
+            },
+            hour: (t, al, div) => {
+                t = t / 1000 / 60 / 60 | 0;
+                al = t % 24;
+                div = 24;
+                this.h = t;
+                return { t, al, div };
+            },
+            day: (t, al, div) => {
+                al = Math.floor(t / (1000 * 60 * 60 * 24));
+                div = 365;
+                return { t, al, div };
+            }
+        }
     }
     updated(e) {
         if (e.has('toUpdate')) {
             let t = Math.abs(this.end - this.today);
-            // t += this.currentTimeZoneOffsetInMS;
             let al = t % 1000;
             let div = 1000;
-            switch (this.type) {
-                case 'sec':
-                    t = t / 1000 | 0;
-                    al = t % 60;
-                    div = 60;
-                    this.s = t
-                    break;
-                case 'min':
-                    t = t / 1000 / 60 | 0;
-                    al = t % 60;
-                    div = 60;
-                    this.mn = t;
-                    break;
-                case 'hour':
-                    t = t / 1000 / 60 / 60 | 0;
-                    al = t % 24;
-                    div = 24;
-                    this.h = t;
-                    break;
-                case 'day':
-                    al = Math.floor(Math.abs(this.end - this.today) / (1000 * 60 * 60 * 24));
-                    div = 365;
-                    break;
+            if (this.clock[this.type]) {
+                const act = this.clock[this.type](t, al, div);
+                t = act.t; al = act.al; div = act.div;
             }
             const diff = ((al / div) * Math.PI * 2 * 10).toFixed(2);
             this.ctx.clearRect(0, 0, this.cw, this.ch);
