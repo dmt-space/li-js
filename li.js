@@ -38,6 +38,7 @@ export class LiElement extends LitElement {
         super();
 
         this.$properties = this.constructor.elementProperties || this.constructor._classProperties;
+        console.log(this.$properties)
         for (const k of this.$properties.keys()) {
             const prop = this.$properties.get(k)
             if (prop?.save) {
@@ -57,6 +58,7 @@ export class LiElement extends LitElement {
                 let name = typeof prop.notify !== 'string' ? `${k}-changed` : prop.notify;
                 this.__notifications.set(k, name);
             }
+            console.log(prop.default)
             if (prop?.default !== undefined) this[k] = prop.default;
         }
 
