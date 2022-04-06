@@ -63,7 +63,7 @@ customElements.define('li-timer', class LiTimer extends LiElement {
     firstUpdated() {
         super.firstUpdated();
 
-        const url = new URL(document.location);
+        const url = new URL(document.location.href);
         const date = url.searchParams.get('date');
         const time = url.searchParams.get('time');
         const txt = url.searchParams.get('txt');
@@ -71,7 +71,7 @@ customElements.define('li-timer', class LiTimer extends LiElement {
         this.time = time || this.time || '00:00:00';
         this.txt = txt || this.txt || 'Ожидаем дату:';
 
-        this.end = (new Date(this.date + ' ' + this.time)).getTime();
+        this.end = (new Date(this.date + 'T' + this.time)).getTime();
         setInterval(() => {
             this.today = (new Date()).getTime();
             const diff = this.end - this.today;
