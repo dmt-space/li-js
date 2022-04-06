@@ -63,7 +63,7 @@ customElements.define('li-timer', class LiTimer extends LiElement {
     firstUpdated() {
         super.firstUpdated();
 
-        const url = new URL(window.location.href);
+        const url = new URL(document.location);
         const date = url.searchParams.get('date');
         const time = url.searchParams.get('time');
         const txt = url.searchParams.get('txt');
