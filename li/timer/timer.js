@@ -4,7 +4,6 @@ customElements.define('li-timer', class LiTimer extends LiElement {
     static get styles() {
         return css`
             :host { 
-                color: blue;
                 flex: 1;
                 margin: 4px 6px 4px 4px;
                 padding: 4px;
@@ -13,6 +12,7 @@ customElements.define('li-timer', class LiTimer extends LiElement {
                 align-items: center;
             }
             .row {
+                color: blue;
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
@@ -20,6 +20,7 @@ customElements.define('li-timer', class LiTimer extends LiElement {
                 font-size: 20px;
             }
             .lbl {
+                color: blue;
                 font-size: 16px;
             }
         `;
@@ -27,8 +28,9 @@ customElements.define('li-timer', class LiTimer extends LiElement {
 
     render() {
         return html`
-            <div style="font-size: 20px; font-weight: 500">${this.txt}</div>
-            <div style="font-size: 24px; font-weight: 700">${this.date + ' ' + this.time}</div>
+            <div style="font-size: 20px; font-weight: 500; color: blue;">${this.txt}</div>
+            <div style="font-size: 24px; font-weight: 700; color: blue;">${this.date + ' ' + this.time}</div>
+            <div style="font-size: 20px; font-weight: 500; color: blue;">${this.txt2}</div>
             <li-timer-circle type="day" size="100" fontSize="24"></li-timer-circle>
             <div>
                 <li-timer-circle type="hour"></li-timer-circle>
@@ -39,14 +41,17 @@ customElements.define('li-timer', class LiTimer extends LiElement {
             <div class="row"><span class="lbl">секунд: </span>${this.s}</div>
             <div class="row"><span class="lbl">минут: </span>${this.mn}</div>
             <div class="row"><span class="lbl">часов: </span>${this.h}</div>
+            <div class="row"><span class="lbl">дней: </span>${this.d}</div>
             <div class="row"><span class="lbl">недель: </span>${this.w}</div>
             <div class="row"><span class="lbl">месяцев: </span>${this.m}</div>
+            <div class="row"><span class="lbl">лет: </span>${this.y}</div>
         `
     }
 
     static get properties() {
         return {
             txt: { type: String, default: '' },
+            txt2: { type: String, default: '' },
             date: { type: String, default: '', local: true },
             time: { type: String, default: '', local: true },
             s: { type: Number, local: true },
@@ -55,6 +60,7 @@ customElements.define('li-timer', class LiTimer extends LiElement {
             d: { type: Number, local: true },
             w: { type: Number, local: true },
             m: { type: Number, local: true },
+            y: { type: Number, local: true },
             end: { type: Object, local: true },
             today: { type: Object, local: true },
             toUpdate: { type: Boolean, local: true }
@@ -67,20 +73,30 @@ customElements.define('li-timer', class LiTimer extends LiElement {
         const date = url.searchParams.get('date');
         const time = url.searchParams.get('time');
         const txt = url.searchParams.get('txt');
+        const txt2 = url.searchParams.get('txt2');
+        
         this.date = date || this.date || '2023-01-01';
         this.time = time || this.time || '00:00:00';
-        this.txt = txt || this.txt || 'Ожидаем дату:';
 
         this.end = (new Date(this.date + 'T' + this.time)).getTime();
+        this.today = (new Date()).getTime();
+
+        // const x = new Date();
+        // this.currentTimeZoneOffsetInMS = x.getTimezoneOffset() * 60 * 1000;
+        let diff = this.end - this.today;
+        // diff += this.currentTimeZoneOffsetInMS;
+
+        this.txt = txt || this.txt || (diff >= 0 ? 'до' : 'с');
+        this.txt2 = txt2 || this.txt2 || (diff >= 0 ? 'осталось' : 'прошло');
+
         setInterval(() => {
             this.today = (new Date()).getTime();
-            const diff = this.end - this.today;
-            // this.s = Math.round((diff) / 1000);
-            // this.mn = Math.round((diff) / 1000 / 60);
-            // this.h = Math.round((diff) / 1000 / 60 / 60);
-            // this.d = Math.round((diff) / 1000 / 60 / 60 / 24);
-            this.w = Math.round((diff) / 1000 / 60 / 60 / 24 / 7);
-            this.m = Math.round((diff) / 1000 / 60 / 60 / 24 / 30.5);
+            diff = Math.abs(this.end - this.today);
+            // diff += this.currentTimeZoneOffsetInMS;
+            this.d = (diff / 1000 / 60 / 60 / 24).toFixed(2);
+            this.w = (diff / 1000 / 60 / 60 / 24 / 7).toFixed(2);
+            this.m = (diff / 1000 / 60 / 60 / 24 / 30.5).toFixed(2);
+            this.y = (diff / 1000 / 60 / 60 / 24 / 365).toFixed(2);
             this.toUpdate = !this.toUpdate;
         }, 16)
     }
@@ -132,13 +148,13 @@ customElements.define('li-timer-circle', class LiTimerCircle extends LiElement {
         this.start = 4.72;
         this.cw = this.ctx.canvas.width;
         this.ch = this.ctx.canvas.height;
-        const x = new Date();
-        this.currentTimeZoneOffsetInMS = x.getTimezoneOffset() * 60 * 1000;
+        // const x = new Date();
+        // this.currentTimeZoneOffsetInMS = x.getTimezoneOffset() * 60 * 1000;
     }
     updated(e) {
         if (e.has('toUpdate')) {
-            let t = this.end - this.today;
-            t += this.currentTimeZoneOffsetInMS;
+            let t = Math.abs(this.end - this.today);
+            // t += this.currentTimeZoneOffsetInMS;
             let al = t % 1000;
             let div = 1000;
             switch (this.type) {
@@ -161,7 +177,7 @@ customElements.define('li-timer-circle', class LiTimerCircle extends LiElement {
                     this.h = t;
                     break;
                 case 'day':
-                    al = Math.ceil(Math.abs(this.end - this.today) / (1000 * 60 * 60 * 24));
+                    al = Math.floor(Math.abs(this.end - this.today) / (1000 * 60 * 60 * 24));
                     div = 365;
                     break;
             }

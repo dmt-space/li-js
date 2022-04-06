@@ -258,6 +258,9 @@ export const indx = {
     'li-dma': { type: 'apps', label: 'Расчёт DMA' },
     'dma': [{ label: 'index', url: url + '/dma' }],
 
+    'li-timer': { type: 'apps', label: 'Timer' },
+    'timer': [{ label: 'index', url: url + '/timer' }],
+
     'li-tetris': { type: 'apps', label: 'TETRIS', props: { iframe: '../tetris/index.html' } },
     'tetris': [{ label: 'index', url: url + '/tetris' }],
 
