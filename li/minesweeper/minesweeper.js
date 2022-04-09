@@ -25,6 +25,7 @@ customElements.define('li-minesweeper', class LiMinesweeper extends LiElement {
             .clock {
                 display: flex;
                 justify-content: center;
+                align-items: center;
                 opacity: .7;
             }
             .field {
@@ -58,6 +59,10 @@ customElements.define('li-minesweeper', class LiMinesweeper extends LiElement {
             li-timer-circle {
                 cursor: pointer;
             }
+            li-button {
+                margin: 0 4px;
+                font-size: 12px;
+            }
         `;
     }
 
@@ -65,10 +70,14 @@ customElements.define('li-minesweeper', class LiMinesweeper extends LiElement {
         return html`
             <li-minesweeper-title></li-minesweeper-title>
             <div class="clock">
+                <li-button radius=50% back=${this.level === 1 ? 'lightgray' : ''} @click=${() => this.setLevel(1)}>1</li-button>
+                <li-button radius=50% back=${this.level === 2 ? 'lightgray' : ''} @click=${() => this.setLevel(2)}>2</li-button>
                 <li-timer-circle type="hour" size=40 height=60></li-timer-circle>
                 <li-timer-circle type="min" size=40 height=60></li-timer-circle>
                 <li-timer-circle type="sec" size=40 height=60></li-timer-circle>
                 <li-timer-circle size=40 height=60></li-timer-circle>
+                <li-button radius=50% back=${this.level === 3 ? 'lightgray' : ''} @click=${() => this.setLevel(3)}>3</li-button>
+                <li-button radius=50% back=${this.level === 4 ? 'lightgray' : ''} @click=${() => this.setLevel(4)}>4</li-button>
             </div>
             ${this.isReady ? html`
                 <li-minesweeper-field class="field"></li-minesweeper-field>
@@ -104,6 +113,7 @@ customElements.define('li-minesweeper', class LiMinesweeper extends LiElement {
             end: { type: Number, default: 0, local: true },
             today: { type: Number, default: 0, local: true },
             isReady: { type: Boolean, default: false },
+            level: { type: Number, default: 4, save: true },
         }
     }
     get _url() { return this.$url.replace('minesweeper.js', '') }
@@ -124,6 +134,31 @@ customElements.define('li-minesweeper', class LiMinesweeper extends LiElement {
         this.init();
     }
 
+    setLevel(level) {
+        this.level = level;
+        switch (level) {
+            case 1:
+                this.rows = this.cols = 10;
+                this.mineCount = 1000;
+                break;
+            case 2:
+                this.rows = this.cols = 15;
+                this.mineCount = 1000;
+                break;
+            case 3:
+                this.rows = this.cols = 20;
+                this.mineCount = 1000;
+                break;
+            case 4:
+                let h = this.offsetParent?.offsetHeight - 110;
+                this.rows = Math.floor(h / this.cellSizeDefault);
+                let w = this.offsetParent?.offsetWidth - 30;
+                this.cols = Math.floor(w / this.cellSizeDefault);
+                this.mineCount = 1000;
+                break;
+        }
+        this.init();
+    }
     _cellSize() {
         let h = this.offsetParent?.offsetHeight - 110;
         h = (h / this.rows) > this.cellSizeDefault ? this.cellSizeDefault : h / this.rows;
@@ -135,9 +170,6 @@ customElements.define('li-minesweeper', class LiMinesweeper extends LiElement {
         this.cellSize = this._cellSize();
         this.hideLabel = this.offsetParent?.offsetWidth < 600;
         this.$update();
-    }
-    setLevel(e) {
-        console.log(e)
     }
     generateModel() {
         const model = [];
@@ -263,7 +295,7 @@ customElements.define('li-minesweeper-title', class LiMinesweeperTitle extends L
             <li-button border="none" name="remove" size=24 @click=${() => { --this.game.rows; this._init() }}></li-button><div class="txt" title="rows">${this.game?.rows}</div><li-button border="none" name="add" size=24  @click=${() => { ++this.game.rows; this._init() }}></li-button>
             <li-button border="none" name="remove" size=24 @click=${() => { --this.game.cols; this._init() }}></li-button><div class="txt" title="columns">${this.game?.cols}</div><li-button border="none" name="add" size=24  @click=${() => { ++this.game.cols; this._init() }}></li-button>
             <div style="width: 100%;cursor: pointer" @click=${() => { this.game.init() }}>${this.game.hideLabel ? '' : 'li-minesweeper'}</div>
-            <li-button border="none" name="face" size=24 @click=${() => this.game.babyMode = !this.game?.babyMode} title="baby mode" allow-toggled :toggled="babyMode"></li-button>
+            <li-button border="none" name="face" size=24 @click=${() => this.game.babyMode = !this.game?.babyMode} title="baby mode" toggledClass='ontoggled' ?toggled=${this.game?.babyMode} ></li-button>
             <li-button border="none" name = "remove" size = 24 @click=${() => { --this.game.mineCount; this._init('mineCount') }}></li-button><div class="txt" title="level">${this.game?.mineCount}</div><li-button border="none" name="add" size=24  @click=${() => { ++this.game.mineCount; this._init('mineCount') }}></li-button>
             <li-button border="none" name="launch" size=24 @click=${this._share} title = "share" ></li-button>
         `
@@ -279,6 +311,7 @@ customElements.define('li-minesweeper-title', class LiMinesweeperTitle extends L
         if (e !== 'mineCount') {
             this.game.mineCount = (this.game.rows * this.game.cols) / 5 - (this.game.rows * this.game.cols) / 20;
         }
+        this.game.level = 0;
         this.game.init();
     }
     _share() {
