@@ -267,6 +267,9 @@ export const indx = {
     'li-flips': { type: 'apps', label: 'FLIPS' },
     'flips': [{ label: 'index', url: url + '/flips' }, { label: 'index2', url: url + '/flips/index2.html' }],
 
+    'li-minesweeper': { type: 'apps', label: 'minesweeper' },
+    'minesweeper': [{ label: 'index', url: url + '/minesweeper' }],
+
     'li-l-system': { type: 'apps', label: 'L-System', props: { iframe: '../l-system/index.html' } },
     'l-system': [{ label: 'index', url: url + '/l-system/index.html' }],
 

@@ -123,7 +123,7 @@ customElements.define('li-timer', class LiTimer extends LiElement {
 customElements.define('li-timer-circle', class LiTimerCircle extends LiElement {
     render() {
         return html`
-            <canvas id="circle" width=${this.size} height="${this.size}"></canvas>
+            <canvas id="circle" width=${this.size} height="${this.height || this.size}"></canvas>
         `
     }
 
@@ -132,6 +132,7 @@ customElements.define('li-timer-circle', class LiTimerCircle extends LiElement {
             type: { type: String, default: 'ms', list: ['day', 'hour', 'min', 'sec', 'ms'] },
             label: { type: String, default: '' },
             size: { type: Number, default: 80 },
+            height: { type: Number, default: 0 },
             padding: { type: Number, default: 8 },
             lineWidth: { type: Number, default: 2 },
             lineColor: { type: String, default: '#4285f4' },
@@ -186,7 +187,7 @@ customElements.define('li-timer-circle', class LiTimerCircle extends LiElement {
         }
     }
     updated(e) {
-        if (e.has('toUpdate')) {
+        if (e.has('toUpdate') || e.has('today')) {
             let t = Math.abs(this.end - this.today);
             let al = t % 1000;
             let div = 1000;
@@ -206,7 +207,8 @@ customElements.define('li-timer-circle', class LiTimerCircle extends LiElement {
             this.ctx.font = `${this.labelSize || this.fontSize - 4 || 14}px monospace`;
             this.ctx.fillText(this.label || this.type, this.cw * .52, this.ch * .45 + 5 + this.fontSize, this.cw + 12);
             this.ctx.beginPath();
-            this.ctx.arc(this.size / 2, this.size / 2, this.size / 2 - this.padding, this.start, diff / 10 + this.start, false);
+            if (this.height === 0)
+                this.ctx.arc(this.size / 2, this.size / 2, this.size / 2 - this.padding, this.start, diff / 10 + this.start, false);
             this.ctx.stroke();
         }
     }
