@@ -139,15 +139,15 @@ customElements.define('li-minesweeper', class LiMinesweeper extends LiElement {
         switch (level) {
             case 1:
                 this.rows = this.cols = 10;
-                this.mineCount = 1000;
+                this.mineCount = 15;
                 break;
             case 2:
                 this.rows = this.cols = 15;
-                this.mineCount = 1000;
+                this.mineCount = 35;
                 break;
             case 3:
                 this.rows = this.cols = 20;
-                this.mineCount = 1000;
+                this.mineCount = 60;
                 break;
             case 4:
                 let h = this.offsetParent?.offsetHeight - 110;
@@ -376,7 +376,6 @@ customElements.define('li-minesweeper-mine', class LiMinesweeperMine extends LiE
                 height: 100%;
                 z-index: 9;
                 box-sizing: border-box;
-                background-color: darkgray;   
             }
             .floor {
                 display: flex;
@@ -400,7 +399,8 @@ customElements.define('li-minesweeper-mine', class LiMinesweeperMine extends LiE
                 }
                 .btn {
                     opacity: ${this.game.babyMode ? .8 : 1};
-                    cursor: ${this.mine?.status === 'opened' ? 'default' : 'pointer'}
+                    cursor: ${this.mine?.status === 'opened' ? 'default' : 'pointer'};
+                    background-color: ${this.mine?.status === 'error' ? 'transparent' : 'darkgray'};   
                 }
                 .btn:hover {
                     background-color: gray;
@@ -410,7 +410,7 @@ customElements.define('li-minesweeper-mine', class LiMinesweeperMine extends LiE
                 <div class="floor" style="color: ${this.colors[this.count]}">${this.count}</div>
             ` : html``}
             ${this.mine?.status !== 'opened' ? html`
-                <li-icon fill="red" name=${this.icon} class="btn" @click=${this.onTap} @pointerdown=${this.pointerdown} @pointerup=${this.pointerup} width="100%" height="100%" back="darkgray" radius=0 size=${this.game.cellSize} scale=.5></li-icon >
+                <li-icon fill="red" name=${this.icon} class="btn" @click=${this.onTap} @pointerdown=${this.pointerdown} @pointerup=${this.pointerup} width="100%" height="100%" scale=${this.mine?.status === 'error' ? .7 : .5} size=${this.game.cellSize}></li-icon >
             ` : html``}
         `
     }
