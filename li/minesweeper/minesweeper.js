@@ -113,7 +113,7 @@ customElements.define('li-minesweeper', class LiMinesweeper extends LiElement {
             end: { type: Number, default: 0, local: true },
             today: { type: Number, default: 0, local: true },
             isReady: { type: Boolean, default: false },
-            level: { type: Number, default: 4, save: true },
+            level: { type: Number, default: 1, save: true },
         }
     }
     get _url() { return this.$url.replace('minesweeper.js', '') }
