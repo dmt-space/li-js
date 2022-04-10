@@ -446,7 +446,10 @@ customElements.define('li-minesweeper-mine', class LiMinesweeperMine extends LiE
     }
 
     setCount() {
-        if (this.mine?.mine) return 0;
+        if (this.mine?.mine) {
+            this.count = 0;
+            return;
+        }
         let count = 0;
         for (let x = (this.mine.x - 1); x <= (this.mine.x + 1); x++) {
             for (let y = (this.mine.y - 1); y <= (this.mine.y + 1); y++) {
