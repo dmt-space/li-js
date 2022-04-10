@@ -196,16 +196,18 @@ customElements.define('li-minesweeper', class LiMinesweeper extends LiElement {
                 } while (model[pos].mine || cells.includes(pos));
                 model[pos].mine = true;
             }
+            this._start = true;
         }
         this.model = model;
         this.$update();
         this.isReady = true;
     }
     init() {
+        this._start = false;
         this.endGame = '';
         this._confetti && clearInterval(this._confetti);
         this.end = this.today = 0;
-        this.clearTimerStartInterval();
+        this.clearGameStartInterval();
         if (!this.firstInit) {
             const url = new URL(document.location.href);
             this.rows = url.searchParams.get('rows') || this.rows;
@@ -221,16 +223,15 @@ customElements.define('li-minesweeper', class LiMinesweeper extends LiElement {
         this.mineCount = this.mineCount < 1 ? 1 : this.mineCount > (this.rows * this.cols) / 4 ? (this.rows * this.cols) / 4 : this.mineCount;
         this.mineCount = Math.floor(this.mineCount);
         this._resize();
-        this.model =  [];
         this.generateModel();  
     }
-    clearTimerStartInterval() {
-        this.timerStartInterval && clearInterval(this.timerStartInterval);
-        this.timerStartInterval = undefined;
+    clearGameStartInterval() {
+        this.gameStartInterval && clearInterval(this.gameStartInterval);
+        this.gameStartInterval = undefined;
     }
     bang(isWin) {
         if (this.endGame) return;
-        this.clearTimerStartInterval();
+        this.clearGameStartInterval();
         this.model.forEach(i => {
             i.status = (i.status === 'locked' && i.mine) ? 'locked' : (i.status === 'locked' && !i.mine) ? 'error' : (i.mine ? 'bang' : 'opened');
         })
@@ -418,7 +419,7 @@ customElements.define('li-minesweeper-mine', class LiMinesweeperMine extends LiE
                     background-color: gray;
                 }
             </style >
-            ${this.count !== 0 ? html`
+            ${this.count !== 0 && this.game._start ? html`
                 <div class="floor" style="color: ${this.colors[this.count]}">${this.count}</div>
             ` : html``}
             ${this.mine?.status !== 'opened' ? html`
@@ -440,11 +441,12 @@ customElements.define('li-minesweeper-mine', class LiMinesweeperMine extends LiE
     async updated(e) {
         if (e.has('mine') && this.mine) {
             this.mine.el = this;
+            if (this.game._start) this.setCount();
         }
     }
 
-    get count() {
-        if (!this.mine || this.mine?.mine) return 0;
+    setCount() {
+        if (this.mine?.mine) return 0;
         let count = 0;
         for (let x = (this.mine.x - 1); x <= (this.mine.x + 1); x++) {
             for (let y = (this.mine.y - 1); y <= (this.mine.y + 1); y++) {
@@ -455,24 +457,24 @@ customElements.define('li-minesweeper-mine', class LiMinesweeperMine extends LiE
                 count++;
             }
         }
-       return count;
+        this.count = count;
     }
-    timerStart() {
-        if (!this.game.timerStartInterval && !this.game.endGame) {
+    gameStart() {
+        if (!this.game.gameStartInterval && !this.game.endGame) {
             this.game.generateModel(this.mine);
             this.game.end = (new Date()).getTime();
-            this.game.timerStartInterval = setInterval(() => {
+            this.game.gameStartInterval = setInterval(() => {
                 this.game.today = (new Date()).getTime();
             }, 48);
         }
     }
     pointerdown(e) {
-        this.timerStart();
+        this.gameStart();
         this._startTime = new Date().getTime();
         if (e.button > 0) this.setLocked();
     }
     pointerup(e) {
-        if (new Date().getTime() - this._startTime > 200) this.setLocked();
+        if (new Date().getTime() - this._startTime > 250) this.setLocked();
     }
     setLocked() {
         if (this.mine.status === 'locked') {
