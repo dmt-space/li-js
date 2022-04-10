@@ -101,12 +101,13 @@ customElements.define('li-minesweeper', class LiMinesweeper extends LiElement {
         return {
             game: { type: Object, default: {}, local: true },
             model: { type: Array, default: [] },
-            cols: { type: Number, default: 10, save: true },
-            rows: { type: Number, default: 10, save: true },
-            mineCount: { type: Number, default: 15, save: true },
+            cols: { type: Number, default: 9, save: true },
+            rows: { type: Number, default: 9, save: true },
+            mineCount: { type: Number, default: 10, save: true },
             babyMode: { type: Number, default: false, save: true },
             cellSize: { type: Number, default: 48 },
             cellSizeDefault: { type: Number, default: 48 },
+            maxCells: { type: Number, default: 50 },
             endGame: { type: String, default: '' },
             smileQY: { type: Number, default: 25 },
             hideLabel: { type: Boolean, default: false },
@@ -138,52 +139,63 @@ customElements.define('li-minesweeper', class LiMinesweeper extends LiElement {
         this.level = level;
         switch (level) {
             case 1:
-                this.rows = this.cols = 10;
-                this.mineCount = 15;
+                this.rows = this.cols = 9;
+                this.mineCount = 10;
                 break;
             case 2:
-                this.rows = this.cols = 15;
-                this.mineCount = 35;
+                this.rows = this.cols = 16;
+                this.mineCount = 40;
                 break;
             case 3:
-                this.rows = this.cols = 20;
-                this.mineCount = 60;
+                this.cols = 30;
+                this.rows = 16;
+                this.mineCount = 99;
                 break;
             case 4:
-                let h = this.offsetParent?.offsetHeight - 110;
+                let h = this.offsetHeight - 110;
                 this.rows = Math.floor(h / this.cellSizeDefault);
-                let w = this.offsetParent?.offsetWidth - 30;
+                let w = this.offsetWidth - 30;
                 this.cols = Math.floor(w / this.cellSizeDefault);
-                this.mineCount = 1000;
+                this.mineCount = (this.rows * this.cols) / 5 - (this.game.rows * this.game.cols) / 20;
                 break;
         }
         this.init();
     }
     _cellSize() {
-        let h = this.offsetParent?.offsetHeight - 110;
+        let h = this.offsetHeight - 110;
         h = (h / this.rows) > this.cellSizeDefault ? this.cellSizeDefault : h / this.rows;
-        let w = this.offsetParent?.offsetWidth - 30;
+        let w = this.offsetWidth - 30;
         w = (w / this.cols) > this.cellSizeDefault ? this.cellSizeDefault : w / this.cols;
         return Math.min(h, w);
     }
     _resize() {
         this.cellSize = this._cellSize();
-        this.hideLabel = this.offsetParent?.offsetWidth < 600;
+        this.hideLabel = this.offsetWidth < 600;
         this.$update();
     }
-    generateModel() {
+    generateModel(mine) {
         const model = [];
-        for (let x = 0; x < this.cols; x++) {
-            for (let y = 0; y < this.rows; y++) {
-                model.push({ x, y })
+        let idx = 0;
+        for (let x = 0; x < this.rows; x++) {
+            for (let y = 0; y < this.cols; y++) {
+                model.push({ x, y, idx });
+                idx++;
             }
         }
-        for (let i = 0; i < this.mineCount; i++) {
-            let pos;
-            do {
-                pos = Math.floor(Math.random() * model.length);
-            } while (model[pos].mine);
-            model[pos].mine = true;
+        if (mine) {
+            const idx = mine.idx;
+            let cells = [idx];
+            if (this.rows >= 5 || this.cols >= 5) {
+                const cols = this.cols;
+                cells = [ idx, idx + 1, idx - 1, idx - cols, idx - cols - 1, idx - cols + 1, idx + cols, idx + cols - 1, idx + cols + 1];
+            }
+            for (let i = 0; i < this.mineCount; i++) {
+                let pos;
+                do {
+                    pos = Math.floor(Math.random() * model.length);
+                } while (model[pos].mine || cells.includes(pos));
+                model[pos].mine = true;
+            }
         }
         this.model = model;
         this.$update();
@@ -204,13 +216,13 @@ customElements.define('li-minesweeper', class LiMinesweeper extends LiElement {
                 this.babyMode = babyMode !== 'false' ? true : false;
             this.firstInit = true;
         }
-        const max = 50;
-        this.rows = this.rows < 3 ? 3 : this.rows > max ? max : this.rows;
-        this.cols = this.cols < 3 ? 3 : this.cols > max ? max : this.cols;
-        this.mineCount = this.mineCount < 1 ? 1 : this.mineCount > (this.rows * this.cols) / 5 ? (this.rows * this.cols) / 5 : this.mineCount;
+        this.rows = this.rows < 3 ? 3 : this.rows > this.maxCells ? this.maxCells : this.rows;
+        this.cols = this.cols < 3 ? 3 : this.cols > this.maxCells ? this.maxCells : this.cols;
+        this.mineCount = this.mineCount < 1 ? 1 : this.mineCount > (this.rows * this.cols) / 4 ? (this.rows * this.cols) / 4 : this.mineCount;
         this.mineCount = Math.floor(this.mineCount);
         this._resize();
-        LI.throttle('_init', () => this.generateModel(), 500, true);  
+        this.model =  [];
+        this.generateModel();  
     }
     clearTimerStartInterval() {
         this.timerStartInterval && clearInterval(this.timerStartInterval);
@@ -343,7 +355,7 @@ customElements.define('li-minesweeper-field', class LiMinesweeperField extends L
             ${[...Array(+this.game?.rows || 0).keys()].map((row, rowIdx) => html`
                 <div style = "display: flex; flex: 1">
                     ${[...Array(+this.game?.cols || 0).keys()].map((col, colIdx) => {
-                        let idx = this.game.rows * colIdx + rowIdx;
+                        let idx = this.game.cols * rowIdx + colIdx;
                         return html`
                             <li-minesweeper-mine class="cell" .mine=${this.game.model[idx]} style="width: ${this.game?.cellSize}px; height: ${this.game?.cellSize}px"></li-minesweeper-mine>
                         `
@@ -395,7 +407,7 @@ customElements.define('li-minesweeper-mine', class LiMinesweeperMine extends LiE
         return html`
             <style >
                 .floor {
-                    font-size: ${12 + ((this.game?.cellSize - 36) > 0 ? this.game?.cellSize - 36 : 0)}px;
+                    font-size: ${8 + Math.floor(this.game?.cellSize / 4)}px;
                 }
                 .btn {
                     opacity: ${this.game.babyMode ? .8 : 1};
@@ -446,7 +458,8 @@ customElements.define('li-minesweeper-mine', class LiMinesweeperMine extends LiE
        return count;
     }
     timerStart() {
-        if (!this.game.timerStartInterval) {
+        if (!this.game.timerStartInterval && !this.game.endGame) {
+            this.game.generateModel(this.mine);
             this.game.end = (new Date()).getTime();
             this.game.timerStartInterval = setInterval(() => {
                 this.game.today = (new Date()).getTime();
