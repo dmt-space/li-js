@@ -485,7 +485,6 @@ customElements.define('li-minesweeper-mine', class LiMinesweeperMine extends LiE
         if (this.mine.status === 'locked') {
             this.mine.status = ''
             this._locked = true;
-            setTimeout(() => this._locked = false, 0);
         } else {
             this.mine.status = 'locked';
         }
@@ -493,7 +492,10 @@ customElements.define('li-minesweeper-mine', class LiMinesweeperMine extends LiE
         this.$update();
     }
     onTap(e) {
-        if (this._locked || this.mine.status === 'locked') return;
+        if (this._locked || this.mine.status === 'locked') {
+            this._locked = false;
+            return;
+        }
         if (this.mine.mine) {
             this.mine.error = true;
             this.game.bang();
