@@ -469,14 +469,16 @@ customElements.define('li-minesweeper-mine', class LiMinesweeperMine extends LiE
         }
     }
     pointerdown(e) {
-        this.gameStart();
+        this._firstStart = !this.game.gameStartInterval;
         this._startTime = new Date().getTime();
         if (e.button > 0) this.setLocked();
+        this.gameStart();
     }
     pointerup(e) {
         if (new Date().getTime() - this._startTime > 250) this.setLocked();
     }
     setLocked() {
+        if (this._firstStart || !this.game._start || this.endGame) return;
         if (this.mine.status === 'locked') {
             this.mine.status = ''
             this._locked = true;
