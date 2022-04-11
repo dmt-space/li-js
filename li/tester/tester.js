@@ -65,8 +65,10 @@ customElements.define('li-tester', class LiTester extends LiElement {
     constructor() {
         super();
         LI.router.create(hash => {
-            hash = hash.replaceAll('#', '');
-            this._go(hash);
+            if (hash) {
+                hash = hash.replaceAll('#', 'li-');
+                this._go(hash);
+            }
         });
     }
     firstUpdated() {
@@ -82,7 +84,7 @@ customElements.define('li-tester', class LiTester extends LiElement {
     }
     _tap(e, key) {
         key = this._locName = e?.target?.label2 || e?.target?.label || key;
-        LI.router.go("#" + key);
+        LI.router.go("#" + key.replace('li-', ''));
     }
     async _go(key) {
         if (this.component)
