@@ -43,12 +43,12 @@ customElements.define('li-minesweeper', class LiMinesweeper extends LiElement {
                 z-index: 99;
                 visibility: hidden;
                 opacity: 0;
-                transition: opacity 3s linear, visibility .5s linear;
                 cursor: pointer;
             }
             .smile.show {
                 opacity: .5;
                 visibility: visible;
+                transition: opacity 3s linear, visibility .5s linear;
             }
             .smile-win {
                 fill: yellow;
