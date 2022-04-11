@@ -5,6 +5,7 @@ import '../layout-app/layout-app.js';
 import '../button/button.js';
 import '../icon/icons/icons.js';
 import { indx } from './indx.js';
+import '../router/router.js';
 
 customElements.define('li-tester', class LiTester extends LiElement {
     static get properties() {
@@ -33,7 +34,7 @@ customElements.define('li-tester', class LiTester extends LiElement {
         return html`
             <li-layout-app sides="300,300" fill="#9f731350" id="li-layout-app-tester" hide=${this.hide}>
                 <div slot="app-top">
-                    <div>${this._localName}</div>
+                    <div>${this._focused}</div>
                 </div>
                 <div slot="app-main" ref="main">
                     <slot @slotchange=${this.slotchange} id="slot"></slot>
@@ -56,11 +57,18 @@ customElements.define('li-tester', class LiTester extends LiElement {
                         `)}
                     </div>
                 </div>
-                <li-property-grid slot="app-right" id="li-layout-app-tester" .io=${this.component} label="${this._localName}"></li-property-grid>
+                <li-property-grid slot="app-right" id="li-layout-app-tester" .io=${this.component} label="${this._focused}"></li-property-grid>
             </li-layout-app>
         `;
     }
 
+    constructor() {
+        super();
+        LI.router.create(hash => {
+            hash = hash.replaceAll('#', '');
+            this._go(hash);
+        });
+    }
     firstUpdated() {
         super.firstUpdated();
         this._focused = this._focused === 'li-tester' ? '' : this._focused;
@@ -72,21 +80,23 @@ customElements.define('li-tester', class LiTester extends LiElement {
     slotchange(updateComponent = false) {
         if (!(updateComponent === true && this.component)) this.component = this.shadowRoot.querySelectorAll('slot')[0].assignedElements()[0];
     }
-
-    async _tap(e, key) {
+    _tap(e, key) {
+        key = this._locName = e?.target?.label2 || e?.target?.label || key;
+        LI.router.go("#" + key);
+    }
+    async _go(key) {
         if (this.component)
             this.removeChild(this.component);
         if (!this._wasRemoved) this.$refs('main').removeChild(this.$id('slot'));
         this._wasRemoved = true
-        let el = this._locName = e?.target.label2 || e?.target.label || key;
         this._focused = key;
-        let props = { ...indx[el].props, _partid: this.partid };
+        let props = { ...indx[key].props, _partid: this.partid };
         if (props.iframe && props.iframe !== 'noiframe') {
             this.component = document.createElement("iframe");
             this.component.src = props.iframe;
             this.component.style.border = 'none';
         } else {
-            this.component = await LI.createComponent(el, props);
+            this.component = await LI.createComponent(key, props);
         }
         this.component.setAttribute('slot', 'app-test');
         this.appendChild(this.component);
