@@ -20,7 +20,6 @@
     import { LiElement, html, css } from '../../li.js';
     import './panel-simple.js';
     import '../splitter/splitter.js';
-    import '../editor-ace/editor-ace.js';
 
     customElements.define('li-panel-simple-demo', class LiDemo extends LiElement {
         static get styles() {
@@ -52,9 +51,7 @@
                         <div class="vertical" style="width: 60%; overflow: hidden;  max-width: calc(100% - 3px);">
                             <li-panel-simple .src=${this.panels.p_001}></li-panel-simple>
                             <li-panel-simple .src=${this.panels.tabs1}></li-panel-simple>
-                            <li-panel-simple .src=${this.panels.p_002}>
-                                <li-editor-ace theme="clouds" .options=${{ fontSize: 16 }} src=${this.panels.p_002.content}></li-editor-ace>
-                            </li-panel-simple>
+                            <li-panel-simple .src=${this.panels.p_002}></li-panel-simple>
                         </div>
                         <li-splitter size="3px" color="darkgray" style="opacity: .3"></li-splitter>
                         <div class="vertical flex" style="overflow: hidden; flex: 1">
@@ -66,9 +63,7 @@
                     <li-splitter direction="horizontal" size="3px" color="darkgray" style="opacity: .3"></li-splitter>
                     <div class="horizontal flex" style="overflow: hidden">
                         <div class="vertical" style="width:50%; overflow: hidden;  max-width: calc(100% - 3px);">
-                            <li-panel-simple .src=${this.panels.p_006}>
-                                <li-editor-ace theme="cobalt" .options=${{ fontSize: 16 }} src=${this.panels.p_006.content}></li-editor-ace>
-                            </li-panel-simple>
+                            <li-panel-simple .src=${this.panels.p_006}></li-panel-simple>
                         </div>
                         <li-splitter size="3px" color="darkgray" style="opacity: .3"></li-splitter>
                         <div class="vertical flex" style="overflow: hidden; flex: 1">
