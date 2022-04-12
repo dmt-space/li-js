@@ -87,14 +87,14 @@ customElements.define('li-editor-html', class LiEditorHTML extends LiElement {
             <div id="editor" ?hidden="${this._showSource || this._showSourceMonaco}"></div>
             ${this._showSource ? html`
                 <div style="position: relative; overflow: auto; flex: 1">
-                    <li-button name="refresh" size="14"                       
+                    <li-button name="refresh" size="32" style="position: absolute; top: 4px; left: 4px; z-index: 99; opacity: .7"                     
                         @click="${() => { this._showSource = false; this.editor.content.innerHTML = this.ace.getValue() }}"></li-button>
                     <li-editor-ace id="ace"></li-editor-ace>
                 </div>
             ` : html``}
             ${this._showSourceMonaco ? html`
-                <div style="position: relative; overflow: auto; flex: 1">
-                    <li-button name="refresh" size="14"                       
+                <div style="position: relative; overflow: auto; flex: 1; height: calc(100vh - 16px);">
+                    <li-button name="refresh" size="32" style="position: absolute; top: 4px; left: 4px; z-index: 99; opacity: .7"                         
                         @click="${() => { this._showSourceMonaco = false; this.editor.content.innerHTML = this.$id('monaco').value; document.getElementsByClassName('monaco-aria-container')[0].hidden = true }}"></li-button>
                     <li-editor-monaco id="monaco" mode="html"></li-editor-monaco>
                 </div>
@@ -248,23 +248,23 @@ customElements.define('li-editor-html', class LiEditorHTML extends LiElement {
                             }, 100);
                         }
                     },
-                    // {
-                    //     name: 'viewSourceMonaco',
-                    //     icon: '&lt;/&gt;',
-                    //     title: 'View source code in monaco',
-                    //     result: () => {
-                    //         this._showSourceMonaco = true;
-                    //         setTimeout(() => {
-                    //             this.monaco = this.$id('monaco');
-                    //             this.monaco.value = this.editor.content.innerHTML;
-                    //             this.monaco.editor.getModel().onDidChangeContent((e) => {
-                    //                 this.src = this.monaco.value || '';
-                    //                 if (this.item) this.item.value = this.value;
-                    //                 this.$update();
-                    //             });
-                    //         }, 100);
-                    //     }
-                    // },
+                    {
+                        name: 'viewSourceMonaco',
+                        icon: '&lt;/&gt;',
+                        title: 'View source code in monaco',
+                        result: () => {
+                            this._showSourceMonaco = true;
+                            setTimeout(() => {
+                                this.monaco = this.$id('monaco');
+                                this.monaco.value = this.editor.content.innerHTML;
+                                this.monaco.editor.getModel().onDidChangeContent((e) => {
+                                    this.src = this.monaco.value || '';
+                                    if (this.item) this.item.value = this.value;
+                                    this.$update();
+                                });
+                            }, 100);
+                        }
+                    },
                 ],
             });
         }
