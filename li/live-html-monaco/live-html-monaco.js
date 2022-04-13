@@ -55,7 +55,7 @@ customElements.define('li-live-html-monaco', class LiLiveHTMLMonaco extends LiEl
             </div>
             <div id="main">
                 <div class="main-panel ${this._widthL <= 0 ? 'hidden' : ''}" style="width:${this._widthL}px; overflow: hidden">
-                    <li-editor-iframe-monaco id="editor" @change=${this._change} src=${this.src}></li-editor-iframe-monaco>
+                    <li-editor-iframe-monaco id="editor" @change=${this._change} src=${this.src} mode="html"></li-editor-iframe-monaco>
                 </div>
                 <div class="splitter ${this._action === 'splitter-move' ? 'splitter-move' : ''}" @pointerdown="${this._pointerdown}"></div>
                 <div class="main-panel ${this._widthL >= this.$id('main')?.offsetWidth ? 'hidden' : ''}" style="flex: 1">
@@ -74,25 +74,25 @@ customElements.define('li-live-html-monaco', class LiLiveHTMLMonaco extends LiEl
             _ready: { type: Boolean }
         }
     }
+    get editor() {
+        return this.$qs('#editor')?.editor;
+    }
 
-    firstUpdated() {
+    async firstUpdated() {
         super.firstUpdated();
-        const int = setInterval(() => {
-            this._location = window.location.href;
-            let _s = this._location.split('?')[1];
-            _s = _s || this.lzs;
-            if (this.$id('editor').editor) {
-                this.src = _s ? LZString.decompressFromEncodedURIComponent(_s) : this.src;
-                this.srcIframe = cssIframe + this.src;
-                this._ready = true;
-                clearInterval(int);
-            }
-        }, 100);
+        await new Promise((r) => setTimeout(r, 0));
+        this._location = window.location.href;
+        let _s = this._location.split('?')[1];
+        _s = _s || this.lzs;
+        this.src = _s ? LZString.decompressFromEncodedURIComponent(_s) : this.lzs || this.src;
+        this.srcIframe = cssIframe + this.src;
+        this._ready = true;
+        this.$update();
     }
 
     _change(e) {
         LI.debounce('_change', () => {
-            this.editorValue = e?.detail?.value;
+            this.editorValue = e?.detail?.value || e?.detail;
             this.srcIframe = cssIframe + (this.editorValue || '');
             this.$update;
         }, 500);
@@ -127,7 +127,7 @@ customElements.define('li-live-html-monaco', class LiLiveHTMLMonaco extends LiEl
     _reload() {
         document.location.href = this.$url.replace('live-html-monaco.js', 'index.html#?') + LZString.compressToEncodedURIComponent(this.editorValue);
         setTimeout(() => {
-            window.location.reload(); 
+            window.location.reload();
         }, 100);
     }
     _resize(v) {

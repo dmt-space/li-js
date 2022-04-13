@@ -294,6 +294,7 @@ class CLI {
     ulidToDateTime(ulid) {
         return new Date(decodeTime(ulid));
     }
+    isPlainObject = (v) => !!v && typeof v === 'object' && (v.__proto__ === null || v.__proto__ === Object.prototype);
 }
 globalThis.LI = new CLI();
 
