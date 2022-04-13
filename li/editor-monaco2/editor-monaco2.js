@@ -16,22 +16,40 @@ customElements.define('li-editor-monaco2', class LiMonaco2 extends LiElement {
 
     static get properties() {
         return {
-            src: { type: String }
+            src: { type: String },
+            value: { type: String },
+            mode: {
+                type: String,
+                default: 'javascript',
+                list: ['javascript', 'html', 'css', 'xml', 'json', 'markdown', 'python', 'php']
+            },
+            theme: {
+                type: String,
+                default: 'vs-dark',
+                list: ['vs-dark', 'vs-light']
+            },
+            options: { type: Object, default: {} },
+            isFirstUpdated: { type: Boolean }
         }
     }
+    get value() { return this._value }
+    set value(v) { this._value = v }
 
-    firstUpdated() {
-        super.firstUpdated();
-        requestAnimationFrame(() => {
+    // async firstUpdated() {
+    //     super.firstUpdated();
+    //     await new Promise((r) => setTimeout(r, 0));;
+    // }
+    updated(e) {
+        if (e.has('src') || e.has('mode') || e.has('theme')) {
+            this._value = this._value || this.src || '';
             const iframe = this.$qs('iframe');
             iframe.srcdoc = this.srcdoc;
-            setTimeout(() => (iframe.contentDocument || iframe.contentWindow).addEventListener("change", (e) => 
-            {
+            setTimeout(() => iframe.contentDocument.addEventListener("change", (e) => {
                 if (e.detail !== undefined)
-                    this.src = e.detail;
-                this.$update();
-            }), 1000);
-        })
+                    this._value = e.detail;
+                this.fire('change', e.detail);
+            }), 500);
+        }
     }
 
     get srcdoc() {
@@ -60,9 +78,9 @@ html body {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.26.1/min/vs/editor/editor.main.js"></script>
 <script>
 const editor = monaco.editor.create(document.getElementById('container'), {
-    value: \`${this.src || ''}\`,
-    language: 'javascript',
-    theme: 'vs-dark',
+    value: \`${this._value || this.src || ''}\`,
+    language: \`${this.mode}\`,
+    theme:  \`${this.theme}\`,
     automaticLayout: true,
     lineNumbersMinChars: 3,
     mouseWheelZoom: true,
