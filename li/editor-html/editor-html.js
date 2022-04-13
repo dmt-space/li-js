@@ -3,7 +3,7 @@ import { LiElement, html, css } from '../../li.js';
 import './src/pell.js'
 import '../button/button.js';
 import '../editor-ace/editor-ace.js'
-import '../editor-monaco/editor-monaco.js'
+import '../editor-monaco2/editor-monaco2.js'
 
 customElements.define('li-editor-html', class LiEditorHTML extends LiElement {
     static get properties() {
@@ -12,7 +12,8 @@ customElements.define('li-editor-html', class LiEditorHTML extends LiElement {
             editable: { type: Boolean, default: true },
             item: { type: Object },
             _showSource: { type: Boolean },
-            _showSourceMonaco: { type: Boolean }
+            _showSourceMonaco: { type: Boolean },
+            _value: { type: String },
         }
     }
 
@@ -95,8 +96,8 @@ customElements.define('li-editor-html', class LiEditorHTML extends LiElement {
             ${this._showSourceMonaco ? html`
                 <div style="position: relative; overflow: auto; flex: 1; height: calc(100vh - 16px);">
                     <li-button name="refresh" size="32" style="position: absolute; top: 4px; left: 4px; z-index: 99; opacity: .7"                         
-                        @click="${() => { this._showSourceMonaco = false; this.editor.content.innerHTML = this.$id('monaco').value; document.getElementsByClassName('monaco-aria-container')[0].hidden = true }}"></li-button>
-                    <li-editor-monaco id="monaco" mode="html"></li-editor-monaco>
+                        @click="${() => { this._showSourceMonaco = false; this.editor.content.innerHTML = this.monaco.value }}"></li-button>
+                    <li-editor-monaco2 id="monaco" mode="html"></li-editor-monaco2>
                 </div>
             ` : html``}
         `
@@ -256,9 +257,9 @@ customElements.define('li-editor-html', class LiEditorHTML extends LiElement {
                             this._showSourceMonaco = true;
                             setTimeout(() => {
                                 this.monaco = this.$id('monaco');
-                                this.monaco.value = this.editor.content.innerHTML;
-                                this.monaco.editor.getModel().onDidChangeContent((e) => {
-                                    this.src = this.monaco.value || '';
+                                this.monaco.src = this.editor.content.innerHTML;
+                                this.monaco.listen('change', (e) => {
+                                    // this.src = this.monaco.value || '';
                                     if (this.item) this.item.value = this.value;
                                     this.$update();
                                 });
