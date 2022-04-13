@@ -1,7 +1,7 @@
-import { LiElement, html, css } from '../../li.js';
+import { LiElement, html, css } from '../../../li.js';
 
-import { m as monaco } from '../editor-monaco/monaco/index.js';
-import '../editor-monaco/monaco/monaco-editor-font-face.js';
+import { m as monaco } from './monaco/index.js';
+import './monaco/monaco-editor-font-face.js';
 
 window.MonacoEnvironment = {
     getWorkerUrl: function(workerId, label) {
@@ -48,7 +48,7 @@ customElements.define('li-editor-monaco', class LiMonaco extends LiElement {
             },
             theme: {
                 type: String,
-                default: 'vs-dark',
+                default: 'vs',
                 list: ['vs-dark', 'vs-light']
             },
             options: { type: Object, default: {} }

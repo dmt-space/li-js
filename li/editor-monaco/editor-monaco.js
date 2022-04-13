@@ -20,15 +20,20 @@ customElements.define('li-editor-monaco', class LiMonaco extends LiElement {
             mode: {
                 type: String,
                 default: 'javascript',
-                list: ['javascript', 'html', 'css', 'xml', 'json', 'markdown', 'python', 'php']
+                list: [
+                    'bat', 'c', 'coffeescript', 'cpp', 'csharp', 'csp', 'css', 'dockerfile', 'fsharp',
+                    'go', 'handlebars', 'html', 'ini', 'java', 'javascript', 'json', 'less', 'lua', 'markdown',
+                    'msdax', 'mysql', 'objective-c', 'pgsql', 'php', 'plaintext', 'postiats', 'powershell',
+                    'pug', 'python', 'r', 'razor', 'redis', 'redshift', 'ruby', 'rust', 'sb', 'scss', 'sol',
+                    'sql', 'st', 'swift', 'typescript', 'vb', 'xml', 'yaml'
+                ]
             },
             theme: {
                 type: String,
                 default: 'vs-dark',
-                list: ['vs-dark', 'vs-light']
+                list: ['vs', 'vs-dark', 'hc-black']
             },
-            props: { type: Object, default: {} },
-            fontSize: { type: String , default: 18 },
+            fontSize: { type: Number, default: 18 },
             wordWrap: { type: Boolean, default: true },
             readOnly: { type: Boolean, default: false },
             lineNumbers: { type: String, default: 'on' }
@@ -36,56 +41,10 @@ customElements.define('li-editor-monaco', class LiMonaco extends LiElement {
     }
     get value() { return this.editor?.getValue() }
     set value(v) { this.editor?.setValue(v || '') }
-
-    async firstUpdated() {
-        super.firstUpdated();
-        await new Promise((r) => setTimeout(r, 0));
-        this.setProps();
-
-        const iframe = this.$qs('iframe');
-        iframe.src = URL.createObjectURL(new Blob([this.srcdoc], { type: 'text/html' }));
-        setTimeout(() => iframe.contentDocument.addEventListener("editor-ready", (e) => {
-            this.editor = e.detail.editor;
-            this.monaco = e.detail.monaco;
-            this.value = this.src
-            this.$update()
-        }), 100);
-        setTimeout(() => iframe.contentDocument.addEventListener("change", (e) => {
-            this.fire('change', e.detail);
-        }), 500);
-    }
-    setProps(v = this.props) {
-        const listen = v?.listen;
-        const isPlainObject = LI.isPlainObject(v)
-        this.props = !isPlainObject ? icaro({}) : !listen ? icaro(v) : v;
-        !listen && this.props.listen((e) => {
-            this.editor.updateOptions(this.props);
-            this.monaco.editor.setModelLanguage(this.editor.getModel(), this.props.mode || this.mode);
-            this.$update();
-        })
-    }
-    updated(e) {
-        if (e.has('src')) {
-            this.value = this.src || '';
-        }
-        if (this.editor && e.has('props')) {
-            this.setProps();
-            this.editor.updateOptions(this.props);
-            this.monaco.editor.setModelLanguage(this.editor.getModel(), this.props.mode || this.mode);
-            this.$update();
-        }
-        if (this.editor && e.has('mode') && this.mode) {
-            this.monaco.editor.setModelLanguage(this.editor.getModel(), this.props.mode || this.mode);
-        }
-        if (this.editor && (e.has('theme') || e.has('fontSize') || e.has('wordWrap') || e.has('lineNumbers') || e.has('readOnly'))) {
-            this.editor.updateOptions(this.options);
-        }
-    }
-
     get options() {
         return {
-            language: this.mode || 'vs-dark',
-            theme:  this.theme || 'javascript',
+            language: this.mode || 'javascript',
+            theme: this.theme || 'vs-dark',
             automaticLayout: true,
             lineNumbersMinChars: 3,
             mouseWheelZoom: true,
@@ -97,7 +56,39 @@ customElements.define('li-editor-monaco', class LiMonaco extends LiElement {
             lineNumbers: this.lineNumbers || 'on',
             scrollBeyondLastLine: false,
             readOnly: this.readOnly || false,
+            contextmenu: true,
+            scrollbar: {
+                useShadows: false,
+                vertical: "visible",
+                horizontal: "visible",
+                horizontalScrollbarSize: 8,
+                verticalScrollbarSize: 8
+            }
         }
+    }
+
+    async firstUpdated() {
+        super.firstUpdated();
+        await new Promise((r) => setTimeout(r, 0));
+        const iframe = this.$qs('iframe');
+        iframe.src = URL.createObjectURL(new Blob([this.srcdoc], { type: 'text/html' }));
+        setTimeout(() => iframe.contentDocument.addEventListener("editor-ready", (e) => {
+            this.editor = e.detail.editor;
+            this.monaco = e.detail.monaco;
+            this.updateOptions();
+            this.value = this.src
+        }), 100);
+        setTimeout(() => iframe.contentDocument.addEventListener("change", (e) => this.fire('change', e.detail)), 500);
+    }
+    updated(e) {
+        if (e.has('src')) this.value = this.src || '';
+        if (this.editor && (e.has('mode') || e.has('theme') || e.has('fontSize') || e.has('wordWrap') || e.has('lineNumbers') || e.has('readOnly'))) this.updateOptions();
+    }
+
+    updateOptions() {
+        this.editor.updateOptions(this.options);
+        this.monaco.editor.setModelLanguage(this.editor.getModel(), this.options.mode || this.mode);
+        this.$update();
     }
 
     get srcdoc() {
@@ -127,13 +118,12 @@ html body {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.33.0/min/vs/editor/editor.main.js"></script>
 <script>
 const editor = monaco.editor.create(document.getElementById('container'), ${JSON.stringify(this.options)})
-setTimeout(() => document.dispatchEvent(new CustomEvent('editor-ready', { detail: { monaco, editor }})), 10);
+setTimeout(() => document.dispatchEvent(new CustomEvent('editor-ready', { detail: { monaco, editor }})), 50);
 editor.getModel().onDidChangeContent((e) => {
     document.dispatchEvent(new CustomEvent('change', { detail: editor.getValue() }));
 })
 
 // https://github.com/brijeshb42/monaco-themes/tree/master/themes
-
 var data = 
 {
     "base": "vs-dark",
