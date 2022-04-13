@@ -3,7 +3,7 @@ import { LiElement, html, css } from '../../li.js';
 import './src/pell.js'
 import '../button/button.js';
 import '../editor-ace/editor-ace.js'
-import '../editor-monaco2/editor-monaco2.js'
+import '../editor-monaco/editor-monaco.js'
 
 customElements.define('li-editor-html', class LiEditorHTML extends LiElement {
     static get properties() {
@@ -30,6 +30,7 @@ customElements.define('li-editor-html', class LiEditorHTML extends LiElement {
             :host {
                display: relative;
                display: flex;
+               height: 100%;
             }
             #editor {
                 width: 100%;
@@ -86,18 +87,14 @@ customElements.define('li-editor-html', class LiEditorHTML extends LiElement {
     render() {
         return html`
             <div id="editor" ?hidden="${this._showSource || this._showSourceMonaco}"></div>
-            ${this._showSource ? html`
-                <div style="position: relative; overflow: auto; flex: 1">
-                    <li-button name="refresh" size="32" style="position: absolute; top: 4px; left: 4px; z-index: 99; opacity: .7"                     
-                        @click="${() => { this._showSource = false; this.editor.content.innerHTML = this.ace.getValue() }}"></li-button>
-                    <li-editor-ace id="ace"></li-editor-ace>
-                </div>
-            ` : html``}
-            ${this._showSourceMonaco ? html`
-                <div style="position: relative; overflow: auto; flex: 1; height: calc(100vh - 16px);">
-                    <li-button name="refresh" size="32" style="position: absolute; top: 4px; left: 4px; z-index: 99; opacity: .7"                         
-                        @click="${() => { this._showSourceMonaco = false; this.editor.content.innerHTML = this.monaco.value }}"></li-button>
-                    <li-editor-monaco2 id="monaco" mode="html"></li-editor-monaco2>
+            ${this._showSource || this._showSourceMonaco ? html`
+                <div style="position: relative; overflow: auto; flex: 1; height: 100%">
+                    <li-button name="refresh" size="32" style="position: absolute; top: 1px; left: 1px; z-index: 99; opacity: .7" @click="${() => { this._showSource =  this._showSourceMonaco = false; this.editor.content.innerHTML =  this._showSource ? this.ace.getValue() : this.monaco.value}}"></li-button>
+                    ${this._showSource ? html`
+                        <li-editor-ace id="ace"></li-editor-ace>
+                    ` : html`
+                        <li-editor-monaco id="monaco" mode="html"></li-editor-monaco>                  
+                    `}
                 </div>
             ` : html``}
         `

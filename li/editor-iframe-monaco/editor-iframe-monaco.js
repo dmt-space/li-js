@@ -15,7 +15,8 @@ customElements.define('li-editor-iframe-monaco', class LiEditorIFrameMonaco exte
         return this.editor?.value;
     }
     set value(v) {
-        this.editor.value = (v || '');
+        if (this.editor)
+            this.editor.value = (v || '');
     }
 
     static get styles() {
@@ -23,10 +24,13 @@ customElements.define('li-editor-iframe-monaco', class LiEditorIFrameMonaco exte
             ::-webkit-scrollbar { width: 4px; height: 4px; } ::-webkit-scrollbar-track { background: lightgray; } ::-webkit-scrollbar-thumb { background-color: gray; }
         `;
     }
+    get editor() {
+        return this.$qs('#editor').editor
+    }
 
     render() {
         return html`
-            <li-editor-monaco ref="editor" mode=${this.mode || ['html', 'javascript', 'typescript']} src=${this.src}></li-editor-monaco>
+            <li-editor-monaco id="editor" mode=${this.mode || ['html', 'javascript', 'typescript']} src=${this.src}></li-editor-monaco>
         `
     }
 
@@ -59,8 +63,6 @@ customElements.define('li-editor-iframe-monaco', class LiEditorIFrameMonaco exte
     }
 
     _update() {
-        if (!this.$refs('editor')?.editor) return;
-        this.editor = this.$refs('editor').editor;
         this.value = this.src || this.item?.value || '';
     }
 })
