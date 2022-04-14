@@ -103,7 +103,7 @@ customElements.define('li-editor-ace', class LiAceEditor extends LiElement {
             showLineNumbers: true,
             showGutter: true,
             displayIndentGuides: true,
-            fontSize: 20,
+            fontSize: 16,
             //fontFamily: css font-family value
             maxLines: Infinity,
             minLines: 50,

@@ -285,8 +285,7 @@ export const indx = {
             lzs: `DwZwLgngNgpgfAKAJACMD2ATCACA3s1AQwGMBrAcwCc0BXAOwwFoBLAW0PJgC5sCkpmdGIUqMqhDMxh0wACgAsAVgwxyAGmwBiGDuwAmRQFINYSoTogADiOlh9Rk2YvXKt7AHYHWnTA9ftugCMAAzBhgCUanwCQiJiZpK2CsqqGgG+BsbYAO4AFsxgGV55Bb6eWel+FT7YIWHhANwEKCQU1PRMlmggBcxodDzBlgAe2EPDGorj2FMjTUhEZFS0DIw9AF7ctaEj2+MN2IdHh8gAvgjAAPTg0PAI98CSAG7YN7AAvABExGhQaJQ8VwYA4AM36YDWzE2PAAzHoRp9EPxmIwBE8YIxcmBWFBsAAFVxPKTZC6XZ6IIA`
         }
     },
-    'live-html': [{ label: 'ace', url: url + '/live-html' }, { label: 'ace-demo', url: url + '/live-html/index-2.html' },
-    { label: 'monaco', url: url + '/live-html-monaco/index.html' }, { label: 'monaco-demo', url: url + '/live-html-monaco/index-2.html' }],
+    'live-html': [{ label: 'index', url: url + '/live-html' }, { label: 'demo', url: url + '/live-html/index-2.html' }],
 
     'li-lzstring': { type: 'apps', label: 'li-lzstring', props: { iframe: '../lzstring/index.html' } },
     'lzstring': [{ label: 'index', url: url + '/lzstring/index.html' }],
@@ -294,8 +293,8 @@ export const indx = {
     'li-editor-ecard': { type: 'apps', label: 'ecard', props: { iframe: '../editor-ecard/index.html' } },
     'editor-ecard': [{ label: 'index', url: url + '/editor-ecard' }],
 
-    'li-tester': { type: 'apps', label: 'li-tester' },
-    'tester': [{ label: 'index', url: url + '/tester' }, { label: 'index2', url: url + '/tester/index-2.html' }],
+    // 'li-tester': { type: 'apps', label: 'li-tester' },
+    // 'tester': [{ label: 'index', url: url + '/tester' }, { label: 'index2', url: url + '/tester/index-2.html' }],
 
 
 

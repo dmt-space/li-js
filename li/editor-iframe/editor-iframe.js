@@ -1,48 +1,46 @@
 import { LiElement, html, css } from '../../li.js';
 
 import '../editor-ace/editor-ace.js'
+import '../editor-monaco/editor-monaco.js'
 
 customElements.define('li-editor-iframe', class LiEditorIFrame extends LiElement {
-    static get properties() {
-        return {
-            src: { type: String },
-            item: { type: Object }
-        }
-    }
-
-    get value() {
-        return this.editor?.getValue() || undefined;
-    }
-    set value(v) {
-        this.editor.setValue(v || '', -1);
-    }
-
     static get styles() {
         return css`
-            ::-webkit-scrollbar {
-                width: 4px;
-                height: 4px;
-            }
-            ::-webkit-scrollbar-track {
-                background: lightgray;
-            }
-            ::-webkit-scrollbar-thumb {
-                background-color: gray;
-            }
+            ::-webkit-scrollbar { width: 4px; height: 4px; } ::-webkit-scrollbar-track { background: lightgray; } ::-webkit-scrollbar-thumb { background-color: gray; }
         `;
     }
     
     render() {
         return html`
-            <li-editor-ace ref="editor"></li-editor-ace>
+                ${this.currentEditor === 'ace' ? html`
+                    <li-editor-ace id="editor" src=${this.src} mode=${this.mode} theme="cobalt" style="overflow: auto"></li-editor-ace>
+                ` : html`
+                    <li-editor-monaco id="editor" src=${this.src} mode=${this.mode}></li-editor-monaco>
+                `}
         `
     }
 
+    static get properties() {
+        return {
+            src: { type: String },
+            item: { type: Object },
+            mode: { type: String, default: 'html' },
+            currentEditor: { type: String, default: 'ace' }
+        }
+    }
+
+    get value() { return this.editor?.value }
+    set value(v) { this.editor.value = v || '' }
+
     firstUpdated() {
         super.firstUpdated();
-        setTimeout(() => {
-            this._update();
-        }, 100);
+        setTimeout(() => this._update(), 100);
+        this.listen('change', (e) => {
+            if (this.item && this.value !== undefined) {
+                this.item.value = e.detail || this.value;
+                this.$update();
+            }
+        })
     }
 
     updated(changedProperties) {
@@ -57,21 +55,18 @@ customElements.define('li-editor-iframe', class LiEditorIFrame extends LiElement
                 this.value = this.item?.value || '';
                 this.$update();
             }
+            if (changedProperties.has('currentEditor')) {
+                setTimeout(() => this._update(), 100);
+            }
         }
     }
 
     _update() {
-        if (!this.$refs('editor')?.editor) return;
-        this.editor = this.$refs('editor').editor;
-        this.editor.setTheme('ace/theme/cobalt');
-        this.editor.getSession().setMode('ace/mode/html');
-        this.editor.setOptions({ fontSize: 16, maxLines: Infinity, minLines: 100, });
-        this.value = this.src || this.item?.value || '';
-        this.editor.getSession().on('change', () => {
-            if (this.item && this.value !== undefined) {
-                this.item.value = this.value;
-                this.$update();
-            }
-        });
+        if (!this.$qs('#editor')?.editor) return;
+        this.editor = this.$qs('#editor').editor;
+        this.value = this.value = this.src || this.item?.value || '';
+        this.src = this.value;
+        if (this.currentEditor === 'ace') this.editor.setValue(this.value, -1);
+        this.$update();
     }
 })
