@@ -33,7 +33,7 @@ customElements.define('li-editor-monaco', class LiMonaco extends LiElement {
                 default: 'vs-dark',
                 list: ['vs', 'vs-dark', 'hc-black']
             },
-            fontSize: { type: Number, default: 18 },
+            fontSize: { type: Number, default: 16 },
             wordWrap: { type: Boolean, default: true },
             readOnly: { type: Boolean, default: false },
             lineNumbers: { type: String, default: 'on' }
@@ -48,7 +48,7 @@ customElements.define('li-editor-monaco', class LiMonaco extends LiElement {
             automaticLayout: true,
             lineNumbersMinChars: 3,
             mouseWheelZoom: true,
-            fontSize: this.fontSize || 18,
+            fontSize: this.fontSize || 16,
             minimap: { enabled: true },
             wordWrap: this.wordWrap || true,
             // wordWrap: 'wordWrapColumn',

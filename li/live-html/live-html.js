@@ -2,6 +2,7 @@ import { LiElement, html, css } from '../../li.js';
 
 import '../editor-iframe/editor-iframe.js';
 import '../button/button.js';
+import '../splitter/splitter.js'
 import { LZString } from '../../lib/lz-string/lz-string.js';
 
 customElements.define('li-live-html', class LiLiveHTML extends LiElement {
@@ -11,7 +12,6 @@ customElements.define('li-live-html', class LiLiveHTML extends LiElement {
             #main {
                 position: relative;
                 display: flex;
-                height: calc(100% - 28px);
                 color: #505050;
             }
             .main-panel {
@@ -20,46 +20,40 @@ customElements.define('li-live-html', class LiLiveHTML extends LiElement {
                 overflow: auto;
                 min-width: 0;
             }
-            .splitter {
-                max-width: 4px;
-                min-width: 4px;
-                cursor: col-resize;
-                z-index: 9;
-            }
-            .splitter:hover, .splitter-move {
-                background-color: lightgray;
-            }
             .iframe-pe {
                 pointer-events: none;
             }
             .btns {
                 display: flex;
-                flex-direction: row-reverse;
                 align-items: center;
             }
             .hidden {
                 display: none;
+            }
+            li-splitter:hover {
+                filter: invert(.2)
             }
         `;
     }
 
     render() {
         return html`
-            <div class="btns">
-                <li-button name="filter-2" @click="${() => this._resize(0)}" style="margin-right:8px" border="none"></li-button>
-                <li-button name="more-vert" @click="${() => this._resize(this.$id('main').offsetWidth / 2)}" style="margin-right:4px" border="none"></li-button>
-                <li-button name="filter-1" @click="${() => this._resize(this.$id('main').offsetWidth)}" style="margin-right:4px" border="none"></li-button>
-                <li-button name="launch" @click=${this._open} title="open in new window" style="margin-right:8px" border="none"></li-button>
+            <div class="btns ${this.onlyPreview ? 'hidden' : ''}">
+                <li-button name="code" @click="${this._setEditor }" title="change editor" style="margin-left:8px" border="none"></li-button>
+                <label style="margin: auto; padding-left: 4px; color: gray">li-live-html-${this.currenrEditor}</label>
                 <li-button name="refresh" @click="${this._reload}" title="reload page" style="margin-right:4px" border="none"></li-button>
-                <label style="margin-right: auto; padding-left: 4px; color: gray">li-live-html Preview</label>
+                <li-button name="launch" @click=${this._open} title="open in new window" style="margin-right:8px" border="none"></li-button>
+                <li-button name="filter-1" @click="${() => this._resize(100)}" style="margin-right:4px" border="none"></li-button>
+                <li-button name="more-vert" @click="${() => this._resize(50)}" style="margin-right:4px" border="none"></li-button>
+                <li-button name="filter-2" @click="${() => this._resize(0)}" style="margin-right:8px" border="none"></li-button>
             </div>
-            <div id="main">
-                <div class="main-panel ${this._widthL <= 0 ? 'hidden' : ''}" style="width:${this._widthL}px">
-                    <li-editor-iframe id="editor" @change=${() => this._change()}></li-editor-iframe>
+            <div id="main" style="height: ${this.onlyPreview ? '100%' : 'calc(100% - 28px)'};">
+                <div class="main-panel ${this.onlyPreview || this._widthL <= 1 ? 'hidden' : ''}" style="width:${this._widthL}%; overflow: hidden">
+                    <li-editor-iframe id="editor" @change=${this._change} src=${this.src} mode="html" currentEditor=${this.currenrEditor}></li-editor-iframe>
                 </div>
-                <div class="splitter ${this._action === 'splitter-move' ? 'splitter-move' : ''}" @pointerdown="${this._pointerdown}"></div>
-                <div class="main-panel ${this._widthL >= this.$id('main')?.offsetWidth ? 'hidden' : ''}" style="flex: 1">
-                    <iframe id="iframe" class="${this._action === 'splitter-move' ? 'iframe-pe' : ''}" .srcdoc=${this.src || ''} style="width: 100%; border: none; height: -webkit-fill-available" .hidden=${!this._ready}></iframe>
+                <li-splitter color="white" size="4px" @endSplitterMove=${e => this._widthL = e.detail.w} class="${this.onlyPreview ? 'hidden' : ''}"></li-splitter>
+                <div class="main-panel ${this._widthL >= 99 ? 'hidden' : ''}" style="flex: 1">
+                    <iframe id="iframe" class="${this._action === 'splitter-move' ? 'iframe-pe' : ''}" src=${this.srcIframe || ''} style="width: 100%; border: none; height: -webkit-fill-available" .hidden=${!this._ready}></iframe>
                 </div>
             </div>
         `
@@ -67,69 +61,44 @@ customElements.define('li-live-html', class LiLiveHTML extends LiElement {
 
     static get properties() {
         return {
-            _widthL: { type: Number, default: 600, save: true },
+            _widthL: { type: Number, default: 50, save: true },
             src: { type: String, default: '' },
+            srcIframe: { type: String, default: '' },
             lzs: { type: String, default: '' },
-            _ready: { type: Boolean }
+            _ready: { type: Boolean },
+            onlyPreview: { type: Boolean, default: false },
+            currenrEditor: { type: String, default: 'ace', save: true }
         }
     }
+    get editor() { return this.$qs('#editor')?.editor }
 
-    firstUpdated() {
+    async firstUpdated() {
         super.firstUpdated();
-        const int = setInterval(() => {
-            this._location = window.location.href;
-            let _s = this._location.split('?')[1];
-            _s = _s || this.lzs;
-            if (this.$id('editor').editor) {
-                this.$id('editor').editor.setTheme('ace/theme/cobalt');
-                this.$id('editor').value = _s ? LZString.decompressFromEncodedURIComponent(_s) : this.src;
-                clearInterval(int);
-                this._change();
-            }
-        }, 100);
-    }
-
-    _change() {
-        LI.debounce('_change', () => {
-            this.src = cssIframe + (this.$id('editor').value || '');
-            //setTimeout(() => {
-                //this.$id('iframe').contentDocument.body.innerHTML = cssIframe + this.$id('iframe').contentDocument.body.innerHTML;
-                this.$update;
-                this._ready = true;
-            //}, 300);
-        }, 500);
-    }
-    _pointerdown(e) {
-        e.stopPropagation();
-        e.preventDefault();
-        this._action = 'splitter-move';
-        document.addEventListener("pointermove", this.__move = this.__move || this._move.bind(this), false);
-        document.addEventListener("pointerup", this.__up = this.__up || this._up.bind(this), false);
-        document.addEventListener("pointercancel", this.__up = this.__up || this._up.bind(this), false);
-    }
-    _up() {
-        this._action = '';
-        document.removeEventListener("pointermove", this.__move, false);
-        document.removeEventListener("pointerup", this.__up, false);
-        document.removeEventListener("pointercancel", this.__up, false);
+        await new Promise((r) => setTimeout(r, 0));  
+        this._location = window.location.href;
+        let _s = this._location.split('?')[1];
+        _s = _s || this.lzs;
+        this.src = _s ? LZString.decompressFromEncodedURIComponent(_s) : this.lzs || this.src;
+        this.srcIframe = URL.createObjectURL(new Blob([cssIframe + (this.src || '')], { type: 'text/html' }));
+        this._ready = true;
         this.$update();
     }
-    _move(e) {
-        e.preventDefault();
-        if (this._action = 'splitter-move') {
-            this._widthL = this._widthL + e.movementX;
-            this._widthL = this._widthL <= 0 ? 0 : this._widthL >= this.$id('main')?.offsetWidth ? this.$id('main').offsetWidth : this._widthL;
-            this.fire('resize');
-        }
+
+    _change(e) {
+        LI.debounce('_change', () => {
+            this.editorValue = e?.detail?.value || e?.detail;
+            this.srcIframe = URL.createObjectURL(new Blob([cssIframe + (this.editorValue || '')], { type: 'text/html' }));
+            this.$update;
+        }, 500);
     }
     _open() {
-        let url = this.$url.replace('live-html.js', 'index.html#?') + LZString.compressToEncodedURIComponent(this.$id('editor')?.value);
+        let url = this.$url.replace('live-html.js', 'index.html#?') + LZString.compressToEncodedURIComponent(this.editorValue || this.editor.getValue());
         window.open(url, '_blank').focus();
     }
     _reload() {
-        document.location.href = this.$url.replace('live-html.js', 'index.html#?') + LZString.compressToEncodedURIComponent(this.$id('editor')?.value);
+        document.location.href = this.$url.replace('live-html.js', 'index.html#?') + LZString.compressToEncodedURIComponent(this.editorValue || this.editor.getValue());
         setTimeout(() => {
-            window.location.reload(); 
+            window.location.reload();
         }, 100);
     }
     _resize(v) {
@@ -138,6 +107,10 @@ customElements.define('li-live-html', class LiLiveHTML extends LiElement {
             this.fire('resize');
             this.$update();
         });
+    }
+    _setEditor() {
+        this.currenrEditor = this.currenrEditor === 'ace' ? 'monaco' : 'ace';
+        this.src = this.editorValue || this.src;
     }
 })
 
