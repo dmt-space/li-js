@@ -2,6 +2,7 @@ import { LiElement, html, css } from '../../li.js';
 
 import '../editor-ace/editor-ace.js'
 import '../editor-monaco/editor-monaco.js'
+import '../editor-html/editor-html.js'
 
 customElements.define('li-editor-iframe', class LiEditorIFrame extends LiElement {
     static get styles() {
@@ -14,8 +15,10 @@ customElements.define('li-editor-iframe', class LiEditorIFrame extends LiElement
         return html`
                 ${this.currentEditor === 'ace' ? html`
                     <li-editor-ace id="editor" src=${this.src} mode=${this.mode} theme="cobalt" style="overflow: auto"></li-editor-ace>
-                ` : html`
+                ` : this.currentEditor === 'monaco' ? html`
                     <li-editor-monaco id="editor" src=${this.src} mode=${this.mode}></li-editor-monaco>
+                ` : html`
+                    <li-editor-html id="editor" src=${this.src}></li-editor-html>
                 `}
         `
     }

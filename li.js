@@ -295,6 +295,7 @@ class CLI {
         return new Date(decodeTime(ulid));
     }
     isPlainObject = (v) => !!v && typeof v === 'object' && (v.__proto__ === null || v.__proto__ === Object.prototype);
+    isString = (v) => Object.prototype.toString.call(v) === '[object String]';
 }
 globalThis.LI = new CLI();
 
