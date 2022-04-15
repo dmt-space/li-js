@@ -89,7 +89,7 @@ customElements.define('li-editor-html', class LiEditorHTML extends LiElement {
             <div id="editor" ?hidden="${this._showSource || this._showSourceMonaco}"></div>
             ${this._showSource || this._showSourceMonaco ? html`
                 <div style="position: relative; overflow: auto; flex: 1; height: 100%">
-                    <li-button name="refresh" size="32" style="position: absolute; top: 1px; left: 1px; z-index: 99; opacity: .7" @click="${() => { this._showSource =  this._showSourceMonaco = false; this.editor.content.innerHTML =  this._showSource ? this.ace.getValue() : this.monaco.value}}"></li-button>
+                    <li-button name="refresh" size="32" style="position: absolute; top: 1px; left: 1px; z-index: 99; opacity: .7" @click="${() => { this.editor.content.innerHTML =  this._showSource ? this.ace?.getValue() : this.monaco?.value; this._showSource = this._showSourceMonaco = false; }}"></li-button>
                     ${this._showSource ? html`
                         <li-editor-ace id="ace"></li-editor-ace>
                     ` : html`
@@ -146,7 +146,7 @@ customElements.define('li-editor-html', class LiEditorHTML extends LiElement {
                             try {
                                 const host = await LI.createComponent('dropdown');
                                 const res = await host.show(await LI.createComponent('color-picker'));
-                                if (res) pell.exec('foreColor', res.component.value);
+                                if (res) pell.exec('foreColor', res.detail || res.component.value);
                             } catch (error) { }
                         }
                     },
@@ -158,7 +158,7 @@ customElements.define('li-editor-html', class LiEditorHTML extends LiElement {
                             try {
                                 const host = await LI.createComponent('dropdown');
                                 const res = await host.show(await LI.createComponent('color-picker'));
-                                if (res) pell.exec('backColor', res.component.value);
+                                if (res) pell.exec('backColor', res.detail || res.component.value);
                             } catch (error) { }
                         }
                     },

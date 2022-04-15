@@ -40,7 +40,7 @@ customElements.define('li-live-html', class LiLiveHTML extends LiElement {
         return html`
             <div class="btns ${this.onlyPreview ? 'hidden' : ''}">
                 <li-button name="code" @click="${this._setEditor }" title="change editor" style="margin-left:8px" border="none"></li-button>
-                <label style="margin: auto; padding-left: 4px; color: gray">li-live-html-${this.currenrEditor}</label>
+                <label style="margin: auto; padding-left: 4px; color: gray">li-live-html-${this.currentEditor}</label>
                 <li-button name="refresh" @click="${this._reload}" title="reload page" style="margin-right:4px" border="none"></li-button>
                 <li-button name="launch" @click=${this._open} title="open in new window" style="margin-right:8px" border="none"></li-button>
                 <li-button name="filter-1" @click="${() => this._resize(100)}" style="margin-right:4px" border="none"></li-button>
@@ -49,7 +49,7 @@ customElements.define('li-live-html', class LiLiveHTML extends LiElement {
             </div>
             <div id="main" style="height: ${this.onlyPreview ? '100%' : 'calc(100% - 28px)'};">
                 <div class="main-panel ${this.onlyPreview || this._widthL <= 1 ? 'hidden' : ''}" style="width:${this._widthL}%; overflow: hidden">
-                    <li-editor-iframe id="editor" @change=${this._change} src=${this.src} mode="html" currentEditor=${this.currenrEditor}></li-editor-iframe>
+                    <li-editor-iframe id="editor" @change=${this._change} src=${this.src} mode="html" currentEditor=${this.currentEditor}></li-editor-iframe>
                 </div>
                 <li-splitter color="white" size="4px" @endSplitterMove=${e => this._widthL = e.detail.w} class="${this.onlyPreview ? 'hidden' : ''}"></li-splitter>
                 <div class="main-panel ${this._widthL >= 99 ? 'hidden' : ''}" style="flex: 1">
@@ -67,7 +67,7 @@ customElements.define('li-live-html', class LiLiveHTML extends LiElement {
             lzs: { type: String, default: '' },
             _ready: { type: Boolean },
             onlyPreview: { type: Boolean, default: false },
-            currenrEditor: { type: String, default: 'ace', save: true }
+            currentEditor: { type: String, default: 'ace', save: true }
         }
     }
     get editor() { return this.$qs('#editor')?.editor }
@@ -78,7 +78,7 @@ customElements.define('li-live-html', class LiLiveHTML extends LiElement {
         this._location = window.location.href;
         let _s = this._location.split('?')[1];
         _s = _s || this.lzs;
-        this.src = _s ? LZString.decompressFromEncodedURIComponent(_s) : this.lzs || this.src;
+        this.editorValue = this.src = _s ? LZString.decompressFromEncodedURIComponent(_s) : this.lzs || this.src;
         this.srcIframe = URL.createObjectURL(new Blob([cssIframe + (this.src || '')], { type: 'text/html' }));
         this._ready = true;
         this.$update();
@@ -86,9 +86,13 @@ customElements.define('li-live-html', class LiLiveHTML extends LiElement {
 
     _change(e) {
         LI.debounce('_change', () => {
-            this.editorValue = e?.detail?.value || e?.detail;
-            this.srcIframe = URL.createObjectURL(new Blob([cssIframe + (this.editorValue || '')], { type: 'text/html' }));
-            this.$update;
+            console.log(e)
+            let value = (e?.detail?.value || e?.detail || e);
+            if (LI.isString(value)) {
+                this.editorValue = value;
+                this.srcIframe = URL.createObjectURL(new Blob([cssIframe + (this.editorValue || '')], { type: 'text/html' }));
+                this.$update;
+            }
         }, 500);
     }
     _open() {
@@ -109,7 +113,7 @@ customElements.define('li-live-html', class LiLiveHTML extends LiElement {
         });
     }
     _setEditor() {
-        this.currenrEditor = this.currenrEditor === 'ace' ? 'monaco' : 'ace';
+        this.currentEditor = this.currentEditor === 'ace' ? 'monaco' : this.currentEditor === 'monaco' ? 'html' : 'ace';
         this.src = this.editorValue || this.src;
     }
 })

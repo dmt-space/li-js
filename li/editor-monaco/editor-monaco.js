@@ -72,13 +72,15 @@ customElements.define('li-editor-monaco', class LiMonaco extends LiElement {
         await new Promise((r) => setTimeout(r, 0));
         const iframe = this.$qs('iframe');
         iframe.src = URL.createObjectURL(new Blob([this.srcdoc], { type: 'text/html' }));
-        setTimeout(() => iframe.contentDocument.addEventListener("editor-ready", (e) => {
-            this.editor = e.detail.editor;
-            this.monaco = e.detail.monaco;
-            this.updateOptions();
-            this.value = this.src
-        }), 100);
-        setTimeout(() => iframe.contentDocument.addEventListener("change", (e) => this.fire('change', e.detail)), 500);
+        setTimeout(() => {
+            iframe.contentDocument.addEventListener("editor-ready", (e) => {
+                this.editor = e.detail.editor;
+                this.monaco = e.detail.monaco;
+                this.updateOptions();
+                this.value = this.src
+            })
+            iframe.contentDocument.addEventListener("change", (e) => this.fire('change', e.detail));
+        }, 100);
     }
     updated(e) {
         if (e.has('src')) this.value = this.src || '';
