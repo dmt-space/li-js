@@ -249,8 +249,8 @@ export const indx = {
     'li-diary': { type: 'apps', label: 'Мой дневник', props: { iframe: '../diary/index.html' } },
     'diary': [{ label: 'index', url: url + '/diary' }],
 
-    'li-valuta': { type: 'apps', label: 'Курсы валют', props: { iframe: '../valuta/index.html' } },
-    'valuta': [{ label: 'index', url: url + '/valuta' }],
+    // 'li-valuta': { type: 'apps', label: 'Курсы валют', props: { iframe: '../valuta/index.html' } },
+    // 'valuta': [{ label: 'index', url: url + '/valuta' }],
 
     'li-credit-calc': { type: 'apps', label: 'Кредитный калькулятор', props: { iframe: '../credit-calc/index.html' } },
     'credit-calc': [{ label: 'index', url: url + '/credit-calc' }],
