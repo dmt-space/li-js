@@ -18,7 +18,6 @@ customElements.define('li-wikis', class LiWikis extends LiElement {
                 font-size: large;
             }
             #main {
-                background: url(/li/wikis/back.jpg);
                 background-size: cover;
                 background-attachment: fixed;
                 background-color: #F4F4F2;
@@ -28,6 +27,11 @@ customElements.define('li-wikis', class LiWikis extends LiElement {
 
     render() {
         return html`
+            <style>
+                #main {
+                    background: url(${this.$url.replace('/wikis.js', '/back.jpg')});
+                }
+            </style>
             <li-layout-app hide="r">
                 <div slot="app-top" class="header">
                     <li-button size="26" id="left" name="arrow-back" @click="${this.onclick}" style="margin-left:8px" border="none"></li-button>
