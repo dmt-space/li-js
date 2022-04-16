@@ -1,7 +1,7 @@
 export const foodList = {
   options: {
     lazy: true,
-    readonly: true,
+    readOnly: true,
     headerHidden: false,
     headerColor: `hsla(60, 80%, 70%, .1)`,
     headerHeight: 36,

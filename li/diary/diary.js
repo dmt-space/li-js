@@ -4,7 +4,7 @@ import '../layout-app/layout-app.js';
 import '../button/button.js';
 import '../checkbox/checkbox.js';
 import '../calendar/calendar.js';
-import '../wiki/wiki.js';
+import '../wikis/wikis.js';
 import '../table/table.js';
 import { foodList } from './food.js';
 import { sets } from './settings.js';
@@ -212,7 +212,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                         </div>
                     `}
                     ${this._mainView?.name !== 'wiki' ? html`` : html`
-                        <li-wiki id=${this.dbName} dbName=${this.dbName}></li-wiki>
+                        <li-wikis id=${this.dbName} dbName=${this.dbName}></li-wikis>
                     `}
                 </div>
                 <div slot="app-right" class="panel">
@@ -231,6 +231,7 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             dbIP: { type: String, default: 'http://admin:54321@localhost:5984/', save: true },
             autoReplication: { type: Boolean, default: false, save: true },
             step: { type: Number, default: 35 },
+            idx: { type: Number, default: 0, save: true },
             leftView: { type: String, default: 'diary' },
             rightView: { type: String, default: 'calendar' },
             mainView: { type: String, default: '' },
@@ -307,6 +308,10 @@ customElements.define('li-diary', class LiDiary extends LiElement {
                 this.$update();
             }
         }
+        if (e.has('idx')) {
+            this._setMainView(null, this.idx, this.types[this.idx])
+            this.$update();
+        }
     }
     async firstUpdated() {
         super.firstUpdated();
@@ -367,7 +372,8 @@ customElements.define('li-diary', class LiDiary extends LiElement {
         this.$update();
     }
     _setMainView(e, idx, i) {
-        e.target.toggled = this.mainView === i.label;
+        this.idx = idx;
+        if (e?.target) e.target.toggled = this.mainView === i.label;
         if (this.mainView === i.label) return;
         this._mainView = undefined;
         this._mainView = i;
