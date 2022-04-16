@@ -293,7 +293,20 @@ customElements.define('li-diary', class LiDiary extends LiElement {
         this._period = LI.icaro({});
         this._period.listen(() => this._resetView());
     }
+    async firstUpdated() {
+        super.firstUpdated();
+        setTimeout(async () => {
+            this.dbName = this._dbName || this.dbName;
+            this.dbLocal = new PouchDB(this.dbName);
+            this.dbRemote = new PouchDB(this.dbIP + this.dbName);
+            if (this.autoReplication) this.replicationHandler = this.dbLocal.sync(this.dbRemote, { live: true });
+            this.isFirstUpdated = true;
+            if (this.idx >= 0) this._setMainView(null, this.idx, this.types[this.idx]);
+            this.$update();
+        }, 100);
+    }
     updated(e) {
+        if (!this.isFirstUpdated) return
         if (e.has('action') && this.action) {
             if ((this._mainView.name === 'eating' && this.action.id === 'table-favorites'
                 || this._mainView.name === 'eating' && this.action.id === 'table-ecalorie'
@@ -309,19 +322,9 @@ customElements.define('li-diary', class LiDiary extends LiElement {
             }
         }
         if (e.has('idx')) {
-            this._setMainView(null, this.idx, this.types[this.idx])
+            this._setMainView(null, this.idx, this.types[this.idx]);
             this.$update();
         }
-    }
-    async firstUpdated() {
-        super.firstUpdated();
-        setTimeout(async () => {
-            this.dbName = this._dbName || this.dbName;
-            this.dbLocal = new PouchDB(this.dbName);
-            this.dbRemote = new PouchDB(this.dbIP + this.dbName);
-            if (this.autoReplication) this.replicationHandler = this.dbLocal.sync(this.dbRemote, { live: true });
-            this.$update();
-        }, 100);
     }
 
     _setDbName(e) {

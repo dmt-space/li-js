@@ -683,7 +683,7 @@ Observable.observe(json, e => {
             const iframe = this.$qs('iframe');
             iframe.srcdoc = update ? this.srcdoc : iframe.srcdoc || this.srcdoc;
             setTimeout(() => {
-                (iframe.contentDocument || iframe.contentWindow).addEventListener("changeJSON", (e) => {
+                iframe.contentDocument?.addEventListener("changeJSON", (e) => {
                     this._sourceJSON = this.cell.sourceJSON = e.detail;
                     if (this.mode === 'json') {
                         this.setAceValue();
