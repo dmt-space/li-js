@@ -18,7 +18,7 @@ customElements.define('li-wikis', class LiWikis extends LiElement {
                 font-size: large;
             }
             #main {
-                background: url(./back.jpg);
+                background: url(/li/wikis/back.jpg);
                 background-size: cover;
                 background-attachment: fixed;
                 background-color: #F4F4F2;
