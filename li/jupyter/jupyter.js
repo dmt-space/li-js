@@ -6,6 +6,7 @@ import '../editor-html/editor-html.js';
 import '../editor-ace/editor-ace.js';
 import '../viewer-md/viewer-md.js';
 import '../splitter/splitter.js';
+import '../editor-simplemde/editor-simplemde.js';
 import { LZString } from '../../lib/lz-string/lz-string.js';
 
 const editorCSS = css`
@@ -412,8 +413,9 @@ customElements.define('li-jupyter-cell-markdown', class LiJupyterCellMarkdown ex
                 <li-viewer-md src=${this.cell?.source} style="width: 100%"></li-viewer-md>
             ` : html`
                 <div style="display: flex; overflow: hidden; width: 100%; height: 100%">
-                    <div style="max-height: ${this._h}vh; width: 50%; overflow: auto">
-                        <li-editor-ace class="ace" style="width: 100%; height: 100%" theme="solarized_light" mode="markdown"></li-editor-ace> 
+                    <div style="max-height: ${this._h}vh; width: 50%; overflow: hidden">
+                        <!-- <li-editor-ace class="ace" style="width: 100%; height: 100%" theme="solarized_light" mode="markdown"></li-editor-ace> -->
+                        <li-editor-simplemde class="editor" style="width: 100%; height: 100%"></li-editor-simplemde>
                     </div>
                     <li-splitter size="3px" color="dodgerblue" style="opacity: .3"></li-splitter>
                     <div style="max-height: 80vh; flex: 1; overflow: auto">
@@ -444,10 +446,16 @@ customElements.define('li-jupyter-cell-markdown', class LiJupyterCellMarkdown ex
             requestAnimationFrame(() => {
                 if (this.editedCell && this.editedCell === this.cell) {
                     const ace = this.$qs('li-editor-ace');
-                    ace.options = { highlightActiveLine: false, showPrintMargin: false, minLines: 1, fontSize: 16 };
-                    ace.src = this.cell.source;
-                    this._h = 80;
+                    if (ace) {
+                        ace.options = { highlightActiveLine: false, showPrintMargin: false, minLines: 1, fontSize: 16 };
+                        ace.src = this.cell.source;   
+                    }
+                    const simplemde = this.$qs('li-editor-simplemde');
+                    if (simplemde) {
+                        simplemde.src = this.cell.source;
+                    }
                 }
+                this._h = 80;
             })
         })
     }
@@ -513,7 +521,7 @@ customElements.define('li-jupyter-cell-html', class LiJupyterCellHtml extends Li
                 <div .innerHTML=${this.cell.source} style="width: 100%; padding: 8px;"></div>
             ` : html`
                 <div style="display: flex; overflow: hidden; width: 100%">
-                    <div style="width: 50%; height: 80vh; overflow: auto">
+                    <div style="width: 50%; height: 80vh; overflow: hidden;">
                         <li-editor-html style="width: 100%"></li-editor-html>
                     </div>
                     <li-splitter size="3px" color="dodgerblue" style="opacity: .3"></li-splitter>
@@ -797,38 +805,37 @@ body, html {
 customElements.define('li-jupyter-cell-html-tiny', class LiJupyterCellHtmlTiny extends LiJupyterCellTemp {
     get srcdoc() {
         return `
-    <style> body, html { margin: 0 }</style>
-    <textarea name="content" id="mytextarea">${this.cell?.source || ''}</textarea>
-    <script src="https://cdn.tiny.cloud/1/0dmt0rtivjr59ocff6ei6iqaicibk0ej2jwub5siiycmlk84/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
-    <script type="module">
-        tinymce.init({
-            selector: 'textarea#mytextarea',
-            height: '100vh',
-            menubar: true,
-            plugins: [
-                'advlist autolink link image lists charmap print preview hr anchor pagebreak spellchecker',
-                'searchreplace wordcount visualblocks visualchars code fullscreen insertdatetime media table powerpaste paste mediaembed nonbreaking',
-                'table emoticons template help pageembed permanentpen advtable',
-            ],
-            toolbar: 'undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | link | ' +
-                'bullist numlist outdent indent | image | print preview media fullpage | ' +
-                'forecolor backcolor emoticons | help' +
-                'casechange checklist code formatpainter pageembed permanentpen paste powerpaste table | vanna',
+<style> 
+    ::-webkit-scrollbar { width: 4px; height: 4px; } ::-webkit-scrollbar-track { -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3); } ::-webkit-scrollbar-thumb { border-radius: 10px; }
+    body, html { 
+        margin: 0; 
+    }
+</style>
+<textarea name="content" id="mytextarea">${this.cell?.source || ''}</textarea>
+<script src="https://cdn.tiny.cloud/1/0dmt0rtivjr59ocff6ei6iqaicibk0ej2jwub5siiycmlk84/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
 
-            menubar: 'favs file edit view insert format tools table help',
-            menu: {
-                favs: {
-                    title: 'My Favorites',
-                    items: 'paste | powerpaste | code visualaid | searchreplace | spellchecker | emoticons',
-                },
-            },
-            paste_webkit_styles: 'color font-size',
-            extended_valid_elements: 'script[language|src|async|defer|type|charset]',
-            setup: (editor) => {
-                editor.on('change', () => { document.dispatchEvent(new CustomEvent('change', { detail: editor.getContent() })) });
-                editor.on('keyup', () => { document.dispatchEvent(new CustomEvent('change', { detail: editor.getContent() })) });
-            },
-        });
-    </script>
+<script type="module">
+    const useDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    tinymce.init({
+        selector: 'textarea#mytextarea',
+        plugins: 'preview importcss searchreplace autolink autosave save directionality code visualblocks visualchars fullscreen image link media template codesample table charmap pagebreak nonbreaking anchor insertdatetime advlist lists wordcount help charmap quickbars emoticons',
+        editimage_cors_hosts: ['picsum.photos'],
+        menubar: 'file edit view insert format tools table help',
+        toolbar: 'undo redo | bold italic underline strikethrough | fontfamily fontsize blocks | alignleft aligncenter alignright alignjustify | outdent indent |  numlist bullist | forecolor backcolor removeformat | pagebreak | charmap emoticons | fullscreen  preview save print | insertfile image media template link anchor codesample | ltr rtl',
+        height: '100vh',
+        image_caption: true,
+        quickbars_selection_toolbar: 'bold italic | quicklink h2 h3 blockquote quickimage quicktable',
+        noneditable_class: 'mceNonEditable',
+        toolbar_mode: 'sliding',
+        contextmenu: 'link image table',
+        skin: useDarkMode ? 'oxide-dark' : 'oxide',
+        content_css: useDarkMode ? 'dark' : 'default',
+        content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:16px }',
+        setup: (editor) => {
+            editor.on('change', () => { document.dispatchEvent(new CustomEvent('change', { detail: editor.getContent() })) });
+            editor.on('keyup', () => { document.dispatchEvent(new CustomEvent('change', { detail: editor.getContent() })) });
+        },
+    });
+</script>
     `}
 })

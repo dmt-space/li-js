@@ -30,10 +30,14 @@ customElements.define('li-editor-html', class LiEditorHTML extends LiElement {
             :host {
                display: relative;
                display: flex;
+               width: 100%;
                height: 100%;
             }
             #editor {
+                display: flex;
+                flex-direction: column;
                 width: 100%;
+                overflow: hidden;
             }
             .pell {
                 border: 1px solid rgba(10, 10, 10, 0.1);
@@ -46,12 +50,13 @@ customElements.define('li-editor-html', class LiEditorHTML extends LiElement {
                 padding: 10px;
             }
             .pell-actionbar {
+                width: 100%;
                 display: flex;
                 background-color: rgb(240, 240, 240);
                 border: 1px solid rgba(10, 10, 10, 0.1);
                 position: sticky;
                 top: 0px;
-                z-index: 1;
+                z-index: 5;
                 flex-wrap: wrap;
             }
             .pell-button {

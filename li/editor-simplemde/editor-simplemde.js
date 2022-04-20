@@ -88,6 +88,7 @@ customElements.define('li-editor-simplemde', class LiEditorSimpleMDE extends LiE
         if (this.item)
             this.item.htmlValue = this.value;
         this.editor.codemirror.on('change', () => {
+            this.fire('change', this.value);
             if (this.item) {
                 this.item.htmlValue = this.value;
                 this.item.value = this.editor.value();
