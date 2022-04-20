@@ -6,6 +6,7 @@ import '../editor-html/editor-html.js';
 import '../editor-ace/editor-ace.js';
 import '../viewer-md/viewer-md.js';
 import '../splitter/splitter.js';
+import '../editor-simplemde/editor-simplemde.js';
 import { LZString } from '../../lib/lz-string/lz-string.js';
 
 const editorCSS = css`
@@ -412,8 +413,9 @@ customElements.define('li-jupyter-cell-markdown', class LiJupyterCellMarkdown ex
                 <li-viewer-md src=${this.cell?.source} style="width: 100%"></li-viewer-md>
             ` : html`
                 <div style="display: flex; overflow: hidden; width: 100%; height: 100%">
-                    <div style="max-height: ${this._h}vh; width: 50%; overflow: auto">
-                        <li-editor-ace class="ace" style="width: 100%; height: 100%" theme="solarized_light" mode="markdown"></li-editor-ace> 
+                    <div style="max-height: ${this._h}vh; width: 50%; overflow: hidden">
+                        <!-- <li-editor-ace class="ace" style="width: 100%; height: 100%" theme="solarized_light" mode="markdown"></li-editor-ace> -->
+                        <li-editor-simplemde class="editor" style="width: 100%; height: 100%"></li-editor-simplemde>
                     </div>
                     <li-splitter size="3px" color="dodgerblue" style="opacity: .3"></li-splitter>
                     <div style="max-height: 80vh; flex: 1; overflow: auto">
@@ -444,10 +446,16 @@ customElements.define('li-jupyter-cell-markdown', class LiJupyterCellMarkdown ex
             requestAnimationFrame(() => {
                 if (this.editedCell && this.editedCell === this.cell) {
                     const ace = this.$qs('li-editor-ace');
-                    ace.options = { highlightActiveLine: false, showPrintMargin: false, minLines: 1, fontSize: 16 };
-                    ace.src = this.cell.source;
-                    this._h = 80;
+                    if (ace) {
+                        ace.options = { highlightActiveLine: false, showPrintMargin: false, minLines: 1, fontSize: 16 };
+                        ace.src = this.cell.source;   
+                    }
+                    const simplemde = this.$qs('li-editor-simplemde');
+                    if (simplemde) {
+                        simplemde.src = this.cell.source;
+                    }
                 }
+                this._h = 80;
             })
         })
     }
@@ -513,7 +521,7 @@ customElements.define('li-jupyter-cell-html', class LiJupyterCellHtml extends Li
                 <div .innerHTML=${this.cell.source} style="width: 100%; padding: 8px;"></div>
             ` : html`
                 <div style="display: flex; overflow: hidden; width: 100%">
-                    <div style="width: 50%; height: 80vh; overflow: auto">
+                    <div style="width: 50%; height: 80vh; overflow: hidden;">
                         <li-editor-html style="width: 100%"></li-editor-html>
                     </div>
                     <li-splitter size="3px" color="dodgerblue" style="opacity: .3"></li-splitter>
