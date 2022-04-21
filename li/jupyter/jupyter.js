@@ -7,6 +7,7 @@ import '../editor-ace/editor-ace.js';
 import '../viewer-md/viewer-md.js';
 import '../splitter/splitter.js';
 import '../editor-simplemde/editor-simplemde.js';
+import '../property-grid/property-grid.js';
 import { LZString } from '../../lib/lz-string/lz-string.js';
 
 const editorCSS = css`
@@ -274,7 +275,7 @@ customElements.define('li-jupyter-cell', class LiJupyterCell extends LiElement {
                 `}
             </div>
             ${!this.readOnly && this.cell && this.focusedCell === this.cell ? html`
-                <li-jupyter-cell-toolbar .cell=${this.cell} idx=${this.idx}></li-jupyter-cell-toolbar>
+                <li-jupyter-cell-toolbar .cell=${this.cell} idx=${this.idx} .focusedControl=${this.focusedControl}></li-jupyter-cell-toolbar>
                 <li-jupyter-cell-addbutton .cell=${this.cell}></li-jupyter-cell-addbutton>
                 <li-jupyter-cell-addbutton .cell=${this.cell} position="bottom"></li-jupyter-cell-addbutton>
             ` : html``}
@@ -291,26 +292,28 @@ customElements.define('li-jupyter-cell', class LiJupyterCell extends LiElement {
             cell: { type: Object, default: undefined },
             idx: { type: Number, default: 0 },
             collapsed: { type: Boolean, local: true },
+            focusedControl: { type: Boolean }
         }
     }
     get focused() { return !this.readOnly && this.focusedCell === this.cell ? 'focused' : '' }
     get id() { return 'cell-' + (this.cell?.order || this.idx || 0) }
+    get focusedControl() { return this.$qs('#control') }
     get cellType() {
         if (this.cell?.cell_type === 'html' || this.cell?.cell_name === 'html-editor' || this.cell?.cell_name === 'suneditor')
-            return html`<li-jupyter-cell-html @click=${this.click} .cell=${this.cell}></li-jupyter-cell-html>`;
+            return html`<li-jupyter-cell-html id="control" @click=${this.click} .cell=${this.cell}></li-jupyter-cell-html>`;
         if (this.cell?.cell_type === 'markdown' || this.cell?.cell_name === 'simplemde' || this.cell?.cell_name === 'showdown')
-            return html`<li-jupyter-cell-markdown @click=${this.click} .cell=${this.cell}></li-jupyter-cell-markdown>`;
+            return html`<li-jupyter-cell-markdown id="control" @click=${this.click} .cell=${this.cell}></li-jupyter-cell-markdown>`;
         if (this.cell?.cell_type === 'code')
-            return html`<li-jupyter-cell-code @click=${this.click} .cell=${this.cell}></li-jupyter-cell-code>`;
+            return html`<li-jupyter-cell-code id="control" @click=${this.click} .cell=${this.cell}></li-jupyter-cell-code>`;
         if (this.cell?.cell_type === 'html-executable' || this.cell?.cell_name === 'iframe')
-            return html`<li-jupyter-cell-html-executable @click=${this.click} .cell=${this.cell}></li-jupyter-cell-html-executable>`;
+            return html`<li-jupyter-cell-html-executable id="control" @click=${this.click} .cell=${this.cell}></li-jupyter-cell-html-executable>`;
 
         if (this.cell?.cell_type === 'html-cde')
-            return html`<li-jupyter-cell-html-cde @click=${this.click} .cell=${this.cell}></li-jupyter-cell-html-cde>`;
+            return html`<li-jupyter-cell-html-cde id="control" @click=${this.click} .cell=${this.cell}></li-jupyter-cell-html-cde>`;
         if (this.cell?.cell_type === 'html-jodit')
-            return html`<li-jupyter-cell-html-jodit @click=${this.click} .cell=${this.cell}></li-jupyter-cell-html-jodit>`;
+            return html`<li-jupyter-cell-html-jodit id="control" @click=${this.click} .cell=${this.cell}></li-jupyter-cell-html-jodit>`;
         if (this.cell?.cell_type === 'html-tiny')
-            return html`<li-jupyter-cell-html-tiny @click=${this.click} .cell=${this.cell}></li-jupyter-cell-html-tiny>`;
+            return html`<li-jupyter-cell-html-tiny id="control" @click=${this.click} .cell=${this.cell}></li-jupyter-cell-html-tiny>`;
 
         return html`<div style="min-height: 28px;">${this.cell?.sourse || this.cell?.value}</div>`;
     }
@@ -352,9 +355,7 @@ customElements.define('li-jupyter-cell-toolbar', class LiJupyterCellToolbar exte
             <li-button name="mode-edit" @click=${() => { this.editedCell = this.editedCell === this.cell ? undefined : this.cell; this.$update() }} fill=${this.editedCell === this.cell ? 'red' : ''} title="edit mode" border=0 size=16></li-button>
             <li-button name="arrow-back" @click=${(e) => this.tapOrder(e, -1.1)} ?disabled=${this.order <= 0} title="move up" border=0 size=16 rotate=90></li-button>
             <li-button name="arrow-forward"  @click=${(e) => this.tapOrder(e, 1.1)} ?disabled=${this.order >= this.notebook?.cells?.length - 1} title="move down" border=0 size=16 rotate=90></li-button>
-            ${this.editedCell === this.cell ? html`
-                <li-button name="settings" border=0 size=16></li-button>
-            ` : html``}
+            <!-- <li-button name="settings" border=0 size=16 @click=${this.showSettings}></li-button> -->
             <div style="flex: 1;"></div>
             <li-button name="launch" @click="${this.share}" style="margin-right:2px" border="none" title="share" size=16></li-button>
             <li-button name="delete" @click=${this.tapDelete} title="delete" border=0 size=16></li-button>
@@ -371,7 +372,9 @@ customElements.define('li-jupyter-cell-toolbar', class LiJupyterCellToolbar exte
             editedCell: { type: Object, local: true },
             cell: { type: Object },
             idx: { type: Number, default: 0 },
-            jupiterUrl: { type: String, local: true }
+            jupiterUrl: { type: String, local: true },
+            showSettings: { type: Boolean },
+            focusedControl: { type: Boolean }
         }
     }
     get order() { return this.cell.order || this.idx }
@@ -399,6 +402,11 @@ customElements.define('li-jupyter-cell-toolbar', class LiJupyterCellToolbar exte
             let url = this.jupiterUrl.replace('jupyter.js', 'index.html#?lzs=') + LZString.compressToEncodedURIComponent(str);
             window.open(url, '_blank').focus();
         }
+    }
+    async showSettings() {
+        try {
+            let val = await LI.show('dropdown', 'property-grid', { io: (this.focusedControl?.editor || this.focusedControl) }, { parent: this, align: 'down' });
+        } catch (error) { }
     }
 })
 

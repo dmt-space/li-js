@@ -48,6 +48,7 @@ customElements.define('li-property-grid', class LiPropertyGrid extends LiElement
                 height: 100%;
                 outline: 1px solid lightgray;
                 margin-right: 4px;
+                background-color: white;
             }
             .hheader {
                 position: sticky;
