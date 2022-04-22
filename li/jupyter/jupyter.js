@@ -510,6 +510,18 @@ customElements.define('li-jupyter-cell-code', class LiJupyterCellCode extends Li
             ace.options = { highlightActiveLine: false, showPrintMargin: false, minLines: 1, fontSize: 16 };
             ace.value = this.cell.source;
             this.$update();
+            let io = icaro({ props: {} })
+            let props = ace.constructor.elementProperties;
+            for (let [key, value] of props.entries()) {
+                io[key] = ace[key];
+                io.props[key] = {
+                    default: ace[key],
+                    type: typeof ace[key],
+                    list: props[key]?.list || [],
+                    category: 'ace-editor'
+                }
+            }
+            this.editor = io;
         })
         this.listen('change', (e) => {
             this.cell.source = e.detail
