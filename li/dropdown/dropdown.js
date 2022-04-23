@@ -113,6 +113,17 @@ customElements.define('li-dropdown', class LiDropdown extends LiElement {
         if (this.parentElement === document.body) document.body.removeChild(this);
     }
     ok(e) {
+        let el = e?.detail?.target;
+        while (el && el.localName !== 'li-dropdown') {
+            try {
+                el = el.parentElement;
+            }
+            catch (ev) {
+                console.error(ev)
+                break;
+            }
+        }
+        if (el?.ulid !== this.ulid) return
         this.opened = false;
         const res = e && e.detail || this.component;
         LI.fire(this, 'ok', { detail: res });
