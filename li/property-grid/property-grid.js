@@ -336,7 +336,7 @@ customElements.define('li-property-tree', class LiPropertyTree extends LiElement
     }
     async _openDropdown(e, i, idx) {
         try {
-            let val = await LI.show('dropdown', 'tester-cell', { type: i.type, value: i.value, props: { list: i.list } }, { parent: this.$refs('inp-' + idx), useParent: true, align: 'down', useParentWidth: true, addWidth: e.target.offsetWidth + 3 });
+            let val = await LI.show('dropdown', 'tester-cell', { type: i.type, value: i.value, props: { list: i.list } }, { parent: this.$refs('inp-' + idx), useParent: true, align: 'bottom', useParentWidth: true, addWidth: e.target.offsetWidth + 3 });
             e.target.value = i.obj[i.label] = val.detail.value;
             this.$update();
         } catch (error) { }

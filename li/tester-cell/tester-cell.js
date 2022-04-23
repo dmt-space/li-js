@@ -46,7 +46,7 @@ customElements.define('li-tester-cell', class LiTesterCell extends LiElement {
                 }
                 .cells:hover {
                     transition: .3s;
-                    filter: brightness(85%);
+                    background: lightgray; 
                 }
                 .list {
                     overflow: auto;
