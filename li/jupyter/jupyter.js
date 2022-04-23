@@ -355,7 +355,7 @@ customElements.define('li-jupyter-cell-toolbar', class LiJupyterCellToolbar exte
             <li-button name="mode-edit" @click=${() => { this.editedCell = this.editedCell === this.cell ? undefined : this.cell; this.$update() }} fill=${this.editedCell === this.cell ? 'red' : ''} title="edit mode" border=0 size=16></li-button>
             <li-button name="arrow-back" @click=${(e) => this.tapOrder(e, -1.1)} ?disabled=${this.order <= 0} title="move up" border=0 size=16 rotate=90></li-button>
             <li-button name="arrow-forward"  @click=${(e) => this.tapOrder(e, 1.1)} ?disabled=${this.order >= this.notebook?.cells?.length - 1} title="move down" border=0 size=16 rotate=90></li-button>
-            <li-button name="settings" border=0 size=16 @click=${this.showSettings}></li-button>
+            <li-button id="sets" name="settings" border=0 size=16 @click=${this.showSettings}></li-button>
             <div style="flex: 1;"></div>
             <li-button name="launch" @click="${this.share}" style="margin-right:2px" border="none" title="share" size=16></li-button>
             <li-button name="delete" @click=${this.tapDelete} title="delete" border=0 size=16></li-button>
@@ -407,7 +407,7 @@ customElements.define('li-jupyter-cell-toolbar', class LiJupyterCellToolbar exte
         try {
             let io = getIO([...[this.focusedControl], ...this.focusedControl?.editors || []]);
             let categories = this.focusedControl.categories || [this.focusedControl.localName];
-            let val = await LI.show('dropdown', 'property-grid', { io, showButtons: false, categories }, { parent: this, align: 'down' });               
+            let val = await LI.show('dropdown', 'property-grid', { io, showButtons: false, categories, hideHeader: true }, { label: this.cell.cell_type, parent: this.$qs('#sets'), align: 'left', hideHeader: false, intersect: true });               
         } catch (error) { }
     }
 })

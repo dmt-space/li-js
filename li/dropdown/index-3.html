@@ -29,6 +29,7 @@
                 intersect: { type: Boolean, save: true },
                 useParentWidth: { type: Boolean, save: true },
                 move: { type: Boolean, default: false },
+                hideHeader: { type: Boolean, save: true }
             }
         }
 
@@ -78,6 +79,8 @@
                                 .toggled="${this.intersect}" @change="${(e) => this.intersect = e.detail}"></li-checkbox></div>
                         <div style="display: flex; width: 160px;">useParentWidth: <div style="flex:1"></div><li-checkbox 
                                 .toggled="${this.useParentWidth}" @change="${(e) => this.useParentWidth = e.detail}"></li-checkbox></div>
+                        <div style="display: flex; width: 160px;">showHeader: <div style="flex:1"></div><li-checkbox 
+                                .toggled="${this.hideHeader}" @change="${(e) => this.hideHeader = e.detail}"></li-checkbox></div>
                     </div>
                 </div>
             `;
@@ -116,7 +119,8 @@
                 parent: this.parent ? e.target : null,
                 intersect: this.intersect,
                 useParentWidth: this.useParentWidth,
-                align: e.target.innerText
+                align: e.target.innerText,
+                hideHeader: !this.hideHeader
             });
             const res = await host.show(await LI.createComponent('db-cell-list', {
                 width: this.useParentWidth ? '240px' : '400px',

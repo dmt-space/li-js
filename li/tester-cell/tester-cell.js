@@ -13,25 +13,19 @@ customElements.define('li-tester-cell', class LiTesterCell extends LiElement {
 
     static get styles() {
         return css`
-                :host {
-                    display:flex;
-                    flex-direction: column;
-                    align-items: stretch;
-                    justify-content: center;
-                    overflow: hidden;
-                } 
                 .cell {
-                    display:flex;
+                    position: sticky;
+                    top: 0;
+                    display: flex;
                     justify-content: center;
                     align-items: center;
-                    background: lightyellow; 
                     padding: 2px;
-                    border:1px solid lightblue; 
+                    background-color: gray;
                     filter: brightness(95%);
                 }
                 #input {
                     font-size: 1em;
-                    color: dark;
+                    color: white;
                     font-family: Arial;
                     text-align: center;
                     outline: none; 
@@ -42,9 +36,9 @@ customElements.define('li-tester-cell', class LiTesterCell extends LiElement {
                 }  
                 .cells {
                     text-align: left;
-                    background: lightyellow; 
-                    padding: 2px;
-                    border:1px solid lightblue;
+                    background: #f7f7f7; 
+                    padding: 4px 2px;
+                    border:1px solid lightgray;
                     border-top: 0px;
                     cursor: pointer;
                     justify-content: left;
@@ -60,6 +54,7 @@ customElements.define('li-tester-cell', class LiTesterCell extends LiElement {
                     display: flex;
                     flex-direction: column;
                     align-items: stretch;
+                    border: 1px solid darkgray;
                 }
         `;
     }
@@ -69,7 +64,7 @@ customElements.define('li-tester-cell', class LiTesterCell extends LiElement {
             <div class="cell">
                 <input id="input" type="${this.type}" value="${this.value}" @keydown="${e => this._change(e)}" ?readonly="${this.props && this.props.readOnly}"/>
                 ${this.props && this.props.hideButton ? html`` : html`
-                    <li-button name="check" size="16" fill="lightblue" color="lightblue" @click="${this._tap}"></li-button>
+                    <li-button name="check" size="16" @click="${this._tap}"></li-button>
                 `}
             </div>
             <div class="list">
