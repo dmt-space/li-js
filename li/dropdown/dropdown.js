@@ -7,6 +7,7 @@ customElements.define('li-dropdown', class LiDropdown extends LiElement {
                 position: fixed;
                 overflow-y: auto;
                 z-index: 99;
+                box-sizing: border-box;
             }
             .block {
                 display: none;
@@ -15,6 +16,8 @@ customElements.define('li-dropdown', class LiDropdown extends LiElement {
             .b-show {
                 display: block;
                 animation: showBlock .2s linear forwards;
+                /* box-shadow: 0 8px 10px 1px rgba(0, 0, 0, 0.14), 0 3px 14px 2px rgba(0, 0, 0, 0.12), 0 5px 5px -3px rgba(0, 0, 0, 0.2); */
+                box-shadow: 0 4px 5px 0 rgb(0 0 0 / 14%), 0 1px 10px 0 rgb(0 0 0 / 12%), 0 2px 4px -1px rgb(0 0 0 / 40%);
             }
 
             @keyframes showBlock {
@@ -49,8 +52,12 @@ customElements.define('li-dropdown', class LiDropdown extends LiElement {
     }
     render() {
         return html`
-            <div id="modal" class="modal" @click="${this.close}"></div>
+            <div id="modal" class="modal" @pointerdown="${this.close}"></div>
             <div id="dropdown" class="${this.opened ? 'b-show' : 'block'}" style=${styleMap({ ...this.size })}>
+                <header style="max-width: ${this.size.maxWidth}; box-sizing: border-box; display: ${this.hideHeader ? 'none' :'flex'}; flex: 1; border: 1px solid gray; background-color: gray; align-items: center; position: sticky; top: 0; z-index: 100; max-height: 30px; color: white">
+                    <span style="padding-left: 4px">${this.label || this.component.localName}</span>
+                    <li-button name="close" style="margin-left: auto" @pointerdown="${this.close}" size="22"></li-button>
+                </header>
                 <slot id="component" name="${this.opened ? '' : '?'}" @slotchange="${this._slotChange}"></slot>
             </div>
         `;
@@ -67,6 +74,8 @@ customElements.define('li-dropdown', class LiDropdown extends LiElement {
             minWidth: { type: Number, default: undefined, reflect: true },
             minHeight: { type: Number, default: undefined, reflect: true },
             addWidth: { type: Number, default: 0, reflect: true },
+            label: { type: String, default: '' },
+            hideHeader: { type: Boolean, default: true, reflect: true },
         }
     }
 
@@ -199,7 +208,7 @@ customElements.define('li-dropdown', class LiDropdown extends LiElement {
             } break;
             case 'top': {
                 bottom = this.intersect ? rect.bottom : rect.top;
-                top = bottom - height;
+                top = bottom - height - (this.hideHeader ? 0 : 30);
                 if (this.parent) {
                     top = top < 0 ? 0 : top;
                     maxHeight = bottom - top;
@@ -215,7 +224,7 @@ customElements.define('li-dropdown', class LiDropdown extends LiElement {
             } break;
             case 'bottom': {
                 top = this.intersect ? rect.top : rect.bottom;
-                bottom = top + height;
+                bottom = top + height + (this.hideHeader ? 0 : 30);
                 if (this.parent) {
                     top = top < 0 ? 0 : top;
                     maxHeight = winHeight - top;

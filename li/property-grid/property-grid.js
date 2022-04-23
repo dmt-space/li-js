@@ -19,7 +19,8 @@ customElements.define('li-property-grid', class LiPropertyGrid extends LiElement
             labelColumn: { type: Number, default: 150, local: true, save: true },
             focused: { type: Object, default: undefined, local: true },
             categories: { type: Array },
-            showButtons: { type: Boolean, default: true }
+            showButtons: { type: Boolean, default: true },
+            hideHeader: { type: Boolean, default: false }
         }
     }
 
@@ -47,7 +48,6 @@ customElements.define('li-property-grid', class LiPropertyGrid extends LiElement
                 flex-direction: column;
                 height: 100%;
                 outline: 1px solid lightgray;
-                margin-right: 4px;
                 background-color: white;
             }
             .hheader {
@@ -120,21 +120,27 @@ customElements.define('li-property-grid', class LiPropertyGrid extends LiElement
             ::-webkit-scrollbar-thumb {
                 background-color: gray;
             }
+            .hidden {
+                display: none;
+            }
         `;
     }
 
     render() {
         return html`
             <slot @slotchange=${this.slotchange}></slot>
-            <div class="hheader">
+            <div class="hheader ${this.hideHeader ? 'hidden' : ''}">
                 <div class="label">${this.item?.label || this.label || 'PropertyGrid'}</div>
                 <div class="buttons" >
                     ${!this.showButtons ? html`` : html`
-                        <li-button class="btn" ?toggled="${this.isShowFocused}" toggledClass="ontoggled" name="radio-button-checked" title="view focused" @click="${this._showFocused}"></li-button>
-                        <li-button class="btn" name="refresh" title="refresh" @click="${(e) => this._expert(e)}"></li-button>
-                        <li-button class="btn" name="${this.sort === 'none' ? 'hamburger' : 'sort'}" rotate="${this.sort === 'descending' ? 0 : 180}" title="sort" @click="${this._sort}"></li-button>
-                        <li-button class="btn" ?toggled="${this.group}" toggledClass="ontoggled" name="list" title="group" @click="${this._group}"></li-button>
-                        <li-button class="btn" ?toggled="${this.showFunction}" toggledClass="ontoggled" name="functions" title="showFunction" @click="${this._fn}"></li-button>
+                        ${!this._showButtons ? html`` : html`
+                            <li-button class="btn" ?toggled="${this.isShowFocused}" toggledClass="ontoggled" name="radio-button-checked" title="view focused" @click="${this._showFocused}"></li-button>
+                            <li-button class="btn" name="refresh" title="refresh" @click="${(e) => this._expert(e)}"></li-button>
+                            <li-button class="btn" name="${this.sort === 'none' ? 'hamburger' : 'sort'}" rotate="${this.sort === 'descending' ? 0 : 180}" title="sort" @click="${this._sort}"></li-button>
+                            <li-button class="btn" ?toggled="${this.group}" toggledClass="ontoggled" name="list" title="group" @click="${this._group}"></li-button>
+                            <li-button class="btn" ?toggled="${this.showFunction}" toggledClass="ontoggled" name="functions" title="showFunction" @click="${this._fn}"></li-button>
+                        `}
+                        <li-button class="btn" ?toggled="${this._expertMode}" toggledClass="ontoggled" width="2px" title="expertMode" @click="${(e) => this._showButtons = !this._showButtons}"></li-button>
                         <li-button class="btn" ?toggled="${this.expertMode}" toggledClass="ontoggled" name="settings" title="expertMode" @click="${(e) => this._expert(e, true)}"></li-button>
                     `}
                 </div>
@@ -350,7 +356,7 @@ async function makeData(el, { expert, group, sort, showFunction, categories }, s
     const props = el?.constructor?.elementProperties || el?.constructor?._classProperties || el?.elementProperties;
 
     function fn(key, category = 'props', props, list) {
-        if (['Πi', 'Πk', 'Πo', 'Πl', 'Πh', 'Πg', 'L', 'Φt'].includes(key)) return;
+        if (!expert && ['Πi', 'Πk', 'Πo', 'Πl', 'Πh', 'Πg', 'L', 'Φt', 't', 'i', 'J', 'it', 'isUpdatePending', 'hasUpdated', 'renderOptions', 'renderRoot'].includes(key)) return;
         if (props && props.get(key) && props.get(key).category) category = props.get(key).category;
         const _ok = !categories || (categories && categories.includes(category)) || (categories && sure);
         if (!_ok) return;
