@@ -7,7 +7,7 @@ customElements.define('li-property-grid', class LiPropertyGrid extends LiElement
     static get properties() {
         return {
             label: { type: String },
-            io: { type: Object, default: undefined, local: true },
+            io: { type: Object, default: undefined },
             ioProperties: { type: Object, default: {} },
             expertMode: { type: Boolean, default: false, local: true },
             showFunction: { type: Boolean, default: false, local: true },
@@ -58,6 +58,7 @@ customElements.define('li-property-grid', class LiPropertyGrid extends LiElement
                 z-index: 1;
                 overflow: hidden;
                 min-height: 28px;
+                z-index: 9;
             }
             .label {
                 display: flex;
@@ -144,7 +145,7 @@ customElements.define('li-property-grid', class LiPropertyGrid extends LiElement
                 ${Object.keys(this.item || {}).map(key => html`
                     <div class="group">
                        ${this.group ? html`<div class="group-header">${key} [${this.item[key].length}]</div>` : html``}
-                        <li-property-tree class="tree" .item="${this.item[key]}" .args="${this.args}"></li-property-tree>
+                        <li-property-tree class="tree" .item="${this.item[key]}" .args="${this.args}" .io=${this.io}></li-property-tree>
                     </div>
                 `)}
             </div>  
@@ -227,7 +228,7 @@ customElements.define('li-property-grid', class LiPropertyGrid extends LiElement
 customElements.define('li-property-tree', class LiPropertyTree extends LiElement {
     static get properties() {
         return {
-            io: { type: Object, local: true },
+            io: { type: Object },
             expertMode: { type: Boolean, default: false, local: true },
             item: { type: Object, default: undefined },
             props: { type: Object, default: {} },
@@ -346,7 +347,7 @@ async function makeData(el, { expert, group, sort, showFunction, categories }, s
     const exts = /^(_|\$)/;
     const _label = el?.constructor?.name || el?.localName || '';
     const data = { _label, items: [] };
-    const props = el?.constructor?.elementProperties || el?.constructor?._classProperties;
+    const props = el?.constructor?.elementProperties || el?.constructor?._classProperties || el?.elementProperties;
 
     function fn(key, category = 'props', props, list) {
         if (['Πi', 'Πk', 'Πo', 'Πl', 'Πh', 'Πg', 'L', 'Φt'].includes(key)) return;

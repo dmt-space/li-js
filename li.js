@@ -63,6 +63,7 @@ export class LiElement extends LitElement {
         const name = this.localName.replace('li-', '');
         this.$url = `${urlLI.replace('li.js', '')}li/${name}/${name}.js`;
         this.$ulid = this.$ulid || LI.ulid();
+        this.ulid = LI.ulid();
         if (this._useInfo) this.$urlInfo = `${urlLI.replace('li.js', '')}li/${name}/$info/$info.js`;
     }
     connectedCallback() {

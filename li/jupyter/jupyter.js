@@ -355,7 +355,7 @@ customElements.define('li-jupyter-cell-toolbar', class LiJupyterCellToolbar exte
             <li-button name="mode-edit" @click=${() => { this.editedCell = this.editedCell === this.cell ? undefined : this.cell; this.$update() }} fill=${this.editedCell === this.cell ? 'red' : ''} title="edit mode" border=0 size=16></li-button>
             <li-button name="arrow-back" @click=${(e) => this.tapOrder(e, -1.1)} ?disabled=${this.order <= 0} title="move up" border=0 size=16 rotate=90></li-button>
             <li-button name="arrow-forward"  @click=${(e) => this.tapOrder(e, 1.1)} ?disabled=${this.order >= this.notebook?.cells?.length - 1} title="move down" border=0 size=16 rotate=90></li-button>
-            <!-- <li-button name="settings" border=0 size=16 @click=${this.showSettings}></li-button> -->
+            <li-button name="settings" border=0 size=16 @click=${this.showSettings}></li-button>
             <div style="flex: 1;"></div>
             <li-button name="launch" @click="${this.share}" style="margin-right:2px" border="none" title="share" size=16></li-button>
             <li-button name="delete" @click=${this.tapDelete} title="delete" border=0 size=16></li-button>
@@ -405,10 +405,29 @@ customElements.define('li-jupyter-cell-toolbar', class LiJupyterCellToolbar exte
     }
     async showSettings() {
         try {
-            let val = await LI.show('dropdown', 'property-grid', { io: (this.focusedControl?.editor || this.focusedControl) }, { parent: this, align: 'down' });
+            let io = getIO([...[this.focusedControl], ...this.focusedControl?.editors || []]);
+            let categories = this.focusedControl.categories || [this.focusedControl.localName];
+            let val = await LI.show('dropdown', 'property-grid', { io, showButtons: false, categories }, { parent: this, align: 'down' });               
         } catch (error) { }
     }
 })
+
+const getIO = (eds) => {
+    if (!eds?.length) return {};
+    let io = { elementProperties: {} };
+    eds.map(ed => {
+        if (ed) {
+            let props = ed.constructor.elementProperties;
+            for (let [key, value] of props.entries()) {
+                io[key] = ed[key];
+                io.elementProperties[key] = value;
+                io.elementProperties[key].category = ed.localName;
+            }
+        }
+    })
+    io.elementProperties = new Map(Object.entries(io.elementProperties));
+    return icaro(io);
+}
 
 customElements.define('li-jupyter-cell-markdown', class LiJupyterCellMarkdown extends LiElement {
     static get styles() {
@@ -510,18 +529,8 @@ customElements.define('li-jupyter-cell-code', class LiJupyterCellCode extends Li
             ace.options = { highlightActiveLine: false, showPrintMargin: false, minLines: 1, fontSize: 16 };
             ace.value = this.cell.source;
             this.$update();
-            let io = icaro({ props: {} })
-            let props = ace.constructor.elementProperties;
-            for (let [key, value] of props.entries()) {
-                io[key] = ace[key];
-                io.props[key] = {
-                    default: ace[key],
-                    type: typeof ace[key],
-                    list: props[key]?.list || [],
-                    category: 'ace-editor'
-                }
-            }
-            this.editor = io;
+            this.editors = [ace];
+            this.categories = ['li-jupyter-cell-code', 'li-editor-ace'];
         })
         this.listen('change', (e) => {
             this.cell.source = e.detail
