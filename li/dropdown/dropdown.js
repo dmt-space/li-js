@@ -3,6 +3,7 @@ import { LiElement, html, css, styleMap } from '../../li.js';
 customElements.define('li-dropdown', class LiDropdown extends LiElement {
     static get styles() {
         return css`
+            ::-webkit-scrollbar { width: 4px; height: 4px; } ::-webkit-scrollbar-track { background: lightgray; } ::-webkit-scrollbar-thumb { background-color: gray; }
             div { 
                 position: fixed;
                 overflow-y: auto;
@@ -12,22 +13,12 @@ customElements.define('li-dropdown', class LiDropdown extends LiElement {
             .block {
                 display: none;
             }
-
             .b-show {
                 display: block;
                 animation: showBlock .2s linear forwards;
-                /* box-shadow: 0 8px 10px 1px rgba(0, 0, 0, 0.14), 0 3px 14px 2px rgba(0, 0, 0, 0.12), 0 5px 5px -3px rgba(0, 0, 0, 0.2); */
                 box-shadow: 0 4px 5px 0 rgb(0 0 0 / 14%), 0 1px 10px 0 rgb(0 0 0 / 12%), 0 2px 4px -1px rgb(0 0 0 / 40%);
             }
-
-            @keyframes showBlock {
-                0% {
-                    opacity: 0;
-                }
-                100% {
-                    opacity: 1;
-                }
-            }
+            @keyframes showBlock {  0% { opacity: 0; } 100% { opacity: 1; } }
             .modal {
                 display: none;
                 position: fixed;
@@ -38,23 +29,13 @@ customElements.define('li-dropdown', class LiDropdown extends LiElement {
                 height: 100%;
                 background-color: rgba(0,0,0,0.4);
             }
-            ::-webkit-scrollbar {
-                width: 4px;
-                height: 4px;
-            }
-            ::-webkit-scrollbar-track {
-                background: lightgray;
-            }
-            ::-webkit-scrollbar-thumb {
-                background-color: gray;
-            }
         `;
     }
     render() {
         return html`
             <div id="modal" class="modal" @pointerdown="${this.close}"></div>
-            <div id="dropdown" class="${this.opened ? 'b-show' : 'block'}" style=${styleMap({ ...this.size })}>
-                <header style="max-width: ${this.size.maxWidth}; box-sizing: border-box; display: ${this.hideHeader ? 'none' :'flex'}; flex: 1; border: 1px solid gray; background-color: gray; align-items: center; position: sticky; top: 0; z-index: 100; max-height: 30px; color: white">
+            <div id="dropdown" class="${this.opened ? 'b-show' : 'block'}" style="${styleMap({ ...this.size })}">
+                <header style="width: ${this.headerWidth || '100%'}; box-sizing: border-box; display: ${this.hideHeader ? 'none' : 'flex'}; flex: 1; border: 1px solid gray; background-color: gray; align-items: center; position: sticky; top: 0; z-index: 100; max-height: 30px; color: white;">
                     <span style="padding-left: 4px">${this.label || this.component.localName}</span>
                     <li-button name="close" style="margin-left: auto" @pointerdown="${this.close}" size="22"></li-button>
                 </header>
@@ -85,7 +66,6 @@ customElements.define('li-dropdown', class LiDropdown extends LiElement {
         this.__keyup = this._keyup.bind(this);
         this.__close = this._close.bind(this);
     }
-
     connectedCallback() {
         super.connectedCallback();
         LI.listen(window, 'dropdownDataChange', this.__ok, true);
@@ -139,7 +119,6 @@ customElements.define('li-dropdown', class LiDropdown extends LiElement {
         if (this.parentElement === document.body) document.body.removeChild(this);
         return res;
     }
-
     _slotChange(e) {
         const els = e.target.assignedElements();
         if (els.length) {
@@ -155,16 +134,14 @@ customElements.define('li-dropdown', class LiDropdown extends LiElement {
         if (!this.component || !rect.ok) return;
         this.contentRect = this.component.getBoundingClientRect()
         let height = this.contentRect?.height || 0;
+        height = height + (this.hideHeader ? 0 : 30)
         let width = this.contentRect?.width || 0;
+        this.headerWidth = width;
         let winWidth = window.innerWidth;
         let winHeight = window.innerHeight;
-        let top = this.align  === 'modal' ? winHeight / 2 - height / 2 : rect.top;
-        let left = this.align  === 'modal' ? winWidth / 2 - width / 2 : rect.left
-        if (!height || !width) {
-            top += 'px';
-            left += 'px';
-            return { top, left };
-        }
+        let top = this.align === 'modal' ? winHeight / 2 - height / 2 : rect.top;
+        let left = this.align === 'modal' ? winWidth / 2 - width / 2 : rect.left
+        if (!height || !width) return { top: top + 'px', left: left + 'px' };
         let maxHeight = winHeight;
         let maxWidth = winWidth;
         let minHeight = this.minHeight || height;
@@ -185,84 +162,41 @@ customElements.define('li-dropdown', class LiDropdown extends LiElement {
             case 'left': {
                 right = this.intersect ? rect.right : rect.left;
                 left = right - width;
-                if (this.parent) {
-                    if (left < 0) {
-                        this.align = this._steps.includes('right') ? 'bottom' : 'right';
-                        this._steps.push('left');
-                        this._setSize();
-                        return;
-                    }
-                }
+                if (this.parent) left = left < 0 ? 0 : left;
             } break;
             case 'right': {
                 left = this.intersect ? rect.left : rect.right;
                 right = left + width;
-                if (this.parent) {
-                    if (right > winWidth) {
-                        this.align = this._steps.includes('left') ? 'bottom' : 'left';
-                        this._steps.push('right');
-                        this._setSize();
-                        return;
-                    }
-                }
+                if (this.parent && right > winWidth) size.right = 0;
             } break;
             case 'top': {
                 bottom = this.intersect ? rect.bottom : rect.top;
-                top = bottom - height - (this.hideHeader ? 0 : 30);
+                top = bottom - height;
                 if (this.parent) {
                     top = top < 0 ? 0 : top;
                     maxHeight = bottom - top;
-                    if (height > maxHeight && winHeight - rect.bottom > rect.top) {
-                        this.align = this._steps.includes('bottom') ? 'top' : 'bottom';
-                        if (this.align === 'bottom') {
-                            this._steps.push('top');
-                            this._setSize();
-                            return;
-                        }
-                    }
+                    maxHeight = maxHeight < 120 ? 120 : maxHeight;
                 }
             } break;
             case 'bottom': {
                 top = this.intersect ? rect.top : rect.bottom;
-                bottom = top + height + (this.hideHeader ? 0 : 30);
+                bottom = top + height;
                 if (this.parent) {
-                    top = top < 0 ? 0 : top;
+                    if (bottom > maxHeight) size.bottom = 0;
                     maxHeight = winHeight - top;
-                    if (height > maxHeight &&  rect.top > winHeight - rect.bottom) {
-                        this.align = this._steps.includes('top') ? 'bottom' : 'top';
-                        if (this.align === 'top') {
-                            this._steps.push('bottom');
-                            this._setSize();
-                            return;
-                        }
-                    }
+                    maxHeight = maxHeight < 120 ? 120 : maxHeight;
                 }
             } break;
         }
 
-        if (!this.parent) {
-            top = top < 0 ? 0 : top;
-            left = left < 0 ? 0 : left;
-            if (bottom > winHeight) size.bottom = 0
-            if (right > winWidth) size.right = 0;
-        } else {
-            if (this.align === 'left' || this.align === 'right') {
-                if (this.useParentWidth) minWidth = maxWidth = parentWidth + this.addWidth;
-                if ((height && top) > winHeight - top) {
-                    top = rect.bottom - height;
-                    top = top < 0 ? 0 : top;
-                    maxHeight = winHeight - top;
-                } else if (bottom >= winHeight) size.bottom = 0;
-            } else if (this.align === 'top' || this.align === 'bottom') {
-                if (this.useParentWidth) minWidth = maxWidth = parentWidth + this.addWidth;
-                else {
-                    if (width < parentWidth) minWidth = parentWidth + this.addWidth;
-                    if (right > winWidth) size.right = 0;
-                }
-                left = left < 0 ? 0 : left;
-                if (bottom > winHeight) size.bottom = 0;;
-            }
-        }
+        top = top < 0 ? 0 : top;
+        left = left < 0 ? 0 : left;
+        if (bottom > winHeight) size.bottom = 0
+        if (right > winWidth) size.right = 0;
+        if (this.useParentWidth) minWidth = maxWidth = parentWidth + this.addWidth;
+
+        maxWidth = maxWidth > winWidth ? winWidth : maxWidth;
+        maxHeight = maxHeight > winHeight ? winHeight : maxHeight;
         minWidth = minWidth > maxWidth ? maxWidth : minWidth;
         minHeight = minHeight > maxHeight ? maxHeight : minHeight;
 
@@ -279,20 +213,6 @@ customElements.define('li-dropdown', class LiDropdown extends LiElement {
         if (e.keyCode === 27) this.close();
         if (e.keyCode === 13) this.ok();
     }
-    // _close(e) {
-    //     let el = this;
-    //     while (el) {
-    //         if (e.target !== window && el.contains(e.target)) {
-    //             if (e.type === 'resize' && this._offsetHeight !== e.target.offsetHeight) {
-    //                 this._setSize();
-    //                 this._offsetHeight = e.target.offsetHeight;
-    //             }
-    //             return;
-    //         }
-    //         el = el.nextElementSibling;
-    //     }
-    //     this.close();
-    // }
     _close(e) {
         if (e.target instanceof Node) {
             let dd = this;
@@ -310,4 +230,4 @@ customElements.define('li-dropdown', class LiDropdown extends LiElement {
         }
         this.close();
     }
-});
+})
