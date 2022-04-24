@@ -319,6 +319,7 @@ customElements.define('li-property-tree', class LiPropertyTree extends LiElement
         else
             i.data = [];
         this.$update();
+        this.fire('resize');
     }
     _focus(e, i) {
         this.focused = i;
@@ -326,8 +327,11 @@ customElements.define('li-property-tree', class LiPropertyTree extends LiElement
     _change(e, i) {
         if (i && i.key in i.obj) {
             if (e.target.type === 'checkbox') i.obj[i.key] = e.target.checked;
-            else i.obj[i.key] = e.target.value;
-            this.$fire('changedInPropertyGrid');
+            else {
+                if (i.type === 'number') i.obj[i.key] = +e.target.value;
+                else i.obj[i.key] = e.target.value;
+            }
+            this.$fire('changedInPropertyGrid', { key: i.key, value: i.obj[i.key], i });
             this.io?.$update && this.io.$update();
         }
     }
@@ -338,6 +342,8 @@ customElements.define('li-property-tree', class LiPropertyTree extends LiElement
         try {
             let val = await LI.show('dropdown', 'tester-cell', { type: i.type, value: i.value, props: { list: i.list } }, { parent: this.$refs('inp-' + idx), useParent: true, align: 'bottom', useParentWidth: true, addWidth: e.target.offsetWidth + 3 });
             e.target.value = i.obj[i.label] = val.detail.value;
+            this.$fire('changedInPropertyGrid', { key: i.key, value: i.obj[i.label], i });
+            this.io?.$update && this.io.$update();
             this.$update();
         } catch (error) { }
     }
