@@ -28,7 +28,7 @@ customElements.define('li-editor-ace', class LiAceEditor extends LiElement {
 
     static get properties() {
         return {
-            src: { type: String, default: '' },
+            src: { type: String, default: '', category: 'src' },
             mode: {
                 type: String,
                 default: 'html',
@@ -60,7 +60,8 @@ customElements.define('li-editor-ace', class LiAceEditor extends LiElement {
                     'tomorrow_night_bright', 'tomorrow_night_eighties', 'twilight', 'vibrant_ink', 'xcode'
                 ]
             },
-            options: { type: Object, default: {} }
+            default: { type: Object },
+            options: { type: Object, default: {}, category: 'options' }
         }
     }
     get value() {
@@ -75,7 +76,7 @@ customElements.define('li-editor-ace', class LiAceEditor extends LiElement {
 
     constructor() {
         super();
-        this._options = icaro({
+        this.default = icaro({
             // mode: 'ace/mode/html',
             // theme: 'ace/theme/chrome', // 'solarized_light',
             highlightActiveLine: true,
@@ -118,8 +119,9 @@ customElements.define('li-editor-ace', class LiAceEditor extends LiElement {
             wrap: true,
             foldStyle: 'markbeginend' //"markbegin" | "markbeginend" | "manual",
         })
-        this._options.listen((e) => {
-            this.editor.setOptions(this._options);
+        this.default.listen((e) => {
+            this.editor.setOptions(this.default);
+            this.fire('aceSetOptions', { ulid: this.ulid, el: this, e })
             this.$update();
         })
     }
@@ -130,7 +132,8 @@ customElements.define('li-editor-ace', class LiAceEditor extends LiElement {
         this.editor.renderer.attachToShadowRoot();
         this.editor.setTheme('ace/theme/' + this.theme);
         this.editor.getSession().setMode('ace/mode/' + this.mode);
-        this.editor.setOptions(this._options);
+        Object.keys(this.options).map(key => this.default[key] = this.options[key]) 
+        this.editor.setOptions(this.default);
         this.editor.setOptions(this.options);
         this.editor.commands.addCommand({
             name: 'format',
@@ -183,13 +186,16 @@ customElements.define('li-editor-ace', class LiAceEditor extends LiElement {
             }
             if (changedProperties.has('theme')) {
                 this.editor.setTheme('ace/theme/' + this.theme);
+                this.fire('aceSetOptions', { ulid: this.ulid, el: this, e: changedProperties, key: 'theme', value: this.theme});
                 this.$update();
             }
             if (changedProperties.has('mode')) {
                 this.editor.getSession().setMode('ace/mode/' + this.mode);
+                this.fire('aceSetOptions', { ulid: this.ulid, el: this, e: changedProperties, key: 'mode', value: this.mode});
                 this.$update();
             }
             if (changedProperties.has('options')) {
+                Object.keys(this.options).map(key => this.default[key] = this.options[key]) 
                 this.editor.setOptions(this.options);
                 this.$update();
             }

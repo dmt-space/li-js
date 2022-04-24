@@ -34,7 +34,7 @@ customElements.define('li-dropdown', class LiDropdown extends LiElement {
     render() {
         return html`
             <div id="modal" class="modal" @pointerdown="${this.close}"></div>
-            <div id="dropdown" class="${this.opened ? 'b-show' : 'block'}" style="${styleMap({ ...this.size })}">
+            <div id="dropdown" class="${this.opened ? 'b-show' : 'block'}" style="${styleMap({ ...this.size })}" @resize=${this._setSize}>
                 <header style="width: ${this.headerWidth || '100%'}; box-sizing: border-box; display: ${this.hideHeader ? 'none' : 'flex'}; flex: 1; border: 1px solid gray; background-color: gray; align-items: center; position: sticky; top: 0; z-index: 100; max-height: 30px; color: white;">
                     <span style="padding-left: 4px">${this.label || this.component.localName}</span>
                     <li-button name="close" style="margin-left: auto" @pointerdown="${this.close}" size="22"></li-button>
@@ -81,6 +81,10 @@ customElements.define('li-dropdown', class LiDropdown extends LiElement {
         LI.unlisten(document, 'ok', this.ok());
         super.disconnectedCallback();
     }
+    firstUpdated() {
+        super.firstUpdated();
+        new ResizeObserver(() => this._setSize()).observe(this.$qs('#dropdown'));
+    }
 
     show(comp, props = {}) {
         for (let p in props) this[p] = props[p];
@@ -112,7 +116,7 @@ customElements.define('li-dropdown', class LiDropdown extends LiElement {
                 break;
             }
         }
-        if (el?.ulid !== this.ulid) return
+        if (el && el.ulid !== this.ulid) return
         this.opened = false;
         const res = e && e.detail || this.component;
         LI.fire(this, 'ok', { detail: res });

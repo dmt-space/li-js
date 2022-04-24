@@ -355,7 +355,7 @@ customElements.define('li-jupyter-cell-toolbar', class LiJupyterCellToolbar exte
             <li-button name="mode-edit" @click=${() => { this.editedCell = this.editedCell === this.cell ? undefined : this.cell; this.$update() }} fill=${this.editedCell === this.cell ? 'red' : ''} title="edit mode" border=0 size=16></li-button>
             <li-button name="arrow-back" @click=${(e) => this.tapOrder(e, -1.1)} ?disabled=${this.order <= 0} title="move up" border=0 size=16 rotate=90></li-button>
             <li-button name="arrow-forward"  @click=${(e) => this.tapOrder(e, 1.1)} ?disabled=${this.order >= this.notebook?.cells?.length - 1} title="move down" border=0 size=16 rotate=90></li-button>
-            <li-button id="sets" name="settings" border=0 size=16 @click=${this.showSettings}></li-button>
+            <li-button id="sets" name="settings" border=0 size=16 @click=${this.showSettings} style="display: ${this.focusedControl?.editors?.length ? '' : 'none'}"></li-button>
             <div style="flex: 1;"></div>
             <li-button name="launch" @click="${this.share}" style="margin-right:2px" border="none" title="share" size=16></li-button>
             <li-button name="delete" @click=${this.tapDelete} title="delete" border=0 size=16></li-button>
@@ -404,11 +404,13 @@ customElements.define('li-jupyter-cell-toolbar', class LiJupyterCellToolbar exte
         }
     }
     async showSettings() {
-        try {
-            let io = getIO([...[this.focusedControl], ...this.focusedControl?.editors || []]);
-            let categories = this.focusedControl.categories || [this.focusedControl.localName];
-            let val = await LI.show('dropdown', 'property-grid', { io, showButtons: false, categories, hideHeader: true }, { label: this.cell.cell_type, parent: this.$qs('#sets'), align: 'left', hideHeader: false, intersect: true });               
-        } catch (error) { }
+        if (this.focusedControl?.editors?.length) {
+            try {
+                let io = getIO(this.focusedControl?.editors);
+                let categories = this.focusedControl.categories;
+                let val = await LI.show('dropdown', 'property-grid', { io, showButtons: false, categories, hideHeader: true }, { label: this.cell.cell_type, parent: this.$qs('#sets'), align: 'left', hideHeader: false, intersect: true });               
+            } catch (error) { }
+        }
     }
 })
 
@@ -421,12 +423,13 @@ const getIO = (eds) => {
             for (let [key, value] of props.entries()) {
                 io[key] = ed[key];
                 io.elementProperties[key] = value;
-                io.elementProperties[key].category = ed.localName;
+                io.elementProperties[key].category = io.elementProperties[key].category || ed.localName;
+                io.ulid = ed.ulid;
             }
         }
     })
     io.elementProperties = new Map(Object.entries(io.elementProperties));
-    return icaro(io);
+    return io;
 }
 
 customElements.define('li-jupyter-cell-markdown', class LiJupyterCellMarkdown extends LiElement {
@@ -530,11 +533,17 @@ customElements.define('li-jupyter-cell-code', class LiJupyterCellCode extends Li
             ace.value = this.cell.source;
             this.$update();
             this.editors = [ace];
-            this.categories = ['li-jupyter-cell-code', 'li-editor-ace'];
+            this.categories = ['li-editor-ace'];
         })
         this.listen('change', (e) => {
             this.cell.source = e.detail
             this.$update();
+        })
+        this.$listen('changedInPropertyGrid', (e) => {
+            const res = e.get('value');
+            if (res.i.obj.ulid === this.$qs('li-editor-ace').ulid) {
+                this.editors[0][res.key] = res.value;
+            }
         })
     }
 })
