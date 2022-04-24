@@ -408,7 +408,7 @@ customElements.define('li-jupyter-cell-toolbar', class LiJupyterCellToolbar exte
             try {
                 let io = getIO(this.focusedControl?.editors);
                 let categories = this.focusedControl.categories;
-                let val = await LI.show('dropdown', 'property-grid', { io, showButtons: false, categories, hideHeader: true }, { label: this.cell.cell_type, parent: this.$qs('#sets'), align: 'left', hideHeader: false, intersect: true });               
+                let val = await LI.show('dropdown', 'property-grid', { io, showButtons: false, categories, hideHeader: true }, { label: this.cell.cell_type, parent: this.$qs('#sets'), align: 'left', hideHeader: false, intersect: true });
             } catch (error) { }
         }
     }
@@ -478,7 +478,7 @@ customElements.define('li-jupyter-cell-markdown', class LiJupyterCellMarkdown ex
                     const ace = this.$qs('li-editor-ace');
                     if (ace) {
                         ace.options = { highlightActiveLine: false, showPrintMargin: false, minLines: 1, fontSize: 16 };
-                        ace.src = this.cell.source;   
+                        ace.src = this.cell.source;
                     }
                     const simplemde = this.$qs('li-editor-simplemde');
                     if (simplemde) {
@@ -525,26 +525,51 @@ customElements.define('li-jupyter-cell-code', class LiJupyterCellCode extends Li
             }
         })
     }
-    firstUpdated() {
+    async firstUpdated() {
         super.firstUpdated();
-        setTimeout(() => {
-            const ace = this.$qs('li-editor-ace');
-            ace.options = { highlightActiveLine: false, showPrintMargin: false, minLines: 1, fontSize: 16 };
-            ace.value = this.cell.source;
-            this.$update();
-            this.editors = [ace];
-            this.categories = ['li-editor-ace'];
+        await new Promise((r) => setTimeout(r, 0));
+        const ace = this.$qs('li-editor-ace');
+        ace.options = { highlightActiveLine: false, showPrintMargin: false, minLines: 1, fontSize: 16 };
+        ace.value = this.cell.source;
+        this.$update();
+        this.editors = [ace];
+        this.categories = ['li-editor-ace'];
+        setTimeout(() => { 
+            Object.keys(this.cell['li-editor-ace'] || []).map(key => {
+                if (key === 'options') {
+                    Object.keys(this.cell['li-editor-ace'][key]).forEach(i => {
+                        this.$qs('li-editor-ace').defaultOptions[i] = this.cell['li-editor-ace'][key][i];
+                    })
+                } else {
+                    this.$qs('li-editor-ace')[key] = this.cell['li-editor-ace'][key];
+                }
+            })
+            this.listen('change', (e) => {
+                if (!this.isFirstUpdated) return;
+                this.cell.source = e.detail
+                this.$update();
+            })
+            this.$listen('changedInPropertyGrid', (e) => {
+                if (!this.isFirstUpdated || !e?.get('value')) return;
+                const res = e.get('value');
+                if (res.i.obj.ulid === this.$qs('li-editor-ace').ulid) {
+                    this.editors[0][res.key] = res.value;
+                    this.cell['li-editor-ace'] ||= {};
+                    this.cell['li-editor-ace'][res.key] = res.value;
+                }
+            })
+            this.listen('aceSetOptions', (e) => {
+                if (!this.isFirstUpdated || !e?.detail?.opts) return;
+                if (e.detail.ulid === this.$qs('li-editor-ace').ulid) {
+                    this.cell['li-editor-ace'] ||= {};
+                    this.cell['li-editor-ace'].options ||= {};
+                    (e.detail?.opts || []).forEach(i => {
+                        this.cell['li-editor-ace'].options[i.key] = i.value;
+                    })
+                }
+            })
         })
-        this.listen('change', (e) => {
-            this.cell.source = e.detail
-            this.$update();
-        })
-        this.$listen('changedInPropertyGrid', (e) => {
-            const res = e.get('value');
-            if (res.i.obj.ulid === this.$qs('li-editor-ace').ulid) {
-                this.editors[0][res.key] = res.value;
-            }
-        })
+        setTimeout(() => this.isFirstUpdated = true, 500);
     }
 })
 
@@ -620,7 +645,7 @@ customElements.define('li-jupyter-cell-html-executable', class LiJupyterCellHtml
                                 ` : html``}
                                 <li-button size=12 name="code" @click=${(e) => { this.cell.useJson = !this.cell.useJson; this.$update() }} title="useJSON" style="margin-left: 8px;"></li-button>
                                 <div style="flex: 1"></div>
-                                <li-button size=12 name="content-cut" @click=${(e) => { this.cell.sourceHTML = this.cell.sourceJS = this.cell.sourceCSS = this._sourceJSON = ''; this.cell.sourceJSON = '{}'; this.listenIframe(true); this.$qs('li-editor-ace').value = ''}} title="clear all"></li-button>
+                                <li-button size=12 name="content-cut" @click=${(e) => { this.cell.sourceHTML = this.cell.sourceJS = this.cell.sourceCSS = this._sourceJSON = ''; this.cell.sourceJSON = '{}'; this.listenIframe(true); this.$qs('li-editor-ace').value = '' }} title="clear all"></li-button>
                                 <li-button size=12 name="refresh" @click=${(e) => { this.listenIframe(true) }} style="margin-left: 6px" title="refresh"></li-button>
                             </div>
                             <li-editor-ace class="ace" style="width: 100%" theme=${this.mode === 'html' ? 'cobalt' : this.mode === 'javascript' ? 'solarized_light' : this.mode === 'css' ? 'dawn' : 'chrome'} mode=${this.mode}></li-editor-ace>

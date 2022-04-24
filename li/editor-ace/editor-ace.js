@@ -4,7 +4,7 @@ import './src/ace.js'
 
 // https://github.com/beautify-web/js-beautify
 import './src/beautify.js';
-// import './src/beautify-css.js';
+import './src/beautify-css.js';
 import './src/beautify-html.js';
 
 let url = import.meta.url;
@@ -28,7 +28,8 @@ customElements.define('li-editor-ace', class LiAceEditor extends LiElement {
 
     static get properties() {
         return {
-            src: { type: String, default: '', category: 'src' },
+            src: { type: String, default: '', category: 'options' },
+            options: { type: Object, default: {}, category: 'options' },
             mode: {
                 type: String,
                 default: 'html',
@@ -60,8 +61,7 @@ customElements.define('li-editor-ace', class LiAceEditor extends LiElement {
                     'tomorrow_night_bright', 'tomorrow_night_eighties', 'twilight', 'vibrant_ink', 'xcode'
                 ]
             },
-            default: { type: Object },
-            options: { type: Object, default: {}, category: 'options' }
+            defaultOptions: { type: Object }
         }
     }
     get value() {
@@ -76,9 +76,7 @@ customElements.define('li-editor-ace', class LiAceEditor extends LiElement {
 
     constructor() {
         super();
-        this.default = icaro({
-            // mode: 'ace/mode/html',
-            // theme: 'ace/theme/chrome', // 'solarized_light',
+        this.defaultOptions = icaro({
             highlightActiveLine: true,
             highlightSelectedWord: true,
             readOnly: false,
@@ -119,9 +117,11 @@ customElements.define('li-editor-ace', class LiAceEditor extends LiElement {
             wrap: true,
             foldStyle: 'markbeginend' //"markbegin" | "markbeginend" | "manual",
         })
-        this.default.listen((e) => {
-            this.editor.setOptions(this.default);
-            this.fire('aceSetOptions', { ulid: this.ulid, el: this, e })
+        this.defaultOptions.listen((e) => {
+            this.editor.setOptions(this.defaultOptions);
+            let opts = [];
+            for (const [key, value] of e.entries()) opts.push({ key, value });
+            this.fire('aceSetOptions', { ulid: this.ulid, el: this, opts })
             this.$update();
         })
     }
@@ -132,18 +132,18 @@ customElements.define('li-editor-ace', class LiAceEditor extends LiElement {
         this.editor.renderer.attachToShadowRoot();
         this.editor.setTheme('ace/theme/' + this.theme);
         this.editor.getSession().setMode('ace/mode/' + this.mode);
-        Object.keys(this.options).map(key => this.default[key] = this.options[key]) 
-        this.editor.setOptions(this.default);
+        Object.keys(this.options).map(key => this.defaultOptions[key] = this.options[key])
+        this.editor.setOptions(this.defaultOptions);
         this.editor.setOptions(this.options);
         this.editor.commands.addCommand({
             name: 'format',
-            bindKey: { win: "Ctrl-Q", mac: "Cmd-Q" },
+            bindKey: { win: "Ctrl-Q", mac: "Alt-q" },
             exec: () => {
                 // https://github.com/beautify-web/js-beautify
                 const
                     mode = this.editor.session.getMode().$id,
-                    // fn = mode.includes('html') ? html_beautify : mode.includes('css') ? css_beautify : js_beautify,
-                    fn = mode.includes('html') ? html_beautify : js_beautify,
+                    fn = mode.includes('html') ? html_beautify : mode.includes('css') ? css_beautify : js_beautify,
+                    //fn = mode.includes('html') ? html_beautify : js_beautify,
                     session = this.editor.getSession();
                 session.setValue(fn(session.getValue(), {
                     // "indent_size": 4,
@@ -186,16 +186,14 @@ customElements.define('li-editor-ace', class LiAceEditor extends LiElement {
             }
             if (changedProperties.has('theme')) {
                 this.editor.setTheme('ace/theme/' + this.theme);
-                this.fire('aceSetOptions', { ulid: this.ulid, el: this, e: changedProperties, key: 'theme', value: this.theme});
                 this.$update();
             }
             if (changedProperties.has('mode')) {
                 this.editor.getSession().setMode('ace/mode/' + this.mode);
-                this.fire('aceSetOptions', { ulid: this.ulid, el: this, e: changedProperties, key: 'mode', value: this.mode});
                 this.$update();
             }
             if (changedProperties.has('options')) {
-                Object.keys(this.options).map(key => this.default[key] = this.options[key]) 
+                Object.keys(this.options).map(key => this.defaultOptions[key] = this.options[key])
                 this.editor.setOptions(this.options);
                 this.$update();
             }
