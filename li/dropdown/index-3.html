@@ -29,7 +29,7 @@
                 intersect: { type: Boolean, save: true },
                 useParentWidth: { type: Boolean, save: true },
                 move: { type: Boolean, default: false },
-                hideHeader: { type: Boolean, save: true }
+                _header: { type: Boolean, save: true }
             }
         }
 
@@ -79,8 +79,8 @@
                                 .toggled="${this.intersect}" @change="${(e) => this.intersect = e.detail}"></li-checkbox></div>
                         <div style="display: flex; width: 160px;">useParentWidth: <div style="flex:1"></div><li-checkbox 
                                 .toggled="${this.useParentWidth}" @change="${(e) => this.useParentWidth = e.detail}"></li-checkbox></div>
-                        <div style="display: flex; width: 160px;">showHeader: <div style="flex:1"></div><li-checkbox 
-                                .toggled="${this.hideHeader}" @change="${(e) => this.hideHeader = e.detail}"></li-checkbox></div>
+                        <div style="display: flex; width: 160px;">hideHeader: <div style="flex:1"></div><li-checkbox 
+                                .toggled="${this._header}" @change="${(e) => this._header = e.detail}"></li-checkbox></div>
                     </div>
                 </div>
             `;
@@ -120,28 +120,66 @@
                 intersect: this.intersect,
                 useParentWidth: this.useParentWidth,
                 align: e.target.innerText,
-                hideHeader: !this.hideHeader
+                header: this._header ? '' : 'Title - 1',
+                id: 0
             });
-            const res = await host.show(await LI.createComponent('db-cell-list', {
-                width: this.useParentWidth ? '240px' : '400px',
-                list:
-                    [
-                        { icon: 'add', label: 'Add db' },
-                        { icon: 'close', label: 'Delete db' },
-                        { icon: 'add', label: 'Add class' },
-                        { icon: 'close', label: 'Delete class' },
-                        { icon: 'add', label: 'Add db' },
-                        { icon: 'close', label: 'Delete db' },
-                        { icon: 'add', label: 'Add class' },
-                        { icon: 'close', label: 'Delete class' },
-                        { icon: 'add', label: 'Add db' },
-                        { icon: 'close', label: 'Delete db' },
-                        { icon: 'add', label: 'Add class' },
-                        { icon: 'close', label: 'Delete class' }
-                    ]
-            }));
+            const res = await host.show(await LI.createComponent(new LiTestDD, { icon: 'warning', size: 100, color: 0 }));
             console.log(res);
         }
     })
-
+    class LiTestDD extends LiElement {
+        static get styles() {
+            return css`
+                :host{
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    background: white;
+                }
+                * {
+                    margin: 4px 12px;
+                }
+            `
+        }
+        render() {
+            return html`
+                <style>
+                    :host{
+                        border: 4px solid hsla(${this.color}, 50%, 50%, .9);
+                    }
+                </style>
+                <li-button size=${this.size} name=${this.icon} fill="hsla(${this.color}, 50%, 50%, .7)"></li-button>
+                ${[...Array(6).keys()].map(i => html`  
+                    <h4 style="display: flex; align-items: center; justify-content: space-between;">
+                        <div style="cursor: pointer" @click=${() => this.onclick(i)}>Запись № ${i}</div>
+                        <div style="flex: 1"></div>
+                        <li-button id=${'Title № ' + i} @pointerdown=${this.ontap} name="add" size="24" ></li-button>
+                    </h4>
+                `)}
+            `
+        }
+        static get properties() {
+            return {
+                iconSize: { type: Number, default: 24 },
+                icon: { type: String, default: '' },
+                color: { type: Number, default: 100 },
+            }
+        }
+        async ontap(e) {
+            try {
+                count = +count + 1;
+                const res = await LI.show('dropdown', new LiTestDD, { icon: 'warning', size: 100, color: Math.floor(Math.random() * 360) },
+                    { parent: e.target, animation: 500, align: 'right', header: 'Title - ' + count, icon: 'info', id: count, });
+                console.log(res);
+            }
+            catch (e) {
+                console.log(e);
+            }
+        }
+        onclick(e) {
+            this.fire('ok', { detail: { index: e, el: this } });
+        }
+    }
+    customElements.define('li-test-dd', LiTestDD);
+    let count = 0;
 </script>

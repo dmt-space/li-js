@@ -34,12 +34,12 @@ customElements.define('li-dropdown', class LiDropdown extends LiElement {
     render() {
         return html`
             <div id="modal" class="modal" @pointerdown="${this.close}"></div>
-            <div id="dropdown" class="${this.opened ? 'b-show' : 'block'}" style="${styleMap({ ...this.size })}" @resize=${this._setSize}>
-                <header style="width: ${this.headerWidth || '100%'}; box-sizing: border-box; display: ${this.hideHeader ? 'none' : 'flex'}; flex: 1; border: 1px solid gray; background-color: gray; align-items: center; position: sticky; top: 0; z-index: 100; max-height: 28px; color: white;">
-                    <span style="padding-left: 4px">${this.label || this.component.localName}</span>
-                    <li-button name="close" style="margin-left: auto" @pointerdown="${this.close}" size="22"></li-button>
+            <div id="dropdown" class="${this.opened ? 'b-show' : 'block'}" style="${styleMap({ ...this.size })}" @resize=${this._setSize} @pointerdown=${e => this._pointerdown(e)}>
+                <header style="width: ${this.headerWidth || '100%'}; box-sizing: border-box; display: ${this.header ? 'flex' : 'none'}; flex: 1; border: 1px solid gray; background-color: gray; align-items: center; position: sticky; top: 0; z-index: 100; max-height: 28px; color: white;">
+                    <span style="padding-left: 4px">${this.header}</span>
+                    <li-button name="close" style="margin-left: auto" @pointerdown=${e => {this._pointerdown(e, this); this.close()}} size="22"></li-button>
                 </header>
-                <slot id="component" name="${this.opened ? '' : '?'}" @slotchange="${this._slotChange}"></slot>
+                <slot id="component" name="${this.opened ? '' : '?'}" @slotchange=${this._slotChange}></slot>
             </div>
         `;
     }
@@ -55,29 +55,22 @@ customElements.define('li-dropdown', class LiDropdown extends LiElement {
             minWidth: { type: Number, default: undefined, reflect: true },
             minHeight: { type: Number, default: undefined, reflect: true },
             addWidth: { type: Number, default: 0, reflect: true },
-            label: { type: String, default: '' },
-            hideHeader: { type: Boolean, default: true, reflect: true },
+            header: { type: String, default: '' }
         }
     }
 
-    constructor() {
-        super();
-        this.__ok = this.ok.bind(this);
-        this.__keyup = this._keyup.bind(this);
-        this.__close = this._close.bind(this);
-    }
     connectedCallback() {
         super.connectedCallback();
-        LI.listen(window, 'dropdownDataChange', this.__ok, true);
-        LI.listen(window, 'keyup', this.__keyup, true);
-        LI.listen(window, 'mousedown, resize, wheel', this.__close, true);
+        LI.listen(window, 'dropdownDataChange', this.__ok ||= this.ok.bind(this), true);
+        LI.listen(window, 'keyup',  this.__keyup ||= this._keyup.bind(this), true);
+        LI.listen(window, 'mousedown, resize, wheel', this.__closeAll ||= this._closeAll.bind(this), true);
         LI.listen(document, 'ok', (e) => this.ok(e));
         this._setSize();
     }
     disconnectedCallback() {
         LI.unlisten(window, 'dropdownDataChange', this.__ok, true);
         LI.unlisten(window, 'keyup', this.__keyup, true);
-        LI.unlisten(window, 'mousedown, resize, wheel', this.__close, true);
+        LI.unlisten(window, 'mousedown, resize, wheel', this.__closeAll, true);
         LI.unlisten(document, 'ok', this.ok());
         super.disconnectedCallback();
     }
@@ -86,6 +79,25 @@ customElements.define('li-dropdown', class LiDropdown extends LiElement {
         new ResizeObserver(() => this._setSize()).observe(this.$qs('#dropdown'));
     }
 
+    _pointerdown(e, d) {
+        e.stopPropagation();
+        e.preventDefault();
+        let parent = d || e.target.parentElement;
+        if (parent?.localName !== 'li-dropdown') return;
+        let idx = 0;
+        const dd = document.body.getElementsByTagName('li-dropdown')
+        if (dd.length) {
+            for (let i = 0; i < dd.length; i++) 
+                if (dd[i] === parent) 
+                    idx = i;
+            const arr = [];
+            for (let i = 0; i < dd.length; i++) {
+                const elm = dd[i];
+                if (i > idx) arr.push(elm);
+            }
+            arr.forEach(i => i.close());
+        }
+    }
     show(comp, props = {}) {
         for (let p in props) this[p] = props[p];
         if (comp) {
@@ -138,7 +150,7 @@ customElements.define('li-dropdown', class LiDropdown extends LiElement {
         if (!this.component || !rect.ok) return;
         this.contentRect = this.component.getBoundingClientRect()
         let height = this.contentRect?.height || 0;
-        height = height + (this.hideHeader ? 0 : 28)
+        height = height + (this.header ? 28 : 0)
         let width = this.contentRect?.width || 0;
         this.headerWidth = width;
         let winWidth = window.innerWidth;
@@ -215,9 +227,9 @@ customElements.define('li-dropdown', class LiDropdown extends LiElement {
     }
     _keyup(e) {
         if (e.keyCode === 27) this.close();
-        if (e.keyCode === 13) this.ok();
+        // if (e.keyCode === 13) this.ok();
     }
-    _close(e) {
+    _closeAll(e) {
         if (e.target instanceof Node) {
             let dd = this;
             while (e?.target && dd) {
