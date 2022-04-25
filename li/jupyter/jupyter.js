@@ -176,7 +176,7 @@ customElements.define('li-jupyter-cell-addbutton', class LiJupyterAddButton exte
     }
 
     async showCellViews(view) {
-        const res = await LI.show('dropdown', new LiJupyterListViews, { notebook: this.notebook, cell: this.cell, position: this.position, view, idx: this.idx }, { parent: this.$qs('li-button') });
+        const res = await LI.show('dropdown', new LiJupyterListViews, { notebook: this.notebook, cell: this.cell, position: this.position, view, idx: this.idx }, { parent: this.$qs('li-button'), hideHeader: false, label: view + ' cell' });
         if (res && view === 'add') this.editedIndex = -1;
         this.$update();
     }
@@ -200,7 +200,7 @@ class LiJupyterListViews extends LiElement {
 
     render() {
         return html`
-            <div style="text-align: center; padding: 4px; border-bottom: 1px solid gray;  background: lightgray">${this.view} cell</div>
+            <!-- <div style="text-align: center; padding: 4px; border-bottom: 1px solid gray;  background: lightgray">${this.view} cell</div> -->
             <div style="display: flex; flex-direction: column;">
                 ${this.cellViews.map((i, indx) => html`
                     <li-button width="auto" textAlign="left" border=0 @click=${() => this.addCell(i)} style="padding: 2px">${(indx + 1) + '. ' + i.label}</li-button>

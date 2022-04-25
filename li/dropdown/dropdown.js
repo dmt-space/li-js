@@ -35,7 +35,7 @@ customElements.define('li-dropdown', class LiDropdown extends LiElement {
         return html`
             <div id="modal" class="modal" @pointerdown="${this.close}"></div>
             <div id="dropdown" class="${this.opened ? 'b-show' : 'block'}" style="${styleMap({ ...this.size })}" @resize=${this._setSize}>
-                <header style="width: ${this.headerWidth || '100%'}; box-sizing: border-box; display: ${this.hideHeader ? 'none' : 'flex'}; flex: 1; border: 1px solid gray; background-color: gray; align-items: center; position: sticky; top: 0; z-index: 100; max-height: 30px; color: white;">
+                <header style="width: ${this.headerWidth || '100%'}; box-sizing: border-box; display: ${this.hideHeader ? 'none' : 'flex'}; flex: 1; border: 1px solid gray; background-color: gray; align-items: center; position: sticky; top: 0; z-index: 100; max-height: 28px; color: white;">
                     <span style="padding-left: 4px">${this.label || this.component.localName}</span>
                     <li-button name="close" style="margin-left: auto" @pointerdown="${this.close}" size="22"></li-button>
                 </header>
@@ -138,7 +138,7 @@ customElements.define('li-dropdown', class LiDropdown extends LiElement {
         if (!this.component || !rect.ok) return;
         this.contentRect = this.component.getBoundingClientRect()
         let height = this.contentRect?.height || 0;
-        height = height + (this.hideHeader ? 0 : 30)
+        height = height + (this.hideHeader ? 0 : 28)
         let width = this.contentRect?.width || 0;
         this.headerWidth = width;
         let winWidth = window.innerWidth;
