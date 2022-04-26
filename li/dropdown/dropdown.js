@@ -53,7 +53,7 @@ customElements.define('li-dropdown', class LiDropdown extends LiElement {
             useParentWidth: { type: Boolean, default: false, reflect: true },
             intersect: { type: Boolean, default: false, reflect: true },
             minWidth: { type: Number, default: undefined, reflect: true },
-            minHeight: { type: Number, default: undefined, reflect: true },
+            minHeight: { type: Number, default: 240, reflect: true },
             addWidth: { type: Number, default: 0, reflect: true },
             header: { type: String, default: '' }
         }
@@ -191,7 +191,7 @@ customElements.define('li-dropdown', class LiDropdown extends LiElement {
                 if (this.parent) {
                     top = top < 0 ? 0 : top;
                     maxHeight = bottom - top;
-                    maxHeight = maxHeight < 120 ? 120 : maxHeight;
+                    maxHeight = maxHeight < this.minHeight ? this.minHeight : maxHeight;
                 }
             } break;
             case 'bottom': {
@@ -200,7 +200,7 @@ customElements.define('li-dropdown', class LiDropdown extends LiElement {
                 if (this.parent) {
                     if (bottom > maxHeight) size.bottom = 0;
                     maxHeight = winHeight - top;
-                    maxHeight = maxHeight < 120 ? 120 : maxHeight;
+                    maxHeight = maxHeight < this.minHeight ? this.minHeight : maxHeight;
                 }
             } break;
         }

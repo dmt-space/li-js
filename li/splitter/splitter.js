@@ -46,8 +46,13 @@ customElements.define('li-splitter', class extends LiElement {
             const dy = e.clientY - y;
 
             if (this.direction === 'vertical') {
-                w = ((prevSiblingWidth + dx) * 100) / this.parentNode.getBoundingClientRect().width;
-                prevSibling.style.width = `${w}%`;
+                if (this.resize) {
+                    w = prevSiblingWidth + dx;
+                    this.parentNode.style.width = `${w}px`;
+                } else {
+                    w = ((prevSiblingWidth + dx) * 100) / this.parentNode.getBoundingClientRect().width;
+                    prevSibling.style.width = `${w}%`;
+                }
             } else {
                 if (this.resize) {
                     h = prevSiblingHeight + dy;
@@ -81,7 +86,7 @@ customElements.define('li-splitter', class extends LiElement {
 
             document.removeEventListener('pointermove', this._moveHandler);
             document.removeEventListener('pointerup', this._upHandler);
-            this.fire('endSplitterMove', { direction: this.direction, h, w });
+            this.fire('endSplitterMove', { direction: this.direction, h, w, id: this.id });
         }
         splitter.addEventListener('pointerdown', downHandler);
     }
