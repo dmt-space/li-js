@@ -151,7 +151,7 @@ customElements.define('li-dropdown', class LiDropdown extends LiElement {
         if (!this.component || !rect.ok) return;
         this.contentRect = this.component.getBoundingClientRect()
         let height = this.contentRect?.height || 0;
-        height = height + (this.header ? 28 : 0)
+        height = height + (this.showHeader ? 28 : 0)
         let width = this.contentRect?.width || 0;
         this.headerWidth = width;
         let winWidth = window.innerWidth;

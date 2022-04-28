@@ -140,6 +140,9 @@
                 * {
                     margin: 4px 12px;
                 }
+                .record:hover {
+                    background: lightgray;
+                }
             `
         }
         render() {
@@ -151,10 +154,10 @@
                 </style>
                 <li-button size=${this.size} name=${this.icon} fill="hsla(${this.color}, 50%, 50%, .7)"></li-button>
                 ${[...Array(6).keys()].map(i => html`  
-                    <h4 style="display: flex; align-items: center; justify-content: space-between;">
+                    <h4 class="record" style="display: flex; align-items: center; justify-content: space-between;">
                         <div style="cursor: pointer" @click=${() => this.onclick(i)}>Запись № ${i}</div>
                         <div style="flex: 1"></div>
-                        <li-button id=${'Title № ' + i} @pointerdown=${this.ontap} name="add" size="24" ></li-button>
+                        <li-button id=${'Title № ' + i} @click=${this.ontap} name="add" size="24" ></li-button>
                     </h4>
                 `)}
             `
@@ -167,6 +170,8 @@
             }
         }
         async ontap(e) {
+            e.stopPropagation();
+            //e.preventDefault();
             try {
                 count = +count + 1;
                 const res = await LI.show('dropdown', new LiTestDD, { icon: 'warning', size: 100, color: Math.floor(Math.random() * 360) },
