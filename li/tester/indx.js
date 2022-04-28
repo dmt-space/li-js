@@ -25,7 +25,7 @@ export const indx = {
     'calendar': [{ label: 'index', url: url + '/calendar' }],
 
     'li-splitter': { type: 'comp', label: 'li-splitter', props: { iframe: '../splitter/index.html' } },
-    splitter: [{ label: 'index', url: url + '/splitter' }],
+    splitter: [{ label: 'index', url: url + '/splitter' }, { label: 'horizontal', url: url + '/splitter/index-horizontal.html' }, { label: 'vertical', url: url + '/splitter/index-vertical.html' }],
 
     'li-panel-simple': { type: 'comp', label: 'li-panel-simple', props: { iframe: '../panel-simple/index.html' } },
     'panel-simple': [{ label: 'index', url: url + '/panel-simple' }],
