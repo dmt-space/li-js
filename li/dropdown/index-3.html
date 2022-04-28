@@ -29,7 +29,7 @@
                 intersect: { type: Boolean, save: true },
                 useParentWidth: { type: Boolean, save: true },
                 move: { type: Boolean, default: false },
-                _header: { type: Boolean, save: true }
+                showHeader: { type: Boolean, save: true }
             }
         }
 
@@ -79,8 +79,8 @@
                                 .toggled="${this.intersect}" @change="${(e) => this.intersect = e.detail}"></li-checkbox></div>
                         <div style="display: flex; width: 160px;">useParentWidth: <div style="flex:1"></div><li-checkbox 
                                 .toggled="${this.useParentWidth}" @change="${(e) => this.useParentWidth = e.detail}"></li-checkbox></div>
-                        <div style="display: flex; width: 160px;">hideHeader: <div style="flex:1"></div><li-checkbox 
-                                .toggled="${this._header}" @change="${(e) => this._header = e.detail}"></li-checkbox></div>
+                        <div style="display: flex; width: 160px;">showHeader: <div style="flex:1"></div><li-checkbox 
+                                .toggled="${this.showHeader}" @change="${(e) => this.showHeader = e.detail}"></li-checkbox></div>
                     </div>
                 </div>
             `;
@@ -120,7 +120,8 @@
                 intersect: this.intersect,
                 useParentWidth: this.useParentWidth,
                 align: e.target.innerText,
-                header: this._header ? '' : 'Title - 1',
+                showHeader: this.showHeader,
+                label: 'Title - 0',
                 id: 0
             });
             const res = await host.show(await LI.createComponent(new LiTestDD, { icon: 'warning', size: 100, color: 0 }));
@@ -169,7 +170,7 @@
             try {
                 count = +count + 1;
                 const res = await LI.show('dropdown', new LiTestDD, { icon: 'warning', size: 100, color: Math.floor(Math.random() * 360) },
-                    { parent: e.target, animation: 500, align: 'right', header: 'Title - ' + count, icon: 'info', id: count, });
+                    { parent: e.target, animation: 500, align: 'right', showHeader: true, label: 'Title - ' + count, icon: 'info', id: count, });
                 console.log(res);
             }
             catch (e) {

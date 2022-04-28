@@ -34,9 +34,9 @@ customElements.define('li-dropdown', class LiDropdown extends LiElement {
     render() {
         return html`
             <div id="modal" class="modal" @pointerdown="${this.close}"></div>
-            <div id="dropdown" class="${this.opened ? 'b-show' : 'block'}" style="${styleMap({ ...this.size })}" @resize=${this._setSize} @pointerdown=${e => this._pointerdown(e)}>
-                <header style="width: ${this.headerWidth || '100%'}; box-sizing: border-box; display: ${this.header ? 'flex' : 'none'}; flex: 1; border: 1px solid gray; background-color: gray; align-items: center; position: sticky; top: 0; z-index: 100; max-height: 28px; color: white;">
-                    <span style="padding-left: 4px">${this.header}</span>
+            <div id="dropdown" class="${this.opened ? 'b-show' : 'block'}" style="${styleMap({ ...this.size })}" @resize=${this._setSize}>
+                <header style="width: ${this.headerWidth || '100%'}; box-sizing: border-box; display: ${this.showHeader ? 'flex' : 'none'}; flex: 1; border: 1px solid gray; background-color: gray; align-items: center; position: sticky; top: 0; z-index: 100; max-height: 28px; color: white;">
+                    <span style="padding-left: 4px">${this.label}</span>
                     <li-button name="close" style="margin-left: auto" @pointerdown=${e => {this._pointerdown(e, this); this.close()}} size="22"></li-button>
                 </header>
                 <slot id="component" name="${this.opened ? '' : '?'}" @slotchange=${this._slotChange}></slot>
@@ -53,9 +53,10 @@ customElements.define('li-dropdown', class LiDropdown extends LiElement {
             useParentWidth: { type: Boolean, default: false, reflect: true },
             intersect: { type: Boolean, default: false, reflect: true },
             minWidth: { type: Number, default: undefined, reflect: true },
-            minHeight: { type: Number, default: 240, reflect: true },
+            minHeight: { type: Number, default: 80, reflect: true },
             addWidth: { type: Number, default: 0, reflect: true },
-            header: { type: String, default: '' }
+            label: { type: String, default: '' },
+            showHeader: { type: Boolean }
         }
     }
 
