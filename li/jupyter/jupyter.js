@@ -176,7 +176,7 @@ customElements.define('li-jupyter-cell-addbutton', class LiJupyterAddButton exte
     }
 
     async showCellViews(view) {
-        const res = await LI.show('dropdown', new LiJupyterListViews, { notebook: this.notebook, cell: this.cell, position: this.position, view, idx: this.idx }, { parent: this.$qs('li-button'), hideHeader: false, label: view + ' cell' });
+        const res = await LI.show('dropdown', new LiJupyterListViews, { notebook: this.notebook, cell: this.cell, position: this.position, view, idx: this.idx }, { parent: this.$qs('li-button'), showHeader: true, label: view + ' cell' });
         if (res && view === 'add') this.editedIndex = -1;
         this.$update();
     }
@@ -417,7 +417,7 @@ customElements.define('li-jupyter-cell-toolbar', class LiJupyterCellToolbar exte
             try {
                 let io = getIO(this.focusedControl?.editors);
                 let categories = this.focusedControl.categories;
-                let val = await LI.show('dropdown', 'property-grid', { io, showButtons: false, categories, hideHeader: true }, { label: this.cell.cell_type, parent: this.$qs('#sets'), align: 'left', hideHeader: false, intersect: true });
+                let val = await LI.show('dropdown', 'property-grid', { io, showButtons: false, categories, hideHeader: true }, { label: this.cell.cell_type, parent: this.$qs('#sets'), align: 'left', showHeader: true, intersect: true });
             } catch (error) { }
         }
     }
