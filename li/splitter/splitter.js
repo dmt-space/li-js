@@ -19,7 +19,8 @@ customElements.define('li-splitter', class extends LiElement {
             direction: { type: String, default: 'vertical' },
             size: { type: String, default: '2px' },
             color: { type: String, default: 'lightgray' },
-            resize: { type: Boolean }
+            resize: { type: Boolean },
+            use_px: { type: Boolean }
         }
     }
 
@@ -46,9 +47,9 @@ customElements.define('li-splitter', class extends LiElement {
             const dy = e.clientY - y;
 
             if (this.direction === 'vertical') {
-                if (this.resize) {
+                if (this.use_px) {
                     w = prevSiblingWidth + dx;
-                    this.parentNode.style.width = `${w}px`;
+                    prevSibling.style.width = `${w}px`;
                 } else {
                     w = ((prevSiblingWidth + dx) * 100) / this.parentNode.getBoundingClientRect().width;
                     prevSibling.style.width = `${w}%`;
@@ -58,8 +59,13 @@ customElements.define('li-splitter', class extends LiElement {
                     h = prevSiblingHeight + dy;
                     this.parentNode.style.height = `${h}px`;
                 } else {
-                    h = ((prevSiblingHeight + dy) * 100) / this.parentNode.getBoundingClientRect().height;
-                    prevSibling.style.height = `${h}%`;
+                    if (this.use_px) {
+                        h = prevSiblingHeight + dy;
+                        prevSibling.style.height = `${h}px`;
+                    } else {
+                        h = ((prevSiblingHeight + dy) * 100) / this.parentNode.getBoundingClientRect().height;
+                        prevSibling.style.height = `${h}%`;
+                    }
                 }
             }
 
@@ -69,8 +75,10 @@ customElements.define('li-splitter', class extends LiElement {
 
             prevSibling.style.userSelect = 'none';
             prevSibling.style.pointerEvents = 'none';
-            nextSibling.style.userSelect = 'none';
-            nextSibling.style.pointerEvents = 'none';
+            if (nextSibling) {
+                nextSibling.style.userSelect = 'none';
+                nextSibling.style.pointerEvents = 'none';
+            }
 
             LI.debounce('splitterMove', () => window.dispatchEvent(new Event('resize')), 50);
         }
@@ -81,8 +89,10 @@ customElements.define('li-splitter', class extends LiElement {
 
             prevSibling.style.removeProperty('user-select');
             prevSibling.style.removeProperty('pointer-events');
-            nextSibling.style.removeProperty('user-select');
-            nextSibling.style.removeProperty('pointer-events');
+            if (nextSibling) {
+                nextSibling.style.removeProperty('user-select');
+                nextSibling.style.removeProperty('pointer-events');
+            }
 
             document.removeEventListener('pointermove', this._moveHandler);
             document.removeEventListener('pointerup', this._upHandler);

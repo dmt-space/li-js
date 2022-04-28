@@ -1,0 +1,47 @@
+<script type="module" src="./splitter.js"></script>
+<style>
+    html {
+        color: gray;
+        font-family: Arial;
+        width: 100%;
+    }
+    * {
+        box-sizing: border-box;
+    }
+    .cell {
+        min-height: 50px;
+        width: 100%;
+        border: 1px solid gray;
+    }
+    .cell2 {
+        min-width: 100px;
+    }
+</style>
+
+<div style="display: flex; flex-direction: column;">
+    <div class="cell" style="display: flex;">
+        <div class="cell2">Cell</div>
+        <li-splitter></li-splitter>
+        <div class="cell2">Cell</div>
+        <li-splitter></li-splitter>
+        <div class="cell2">Cell</div>
+        <li-splitter></li-splitter>
+        <div class="cell2">Cell</div>
+        <li-splitter></li-splitter>
+        <div class="cell2">Cell</div>
+        <li-splitter></li-splitter>
+        <div class="cell2">Cell</div>
+        <li-splitter></li-splitter>
+    </div>
+    <li-splitter direction="horizontal" use_px></li-splitter>
+    <div class="cell">Cell</div>
+    <li-splitter direction="horizontal" use_px></li-splitter>
+    <div class="cell">Cell</div>
+    <li-splitter direction="horizontal" use_px></li-splitter>
+    <div class="cell">Cell</div>
+    <li-splitter direction="horizontal" use_px></li-splitter>
+    <div class="cell">Cell</div>
+    <li-splitter direction="horizontal" use_px></li-splitter>
+    <div class="cell">Cell</div>
+    <li-splitter direction="horizontal" use_px></li-splitter>
+</div>
