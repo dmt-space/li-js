@@ -28,28 +28,28 @@
         },
         columns: [
             { name: 'right fixed column', fix: 'right' },
-            { fix: 'left', width: 32 },
+            { fix: 'left', width: 32, name: 'left' },
             { name: 'col1', treeMode: true },
             { name: 'number', summary: 'sum', order: 2 },
-            { name: '2 right fixed column', fix: 'right' },
-            { name: 'left fixed column', fix: 'left', items: [{ name: 'sub-left1' }, { name: 'sub-left2', items: [{ name: 'sub-left1' }, { name: 'sub-left2' }] }] },
+            { name: '2 right fixed column', fix: 'right', hideSplitter: true },
+            { name: 'left fixed column', fix: 'left', hideSplitter: true, items: [{ name: 'sub-left1' }, { name: 'sub-left2', hideSplitter: true, items: [{ name: 'sub-left1' }, { name: 'sub-left2', hideSplitter: true }] }] },
             {
-                name: 'col2', width: 300, items: [
+                name: 'col2', width: 900, hideSplitter: true, items: [
                     {
                         name: 'col21', items: [
                             { name: 'col211' },
                             { name: 'col212' },
                             { name: 'col213' },
                             {
-                                name: 'col215', items: [
+                                name: 'col215', hideSplitter: true, items: [
                                     { name: 'col211' },
                                     { name: 'col212' },
                                     { name: 'col213' },
-                                    { name: 'col215', }
+                                    { name: 'col215', hideSplitter: true }
                                 ]
                             }
                         ]
-                    }, { name: "col22" }
+                    }, { name: "col22", hideSplitter: true }
                 ]
             }
         ],
