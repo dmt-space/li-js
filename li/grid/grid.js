@@ -6,28 +6,44 @@ customElements.define('li-grid', class LiGrid extends LiElement {
     static get styles() {
         return css`
             :host: {
-                max-height: 100%; 
+                height: 100%;
+                width: 100%;
+            }
+            * {
+                box-sizing: border-box;
             }
             .wrapper {
-                display: flex; 
+                display: flex;
+                flex: 1;
                 width: 100%;
                 height: 100%; 
                 border: 1px solid lightgray;
+
             }
-            .panel-left, .panel-right {
+            .panel-left, .panel-right, .panel-main  {
                 display: flex;
-                background-color: #f0f0f0; 
                 border: 1px solid darkgray;
-                width: 100%;
+                z-index: 1;
+                overflow: auto;
             }
-            .panel-main, .panel-right {
-                display: flex;
+            .panel-main  {
                 flex: 1;
-                border: 1px solid gray;
-                width: 100%;
+            }
+            .panel-left {
+                background-color: #f0f0f0; 
+                position: sticky;
+                left: 0;
+            }
+            .panel-right {
+                background-color: #f0f0f0; 
+                position: sticky;
+                right: 0;
             }
             li-grid-table {
                 flex: 1;
+            }
+            li-splitter {
+                z-index: 1;
             }
         `;
     }
@@ -35,20 +51,16 @@ customElements.define('li-grid', class LiGrid extends LiElement {
     render() {
         return html`
             <div class="wrapper">
-                <div style="width: ${this.right}%">
-                    <div style="display: flex; width: 100%; height: 100%">
-                        <div class="panel-left" style="width: ${this.left}%">
-                            <li-grid-table></li-grid-table>
-                        </div>
-                        <li-splitter id="grid-splitter-left" color="lightgray" size="2px"></li-splitter>
-                        <div class="panel-main">
-                            <li-grid-table></li-grid-table>
-                        </div>
-                    </div>
+                <div class="panel-left" style="width: ${this.left}px">
+                    <li-grid-table count=2></li-grid-table>
                 </div>
-                <li-splitter id="grid-splitter-right" color="lightgray" size="2px"></li-splitter>
-                <div class="panel-right">
-                    <li-grid-table></li-grid-table>
+                <li-splitter id="grid-splitter-left" color="lightgray" size="2px" use_px></li-splitter>
+                <div class="panel-main">
+                    <li-grid-table count=20></li-grid-table>
+                </div>
+                <li-splitter id="grid-splitter-right" color="lightgray" size="2px" use_px reverse></li-splitter>
+                <div class="panel-right" style="width: ${this.right}px">
+                    <li-grid-table count=2></li-grid-table>
                 </div>
             </div>
         `;
@@ -56,8 +68,9 @@ customElements.define('li-grid', class LiGrid extends LiElement {
 
     static get properties() {
         return {
-            left: { type: Number, default: '80', save: true },
-            right: { type: Number, default: '20', save: true }
+            data: { type: Object, local: true },
+            left: { type: Number, default: '300', save: true },
+            right: { type: Number, default: '300', save: true }
         }
     }
 
@@ -101,6 +114,7 @@ customElements.define('li-grid-table', class LiGridTable extends LiElement {
                 border-bottom: 1px solid gray;
             }
             footer {
+
                 border-top: 1px solid gray;
             }
         `;
@@ -108,13 +122,100 @@ customElements.define('li-grid-table', class LiGridTable extends LiElement {
 
     render() {
         return html`
-        <div class="wrapper">
-            <header></header>
-            <div class="table">
-            
+            <div class="wrapper">
+                <header>
+                    <li-grid-header count=${this.count}></li-grid-header>
+                </header>
+                <div class="table" style="">
+                
+                </div>
+                <footer></footer>
             </div>
-            <footer></footer>
-        </div>
+        `;
+    }
+
+    static get properties() {
+        return {
+            count: { type: Number, default: 0 }
+        }
+    }
+
+    constructor() {
+        super();
+    }
+
+})
+
+customElements.define('li-grid-header', class LiGridRow extends LiElement {
+    static get styles() {
+        return css`
+            :host {
+                display: flex;
+                height: 100%;
+            }
+            .cell {
+                min-width: 100px;
+                text-align: center;
+            }
+        `;
+    }
+
+    render() {
+        return html`
+            ${Array.from(Array(this.count).keys()).map(i => html`
+                <div class="cell">Cell</div>
+                <li-splitter use_px color="gray" size="1px"></li-splitter>
+            `)}
+        `;
+    }
+
+    static get properties() {
+        return {
+            count: { type: Number, default: 0 }
+        }
+    }
+
+    constructor() {
+        super();
+    }
+
+})
+
+customElements.define('li-grid-row', class LiGridRow extends LiElement {
+    static get styles() {
+        return css`
+
+        `;
+    }
+
+    render() {
+        return html`
+
+        `;
+    }
+
+    static get properties() {
+        return {
+
+        }
+    }
+
+    constructor() {
+        super();
+    }
+
+})
+
+customElements.define('li-grid-cell', class LiGridCell extends LiElement {
+    static get styles() {
+        return css`
+
+        `;
+    }
+
+    render() {
+        return html`
+
         `;
     }
 
