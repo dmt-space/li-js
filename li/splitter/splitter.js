@@ -6,7 +6,9 @@ customElements.define('li-splitter', class extends LiElement {
             <style>
                 :host {
                     height: ${this.direction === 'vertical' ? '100%' : this.size || '2px'};
+                    min-height: ${this.size};
                     width: ${this.direction === 'vertical' ? this.size || '2px' : '100%'};
+                    min-width: ${this.size};
                     cursor: ${this.direction === 'vertical' ? 'ew-resize' : 'ns-resize'};
                     background-color: ${this.color || 'lightgray'};
                 }
@@ -20,15 +22,16 @@ customElements.define('li-splitter', class extends LiElement {
             size: { type: String, default: '2px' },
             color: { type: String, default: 'lightgray' },
             resize: { type: Boolean },
-            use_px: { type: Boolean }
+            use_px: { type: Boolean },
+            reverse: { type: Boolean }
         }
     }
 
-    constructor() {
-        super();
+    firstUpdated() {
+        super.firstUpdated();
         const splitter = this,
-            prevSibling = this.previousElementSibling,
-            nextSibling = this.nextElementSibling;
+            prevSibling = this.reverse ?  this.nextElementSibling : this.previousElementSibling,
+            nextSibling = this.reverse ?  this.previousElementSibling : this.nextElementSibling;
 
         let x = 0, y = 0, h = 0, w = 0, prevSiblingHeight = 0, prevSiblingWidth = 0;
 
@@ -43,8 +46,12 @@ customElements.define('li-splitter', class extends LiElement {
         }
 
         const moveHandler = (e) => {
-            const dx = e.clientX - x;
-            const dy = e.clientY - y;
+            let dx = e.clientX - x;
+            let dy = e.clientY - y;
+            if (this.reverse) {
+                dx = dx * -1;
+                dy = dy * -1;
+            }
 
             if (this.direction === 'vertical') {
                 if (this.use_px) {
@@ -73,8 +80,10 @@ customElements.define('li-splitter', class extends LiElement {
             splitter.style.cursor = cursor;
             document.body.style.cursor = cursor;
 
-            prevSibling.style.userSelect = 'none';
-            prevSibling.style.pointerEvents = 'none';
+            if (prevSibling) {
+                prevSibling.style.userSelect = 'none';
+                prevSibling.style.pointerEvents = 'none';
+            }
             if (nextSibling) {
                 nextSibling.style.userSelect = 'none';
                 nextSibling.style.pointerEvents = 'none';
@@ -87,8 +96,10 @@ customElements.define('li-splitter', class extends LiElement {
             splitter.style.removeProperty('cursor');
             document.body.style.removeProperty('cursor');
 
-            prevSibling.style.removeProperty('user-select');
-            prevSibling.style.removeProperty('pointer-events');
+            if (prevSibling) {
+                prevSibling.style.removeProperty('user-select');
+                prevSibling.style.removeProperty('pointer-events');
+            }
             if (nextSibling) {
                 nextSibling.style.removeProperty('user-select');
                 nextSibling.style.removeProperty('pointer-events');
