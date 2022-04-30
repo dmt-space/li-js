@@ -7,6 +7,8 @@ import '../splitter/splitter.js';
 customElements.define('li-grid', class LiGrid extends LiElement {
     static get styles() {
         return css`
+            ::-webkit-scrollbar { width: 0px; height: 2px; } ::-webkit-scrollbar-track { background: lightgray; margin-top: -20px} ::-webkit-scrollbar-thumb {  background-color: black }    
+
             :host: {
                 height: 100%;
                 width: 100%;
@@ -100,8 +102,7 @@ customElements.define('li-grid', class LiGrid extends LiElement {
 
 customElements.define('li-grid-table', class LiGridTable extends LiElement {
     static get styles() {
-        return css`
-            ::-webkit-scrollbar { width: 4px; height: 4px; } ::-webkit-scrollbar-track { background: lightgray; } ::-webkit-scrollbar-thumb {  background-color: gray; }    
+        return css`  
             * {
                 box-sizing: border-box;
             }        
@@ -167,6 +168,8 @@ customElements.define('li-grid-table', class LiGridTable extends LiElement {
 customElements.define('li-grid-header', class LiGridRow extends LiElement {
     static get styles() {
         return css`
+            :host::-webkit-scrollbar { width: 0px; height: 1px; } :host::-webkit-scrollbar-track { background: lightgray; } :host::-webkit-scrollbar-thumb {  background-color: black; }    
+
             * {
                 box-sizing: border-box;
             }
@@ -174,6 +177,7 @@ customElements.define('li-grid-header', class LiGridRow extends LiElement {
                 display: flex;
                 height: 100%;
                 align-items: center;
+                overflow-x: auto;
             }
             .cell {
                 width: 100%;
@@ -187,10 +191,10 @@ customElements.define('li-grid-header', class LiGridRow extends LiElement {
     render() {
         return html`
             ${this.columns?.map(i => html`
-                    <li-grid-header-cell .item=${i} class="cell" style="width: ${i.width || 'unset'}; flex: ${i.hideSplitter ? '1' : 'unset'}; overflow: hidden" type=${this.type} level=${this.level}>${i.name || '...'}</li-grid-header-cell>
-                    ${i.hideSplitter ? html `` : html`
-                        <li-splitter use_px color="gray" size="1px"></li-splitter>
-                    `}
+                <li-grid-header-cell .item=${i} class="cell" style="width: ${i.width || 'unset'}; flex: ${i.hideSplitter ? '1' : 'unset'}; overflow: hidden" type=${this.type} level=${this.level}>${i.name || '...'}</li-grid-header-cell>
+                ${i.hideSplitter ? html `` : html`
+                    <li-splitter use_px color="gray" size="1px"></li-splitter>
+                `}
             `)}
         `;
     }
@@ -220,13 +224,14 @@ customElements.define('li-grid-header-cell', class LiGridCell extends LiElement 
             :host {
                 display: flex;
                 flex-direction: column;
+                justify-content: center;
                 height: 100%;
                 min-height: 32px;
             }
             .row {
                 display: flex;
                 /* flex-direction: column; */
-                height: 100%;
+                /* height: 100%; */
                 align-items: center;
             }
             .cell {
@@ -272,16 +277,22 @@ customElements.define('li-grid-header-cell', class LiGridCell extends LiElement 
 
 })
 
-customElements.define('li-grid-row', class LiGridRow extends LiElement {
+customElements.define('li-grid-row-cell', class LiGridRow extends LiElement {
     static get styles() {
         return css`
-
+            :host {
+                width: 100%;
+                height: 100%;
+                border: 1px solid red;
+            }
         `;
     }
 
     render() {
         return html`
+            <div>
 
+            </div>
         `;
     }
 
