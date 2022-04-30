@@ -1,6 +1,5 @@
 import { LiElement, html, css } from '../../li.js';
 
-import '../icon/icon.js'
 import '../button/button.js'
 import '../splitter/splitter.js';
 
@@ -8,7 +7,6 @@ customElements.define('li-grid', class LiGrid extends LiElement {
     static get styles() {
         return css`
             ::-webkit-scrollbar { width: 0px; height: 2px; } ::-webkit-scrollbar-track { background: lightgray; margin-top: -20px} ::-webkit-scrollbar-thumb {  background-color: black }    
-
             :host: {
                 height: 100%;
                 width: 100%;
@@ -88,15 +86,6 @@ customElements.define('li-grid', class LiGrid extends LiElement {
             if (e.detail.id === 'grid-splitter-right') this.right = e.detail.w;
             if (e.detail.id === 'grid-splitter-left') this.left = e.detail.w;
         })
-        this.listen('changeLevels', () => this.setLevel());
-    }
-
-    setLevel() {
-        const tables = this.$qsa('li-grid-table');
-        let levels = [];
-        tables.map(i => levels.push(i.level));
-        //this.headersLevel = Math.max(...levels);
-        this.$update();
     }
 })
 
@@ -119,10 +108,8 @@ customElements.define('li-grid-table', class LiGridTable extends LiElement {
                 min-height: 2em;
             }
             header, footer {
-                /* display: flex; */
                 align-items: center;
                 min-width: 100%;
-                /* flex-shrink: 0; */
                 min-height: 32px;
                 background-color: #d0d0d0; 
                 z-index: 1;
@@ -142,9 +129,7 @@ customElements.define('li-grid-table', class LiGridTable extends LiElement {
                 <header style="min-height: ${this.headersLevel * 32}px; max-height: ${this.headersLevel * 32}px">
                     <li-grid-header .columns=${this.columns} type=${this.type}></li-grid-header>
                 </header>
-                <div class="table" style="">
-                
-                </div>
+                <div class="table" style=""></div>
                 <footer></footer>
             </div>
         `;
@@ -157,19 +142,12 @@ customElements.define('li-grid-table', class LiGridTable extends LiElement {
             headersLevel: { type: Number, local: true }
         }
     }
-    get level() { return Math.ceil((this.$qs('li-grid-header').offsetHeight + this.$qs('li-grid-header').scrollHeight) / 32) }
-
-    constructor() {
-        super();
-    }
-
 })
 
 customElements.define('li-grid-header', class LiGridRow extends LiElement {
     static get styles() {
         return css`
             :host::-webkit-scrollbar { width: 0px; height: 1px; } :host::-webkit-scrollbar-track { background: lightgray; } :host::-webkit-scrollbar-thumb {  background-color: black; }    
-
             * {
                 box-sizing: border-box;
             }
@@ -206,13 +184,6 @@ customElements.define('li-grid-header', class LiGridRow extends LiElement {
             level: { type: Number, default: 1 }
         }
     }
-
-    constructor() {
-        super();
-    }
-
-
-
 })
 
 customElements.define('li-grid-header-cell', class LiGridCell extends LiElement {
@@ -230,8 +201,6 @@ customElements.define('li-grid-header-cell', class LiGridCell extends LiElement 
             }
             .row {
                 display: flex;
-                /* flex-direction: column; */
-                /* height: 100%; */
                 align-items: center;
             }
             .cell {
@@ -265,47 +234,8 @@ customElements.define('li-grid-header-cell', class LiGridCell extends LiElement 
         }
     }
 
-    constructor() {
-        super();
-    }
     _expanded(e) {
         this.item.expanded = e.target.toggled;
-        this.fire('changeLevels');
-        console.log(this.type, this.level);
         this.$update();
     }
-
 })
-
-customElements.define('li-grid-row-cell', class LiGridRow extends LiElement {
-    static get styles() {
-        return css`
-            :host {
-                width: 100%;
-                height: 100%;
-                border: 1px solid red;
-            }
-        `;
-    }
-
-    render() {
-        return html`
-            <div>
-
-            </div>
-        `;
-    }
-
-    static get properties() {
-        return {
-
-        }
-    }
-
-    constructor() {
-        super();
-    }
-
-})
-
-
