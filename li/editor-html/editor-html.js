@@ -91,7 +91,7 @@ customElements.define('li-editor-html', class LiEditorHTML extends LiElement {
     }
     render() {
         return html`
-            <div id="editor" ?hidden="${this._showSource || this._showSourceMonaco}"></div>
+            <div id="editor" style="display: ${this._showSource || this._showSourceMonaco ? 'none' : 'block'}"></div>
             ${this._showSource || this._showSourceMonaco ? html`
                 <div style="position: relative; overflow: auto; flex: 1; height: 100%">
                     <li-button name="refresh" size="32" style="position: absolute; top: 1px; left: 1px; z-index: 99; opacity: .7" @click="${() => { this.editor.content.innerHTML =  this._showSource ? this.ace?.getValue() : this.monaco?.value; this._showSource = this._showSourceMonaco = false; }}"></li-button>
@@ -235,6 +235,7 @@ customElements.define('li-editor-html', class LiEditorHTML extends LiElement {
                         icon: '&lt;/&gt;',
                         title: 'View source code in ace',
                         result: () => {
+                            const val = this.editor.content.innerHTML;
                             this._showSource = true;
                             setTimeout(() => {
                                 this.ace = this.$id('ace').editor;
@@ -247,7 +248,7 @@ customElements.define('li-editor-html', class LiEditorHTML extends LiElement {
                                     this.$update();
                                 });
 
-                                this.ace.setValue(this.editor.content.innerHTML);
+                                this.ace.setValue(val, -1);
                             }, 100);
                         }
                     },
@@ -256,10 +257,11 @@ customElements.define('li-editor-html', class LiEditorHTML extends LiElement {
                         icon: '&lt;/&gt;',
                         title: 'View source code in monaco',
                         result: () => {
+                            const val = this.editor.content.innerHTML;
                             this._showSourceMonaco = true;
                             setTimeout(() => {
                                 this.monaco = this.$id('monaco');
-                                this.monaco.src = this.editor.content.innerHTML;
+                                this.monaco.src = val;
                                 this.monaco.listen('change', (e) => {
                                     // this.src = this.monaco.value || '';
                                     if (this.item) this.item.value = this.value;
