@@ -17,6 +17,7 @@ customElements.define('li-layout-app', class LiLayoutApp extends LiElement {
             _widthL: { type: Number, default: 0 },
             _widthR: { type: Number, default: 0 },
             _isOver: { type: Boolean, default: false },
+            shift: { type: Number, default: 4 },
         }
     }
 
@@ -166,7 +167,7 @@ customElements.define('li-layout-app', class LiLayoutApp extends LiElement {
     get leftPanel() {
         return this._l ? html`
             <div style="${this.styleLP}">
-                <slot name="app-left" style="width:${this._widthL - 4}px;display:inline-block"></slot>
+                <slot name="app-left" style="width:${this._widthL - (+this.shift >= 0 ? +this.shift : 4)}px;display:inline-block"></slot>
             </div>
         ` : html``;
     }
@@ -177,7 +178,7 @@ customElements.define('li-layout-app', class LiLayoutApp extends LiElement {
     get rightPanel() {
         return this._r ? html`
             <div style="${this.styleRP}">
-                <slot name="app-right" style="width:${this._widthR - 4}px;display:inline-block"></slot>
+                <slot name="app-right" style="width:${this._widthR - (+this.shift >= 0 ? +this.shift : 4)}px;display:inline-block"></slot>
             </div>
         ` : html``;
     }

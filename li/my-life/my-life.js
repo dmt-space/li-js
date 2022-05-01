@@ -20,22 +20,24 @@ customElements.define('li-my-life', class LiMyLife extends LiElement {
 
     render() {
         return html`
-            <li-layout-app>
+            <li-layout-app shift="0">
                 <div slot="app-top" class="header">
                     <div style="flex:1"></div>${this.name || 'my-life'}<div style="flex:1"></div>
                 </div>
-                <div slot="app-left">
-                    <li-wikis-db name="my-life" rootLabel="my-life" sortLabel="persons" prefix="lfdb_"></li-wikis-db>
+                <div slot="app-left" slot="app-main" style="display: flex; height: 100%; padding: 0 !important">
+                    <!-- <li-wikis-db name="my-life" rootLabel="my-life" sortLabel="persons" prefix="lfdb_"></li-wikis-db> -->
+                    <li-panel-simple .src=${this.leftTabs} iconSize=24>
+                    </li-panel-simple>
                 </div>
                 <div id="main" slot="app-main" style="display: flex; height: 100%;">
-                    <li-panel-simple .src=${this.mainTabs}>
+                    <li-panel-simple .src=${this.mainTabs} iconSize=24>
                         <li-jupyter slot="jupiter notebook"></li-jupyter>
                         <li-weeks slot="weeks"></li-weeks>
                         <li-family-tree slot="family tree" style="height: 100%:" style="display: ${this.selectedArticle?.items?.length ? 'none' : 'unset'}"></li-family-tree>
                     </li-panel-simple>
                 </div>
                 <div slot="app-right" slot="app-main" style="display: flex; height: 100%;">
-                    <li-panel-simple .src=${this.rightTabs} style="height: 100%:">
+                    <li-panel-simple .src=${this.rightTabs} style="height: 100%:" iconSize=24>
                         <li-family-phase slot="phase"></li-family-phase>
                     </li-panel-simple>
                 </div>
@@ -46,12 +48,55 @@ customElements.define('li-my-life', class LiMyLife extends LiElement {
     static get properties() {
         return {
             selectedArticle: { type: Object, local: true },
+            leftTabs: {
+                type: Object, default: {
+                    open: true,
+                    tabs: [
+                        {
+                            icon: 'tree-structure', label: 'three', labelOnSelected: true, title: 'three',
+                            btns: [
+                                { icon: 'save', title: 'save' },
+                                { icon: 'edit', title: 'readonly' },
+                                { icon: 'refresh', title: 'reload page' }
+                            ],
+                            btns_left: [
+                                { icon: 'unfold-less', title: 'collapse' },
+                                { icon: 'unfold-more', title: 'expand' },
+                                { icon: 'star-border', title: 'set selected as root' },
+                                { icon: 'camera', title: 'save tree state' }
+                            ],
+                            btns_right: [
+                                { icon: 'cached', title: 'clear deleted' },
+                                { icon: 'delete', title: 'delete' },
+                                { icon: 'library-add', title: 'add new' }
+                            ],
+                        },
+                        {
+                            icon: 'list', label: 'list', labelOnSelected: true, title: 'list',
+                            btns: [
+                                { icon: 'save', title: 'save' },
+                                { icon: 'edit', title: 'readonly' },
+                                { icon: 'refresh', title: 'reload page' }
+                            ],
+                        },
+                        ,
+                        {
+                            icon: 'settings', label: 'settings', labelOnSelected: true, title: 'settings',
+                            btns: [
+                                { icon: 'save', title: 'save' },
+                                { icon: 'edit', title: 'readonly' },
+                                { icon: 'refresh', title: 'reload page' }
+                            ],
+                        }
+                    ]
+                }
+            },
             mainTabs: {
                 type: Object, default: {
                     open: true,
                     tabs: [
                         {
-                            label: 'jupiter notebook', icon: 'edit',
+                            icon: 'edit', label: 'jupiter notebook', labelOnSelected: true, title: 'jupiter notebook',
                             btns: [
                                 { icon: 'alarm' },
                                 { icon: 'alarm-add' },
@@ -59,13 +104,13 @@ customElements.define('li-my-life', class LiMyLife extends LiElement {
                             ],
                         },
                         {
-                            label: 'weeks', icon: 'apps',
+                            icon: 'apps', label: 'weeks', labelOnSelected: true, title: 'weeks',
                             btns: [
                                 { icon: 'auto_stories' }
                             ],
                         },
                         {
-                            label: 'family tree', icon: 'tree-structure',
+                            icon: 'supervisor-account', label: 'family tree', labelOnSelected: true, title: 'family tree',
                             btns: [
                                 { icon: 'arrow-back' },
                                 { icon: 'arrow-forward' }
@@ -79,13 +124,13 @@ customElements.define('li-my-life', class LiMyLife extends LiElement {
                     open: true,
                     tabs: [
                         {
-                            label: 'phase', icon: 'apps',
+                            icon: 'apps', label: 'phase', labelOnSelected: true, title: 'phase',
                             btns: [
                                 { icon: 'add', title: 'add' }
                             ],
                         },
                         {
-                            label: 'settings', icon: 'tree-structure',
+                            icon: 'settings',label: 'settings', labelOnSelected: true, title: 'settings',
                             btns: [
                                 { icon: 'arrow-back' },
                                 { icon: 'arrow-forward' }
