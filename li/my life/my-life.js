@@ -28,14 +28,16 @@ customElements.define('li-my-life', class LiMyLife extends LiElement {
                     <li-db name="my-life" rootLabel="my-life" sortLabel="persons" prefix="lfdb_"></li-db>
                 </div>
                 <div id="main" slot="app-main" style="display: flex; height: 100%;">
-                    <li-panel-simple .src=${this.mainTabs} style="height: 100%:">
-                        <li-weeks slot="weeks"></li-weeks>
-                        <li-family-tree slot="family tree"></li-family-tree>
+                    <li-panel-simple .src=${this.mainTabs}>
                         <li-jupyter slot="jupiter notebook"></li-jupyter>
+                        <li-weeks slot="weeks"></li-weeks>
+                        <li-family-tree slot="family tree" style="height: 100%:" style="display: ${this.selectedArticle?.items?.length ? 'none' : 'unset'}"></li-family-tree>
                     </li-panel-simple>
                 </div>
-                <div slot="app-right">
-
+                <div slot="app-right" slot="app-main" style="display: flex; height: 100%;">
+                    <li-panel-simple .src=${this.rightTabs} style="height: 100%:">
+                        <li-family-phase slot="phase"></li-family-phase>
+                    </li-panel-simple>
                 </div>
             </li-layout-app>
         `;
@@ -49,6 +51,14 @@ customElements.define('li-my-life', class LiMyLife extends LiElement {
                     open: true,
                     tabs: [
                         {
+                            label: 'jupiter notebook', icon: 'edit',
+                            btns: [
+                                { icon: 'alarm' },
+                                { icon: 'alarm-add' },
+                                { icon: 'alarm-on' }
+                            ],
+                        },
+                        {
                             label: 'weeks', icon: 'apps',
                             btns: [
                                 { icon: 'auto_stories' }
@@ -60,13 +70,25 @@ customElements.define('li-my-life', class LiMyLife extends LiElement {
                                 { icon: 'arrow-back' },
                                 { icon: 'arrow-forward' }
                             ],
+                        }
+                    ]
+                }
+            },
+            rightTabs: {
+                type: Object, default: {
+                    open: true,
+                    tabs: [
+                        {
+                            label: 'phase', icon: 'apps',
+                            btns: [
+                                { icon: 'add', title: 'add' }
+                            ],
                         },
                         {
-                            label: 'jupiter notebook', icon: 'edit',
+                            label: 'settings', icon: 'tree-structure',
                             btns: [
-                                { icon: 'alarm' },
-                                { icon: 'alarm-add' },
-                                { icon: 'alarm-on' }
+                                { icon: 'arrow-back' },
+                                { icon: 'arrow-forward' }
                             ],
                         }
                     ]
@@ -158,7 +180,43 @@ customElements.define('li-family-tree', class LiFamilyTree extends LiElement {
     
     static get properties() {
         return {
-            props: { type: String, default: 'li-weeks' },
+            props: { type: String, default: 'li-family-tree' },
+        }
+    }
+})
+
+customElements.define('li-family-phase', class LiFamilyPhase extends LiElement {
+    static get styles() {
+        return css`
+            :host {
+                display: flex;
+                flex-direction: column;
+                flex: 1;
+                padding: 4px;
+                color: gray;
+             }
+             input {
+                border: none;
+                border-bottom: 1px solid lightgray; 
+                outline: none; 
+                width: 100%; 
+                color: blue; 
+                font-size: 18;
+            }
+        `;
+    }
+    
+    render() {
+        return html`
+            <span>birthday: </span><input type="datetime-local">
+            <span>death date: </span><input type="datetime-local">
+        `
+    }
+    
+    static get properties() {
+        return {
+            props: { type: String, default: 'li-phase' },
+            
         }
     }
 })
