@@ -1,7 +1,7 @@
 import { LiElement, html, css } from '../../li.js';
 
 import '../layout-app/layout-app.js';
-import '../db/db.js';
+import '../wikis-db/wikis-db.js';
 import '../panel-simple/panel-simple.js';
 import '../jupyter/jupyter.js';
 import '../button/button.js';
@@ -25,7 +25,7 @@ customElements.define('li-my-life', class LiMyLife extends LiElement {
                     <div style="flex:1"></div>${this.name || 'my-life'}<div style="flex:1"></div>
                 </div>
                 <div slot="app-left">
-                    <li-db name="my-life" rootLabel="my-life" sortLabel="persons" prefix="lfdb_"></li-db>
+                    <li-wikis-db name="my-life" rootLabel="my-life" sortLabel="persons" prefix="lfdb_"></li-wikis-db>
                 </div>
                 <div id="main" slot="app-main" style="display: flex; height: 100%;">
                     <li-panel-simple .src=${this.mainTabs}>
@@ -195,6 +195,33 @@ customElements.define('li-family-phase', class LiFamilyPhase extends LiElement {
                 padding: 4px;
                 color: gray;
              }
+        `;
+    }
+    
+    render() {
+        return html`
+
+        `
+    }
+    
+    static get properties() {
+        return {
+            props: { type: String, default: 'li-phase' },
+            
+        }
+    }
+})
+
+customElements.define('li-family-phase-row', class LiFamilyPhase extends LiElement {
+    static get styles() {
+        return css`
+            :host {
+                display: flex;
+                flex-direction: column;
+                flex: 1;
+                padding: 4px;
+                color: gray;
+             }
              input {
                 border: none;
                 border-bottom: 1px solid lightgray; 
@@ -202,6 +229,7 @@ customElements.define('li-family-phase', class LiFamilyPhase extends LiElement {
                 width: 100%; 
                 color: blue; 
                 font-size: 18;
+                font-family: Arial;
             }
         `;
     }
