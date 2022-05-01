@@ -44,7 +44,7 @@ class ITEM {
     }
 }
 
-customElements.define('li-db', class LiDb extends LiElement {
+customElements.define('li-wikis-db', class LiWikisDB extends LiElement {
     static get styles() {
         return [rowPanelCSS, css`
             :host {
@@ -76,9 +76,9 @@ customElements.define('li-db', class LiDb extends LiElement {
                 <li-button id="reload" name="refresh" title="reload page"  @click="${this.btnClick}"></li-button>
             </div>
             <div class="panel">
-                    ${this.dbPanel === 'tree' ? html`<li-db-three></li-db-three>` : html``}
-                    ${this.dbPanel === 'list' ? html`<li-db-list></li-db-list>` : html``}
-                    ${this.dbPanel === 'settings' ? html`<li-db-settings></li-db-settings></li-base-settings>` : html``}             
+                    ${this.dbPanel === 'tree' ? html`<li-wikis-db-three></li-wikis-db-three>` : html``}
+                    ${this.dbPanel === 'list' ? html`<li-wikis-db-list></li-wikis-db-list>` : html``}
+                    ${this.dbPanel === 'settings' ? html`<li-wikis-db-settings></li-wikis-db-settings></li-base-settings>` : html``}             
             </div>
         `
     }
@@ -156,13 +156,13 @@ customElements.define('li-db', class LiDb extends LiElement {
                 this.$update();
             }
             this.notebook = undefined;
-            if (this.selectedArticle.notebook) {
-                setTimeout(() => {
-                    this.notebook = this.selectedArticle.notebook;
-                    this.$update();
-                }, 100);
-                return;
-            }
+            // if (this.selectedArticle.notebook) {
+            //     setTimeout(() => {
+            //         this.notebook = this.selectedArticle.notebook;
+            //         this.$update();
+            //     }, 100);
+            //     return;
+            // }
             this.selectedArticle._items = [];
             this.selectedArticle.notebook = { cells: icaro([]) };
             const parts = await this.dbLocal.allDocs({ keys: this.selectedArticle.partsId || [], include_docs: true });
@@ -179,13 +179,14 @@ customElements.define('li-db', class LiDb extends LiElement {
                         source: doc.source || doc.value || '',
                         cell_h: doc.cell_h || doc.h,
                         cell_w: doc.cell_w >= 0 ? doc.cell_w : doc.w || '',
-                        order: doc.order || idx,
                         cell_type: doc.cell_type,
                         sourceHTML: doc.sourceHTML || (doc.label === 'iframe' ? doc.value : ''),
                         sourceJS: doc.sourceJS || '',
                         sourceCSS: doc.sourceCSS || '',
                         sourceJSON: doc.sourceJSON || '{}',
-                        useJson: doc.useJson || false
+                        useJson: doc.useJson || false,
+                        'li-editor-ace': doc['li-editor-ace'] || '',
+                        'li-editor-monaco': doc['li-editor-monaco'] || ''
                     })
                     this.selectedArticle.notebook.cells.push(cell);
                     cell.listen(e => fn(e, item));
@@ -213,8 +214,12 @@ customElements.define('li-db', class LiDb extends LiElement {
                 this.changedItemsID.add(this.selectedArticle._id)
                 this.changedItems[this.selectedArticle._id] = this.selectedArticle
             })
-            this.notebook = this.selectedArticle.notebook;
-            this.$update();
+            setTimeout(() => {
+                if (this.selectedArticle.notebook) {
+                    this.notebook = this.selectedArticle.notebook;
+                    this.$update();
+                }
+            }, 100)
         }
     }
 
@@ -370,7 +375,7 @@ customElements.define('li-db', class LiDb extends LiElement {
     }
 })
 
-customElements.define('li-db-three', class LiDbThree extends LiElement {
+customElements.define('li-wikis-db-three', class LiWikisDbThree extends LiElement {
     static get styles() {
         return [rowPanelCSS, scrollCSS, css`
             :host {
@@ -494,7 +499,7 @@ customElements.define('li-db-three', class LiDbThree extends LiElement {
     }
 })
 
-customElements.define('li-db-list', class LiDblist extends LiElement {
+customElements.define('li-wikis-db-list', class LiWikisDblist extends LiElement {
     static get styles() {
         return css`
             :host {
@@ -526,7 +531,7 @@ customElements.define('li-db-list', class LiDblist extends LiElement {
     }
 })
 
-customElements.define('li-db-settings', class LiSettings extends LiElement {
+customElements.define('li-wikis-db-settings', class LiWikisSettings extends LiElement {
     static get styles() {
         return [scrollCSS, rowPanelCSS, css`
             :host {
