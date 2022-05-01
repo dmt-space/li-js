@@ -80,7 +80,7 @@ customElements.define('li-layout-tree', class LiLayoutTree extends LiElement {
                         ${this._ed && (this.selected && (this.selected === i || this.selected?.ulid === i.ulid)) && !i._deleted ? html`
                             <input value="${i.label}" @change="${(e) => this._setLabel(e, i)}" style="color: gray; flex:1;padding:1px;width:${this.labelWidth}px;font-size:${this.fontSize};border: none;margin:1px;outline: none;"/>
                         ` : html`
-                            <div style="flex:1;padding:2px;width:${this.labelWidth}px;font-size:${this.fontSize}; text-decoration:${i._deleted ? 'line-through solid red !important' : ''}"
+                            <div style="flex:1;padding:2px;width:${this.labelWidth}px;font-size:${this.fontSize}; text-decoration-line:${i._deleted ? 'line-through' : ''}; text-decoration-color:${i._deleted ? 'red' : ''}"
                                 @dblclick="${() => this._ed = !this.readOnly}" @click="${(e) => this._focus(e, i)}">${i.label}</div>
                         `}
                     </div>
