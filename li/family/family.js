@@ -40,15 +40,15 @@ customElements.define('li-family', class LiFamily extends LiElement {
                 <div slot="app-left" slot="app-main" style="display: flex; height: 100%; padding: 0 !important">
                     <li-panel-simple .src=${this.leftTabs} iconSize=24>
                         <li-family-items-tree slot="tree"></li-family-items-tree>
-                        <li-family-items-list slot="list"></li-family-items-list>
+                        <li-table slot="list" .data=${this.sortItems} style="cursor: pointer; width: 100%"></li-table> 
                         <li-db-settings slot="settings"></li-db-settings>
                     </li-panel-simple>
                 </div>
                 <div id="main" slot="app-main" style="display: flex; height: 100%;">
                     <li-panel-simple .src=${this.mainTabs} iconSize=24>
-                        <li-jupyter slot="jupiter notebook" @change=${this.onchange}></li-jupyter>
+                        <li-jupyter slot="notebook" .notebook=${this.selectedItem?.notebook}></li-jupyter>
                         <li-family-weeks slot="weeks"></li-family-weeks>
-                        <li-family-tree slot="family tree" style="height: 100%:" style="display: ${this.selectedItem?.items?.length ? 'none' : 'unset'}"></li-family-tree>
+                        <li-family-tree slot="family tree" style="height: 100%:"></li-family-tree>
                     </li-panel-simple>
                 </div>
                 <div slot="app-right" slot="app-main" style="display: flex; height: 100%;">
@@ -113,7 +113,7 @@ customElements.define('li-family', class LiFamily extends LiElement {
                     open: true,
                     tabs: [
                         {
-                            icon: 'edit', label: 'jupiter notebook', labelOnSelected: true, title: 'jupiter notebook',
+                            icon: 'edit', label: 'notebook', labelOnSelected: true, title: 'notebook',
                             btns: [
                                 { icon: 'alarm' },
                                 { icon: 'alarm-add' },
@@ -165,15 +165,52 @@ customElements.define('li-family', class LiFamily extends LiElement {
         super.firstUpdated();
         db.firstInit(this);
         this.$update();
+        this.listen('li-panel-simple-click', e => {
+            if (e.detail.btn === 'list') {
+                setTimeout(() => {    
+                    this.$qs('li-table')._resizeColumns();
+                    this.$update();
+                }, 10);
+            }
+        })
+        this.listen('tableRowSelect', async e => {
+            this.selectedItem = e.detail?.row;
+            this.$update();
+        })
+        setTimeout(() => {
+            LI.listen(document, 'changed', (e) =>{
+                if (this._isUpdateSelectedItem) return;
+                const d = e.detail;
+                // console.log(d);
+                if (d.type === 'jupyter_cell') {
+                    const _id = 'jupyter_cell:' + d.value.ulid;
+                    const doc = d.value;
+                    if (d.change === 'deleteCell') {
+                        this.deletedItemsID ||= [];
+                        this.deletedItemsID.add(_id);
+                    } else {
+                        this.changedItemsID ||= [];
+                        this.changedItemsID.add(_id);
+                        const item = new db.ITEM(doc, { type: doc.type, isUse: true });
+                        this.changedItems[_id] = item;
+    
+                        this.selectedItem.doc.partsId ||= [];
+                        this.selectedItem.doc.partsId.add(_id);
+    
+                        this.changedItemsID.add(this.selectedItem._id);
+                        this.changedItems[this.selectedItem._id] = this.selectedItem;
+                        //this.selectedItem.cells = d.notebook?.cells;
+                    }
+                    this.$update();
+                }
+                //console.log(this.changedItemsID, this.deletedItemsID)
+            })
+        }, 1000);
     }
     async updated(e) {
         if (e.has('selectedItem')) {
             db.updateSelectedItem(this);
         }
-    }
-
-    onchange(e) {
-        console.log(e)
     }
 
     btnClick(e) {
@@ -236,37 +273,6 @@ customElements.define('li-family-items-tree', class LiFamilyItemsTree extends Li
     }
 })
 
-customElements.define('li-family-items-list', class LiFamilyItemslist extends LiElement {
-    static get styles() {
-        return css`
-            :host {
-                display: flex;
-                flex-direction: column;
-                height: 100%;
-            }
-        `
-    }
-    render() {
-        return html`
-            <li-table .data=${this.sortItems} style="cursor: pointer; width: 100%"></li-table> 
-        `
-    }
-
-    static get properties() {
-        return {
-            sortItems: { type: Object, local: true },
-            selectedItem: { type: Object, local: true },
-        }
-    }
-
-    constructor() {
-        super();
-        this.listen('tableRowSelect', async e => {
-            this.selectedItem = e.detail?.row;
-            this.$update();
-        });
-    }
-})
 
 customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
     static get styles() {

@@ -131,5 +131,6 @@ customElements.define('li-panel-simple', class LiPanelSimple extends LiElement {
         } else {
             this.opened();
         }
+        this.fire('li-panel-simple-click', { uuid: this.uuid, btn: e.target.title, src: this.src });
     }
 })
