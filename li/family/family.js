@@ -1,12 +1,19 @@
 import { LiElement, html, css } from '../../li.js';
 
+import * as db from './lib/db.js';
+import './lib/db-settings.js';
 import '../layout-app/layout-app.js';
 import '../wikis-db/wikis-db.js';
 import '../panel-simple/panel-simple.js';
 import '../jupyter/jupyter.js';
 import '../button/button.js';
+import '../layout-tree/layout-tree.js';
+import '../table/table.js';
 
-customElements.define('li-my-life', class LiMyLife extends LiElement {
+const rowPanelCSS = css` .row-panel { display: flex; border-bottom: 1px solid lightgray; padding: 4px 2px; margin-bottom: 2px; }`;
+const scrollCSS = css`::-webkit-scrollbar { width: 4px; height: 4px; } ::-webkit-scrollbar-track { background: lightgray; } ::-webkit-scrollbar-thumb {  background-color: gray; }`;
+
+customElements.define('li-family', class LiFamily extends LiElement {
     static get styles() {
         return css`
             .header {
@@ -22,18 +29,26 @@ customElements.define('li-my-life', class LiMyLife extends LiElement {
         return html`
             <li-layout-app shift="0">
                 <div slot="app-top" class="header">
-                    <div style="flex:1"></div>${this.name || 'my-life'}<div style="flex:1"></div>
+                    <div style="flex:1"></div>${this.name || 'my-family'}<div style="flex:1"></div>
+                    ${this.readOnly ? html`` : html`
+                    <li-button id="save" name="save" title="save" @click=${this.btnClick} .fill="${this.needSave ? 'red' : ''}" color="${this.needSave ? 'red' : 'gray'}"></li-button>
+                    `}
+                    <li-button id="readonly" name="edit" @click=${this.btnClick} style="margin-right:8px" title="enable edit" fill=${this.readOnly ? 'lightgray' : 'green'} 
+                            color="${this.readOnly ? 'lightgray' : 'green'}" back="${this.readOnly ? 'transparent' : '#e9ffdb'}"></li-button>
+                    <li-button id="reload" name="refresh" title="reload page"  @click="${this.btnClick}" style="padding-right: 8px"></li-button>
                 </div>
                 <div slot="app-left" slot="app-main" style="display: flex; height: 100%; padding: 0 !important">
-                    <!-- <li-wikis-db name="my-life" rootLabel="my-life" sortLabel="persons" prefix="lfdb_"></li-wikis-db> -->
                     <li-panel-simple .src=${this.leftTabs} iconSize=24>
+                        <li-family-items-tree slot="tree"></li-family-items-tree>
+                        <li-family-items-list slot="list"></li-family-items-list>
+                        <li-db-settings slot="settings"></li-db-settings>
                     </li-panel-simple>
                 </div>
                 <div id="main" slot="app-main" style="display: flex; height: 100%;">
                     <li-panel-simple .src=${this.mainTabs} iconSize=24>
-                        <li-jupyter slot="jupiter notebook"></li-jupyter>
-                        <li-weeks slot="weeks"></li-weeks>
-                        <li-family-tree slot="family tree" style="height: 100%:" style="display: ${this.selectedArticle?.items?.length ? 'none' : 'unset'}"></li-family-tree>
+                        <li-jupyter slot="jupiter notebook" @change=${this.onchange}></li-jupyter>
+                        <li-family-weeks slot="weeks"></li-family-weeks>
+                        <li-family-tree slot="family tree" style="height: 100%:" style="display: ${this.selectedItem?.items?.length ? 'none' : 'unset'}"></li-family-tree>
                     </li-panel-simple>
                 </div>
                 <div slot="app-right" slot="app-main" style="display: flex; height: 100%;">
@@ -42,52 +57,54 @@ customElements.define('li-my-life', class LiMyLife extends LiElement {
                     </li-panel-simple>
                 </div>
             </li-layout-app>
-        `;
+        `
     }
 
     static get properties() {
         return {
-            selectedArticle: { type: Object, local: true },
+            name: { type: String, default: 'my-family', local: true, save: true },
+            url: { type: String, default: 'http://admin:54321@localhost:5984/', local: true, save: true },
+            rootLabel: { type: String, default: 'my family' },
+            sortLabel: { type: String, default: 'persons' },
+            prefix: { type: String, default: 'lfdb_', local: true },
+            replication: { type: Boolean, default: false, local: true, save: true },
+            readOnly: { type: Boolean, default: false, local: true, save: true },
+            allowImport: { type: Boolean, default: true, local: true },
+            allowExport: { type: Boolean, default: true, local: true },
+            dbLocal: { type: Object, local: true },
+            dbRemote: { type: Object, local: true },
+            replicationHandler: { type: Object, local: true },
+
+            items: { type: Array, local: true },
+            flatItems: { type: Object, local: true },
+            sortItems: { type: Object, local: true },
+            selectedItem: { type: Object, local: true },
+            starItem: { type: Object, local: true },
+            changedItemsID: { type: Array, defauLt: [], local: true },
+            changedItems: { type: Object, default: {}, local: true },
+            deletedItemsID: { type: Array, defauLt: [], local: true },
+            deletedItems: { type: Object, defauLt: {}, local: true },
+
             leftTabs: {
                 type: Object, default: {
                     open: true,
                     tabs: [
                         {
-                            icon: 'tree-structure', label: 'three', labelOnSelected: true, title: 'three',
-                            btns: [
-                                { icon: 'save', title: 'save' },
-                                { icon: 'edit', title: 'readonly' },
-                                { icon: 'refresh', title: 'reload page' }
-                            ],
+                            icon: 'tree-structure', label: 'tree', labelOnSelected: true, title: 'tree',
                             btns_left: [
                                 { icon: 'unfold-less', title: 'collapse' },
                                 { icon: 'unfold-more', title: 'expand' },
-                                { icon: 'star-border', title: 'set selected as root' },
+                                { icon: 'star', title: 'set selected as root', toggledClass: '_yellow', notoggledClass: '_white' },
                                 { icon: 'camera', title: 'save tree state' }
                             ],
                             btns_right: [
                                 { icon: 'cached', title: 'clear deleted' },
-                                { icon: 'delete', title: 'delete' },
-                                { icon: 'library-add', title: 'add new' }
+                                { icon: 'delete', title: 'delete item' },
+                                { icon: 'library-add', title: 'add new item' }
                             ],
                         },
-                        {
-                            icon: 'list', label: 'list', labelOnSelected: true, title: 'list',
-                            btns: [
-                                { icon: 'save', title: 'save' },
-                                { icon: 'edit', title: 'readonly' },
-                                { icon: 'refresh', title: 'reload page' }
-                            ],
-                        },
-                        ,
-                        {
-                            icon: 'settings', label: 'settings', labelOnSelected: true, title: 'settings',
-                            btns: [
-                                { icon: 'save', title: 'save' },
-                                { icon: 'edit', title: 'readonly' },
-                                { icon: 'refresh', title: 'reload page' }
-                            ],
-                        }
+                        { icon: 'list', label: 'list', labelOnSelected: true, title: 'list' },
+                        { icon: 'settings', label: 'settings', labelOnSelected: true, title: 'settings' }
                     ]
                 }
             },
@@ -142,13 +159,116 @@ customElements.define('li-my-life', class LiMyLife extends LiElement {
         }
     }
 
+    get needSave() { return this.changedItemsID?.length || this.deletedItemsID?.length };
+
     firstUpdated() {
         super.firstUpdated();
+        db.firstInit(this);
+        this.$update();
+    }
+    async updated(e) {
+        if (e.has('selectedItem')) {
+            db.updateSelectedItem(this);
+        }
+    }
+
+    onchange(e) {
+        console.log(e)
+    }
+
+    btnClick(e) {
+        const id = e.target.id;
+        const action = {
+            readonly: () => this.readOnly = !this.readOnly,
+            reload: () => document.location.reload(),
+            save: () => {
+                db.save(this);
+                db.getSortItems(this);
+            }
+        }
+        action[id] && action[id]();
+        this.$update();
     }
 
 })
 
-customElements.define('li-weeks', class LiWeeks extends LiElement {
+customElements.define('li-family-items-tree', class LiFamilyItemsTree extends LiElement {
+    static get styles() {
+        return [rowPanelCSS, scrollCSS, css`
+            :host {
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+            }
+        `]
+    }
+    render() {
+        return html`
+            <label class="row-panel">${this.starItem?.label || this.name}</label>
+            <div style="overflow: auto; flex: 1">
+                <li-layout-tree .item="${this._items}" .selected="${this.selectedItem}" @selected="${this.onselected}" style="overflow: auto;"
+                    allowEdit allowCheck iconSize="20"></li-layout-tree>
+            </div>
+        `
+    }
+
+    static get properties() {
+        return {
+            name: { type: String, local: true },
+            readOnly: { type: Boolean, local: true },
+            dbLocal: { type: Object, local: true },
+            dbLocalStore: { type: Object, local: true },
+            items: { type: Array, local: true },
+            flatItems: { type: Object, local: true },
+            selectedItem: { type: Object, local: true },
+            starItem: { type: Object, local: true },
+            changedItemsID: { type: Array, local: true },
+            changedItems: { type: Object, local: true },
+            deletedItemsID: { type: Array, local: true },
+            deletedItems: { type: Object, local: true },
+        }
+    }
+    get _items() { return this.starItem || this.items }
+    get needSave() { return this.deletedItemsID.length }
+
+    onselected(e) {
+        this.selectedItem = e.detail;
+    }
+})
+
+customElements.define('li-family-items-list', class LiFamilyItemslist extends LiElement {
+    static get styles() {
+        return css`
+            :host {
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+            }
+        `
+    }
+    render() {
+        return html`
+            <li-table .data=${this.sortItems} style="cursor: pointer; width: 100%"></li-table> 
+        `
+    }
+
+    static get properties() {
+        return {
+            sortItems: { type: Object, local: true },
+            selectedItem: { type: Object, local: true },
+        }
+    }
+
+    constructor() {
+        super();
+        this.listen('tableRowSelect', async e => {
+            this.selectedItem = e.detail?.row;
+            this.$update();
+        });
+    }
+})
+
+customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
     static get styles() {
         return css`
             :host {
@@ -225,7 +345,7 @@ customElements.define('li-family-tree', class LiFamilyTree extends LiElement {
     
     static get properties() {
         return {
-            props: { type: String, default: 'li-family-tree' },
+            props: { type: String, default: 'li-family-items-tree' },
         }
     }
 })

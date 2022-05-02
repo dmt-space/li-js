@@ -87,6 +87,14 @@ customElements.define('li-button', class LiButton extends LiElement {
                 transition: .3s;
                 background-color: white;
             }
+            ._orange {
+                transition: .3s;
+                background-color: hsla(35, 90%, 50%, .3);
+            }
+            ._yellow {
+                transition: .3s;
+                background-color: hsla(60, 90%, 50%, .2);
+            }
         `;
     }
     firstUpdated(setPath = false) {
