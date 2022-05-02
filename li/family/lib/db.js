@@ -5,8 +5,8 @@ export class ITEM {
         if (doc.label || props.label) this.doc.label = doc.label || props.label;
         else if (this.doc.type === 'items') this.doc.label = 'new item';
         const ulid = LI.ulid();
-        this.doc._id = doc._id || this.doc.type + ':' + ulid;
         this.doc.ulid = doc.ulid || ulid;
+        this.doc._id = doc._id || this.doc.type + ':' + this.doc.ulid ;
         this.doc.created = doc.created || LI.dates(new Date(), true);
         this.items = [];
         Object.keys(props).forEach(key => this[key] = props[key]);
@@ -74,6 +74,7 @@ export const init = async (self) => {
     self.$update();
 }
 export const getflatItems = async (self, type = 'items') => {
+    self.deletedItemsID ||= [];
     const items = await self.dbLocal.allDocs({ include_docs: true, startkey: 'items', endkey: 'items' + '\ufff0' });
     if (!items.rows) return;
     const flat = {};
@@ -136,78 +137,29 @@ export const getSortItems = (self) => {
     }
 }
 export const updateSelectedItem = async (self) => {
-    // const fn = (e, item) => {
-    //     if (self.readOnly) return;
-    //     e.forEach((value, key) => {
-    //         if (key === '_deleted' && value) {
-    //             self.deletedItemsID.add(item._id);
-    //             self.deletedItems[item._id] = item;
-    //         } else {
-    //             item.doc[key] = value;
-    //             self.changedItemsID.add(item._id);
-    //             self.changedItems[item._id] = item;
-    //         }
-    //     });
-    //     self.$update();
-    // }
-    // self.notebook = undefined;
-    // self.selectedItem._items = [];
-    // self.selectedItem.notebook = { cells: icaro([]) };
+    if (self.selectedItem.notebook) return;
+    self._isUpdateSelectedItem = true;
+    self.selectedItem.notebook = { cells: [] };
     const parts = await self.dbLocal.allDocs({ keys: self.selectedItem.partsId || [], include_docs: true });
     parts.rows.map((i, idx) => {
         if (i.doc) {
-            // let lzs = LZString.decompressFromUTF16((i.doc.lzs || ''))
+            // let lzs = LZString.decompressFromUTF16((i.doc.lzs || ''));
             // let doc = lzs ? lzs = JSON.parse(lzs) : i.doc;
-            // const item = new ITEM(doc, { type: 'editors', isUse: true });
-            // self.selectedItem._items.push(item);
-            // const cell = icaro({
-            //     _id: item._id,
-            //     label: doc.label,
-            //     cell_name: doc.cell_name || doc.name,
-            //     source: doc.source || doc.value || '',
-            //     cell_h: doc.cell_h || doc.h,
-            //     cell_w: doc.cell_w >= 0 ? doc.cell_w : doc.w || '',
-            //     cell_type: doc.cell_type,
-            //     sourceHTML: doc.sourceHTML || (doc.label === 'iframe' ? doc.value : ''),
-            //     sourceJS: doc.sourceJS || '',
-            //     sourceCSS: doc.sourceCSS || '',
-            //     sourceJSON: doc.sourceJSON || '{}',
-            //     useJson: doc.useJson || false,
-            //     'li-editor-ace': doc['li-editor-ace'] || '',
-            //     'li-editor-monaco': doc['li-editor-monaco'] || ''
-            // })
-            // self.selectedItem.notebook.cells.push(cell);
-            // cell.listen(e => fn(e, item));
+            let doc = i.doc;
+            const item = new ITEM(doc, { type: doc.type, isUse: true });
+            if (doc.type === 'notebook') {
+                self.selectedItem.notebook = {...selectedItem.notebook, ...doc };
+            }
+            if (doc.type === 'jupyter_cell') {
+                self.selectedItem.notebook.cells ||= [];
+                self.selectedItem.notebook.cells.push(doc);
+            }
         }
     })
-    // self.selectedItem.notebook.cells.listen((e) => {
-    //     if (self.readOnly) return;
-    //     self.selectedItem.doc.partsId = [];
-    //     self.selectedItem.notebook.cells.map((i, idx) => {
-    //         if (!i._id) {
-    //             const name = i.cell_name || (i.cell_type === 'markdown' ? 'showdown'
-    //                 : i.cell_type === 'html' || i.cell_type === 'html-cde' || i.cell_type === 'code' ? 'html'
-    //                     : i.cell_type === 'html-executable' ? 'iframe' : 'showdown');
-    //             const item = new ITEM({ name, h: i.cell_h, cell_type: i.cell_type, label: i.label }, { type: 'editors' });
-    //             self.selectedItem._items.push(item);
-    //             i._id = item._id
-    //             i = icaro({ ...{}, ...i });
-    //             i.listen(e => fn(e, item));
-    //             self.selectedItem.notebook.cells[idx] = i;
-    //             self.changedItemsID.add(item._id);
-    //             self.changedItems[item._id] = item;
-    //         }
-    //         self.selectedItem.doc.partsId.add(i._id);
-    //     })
-    //     self.changedItemsID.add(self.selectedItem._id)
-    //     self.changedItems[self.selectedItem._id] = self.selectedItem
-    // })
-    // setTimeout(() => {
-    //     if (self.selectedItem.notebook) {
-    //         self.notebook = self.selectedItem.notebook;
-    //         self.$update();
-    //     }
-    // }, 100)
+    setTimeout(() => {
+        self._isUpdateSelectedItem = false;
+    }, 500);
+    self.$update();
 }
 export const save = async (self) => {
     if (self.changedItemsID?.length) {
@@ -215,11 +167,11 @@ export const save = async (self) => {
         const res = [];
         items.rows.map(i => {
             if (i.doc) {
-                if (i.doc._id.startsWith('editors')) {
-                    let lzs = LZString.compressToUTF16(JSON.stringify(self.changedItems[i.doc._id].doc));
-                    res.add({ _id: i.doc._id, _rev: i.doc._rev, lzs })
-                } else {
+                if (i.doc._id === 'items') {
                     res.add({ ...i.doc, ...self.changedItems[i.key].doc });
+                } else {
+                    //let lzs = LZString.compressToUTF16(JSON.stringify(self.changedItems[i.doc._id].doc));
+                    res.add({ _id: i.doc._id, _rev: i.doc._rev, ...self.changedItems[i.doc._id].doc })
                 }
                 self.changedItemsID.remove(i.key);
                 if (self.changedItems[i.key] !== self.selectedItem && self.changedItems[i.key].notebook) {
@@ -229,11 +181,11 @@ export const save = async (self) => {
         })
         self.changedItemsID.forEach(i => {
             let doc = { ...self.changedItems[i].doc };
-            if (doc._id.startsWith('editors')) {
-                let lzs = LZString.compressToUTF16(JSON.stringify(doc));
-                res.add({ _id: doc._id, lzs })
-            } else {
+            if (doc._id === 'items') {
                 res.add(doc);
+            } else {
+                //let lzs = LZString.compressToUTF16(JSON.stringify(doc));
+                res.add({ ...doc  })
             }
         })
         await self.dbLocal.bulkDocs(res);

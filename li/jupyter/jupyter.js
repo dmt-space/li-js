@@ -235,15 +235,18 @@ class LiJupyterListViews extends LiElement {
         let idx = this.idx;
         if (this.view === 'add') {
             idx = this.position === 'top' ? idx : idx + 1;
-            const cell = { cell_type: item.cell_type, cell_extType: item.cell_extType, source: item.source, label: item.label };
+            const cell = { ulid: LI.ulid(), type: 'jupyter_cell', cell_type: item.cell_type, cell_extType: item.cell_extType, source: item.source, label: item.label };
             this.notebook.cells ||= [];
             this.notebook.cells.splice(idx, 0, cell);
+            LI.fire(document, 'changed', { type: 'jupyter_cell', change: 'addCell' , value: cell, notebook: this.notebook } );
         } else if (this.view === 'select type') {
             const cell = { ...this.cell, ...{ cell_type: item.cell_type, cell_extType: item.cell_extType, label: item.label } };
+            LI.fire(document, 'changed', { type: 'jupyter_cell', change: 'setCellType' , value: cell, notebook: this.notebook } );
             this.notebook.cells.splice(idx, 1, cell);
         }
         LI.fire(document, 'ok', item);
-        LI.fire(document, 'setFocusedIndex', idx)
+        LI.fire(document, 'setFocusedIndex', idx);
+
     }
 }
 customElements.define('li-jupyter-list-views', LiJupyterListViews);
@@ -327,6 +330,12 @@ customElements.define('li-jupyter-cell', class LiJupyterCell extends LiElement {
 
         return html`<div style="min-height: 28px;">${this.cell?.sourse || this.cell?.value}</div>`;
     }
+    firstUpdated() {
+        super.firstUpdated();
+        this.listen('change', (e) => {
+            LI.fire(document, 'changed', { type: 'jupyter_cell', change: 'setCellType' , value: this.cell, notebook: this.notebook } );
+        })
+    }
     click(e) {
         if (this.readOnly) return;
         this.focusedIndex = this.idx;
@@ -400,6 +409,7 @@ customElements.define('li-jupyter-cell-toolbar', class LiJupyterCellToolbar exte
             this.cell._deleted = true;
             this.notebook.cells.splice(this.idx, 1);
             this.focusedIndex = (this.idx > this.notebook.cells.length - 1) ? this.notebook.cells.length - 1 : this.idx;
+            LI.fire(document, 'changed', { type: 'jupyter_cell', change: 'deleteCell' , value: this.cell, notebook: this.notebook } );
             this.$update();
         }
     }
