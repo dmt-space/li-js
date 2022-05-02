@@ -59,7 +59,7 @@ customElements.define('li-panel-simple', class LiPanelSimple extends LiElement {
                 <div style="flex: 1"></div>
                 ${this.src?.open || this.src?.opened ? html`
                     ${(this.tabs[this.idx]?.btns || []).map(btn => html`
-                        <li-button class="btn" size=${this.iconSize} width=${btn.width || 'auto'} name=${btn.icon} title=${btn.title || btn.label || btn.icon} @click=${this.btnclick} radius="2px" scale=.8><span style="font-size: ${this.fontSize ? this.fontSize - 2 : 14}px">${btn.label || ''}</span></li-button>
+                        <li-button class="btn" size=${this.iconSize} width=${btn.width || 'auto'} name=${btn.icon} title=${btn.title || btn.label || btn.icon} @click=${this.btnclick} radius="2px" scale=.8 toggledClass=${btn.toggledClass || ''} notoggledClass=${btn.notoggledClass || ''}><span style="font-size: ${this.fontSize ? this.fontSize - 2 : 14}px">${btn.label || ''} </span></li-button>
                     `)}
                     <div style="width: 2px"></div>
                 ` : html``}
@@ -67,11 +67,11 @@ customElements.define('li-panel-simple', class LiPanelSimple extends LiElement {
             ${(this.src?.open || this.src?.opened) && (this.tabs[this.idx]?.btns_left?.length || this.tabs[this.idx]?.btns_right?.length) ? html`
                 <div class="panel_buttons" style="display: flex; padding: 2px; border: 1px solid lightgray; margin: 0 1px 1px 1px; background-color: #f0f0f0">
                     ${(this.tabs[this.idx]?.btns_left || []).map(btn => html`
-                        <li-button class="btn" size=${this.iconSize - 4} width=${btn.width || 'auto'} name=${btn.icon} title=${btn.title || btn.label || btn.icon} @click=${this.btnclick} radius="2px" scale=.8><span style="font-size: ${this.fontSize ? this.fontSize - 2 : 14}px;">${btn.label || ''}</span></li-button>
+                        <li-button class="btn" size=${this.iconSize - 4} width=${btn.width || 'auto'} name=${btn.icon} title=${btn.title || btn.label || btn.icon} @click=${this.btnclick} radius="2px" scale=.8 toggledClass=${btn.toggledClass || ''} notoggledClass=${btn.notoggledClass || ''}><span style="font-size: ${this.fontSize ? this.fontSize - 2 : 14}px;">${btn.label || ''}</span></li-button>
                     `)}
                     <div style="flex: 1"></div>
                     ${(this.tabs[this.idx]?.btns_right || []).map(btn => html`
-                        <li-button class="btn" size=${this.iconSize - 4} width=${btn.width || 'auto'} name=${btn.icon} title=${btn.title || btn.label || btn.icon} @click=${this.btnclick} radius="2px" scale=.8><span style="font-size: ${this.fontSize ? this.fontSize - 2 : 14}px">${btn.label || ''}</span></li-button>
+                        <li-button class="btn" size=${this.iconSize - 4} width=${btn.width || 'auto'} name=${btn.icon} title=${btn.title || btn.label || btn.icon} @click=${this.btnclick} radius="2px" scale=.8 toggledClass=${btn.toggledClass || ''} notoggledClass=${btn.notoggledClass || ''}><span style="font-size: ${this.fontSize ? this.fontSize - 2 : 14}px">${btn.label || ''}</span></li-button>
                     `)}
                 </div>
             ` : html``}
