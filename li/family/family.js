@@ -115,9 +115,12 @@ customElements.define('li-family', class LiFamily extends LiElement {
                         {
                             icon: 'edit', label: 'notebook', labelOnSelected: true, title: 'notebook',
                             btns: [
-                                { icon: 'alarm' },
-                                { icon: 'alarm-add' },
-                                { icon: 'alarm-on' }
+                                { icon: 'close', title: 'delete notebook' },
+                                { icon: 'crop-3-2', title: 'cells border' },
+                                { icon: 'add', title: 'add uploaded notebook (json)' },
+                                { icon: 'file-upload', title: 'upload notebook (json)' },
+                                { icon: 'save', title: 'save notebook (json)' },
+                                { icon: 'launch', title: 'share notebook to new tab' }
                             ],
                         },
                         {
@@ -165,45 +168,47 @@ customElements.define('li-family', class LiFamily extends LiElement {
         super.firstUpdated();
         db.firstInit(this);
         this.$update();
-        this.listen('li-panel-simple-click', e => {
-            if (e.detail.btn === 'list') {
-                setTimeout(() => {    
-                    this.$qs('li-table')._resizeColumns();
-                    this.$update();
-                }, 10);
-            }
-        })
         this.listen('tableRowSelect', async e => {
             this.selectedItem = e.detail?.row;
             this.$update();
+        })
+        this.listen('li-panel-simple-click', (e) => {
+            this.panelSimpleClick(e);
         })
         setTimeout(() => {
             LI.listen(document, 'changed', (e) =>{
                 if (this._isUpdateSelectedItem) return;
                 const d = e.detail;
-                // console.log(d);
+                console.log(d)
                 if (d.type === 'jupyter_cell') {
                     const _id = 'jupyter_cell:' + d.value.ulid;
-                    const doc = d.value;
                     if (d.change === 'deleteCell') {
                         this.deletedItemsID ||= [];
                         this.deletedItemsID.add(_id);
                     } else {
-                        this.changedItemsID ||= [];
-                        this.changedItemsID.add(_id);
-                        const item = new db.ITEM(doc, { type: doc.type, isUse: true });
-                        this.changedItems[_id] = item;
-    
-                        this.selectedItem.doc.partsId ||= [];
-                        this.selectedItem.doc.partsId.add(_id);
-    
-                        this.changedItemsID.add(this.selectedItem._id);
-                        this.changedItems[this.selectedItem._id] = this.selectedItem;
-                        //this.selectedItem.cells = d.notebook?.cells;
+                        this.setChangedCell(d.value)
                     }
-                    this.$update();
+                } else if(d.type === 'jupyter_notebook') {
+                    this._isUpdateSelectedItem = true;
+                    if (d.change === 'addNotebook') {
+                        this.selectedItem.notebook ||= { cells: [] };
+                        this.selectedItem._parts ||= [];
+                    } else {
+                        this.selectedItem.notebook = { cells: [] };
+                        this.selectedItem._parts = [];
+                    }
+                    (d.notebook?.cells || []).map(doc => {
+                        const _id = 'jupyter_cell:' + (doc.ulid || LI.ulid());
+                        doc._id ||= _id;
+                        const part = this.setChangedCell(doc);
+                        this.selectedItem.notebook.cells.push(doc);;
+                        this.selectedItem._parts.push(part);
+                    })
+                    setTimeout(() => {
+                        this._isUpdateSelectedItem = false;
+                    }, 1000);
                 }
-                //console.log(this.changedItemsID, this.deletedItemsID)
+                this.$update();
             })
         }, 1000);
     }
@@ -213,6 +218,21 @@ customElements.define('li-family', class LiFamily extends LiElement {
         }
     }
 
+    setChangedCell(doc, type = 'jupyter_cell') {
+        const _id = doc._id;
+        this.changedItemsID ||= [];
+        this.changedItemsID.add(_id);
+        const item = new db.ITEM(doc, { type });
+        this.changedItems[_id] = item;
+
+        this.selectedItem.doc.partsId ||= [];
+        this.selectedItem.doc.partsId.add(_id);
+
+        this.changedItemsID.add(this.selectedItem._id);
+        this.changedItems[this.selectedItem._id] = this.selectedItem;
+        //this.selectedItem.cells = d.notebook?.cells;
+        return item;
+    }
     btnClick(e) {
         const id = e.target.id;
         const action = {
@@ -221,6 +241,46 @@ customElements.define('li-family', class LiFamily extends LiElement {
             save: () => {
                 db.save(this);
                 db.getSortItems(this);
+            }
+        }
+        action[id] && action[id]();
+        this.$update();
+    }
+    _uploadFile(jup, add = false) {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.onchange = e => jup.loadFile(e, add); 
+        input.click();
+    }
+    panelSimpleClick(e) {
+        const id = e.detail.btn;
+        const jup = this.$qs('li-jupyter');
+        const action = {
+            'list': () => {
+                setTimeout(() => {    
+                    this.$qs('li-table')._resizeColumns();
+                    this.$update();
+                }, 10);
+            },
+            'delete notebook': () => {
+                this.selectedItem.notebook = { cells: [] };
+                this.selectedItem._parts = [];
+
+            },
+            'cells border': () => {
+                jup.showBorder = !jup.showBorder
+            },
+            'add uploaded notebook (json)': () => {
+                this._uploadFile(jup, true);
+            },
+            'upload notebook (json)': () => {
+                this._uploadFile(jup);
+            },
+            'save notebook (json)': () => {
+                jup.saveFile();
+            },
+            'share notebook to new tab': () => {
+                jup.share();
             }
         }
         action[id] && action[id]();

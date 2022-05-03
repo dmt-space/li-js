@@ -1,13 +1,12 @@
 export class ITEM {
     constructor(doc = {}, props = {}) {
         this.doc = doc;
-        this.doc.type = doc.type || props.type || 'items';
-        if (doc.label || props.label) this.doc.label = doc.label || props.label;
-        else if (this.doc.type === 'items') this.doc.label = 'new item';
-        const ulid = LI.ulid();
-        this.doc.ulid = doc.ulid || ulid;
-        this.doc._id = doc._id || this.doc.type + ':' + this.doc.ulid ;
-        this.doc.created = doc.created || LI.dates(new Date(), true);
+        this.doc.type ||= props.type || 'items';
+        if (doc.label || props.label) this.doc.label ||= props.label;
+        else if (this.doc.type === 'items') this.doc.label = '...';
+        this.doc.ulid ||= LI.ulid();
+        this.doc._id ||= this.doc.type + ':' + this.doc.ulid ;
+        this.doc.created ||= LI.dates(new Date(), true);
         this.items = [];
         Object.keys(props).forEach(key => this[key] = props[key]);
     }
@@ -140,19 +139,21 @@ export const updateSelectedItem = async (self) => {
     if (self.selectedItem.notebook) return;
     self._isUpdateSelectedItem = true;
     self.selectedItem.notebook = { cells: [] };
+    self.selectedItem._parts = [];
     const parts = await self.dbLocal.allDocs({ keys: self.selectedItem.partsId || [], include_docs: true });
     parts.rows.map((i, idx) => {
         if (i.doc) {
             // let lzs = LZString.decompressFromUTF16((i.doc.lzs || ''));
             // let doc = lzs ? lzs = JSON.parse(lzs) : i.doc;
             let doc = i.doc;
-            const item = new ITEM(doc, { type: doc.type, isUse: true });
+            const item = new ITEM(doc, { type: doc.type });
             if (doc.type === 'notebook') {
                 self.selectedItem.notebook = {...selectedItem.notebook, ...doc };
             }
             if (doc.type === 'jupyter_cell') {
                 self.selectedItem.notebook.cells ||= [];
                 self.selectedItem.notebook.cells.push(doc);
+                self.selectedItem._parts.push(item);
             }
         }
     })
@@ -160,6 +161,15 @@ export const updateSelectedItem = async (self) => {
         self._isUpdateSelectedItem = false;
     }, 500);
     self.$update();
+}
+const checkDoc = (res) => {
+    (res || []).map(doc => {
+        for (var key in doc) {
+            if (key.startsWith('_') && key !== '_id' && key !== '_rev' && key !== '_deleted') {
+                delete doc[key];
+            }
+        }
+    })
 }
 export const save = async (self) => {
     if (self.changedItemsID?.length) {
@@ -188,6 +198,7 @@ export const save = async (self) => {
                 res.add({ ...doc  })
             }
         })
+        checkDoc(res);
         await self.dbLocal.bulkDocs(res);
         self.changedItemsID = [];
         self.changedItems = {};
@@ -211,6 +222,7 @@ export const save = async (self) => {
                 }
             }
         })
+        checkDoc(res);
         await self.dbLocal.bulkDocs(res);
         self.deletedItemsID = [];
         self.deletedItems = {};
