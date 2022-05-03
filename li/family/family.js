@@ -176,17 +176,17 @@ customElements.define('li-family', class LiFamily extends LiElement {
             this.panelSimpleClick(e);
         })
         setTimeout(() => {
-            LI.listen(document, 'changed', (e) =>{
-                if (this._isUpdateSelectedItem) return;
+            LI.listen(document, 'changesJupyter', (e) =>{
+                if (this._isUpdateSelectedItem || this.$qs('li-jupyter').ulid !== e?.detail?.jupyter.ulid) return;
                 const d = e.detail;
                 console.log(d)
                 if (d.type === 'jupyter_cell') {
-                    const _id = 'jupyter_cell:' + d.value.ulid;
+                    const _id = 'jupyter_cell:' + d.cell.ulid;
                     if (d.change === 'deleteCell') {
                         this.deletedItemsID ||= [];
                         this.deletedItemsID.add(_id);
                     } else {
-                        this.setChangedCell(d.value)
+                        this.setChangedCell(d.cell)
                     }
                 } else if(d.type === 'jupyter_notebook') {
                     this._isUpdateSelectedItem = true;
@@ -262,10 +262,13 @@ customElements.define('li-family', class LiFamily extends LiElement {
             },
             'delete notebook': () => {
                 if (window.confirm(`Do you really want delete all cells ?`)) {
+                    this.deletedItemsID ||= [];
+                    this.selectedItem.notebook?.cells?.map(cell => {
+                        this.deletedItemsID.add(cell._id);
+                    })
                     this.selectedItem.notebook = { cells: [] };
                     this.selectedItem._parts = [];
                 }
-
             },
             'cells border': () => {
                 jup.showBorder = !jup.showBorder

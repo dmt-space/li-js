@@ -226,7 +226,7 @@ export const save = async (self) => {
         await self.dbLocal.bulkDocs(res);
         self.deletedItemsID = [];
         self.deletedItems = {};
-        init();
+        init(self);
     }
 }
 
