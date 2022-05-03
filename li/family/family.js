@@ -52,7 +52,7 @@ customElements.define('li-family', class LiFamily extends LiElement {
                 </div>
                 <div slot="app-right" slot="app-main" style="display: flex; height: 100%;">
                     <li-panel-simple .src=${this.rightTabs} style="height: 100%:" iconSize=24>
-                        <li-family-phase slot="phase"></li-family-phase>
+                        <li-family-phases slot="phases" style="display: flex; height: 100%;"></li-family-phases>
                     </li-panel-simple>
                 </div>
             </li-layout-app>
@@ -142,10 +142,17 @@ customElements.define('li-family', class LiFamily extends LiElement {
                     open: true,
                     tabs: [
                         {
-                            icon: 'apps', label: 'phase', labelOnSelected: true, title: 'phase',
+                            icon: 'apps', label: 'phases', labelOnSelected: true, title: 'phases',
                             btns: [
-                                { icon: 'done', title: 'add date' },
-                                { icon: 'done-all', title: 'add period' }
+                                { icon: 'delete', title: 'delete phase' },
+                                { icon: 'done', title: 'add phase date' },
+                                { icon: 'done-all', title: 'add phase period' } //family ties
+                            ]
+                        },
+                        {
+                            icon: 'supervisor-account', label: 'family ties', labelOnSelected: true, title: 'family ties',
+                            btns: [
+
                             ],
                         }
                     ]
@@ -178,7 +185,7 @@ customElements.define('li-family', class LiFamily extends LiElement {
                         this.deletedItemsID ||= [];
                         this.deletedItemsID.add(_id);
                     } else {
-                        this.setChangedCell(d.cell)
+                        this.setChangedPart(d.cell, 'jupyter_cell')
                     }
                 } else if (d.type === 'jupyter_notebook') {
                     this._isUpdateSelectedItem = true;
@@ -195,13 +202,16 @@ customElements.define('li-family', class LiFamily extends LiElement {
                         doc.ulid = LI.ulid();
                         doc._id = 'jupyter_cell:' + doc.ulid;
                         delete doc._rev;
-                        const part = this.setChangedCell(doc);
+                        const part = this.setChangedPart(doc, 'jupyter_cell');
                         this.selectedItem.notebook.cells.push(doc);;
                         this.selectedItem._parts.push(part);
                     })
                     setTimeout(() => this._isUpdateSelectedItem = false, 1000);
                 }
                 this.$update();
+            })
+            this.listen('changesPhases', (e) => {
+                this.setChangedPart(e.detail.doc, 'phases')
             })
         }, 1000);
     }
@@ -211,7 +221,7 @@ customElements.define('li-family', class LiFamily extends LiElement {
         }
     }
 
-    setChangedCell(doc, type = 'jupyter_cell') {
+    setChangedPart(doc, type) {
         doc._id ||= type + ':' + LI.ulid();
         this.changedItemsID ||= [];
         this.changedItemsID.add(doc._id);
@@ -279,6 +289,32 @@ customElements.define('li-family', class LiFamily extends LiElement {
             },
             'share notebook to new tab': () => {
                 jup.share();
+            },
+            'add phase date': () => {
+                this.selectedItem.phases ||= [];
+                let date = new Date().toISOString().split('T');
+                date = date[0] + 'T12:00';
+                const doc = { date1: date, isPeriod: false };
+                const item = this.setChangedPart(doc, 'phases')
+                this.selectedItem.phases.push(doc);
+            },
+            'add phase period': () => {
+                this.selectedItem.phases ||= [];
+                let date = new Date().toISOString().split('T');
+                date = date[0] + 'T12:00';
+                const doc = { date1: date, date2: date, isPeriod: true };
+                const item = this.setChangedPart(doc, 'phases')
+                this.selectedItem.phases.push(doc);
+            },
+            'delete phase': () => {
+                const phases = this.$qs('li-family-phases');
+                let idx = phases.idx;
+                if (idx >= 0) {
+                    this.selectedItem.phases.splice(idx, 1);
+                    phases.idx = idx > this.selectedItem.phases.length - 1 ? this.selectedItem.phases.length - 1 : idx;
+                    console.log(phases.idx)
+                    this.$update();
+                }
             }
         }
         action[id] && action[id]();
@@ -414,7 +450,7 @@ customElements.define('li-family-tree', class LiFamilyTree extends LiElement {
     }
 })
 
-customElements.define('li-family-phase', class LiFamilyPhase extends LiElement {
+customElements.define('li-family-phases', class LiFamilyPhase extends LiElement {
     static get styles() {
         return css`
             :host {
@@ -422,58 +458,54 @@ customElements.define('li-family-phase', class LiFamilyPhase extends LiElement {
                 flex-direction: column;
                 flex: 1;
                 padding: 4px;
-                color: gray;
-             }
-        `;
-    }
-
-    render() {
-        return html`
-
-        `
-    }
-
-    static get properties() {
-        return {
-            props: { type: String, default: 'li-phase' },
-
-        }
-    }
-})
-
-customElements.define('li-family-phase-row', class LiFamilyPhase extends LiElement {
-    static get styles() {
-        return css`
-            :host {
-                display: flex;
-                flex-direction: column;
-                flex: 1;
-                padding: 4px;
-                color: gray;
+                box-sizing: border-box;
              }
              input {
                 border: none;
                 border-bottom: 1px solid lightgray; 
                 outline: none; 
                 width: 100%; 
-                color: blue; 
-                font-size: 18;
+                color: gray; 
+                font-size: 16;
                 font-family: Arial;
+                background-color: transparent;
+                cursor: pointer;
             }
         `;
     }
 
     render() {
         return html`
-            <span>birthday: </span><input type="datetime-local">
-            <span>death date: </span><input type="datetime-local">
+            ${(this.selectedItem?.phases || []).map((doc, idx) => html`
+                <div @pointerdown=${() => this.idx = idx} style="padding: 4px; border: 1px solid ${idx === this.idx ? 'blue' : 'lightgray'}; border-radius: 4px; margin-bottom: 4px; background-color: hsla(${doc.isPeriod ? 180 : 90}, 70%, 70%, .2)">
+                    <input value=${doc.label} @change=${e => this.onchange(e, doc, idx, 'label')}>
+                    <input type="datetime-local" value=${doc.date1} @change=${e => this.onchange(e, doc, idx, 'date1')}>
+                    ${doc.isPeriod ? html`
+                        <input type="datetime-local" value=${doc.date2} @change=${e => this.onchange(e, doc, idx, 'date2')}>
+                    ` : html``}
+                </div>
+            `)}
         `
     }
 
     static get properties() {
         return {
-            props: { type: String, default: 'li-phase' },
-
+            idx: { type: Number, default: -1 },
+            selectedItem: { type: Object, local: true },
+            // starItem: { type: Object, local: true },
+            // changedItemsID: { type: Array, defauLt: [], local: true },
+            // changedItems: { type: Object, default: {}, local: true },
+            // deletedItemsID: { type: Array, defauLt: [], local: true },
+            // deletedItems: { type: Object, defauLt: {}, local: true },
+        }
+    }
+    firstUpdated() {
+        super.firstUpdated();
+    }
+    onchange(e, doc, idx, key) {
+        if (idx === this.idx) {
+            this.selectedItem.phases[idx][key] = e.target.value;
+            this.fire('changesPhases', { type: 'changesPhases', change: 'setValue', value: e.target.value, idx, doc, sourceEvent: e })
         }
     }
 })

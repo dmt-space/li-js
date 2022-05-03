@@ -154,12 +154,17 @@ export const updateSelectedItem = async (self) => {
             // let doc = lzs ? lzs = JSON.parse(lzs) : i.doc;
             let doc = i.doc;
             const item = new ITEM(doc, { type: doc.type });
-            if (doc.type === 'notebook') {
-                self.selectedItem.notebook = { ...selectedItem.notebook, ...doc };
-            }
+            // if (doc.type === 'notebook') {
+            //     self.selectedItem.notebook = { ...selectedItem.notebook, ...doc };
+            // }
             if (doc.type === 'jupyter_cell') {
                 self.selectedItem.notebook.cells ||= [];
                 self.selectedItem.notebook.cells.push(doc);
+                self.selectedItem._parts.push(item);
+            }
+            if (doc.type === 'phases') {
+                self.selectedItem.phases ||= [];
+                self.selectedItem.phases.push(doc);
                 self.selectedItem._parts.push(item);
             }
         }
