@@ -406,7 +406,7 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
                     <div style="width: 14px">${y + 1}</div>
                     <div class="year">
                         ${this.arr(52).map(w => html`
-                            <div class="week"></div>
+                            <li-family-week class="week" y=${y} w=${w}></li-family-week>
                         `)}
                     </div>
                 </div>
@@ -414,14 +414,39 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
         `
     }
 
-    static get properties() {
-        return {
-
-        }
-    }
-
     arr(count) {
         return [...Array(count).keys()];
+    }
+})
+
+customElements.define('li-family-week', class LiFamilyWeek extends LiElement {
+    static get styles() {
+        return css`
+
+        `;
+    }
+
+    render() {
+        return html`
+            <div class="week" style="background: ${this.y >= 6 && this.y <= 13 ? 'lightgreen' : this.y >= 14 && this.y <= 17 ? 'lightblue' : ''}; width: 100%; height: 100%; opacity: .3"></div>
+        `
+    }
+
+    get timeStart() {
+        const MS_DAY = 1000 * 60 * 60 * 24;
+        return this.y * MS_DAY * 365 + this.w * MS_DAY;
+    }
+    get timeEnd() {
+        const MS_DAY = 1000 * 60 * 60 * 24;
+        return this.y * MS_DAY * 365 + this.w * MS_DAY + 7 * MS_DAY;
+    }
+
+    static get properties() {
+        return {
+            selectedItem: { type: Object, local: true },
+            y: { type: Number },
+            w: { type: Number }
+        }
     }
 })
 
@@ -478,7 +503,10 @@ customElements.define('li-family-phases', class LiFamilyPhase extends LiElement 
         return html`
             ${(this.selectedItem?.phases || []).map((doc, idx) => html`
                 <div @pointerdown=${() => this.idx = idx} style="padding: 4px; border: 1px solid ${idx === this.idx ? 'blue' : 'lightgray'}; border-radius: 4px; margin-bottom: 4px; background-color: hsla(${doc.isPeriod ? 180 : 90}, 70%, 70%, .2)">
-                    <input value=${doc.label} @change=${e => this.onchange(e, doc, idx, 'label')}>
+                    <div style="display: flex">
+                        <input value=${doc.label} @change=${e => this.onchange(e, doc, idx, 'label')}>
+                        <input type="color" value=${doc.color || '#ffffff'} @change=${e => this.onchange(e, doc, idx, 'color')} style="width: 22px; opacity: .5">
+                    </div>
                     <input type="datetime-local" value=${doc.date1} @change=${e => this.onchange(e, doc, idx, 'date1')}>
                     ${doc.isPeriod ? html`
                         <input type="datetime-local" value=${doc.date2} @change=${e => this.onchange(e, doc, idx, 'date2')}>
@@ -491,12 +519,7 @@ customElements.define('li-family-phases', class LiFamilyPhase extends LiElement 
     static get properties() {
         return {
             idx: { type: Number, default: -1 },
-            selectedItem: { type: Object, local: true },
-            // starItem: { type: Object, local: true },
-            // changedItemsID: { type: Array, defauLt: [], local: true },
-            // changedItems: { type: Object, default: {}, local: true },
-            // deletedItemsID: { type: Array, defauLt: [], local: true },
-            // deletedItems: { type: Object, defauLt: {}, local: true },
+            selectedItem: { type: Object, local: true }
         }
     }
     firstUpdated() {
