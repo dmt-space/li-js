@@ -29,13 +29,12 @@ customElements.define('li-family', class LiFamily extends LiElement {
         return html`
             <li-layout-app shift="0">
                 <div slot="app-top" class="header">
-                    <div style="flex:1"></div>${this.name || 'my-family'}<div style="flex:1"></div>
+                    <li-button id="reload" name="refresh" title="reload page"  @click="${this.btnClick}" style="padding: 0 8px"></li-button>
+                    <li-button id="readonly" name="edit" @click=${this.btnClick} title="enable edit" fill=${this.readOnly ? 'lightgray' : 'green'} color="${this.readOnly ? 'lightgray' : 'green'}" back="${this.readOnly ? 'transparent' : '#e9ffdb'}"></li-button>
                     ${this.readOnly ? html`` : html`
-                    <li-button id="save" name="save" title="save" @click=${this.btnClick} .fill="${this.needSave ? 'red' : ''}" color="${this.needSave ? 'red' : 'gray'}"></li-button>
+                        <li-button id="save" name="save" title="save" @click=${this.btnClick} .fill="${this.needSave ? 'red' : ''}" color="${this.needSave ? 'red' : 'gray'}"></li-button>
                     `}
-                    <li-button id="readonly" name="edit" @click=${this.btnClick} style="margin-right:8px" title="enable edit" fill=${this.readOnly ? 'lightgray' : 'green'} 
-                            color="${this.readOnly ? 'lightgray' : 'green'}" back="${this.readOnly ? 'transparent' : '#e9ffdb'}"></li-button>
-                    <li-button id="reload" name="refresh" title="reload page"  @click="${this.btnClick}" style="padding-right: 8px"></li-button>
+                    <div style="flex:1"></div>${this.name || 'my-family'}<div style="flex:1"></div>
                 </div>
                 <div slot="app-left" slot="app-main" style="display: flex; height: 100%; padding: 0 !important">
                     <li-panel-simple .src=${this.leftTabs} iconSize=24>
@@ -46,7 +45,7 @@ customElements.define('li-family', class LiFamily extends LiElement {
                 </div>
                 <div id="main" slot="app-main" style="display: flex; height: 100%;">
                     <li-panel-simple .src=${this.mainTabs} iconSize=24>
-                        <li-jupyter slot="notebook" .notebook=${this.selectedItem?.notebook}></li-jupyter>
+                        <li-jupyter slot="notebook" .notebook=${this.selectedItem?._notebook || this.selectedItem?.notebook}></li-jupyter>
                         <li-family-weeks slot="weeks"></li-family-weeks>
                         <li-family-tree slot="family tree" style="height: 100%:"></li-family-tree>
                     </li-panel-simple>
@@ -84,7 +83,6 @@ customElements.define('li-family', class LiFamily extends LiElement {
             changedItems: { type: Object, default: {}, local: true },
             deletedItemsID: { type: Array, defauLt: [], local: true },
             deletedItems: { type: Object, defauLt: {}, local: true },
-
             leftTabs: {
                 type: Object, default: {
                     open: true,
@@ -146,14 +144,8 @@ customElements.define('li-family', class LiFamily extends LiElement {
                         {
                             icon: 'apps', label: 'phase', labelOnSelected: true, title: 'phase',
                             btns: [
-                                { icon: 'add', title: 'add' }
-                            ],
-                        },
-                        {
-                            icon: 'settings',label: 'settings', labelOnSelected: true, title: 'settings',
-                            btns: [
-                                { icon: 'arrow-back' },
-                                { icon: 'arrow-forward' }
+                                { icon: 'done', title: 'add date' },
+                                { icon: 'done-all', title: 'add period' }
                             ],
                         }
                     ]
@@ -176,7 +168,7 @@ customElements.define('li-family', class LiFamily extends LiElement {
             this.panelSimpleClick(e);
         })
         setTimeout(() => {
-            LI.listen(document, 'changesJupyter', (e) =>{
+            LI.listen(document, 'changesJupyter', (e) => {
                 if (this._isUpdateSelectedItem || this.$qs('li-jupyter').ulid !== e?.detail?.jupyter.ulid) return;
                 const d = e.detail;
                 console.log(d)
@@ -188,18 +180,21 @@ customElements.define('li-family', class LiFamily extends LiElement {
                     } else {
                         this.setChangedCell(d.cell)
                     }
-                } else if(d.type === 'jupyter_notebook') {
+                } else if (d.type === 'jupyter_notebook') {
                     this._isUpdateSelectedItem = true;
                     if (d.change === 'addNotebook') {
                         this.selectedItem.notebook ||= { cells: [] };
                         this.selectedItem._parts ||= [];
                     } else {
+                        this.deletedItemsID ||= [];
+                        this.selectedItem.notebook?.cells?.map(cell => this.deletedItemsID.add(cell._id));
                         this.selectedItem.notebook = { cells: [] };
                         this.selectedItem._parts = [];
                     }
                     (d.notebook?.cells || []).map(doc => {
-                        const _id = 'jupyter_cell:' + (doc.ulid || LI.ulid());
-                        doc._id ||= _id;
+                        doc.ulid = LI.ulid();
+                        doc._id = 'jupyter_cell:' + doc.ulid;
+                        delete doc._rev;
                         const part = this.setChangedCell(doc);
                         this.selectedItem.notebook.cells.push(doc);;
                         this.selectedItem._parts.push(part);
@@ -217,14 +212,14 @@ customElements.define('li-family', class LiFamily extends LiElement {
     }
 
     setChangedCell(doc, type = 'jupyter_cell') {
-        const _id = doc._id;
+        doc._id ||= type + ':' + LI.ulid();
         this.changedItemsID ||= [];
-        this.changedItemsID.add(_id);
+        this.changedItemsID.add(doc._id);
         const item = new db.ITEM(doc, { type });
-        this.changedItems[_id] = item;
+        this.changedItems[doc._id] = item;
 
         this.selectedItem.doc.partsId ||= [];
-        this.selectedItem.doc.partsId.add(_id);
+        this.selectedItem.doc.partsId.add(doc._id);
 
         this.changedItemsID.add(this.selectedItem._id);
         this.changedItems[this.selectedItem._id] = this.selectedItem;
@@ -247,7 +242,7 @@ customElements.define('li-family', class LiFamily extends LiElement {
     _uploadFile(jup, add = false) {
         const input = document.createElement('input');
         input.type = 'file';
-        input.onchange = e => jup.loadFile(e, add); 
+        input.onchange = e => jup.loadFile(e, add);
         input.click();
     }
     panelSimpleClick(e) {
@@ -255,7 +250,7 @@ customElements.define('li-family', class LiFamily extends LiElement {
         const jup = this.$qs('li-jupyter');
         const action = {
             'list': () => {
-                setTimeout(() => {    
+                setTimeout(() => {
                     this.$qs('li-table')._resizeColumns();
                     this.$update();
                 }, 10);
@@ -325,7 +320,7 @@ customElements.define('li-family-items-tree', class LiFamilyItemsTree extends Li
             changedItemsID: { type: Array, local: true },
             changedItems: { type: Object, local: true },
             deletedItemsID: { type: Array, local: true },
-            deletedItems: { type: Object, local: true },
+            deletedItems: { type: Object, local: true }
         }
     }
     get _items() { return this.starItem || this.items }
@@ -361,7 +356,7 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
             }
         `;
     }
-    
+
     render() {
         return html`
             <div class="year" style="position: sticky; top: 0px; ; background: white; z-index: 9; border-bottom: 1px solid darkgray; align-items: center">
@@ -382,7 +377,7 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
             `)}
         `
     }
-    
+
     static get properties() {
         return {
 
@@ -405,13 +400,13 @@ customElements.define('li-family-tree', class LiFamilyTree extends LiElement {
              }
         `;
     }
-    
+
     render() {
         return html`
             <h3>${this.props}</h1>
         `
     }
-    
+
     static get properties() {
         return {
             props: { type: String, default: 'li-family-items-tree' },
@@ -431,17 +426,17 @@ customElements.define('li-family-phase', class LiFamilyPhase extends LiElement {
              }
         `;
     }
-    
+
     render() {
         return html`
 
         `
     }
-    
+
     static get properties() {
         return {
             props: { type: String, default: 'li-phase' },
-            
+
         }
     }
 })
@@ -467,18 +462,18 @@ customElements.define('li-family-phase-row', class LiFamilyPhase extends LiEleme
             }
         `;
     }
-    
+
     render() {
         return html`
             <span>birthday: </span><input type="datetime-local">
             <span>death date: </span><input type="datetime-local">
         `
     }
-    
+
     static get properties() {
         return {
             props: { type: String, default: 'li-phase' },
-            
+
         }
     }
 })

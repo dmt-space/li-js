@@ -5,7 +5,7 @@ export class ITEM {
         if (doc.label || props.label) this.doc.label ||= props.label;
         else if (this.doc.type === 'items') this.doc.label = '...';
         this.doc.ulid ||= LI.ulid();
-        this.doc._id ||= this.doc.type + ':' + this.doc.ulid ;
+        this.doc._id ||= this.doc.type + ':' + this.doc.ulid;
         this.doc.created ||= LI.dates(new Date(), true);
         this.items = [];
         Object.keys(props).forEach(key => this[key] = props[key]);
@@ -136,7 +136,14 @@ export const getSortItems = (self) => {
     }
 }
 export const updateSelectedItem = async (self) => {
-    if (self.selectedItem.notebook) return;
+    if (self.selectedItem.notebook) {
+        self.selectedItem._notebook = {};
+        setTimeout(() => {
+            self.selectedItem._notebook = undefined;
+            self.$update();
+        });
+        return;
+    }
     self._isUpdateSelectedItem = true;
     self.selectedItem.notebook = { cells: [] };
     self.selectedItem._parts = [];
@@ -148,7 +155,7 @@ export const updateSelectedItem = async (self) => {
             let doc = i.doc;
             const item = new ITEM(doc, { type: doc.type });
             if (doc.type === 'notebook') {
-                self.selectedItem.notebook = {...selectedItem.notebook, ...doc };
+                self.selectedItem.notebook = { ...selectedItem.notebook, ...doc };
             }
             if (doc.type === 'jupyter_cell') {
                 self.selectedItem.notebook.cells ||= [];
@@ -195,7 +202,7 @@ export const save = async (self) => {
                 res.add(doc);
             } else {
                 //let lzs = LZString.compressToUTF16(JSON.stringify(doc));
-                res.add({ ...doc  })
+                res.add({ ...doc })
             }
         })
         checkDoc(res);
