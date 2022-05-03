@@ -115,7 +115,7 @@ customElements.define('li-family', class LiFamily extends LiElement {
                         {
                             icon: 'edit', label: 'notebook', labelOnSelected: true, title: 'notebook',
                             btns: [
-                                { icon: 'close', title: 'delete notebook' },
+                                { icon: 'delete', title: 'delete notebook' },
                                 { icon: 'crop-3-2', title: 'cells border' },
                                 { icon: 'add', title: 'add uploaded notebook (json)' },
                                 { icon: 'file-upload', title: 'upload notebook (json)' },
@@ -204,9 +204,7 @@ customElements.define('li-family', class LiFamily extends LiElement {
                         this.selectedItem.notebook.cells.push(doc);;
                         this.selectedItem._parts.push(part);
                     })
-                    setTimeout(() => {
-                        this._isUpdateSelectedItem = false;
-                    }, 1000);
+                    setTimeout(() => this._isUpdateSelectedItem = false, 1000);
                 }
                 this.$update();
             })
@@ -263,8 +261,10 @@ customElements.define('li-family', class LiFamily extends LiElement {
                 }, 10);
             },
             'delete notebook': () => {
-                this.selectedItem.notebook = { cells: [] };
-                this.selectedItem._parts = [];
+                if (window.confirm(`Do you really want delete all cells ?`)) {
+                    this.selectedItem.notebook = { cells: [] };
+                    this.selectedItem._parts = [];
+                }
 
             },
             'cells border': () => {

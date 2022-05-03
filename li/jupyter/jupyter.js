@@ -49,6 +49,7 @@ customElements.define('li-jupyter', class LiJupyter extends LiElement {
             editedIndex: { type: Number, default: -1, local: true },
             jupiterUrl: { type: String, local: true },
             collapsed: { type: Boolean, local: true },
+            _isChanged: { type: Boolean, local: true }
         }
     }
     get jupiterUrl() { return this.$url }
@@ -308,7 +309,8 @@ customElements.define('li-jupyter-cell', class LiJupyterCell extends LiElement {
             collapsed: { type: Boolean, local: true },
             focusedControl: { type: Boolean },
             focusedIndex: { type: Number, local: true },
-            editedIndex: { type: Number, local: true }
+            editedIndex: { type: Number, local: true },
+            _isChanged: { type: Boolean, local: true }
         }
     }
     get focused() { return !this.readOnly && this.focusedIndex === this.idx ? 'focused' : '' }
@@ -335,9 +337,13 @@ customElements.define('li-jupyter-cell', class LiJupyterCell extends LiElement {
     }
     firstUpdated() {
         super.firstUpdated();
-        this.listen('change', (e) => {
-            LI.fire(document, 'changed', { type: 'jupyter_cell', change: 'setCellType' , value: this.cell, notebook: this.notebook } );
-        })
+        setTimeout(() => {
+            this.listen('change', (e) => {
+                if (!this._isChanged) {
+                    LI.fire(document, 'changed', { type: 'jupyter_cell', change: 'changeCellValue' , value: this.cell, notebook: this.notebook } );
+                }
+            })
+        }, 500);
     }
     click(e) {
         if (this.readOnly) return;
@@ -395,25 +401,29 @@ customElements.define('li-jupyter-cell-toolbar', class LiJupyterCellToolbar exte
             showSettings: { type: Boolean },
             focusedControl: { type: Boolean },
             focusedIndex: { type: Number, local: true },
-            editedIndex: { type: Number, local: true }
+            editedIndex: { type: Number, local: true },
+            _isChanged: { type: Boolean, local: true }
         }
     }
 
     tapOrder(e, v) {
+        this._isChanged = true;
         const cells = this.notebook.cells.splice(this.idx, 1);
         let idx = this.idx + v;
         idx = idx < 0 ? 0 : idx > this.notebook.cells.length ? this.notebook.cells.length : idx;
         this.notebook.cells.splice(idx, 0, cells[0])
         this.focusedIndex = idx;
         this.$update();
+        LI.fire(document, 'changed', { type: 'jupyter_cell', change: 'moveCell' , value: this.cell, notebook: this.notebook } );
+        setTimeout(() => this._isChanged = false, 1000);
     }
     tapDelete() {
         if (window.confirm(`Do you really want delete current cell ?`)) {
             this.cell._deleted = true;
             this.notebook.cells.splice(this.idx, 1);
             this.focusedIndex = (this.idx > this.notebook.cells.length - 1) ? this.notebook.cells.length - 1 : this.idx;
-            LI.fire(document, 'changed', { type: 'jupyter_cell', change: 'deleteCell' , value: this.cell, notebook: this.notebook } );
             this.$update();
+            LI.fire(document, 'changed', { type: 'jupyter_cell', change: 'deleteCell' , value: this.cell, notebook: this.notebook } );
         }
     }
     share() {
