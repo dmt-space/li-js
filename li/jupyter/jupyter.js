@@ -104,15 +104,18 @@ customElements.define('li-jupyter', class LiJupyter extends LiElement {
         this.notebook.cells = [];
         this.$update();
     }
-    loadFile(e) {
+    loadFile(e, add) {
         const file = e.target.files[0];
         const reader = new FileReader();
-        reader.onload = async e => this.notebook = JSON.parse(e.target.result);
+        reader.onload = async (e) => {
+            this.notebook = JSON.parse(e.target.result);
+            this.$update();
+            LI.fire(document, 'changed', { type: 'jupyter_notebook', change: add ? 'addNotebook' : 'loadNotebook', notebook: this.notebook } );
+        }
         reader.readAsText(file, 'UTF-8');
-        this.$update();
     }
     async saveFile(e) {
-        let str = JSON.stringify(this.notebook);
+        let str = JSON.stringify(this.notebook, null, '\t');
         if (!str) return;
         const blob = new Blob([str], { type: "text/plain" });
         const a = document.createElement("a");

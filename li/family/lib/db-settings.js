@@ -75,8 +75,7 @@ customElements.define('li-db-settings', class LiDbSettings extends LiElement {
             dbLocal: { type: Object, local: true },
             dbRemote: { type: Object, local: true },
             replicationHandler: { type: Object, local: true },
-            selectedArticle: { type: Object, local: true },
-            flatArticles: { type: Object, local: true }
+            selectedItem: { type: Object, local: true }
         }
     }
     get newName() { return this._newName || this.name + '_copy' }
@@ -162,10 +161,10 @@ customElements.define('li-db-settings', class LiDbSettings extends LiElement {
                     const
                         keys = [],
                         root = '$wiki:articles',
-                        parent = this.selectedArticle._id,
-                        arr = LIUtils.arrAllChildren(this.selectedArticle);
+                        parent = this.selectedItem._id,
+                        arr = LIUtils.arrAllChildren(this.selectedItem);
                     keys.add(parent);
-                    (this.selectedArticle.doc.partsId || []).map(id => keys.add(id));
+                    (this.selectedItem.doc.partsId || []).map(id => keys.add(id));
                     arr.map(i => {
                         if (i.checked) {
                             keys.add(i._id);
@@ -179,7 +178,7 @@ customElements.define('li-db-settings', class LiDbSettings extends LiElement {
                                 if (doc.parentId === parent) doc.parentId = root;
                                 if (doc._id === parent) doc._id = root;
                             })
-                            saveFile(doc.rows.map(({ doc }) => doc), this.selectedArticle.label);
+                            saveFile(doc.rows.map(({ doc }) => doc), this.selectedItem.label);
                         }
                     })
                 }
@@ -202,7 +201,7 @@ customElements.define('li-db-settings', class LiDbSettings extends LiElement {
                                 if (i._id === '$wiki:articles') {
                                     i._id = 'articles:' + ulid;
                                     i.ulid = LI.ulid();
-                                    i.parentId = this.selectedArticle._id;
+                                    i.parentId = this.selectedItem._id;
                                 }
                                 if (i.parentId === '$wiki:articles') i.parentId = 'articles:' + ulid;
                             })
@@ -234,12 +233,12 @@ customElements.define('li-db-settings', class LiDbSettings extends LiElement {
                 }
                 let items;
                 const copy_selected = this.$qs('#copy-selected').toggled;
-                const parent = this.selectedArticle._id;
+                const parent = this.selectedItem._id;
                 if (copy_selected) {
                     const keys = [];
-                    const arr = LIUtils.arrAllChildren(this.selectedArticle);
+                    const arr = LIUtils.arrAllChildren(this.selectedItem);
                     keys.add(parent);
-                    (this.selectedArticle.doc.partsId || []).map(id => keys.add(id));
+                    (this.selectedItem.doc.partsId || []).map(id => keys.add(id));
                     arr.map(i => {
                         if (i.checked) {
                             keys.add(i._id);
