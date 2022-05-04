@@ -64,8 +64,11 @@ customElements.define('li-jupyter', class LiJupyter extends LiElement {
         super.firstUpdated();
         LI.listen(document, 'setFocusedIndex', (e) => {
             setTimeout(() => {         
-                this.focusedIndex = +e.detail;
-                this.$update();
+                this.focusedIndex = +e.detail.idx;
+                setTimeout(() => {         
+                    this.editedIndex = +e.detail.editedIdx;
+                    this.$update();
+                }, 100);
             }, 100);
         })
     }
@@ -186,6 +189,7 @@ customElements.define('li-jupyter-cell-addbutton', class LiJupyterAddButton exte
     }
 
     async showCellViews(view) {
+        this.editedIndex = -1;
         const res = await LI.show('dropdown', new LiJupyterListViews, { jupyter: this.jupyter, notebook: this.notebook, cell: this.cell, position: this.position, view, idx: this.idx }, { parent: this.$qs('li-button'), showHeader: true, label: view + ' cell' });
         if (res && view === 'add') this.editedIndex = -1;
         this.$update();
@@ -245,11 +249,14 @@ class LiJupyterListViews extends LiElement {
     addCell(item) {
         this.jupyter._isChanged = true;
         let idx = this.idx;
+        let editedIdx = -1;
         if (this.view === 'add') {
             idx = this.position === 'top' ? idx : idx + 1;
+            idx ||= 0;
             const cell = { ulid: LI.ulid(), type: 'jupyter_cell', cell_type: item.cell_type, cell_extType: item.cell_extType, source: item.source, label: item.label };
             this.notebook.cells ||= [];
             this.notebook.cells.splice(idx, 0, cell);
+            editedIdx = this.notebook.cells.length === 1 ? 0 : -1;
             LI.fire(document, 'changesJupyter', { type: 'jupyter_cell', change: 'addCell' , cell: cell, notebook: this.notebook, jupyter: this.jupyter } );
         } else if (this.view === 'select type') {
             const cell = { ...this.cell, ...{ cell_type: item.cell_type, cell_extType: item.cell_extType, label: item.label } };
@@ -257,8 +264,10 @@ class LiJupyterListViews extends LiElement {
             this.notebook.cells.splice(idx, 1, cell);
         }
         LI.fire(document, 'ok', item);
-        LI.fire(document, 'setFocusedIndex', idx);
-        setTimeout(() => this.jupyter._isChanged = false, 500);
+        LI.fire(document, 'setFocusedIndex', { idx, editedIdx });
+        setTimeout(() => {
+            this.jupyter._isChanged = false;
+        }, 500);
     }
 }
 customElements.define('li-jupyter-list-views', LiJupyterListViews);
@@ -544,8 +553,8 @@ customElements.define('li-jupyter-cell-code', class LiJupyterCellCode extends Li
 
     render() {
         return html`
-            <div style="display: flex; flex-direction: column; width: 100%; height: ${this.cell?.cell_h || 'unset'}; min-height: 24px; overflow: auto; padding: 2px 2px 0 2px">
-                <li-editor-ace style="width: 100%; height: 100%; min-height: 0px" theme=${!this.readOnly && this.editedIndex === this.idx ? 'solarized_light' : 'dawn'} mode="javascript"></li-editor-ace>    
+            <div style="display: flex; flex-direction: column; width: 100%; height: ${!this.readOnly && this.editedIndex === this.idx ? '80vh' : this.cell?.cell_h || 'unset'}; min-height: 24px; overflow: auto; padding: 2px 2px 0 2px">
+                <li-editor-ace style="width: 100%; height: '100%'; min-height: 0px" theme=${!this.readOnly && this.editedIndex === this.idx ? 'solarized_light' : 'dawn'} mode="javascript"></li-editor-ace>    
                 <li-splitter direction="horizontal" size="${this.cell?.splitterH >= 0 ? this.cell?.splitterH : 2}px" color="transparent" style="opacity: .3" resize></li-splitter>
                 <div style="display: flex; overflow: auto; width: 100%; max-height: 0px;"></div>
             </div>
@@ -682,7 +691,7 @@ customElements.define('li-jupyter-cell-html-executable', class LiJupyterCellHtml
 
     render() {
         return html`
-            <div style="position: relative; display: flex; flex-direction: column; overflow: hidden; width: 100%; height: ${this.cell?.cell_h || '200px'}; min-height: 26px; padding: 2px 2px 0 2px;">
+            <div style="position: relative; display: flex; flex-direction: column; overflow: hidden; width: 100%; height: ${!this.readOnly && this.editedIndex === this.idx ? '80vh' : this.cell?.cell_h || '200px'}; min-height: 26px; padding: 2px 2px 0 2px;">
                 <div style="display: flex; overflow: hidden; width: 100%; height: 100%">
                     <div style="width: ${this.cell?.cell_w === 0 || this.cell?.cell_w > 0 ? this.cell?.cell_w + '%' : '50%'}; overflow: auto">
                         <div style="display: flex; flex-direction: column; width: 100%; overflow: auto; height: 100%; position: relative">
