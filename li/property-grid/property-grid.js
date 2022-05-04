@@ -140,7 +140,7 @@ customElements.define('li-property-grid', class LiPropertyGrid extends LiElement
                             <li-button class="btn" ?toggled="${this.group}" toggledClass="ontoggled" name="list" title="group" @click="${this._group}"></li-button>
                             <li-button class="btn" ?toggled="${this.showFunction}" toggledClass="ontoggled" name="functions" title="showFunction" @click="${this._fn}"></li-button>
                         `}
-                        <li-button class="btn" ?toggled="${this._expertMode}" toggledClass="ontoggled" width="2px" title="expertMode" @click="${(e) => this._showButtons = !this._showButtons}"></li-button>
+                        <li-button class="btn" ?toggled="${this._expertMode}" toggledClass="ontoggled" width="2px" title="show buttons" @click="${(e) => this._showButtons = !this._showButtons}" back="darkgray"></li-button>
                         <li-button class="btn" ?toggled="${this.expertMode}" toggledClass="ontoggled" name="settings" title="expertMode" @click="${(e) => this._expert(e, true)}"></li-button>
                     `}
                 </div>
