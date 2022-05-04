@@ -53,7 +53,7 @@ customElements.define('li-dropdown', class LiDropdown extends LiElement {
             useParentWidth: { type: Boolean, default: false, reflect: true },
             intersect: { type: Boolean, default: false, reflect: true },
             minWidth: { type: Number, default: undefined, reflect: true },
-            minHeight: { type: Number, default: 80, reflect: true },
+            minHeight: { type: Number, default: 240, reflect: true },
             addWidth: { type: Number, default: 0, reflect: true },
             label: { type: String, default: '' },
             showHeader: { type: Boolean }
@@ -216,6 +216,7 @@ customElements.define('li-dropdown', class LiDropdown extends LiElement {
         maxHeight = maxHeight > winHeight ? winHeight : maxHeight;
         minWidth = minWidth > maxWidth ? maxWidth : minWidth;
         minHeight = minHeight > maxHeight ? maxHeight : minHeight;
+        if (height < minHeight) minHeight = height;
 
         size = { ...size, ...{ maxWidth, minWidth, minHeight, maxHeight } };
         if (!size.hasOwnProperty('bottom')) size.top = top;
