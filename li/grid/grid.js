@@ -56,11 +56,11 @@ customElements.define('li-grid', class LiGrid extends LiElement {
                 <div class="panel-left" style="width: ${this.left}px">
                     <li-grid-table .columns=${this.colLeft} type="left"></li-grid-table>
                 </div>
-                <li-splitter id="grid-splitter-left" color="lightgray" size="2px" use_px></li-splitter>
+                <li-splitter id="grid-splitter-left" color="lightgray" size="2" use_px></li-splitter>
                 <div class="panel-main">
                     <li-grid-table .columns=${this.colMain} type="main"></li-grid-table>
                 </div>
-                <li-splitter id="grid-splitter-right" color="lightgray" size="2px" use_px reverse></li-splitter>
+                <li-splitter id="grid-splitter-right" color="lightgray" size="2" use_px reverse></li-splitter>
                 <div class="panel-right" style="width: ${this.right}px">
                     <li-grid-table .columns=${this.colRight} type="right"></li-grid-table>
                 </div>
@@ -171,7 +171,7 @@ customElements.define('li-grid-header', class LiGridRow extends LiElement {
             ${this.columns?.map(i => html`
                 <li-grid-header-cell .item=${i} class="cell" style="width: ${i.width || 'unset'}; flex: ${i.hideSplitter ? '1' : 'unset'}; overflow: hidden" type=${this.type} level=${this.level}>${i.name || '...'}</li-grid-header-cell>
                 ${i.hideSplitter ? html `` : html`
-                    <li-splitter use_px color="gray" size="1px"></li-splitter>
+                    <li-splitter use_px color="gray" size="1"></li-splitter>
                 `}
             `)}
         `;

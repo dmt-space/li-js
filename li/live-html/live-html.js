@@ -51,7 +51,7 @@ customElements.define('li-live-html', class LiLiveHTML extends LiElement {
                 <div class="main-panel ${this.onlyPreview || this._widthL <= 1 ? 'hidden' : ''}" style="width:${this._widthL}%; overflow: hidden">
                     <li-editor-iframe id="editor" @change=${this._change} src=${this.src} mode="html" currentEditor=${this.currentEditor}></li-editor-iframe>
                 </div>
-                <li-splitter color="white" size="4px" @endSplitterMove=${e => this._widthL = e.detail.w} class="${this.onlyPreview ? 'hidden' : ''}"></li-splitter>
+                <li-splitter color="white" size="4" @endSplitterMove=${e => this._widthL = e.detail.w} class="${this.onlyPreview ? 'hidden' : ''}"></li-splitter>
                 <div class="main-panel ${this._widthL >= 99 ? 'hidden' : ''}" style="flex: 1">
                     <iframe id="iframe" class="${this._action === 'splitter-move' ? 'iframe-pe' : ''}" src=${this.srcIframe || ''} style="width: 100%; border: none; height: -webkit-fill-available" .hidden=${!this._ready}></iframe>
                 </div>
