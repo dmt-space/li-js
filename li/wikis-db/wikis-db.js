@@ -156,13 +156,13 @@ customElements.define('li-wikis-db', class LiWikisDB extends LiElement {
                 this.$update();
             }
             this.notebook = undefined;
-            // if (this.selectedArticle.notebook) {
-            //     setTimeout(() => {
-            //         this.notebook = this.selectedArticle.notebook;
-            //         this.$update();
-            //     }, 100);
-            //     return;
-            // }
+            if (this.selectedArticle.notebook && this.needSave) {
+                setTimeout(() => {
+                    this.notebook = this.selectedArticle.notebook;
+                    this.$update();
+                }, 100);
+                return;
+            }
             this.selectedArticle._items = [];
             this.selectedArticle.notebook = { cells: icaro([]) };
             const parts = await this.dbLocal.allDocs({ keys: this.selectedArticle.partsId || [], include_docs: true });
