@@ -143,7 +143,7 @@ customElements.define('li-db-settings', class LiDbSettings extends LiElement {
             },
             export: async (e) => {
                 let saveFile = async (json, name) => {
-                    let str = JSON.stringify(json);
+                    let str = JSON.stringify(json, null, 4);
                     if (!str || !name) return;
                     const blob = new Blob([str], { type: "text/plain" });
                     const a = document.createElement("a");
@@ -160,7 +160,7 @@ customElements.define('li-db-settings', class LiDbSettings extends LiElement {
                 } else {
                     const
                         keys = [],
-                        root = '$wiki:articles',
+                        root = '$db:items',
                         parent = this.selectedItem._id,
                         arr = LIUtils.arrAllChildren(this.selectedItem);
                     keys.add(parent);
@@ -198,17 +198,17 @@ customElements.define('li-db-settings', class LiDbSettings extends LiElement {
                         if (importToFocused) {
                             const ulid = LI.ulid();
                             result.forEach(i => {
-                                if (i._id === '$wiki:articles') {
-                                    i._id = 'articles:' + ulid;
+                                if (i._id === '$db:items') {
+                                    i._id = 'items:' + ulid;
                                     i.ulid = LI.ulid();
                                     i.parentId = this.selectedItem._id;
                                 }
-                                if (i.parentId === '$wiki:articles') i.parentId = 'articles:' + ulid;
+                                if (i.parentId === '$db:items') i.parentId = 'items:' + ulid;
                             })
                         }
                         if (!importToFocused) {
-                            this.dbLocal = new PouchDB('lidb_' + this.name);
-                            this.dbRemote = new PouchDB(this.url + 'lidb_' + this.name);
+                            this.dbLocal = new PouchDB('lfdb_' + this.name);
+                            this.dbRemote = new PouchDB(this.url + 'lfdb_' + this.name);
                             if (this.replication) this.replicationHandler = this.dbLocal.sync(this.dbRemote, { live: true });
                         }
                         await this.dbLocal.bulkDocs(
@@ -225,7 +225,7 @@ customElements.define('li-db-settings', class LiDbSettings extends LiElement {
                 }
             },
             copy: async () => {
-                const prefix = this.prefix || 'lidb_';
+                const prefix = this.prefix || 'lfdb_';
                 const dbLocalNew = new PouchDB(prefix + this.newName);
                 if (this.$qs('#copy-replicate').toggled) {
                     const dbRemoteNew = new PouchDB(this.url + prefix + this.newName);
@@ -250,7 +250,7 @@ customElements.define('li-db-settings', class LiDbSettings extends LiElement {
                     items = await this.dbLocal.allDocs({ include_docs: true });
                 }
                 const res = [];
-                const root = '$wiki:articles'
+                const root = '$db:items'
                 items.rows.map(i => {
                     if (i.doc) {
                         if (copy_selected) {
@@ -258,10 +258,10 @@ customElements.define('li-db-settings', class LiDbSettings extends LiElement {
                             if (i.doc._id === parent) i.doc._id = root;
                         }
                         delete i.doc._rev;
-                        if (i.doc._id.startsWith('editors')) {
+                        if (!i.doc._id.startsWith('items') && !i.doc._id.startsWith('$db')) {
                             let lzs = LZString.decompressFromUTF16((i.doc.lzs || ''))
                             let doc = lzs ? JSON.parse(lzs) : i.doc;
-                            lzs = LZString.compressToUTF16(JSON.stringify(doc));
+                            lzs = LZString.compressToUTF16(JSON.stringify(doc, null, 4));
                             res.add({ _id: i.doc._id, lzs })
                         } else {
                             res.add({ ...i.doc });

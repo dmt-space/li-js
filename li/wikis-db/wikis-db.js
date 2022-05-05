@@ -138,23 +138,72 @@ customElements.define('li-wikis-db', class LiWikisDB extends LiElement {
                 this.firstInit();
             }
         }, 100);
+        setTimeout(() => {
+            LI.listen(document, 'changesJupyter', (e) => {
+                if (this._isUpdateSelectedItem) return;
+                // if (this._isUpdateSelectedItem || this.$qs('li-jupyter').ulid !== e?.detail?.jupyter.ulid) return;
+                this._isUpdateSelectedItem = true;
+                const d = e.detail;
+                console.log(d)
+                if (d.type === 'jupyter_cell') {
+                    const _id = d.cell._id || 'editors:' + d.cell.ulid;
+                    if (d.change === 'deleteCell') {
+                        this.deletedItemsID ||= [];
+                        this.deletedItemsID.add(_id);
+                    } else if (d.change === 'moveCell') {
+                        const partsId = [];
+                        this.notebook.cells.map (i => {
+                            partsId.push(i._id);
+                        })
+                        this.selectedArticle.doc.partsId = partsId;
+                        this.changedItemsID ||= [];
+                        this.changedItemsID.add(this.selectedArticle._id);
+                        this.changedItems[this.selectedArticle._id] = this.selectedArticle;
+                    } else {
+                        this.setChangedPart(d.cell, 'editors')
+                    }
+                } else if (d.type === 'jupyter_notebook') {
+                    this._isUpdateSelectedItem = true;
+                    if (d.change === 'addNotebook') {
+                        this.selectedArticle.notebook ||= { cells: [] };
+                        this.selectedArticle._parts ||= [];
+                    } else {
+                        this.deletedItemsID ||= [];
+                        this.selectedArticle.notebook?.cells?.map(cell => this.deletedItemsID.add(cell._id));
+                        this.selectedArticle.notebook = { cells: [] };
+                        this.selectedArticle._parts = [];
+                    }
+                    (d.notebook?.cells || []).map(doc => {
+                        doc.ulid = LI.ulid();
+                        doc._id = 'editors:' + doc.ulid;
+                        delete doc._rev;
+                        const part = this.setChangedPart(doc, 'editors');
+                        this.selectedArticle.notebook.cells.push(doc);;
+                        this.selectedArticle._parts.push(part);
+                    })
+                }
+                setTimeout(() => this._isUpdateSelectedItem = false, 1000);
+                this.$update();
+            })
+        }, 1000);
+    }
+    setChangedPart(doc, type) {
+        doc._id ||= type + ':' + LI.ulid();
+        this.changedItemsID ||= [];
+        this.changedItemsID.add(doc._id);
+        const item = new ITEM(doc, { type });
+        this.changedItems[doc._id] = item;
+
+        this.selectedArticle.doc.partsId ||= [];
+        this.selectedArticle.doc.partsId.add(doc._id);
+
+        this.changedItemsID.add(this.selectedArticle._id);
+        this.changedItems[this.selectedArticle._id] = this.selectedArticle;
+        //this.selectedArticle.cells = d.notebook?.cells;
+        return item;
     }
     async updated(e) {
         if (e.has('selectedArticle')) {
-            const fn = (e, item) => {
-                if (this.readOnly) return;
-                e.forEach((value, key) => {
-                    if (key === '_deleted' && value) {
-                        this.deletedItemsID.add(item._id);
-                        this.deletedItems[item._id] = item;
-                    } else {
-                        item.doc[key] = value;
-                        this.changedItemsID.add(item._id);
-                        this.changedItems[item._id] = item;
-                    }
-                });
-                this.$update();
-            }
             this.notebook = undefined;
             if (this.selectedArticle.notebook && this.needSave) {
                 setTimeout(() => {
@@ -164,55 +213,21 @@ customElements.define('li-wikis-db', class LiWikisDB extends LiElement {
                 return;
             }
             this.selectedArticle._items = [];
-            this.selectedArticle.notebook = { cells: icaro([]) };
+            this.selectedArticle.notebook = { cells: [] };
             const parts = await this.dbLocal.allDocs({ keys: this.selectedArticle.partsId || [], include_docs: true });
             parts.rows.map((i, idx) => {
                 if (i.doc) {
                     let lzs = LZString.decompressFromUTF16((i.doc.lzs || ''))
                     let doc = lzs ? lzs = JSON.parse(lzs) : i.doc;
+                    doc.source = doc.source || doc.value || '';
+                    doc.cell_name = doc.cell_name || doc.name;
+                    doc.cell_h = doc.cell_h || doc.h;
+                    doc.cell_w = doc.cell_w >= 0 ? doc.cell_w : doc.w || '';
+                    doc.sourceHTML = doc.sourceHTML || (doc.label === 'iframe' ? doc.value : '');
                     const item = new ITEM(doc, { type: 'editors', isUse: true });
                     this.selectedArticle._items.push(item);
-                    const cell = icaro({
-                        _id: item._id,
-                        label: doc.label,
-                        cell_name: doc.cell_name || doc.name,
-                        source: doc.source || doc.value || '',
-                        cell_h: doc.cell_h || doc.h,
-                        cell_w: doc.cell_w >= 0 ? doc.cell_w : doc.w || '',
-                        cell_type: doc.cell_type,
-                        sourceHTML: doc.sourceHTML || (doc.label === 'iframe' ? doc.value : ''),
-                        sourceJS: doc.sourceJS || '',
-                        sourceCSS: doc.sourceCSS || '',
-                        sourceJSON: doc.sourceJSON || '{}',
-                        useJson: doc.useJson || false,
-                        'li-editor-ace': doc['li-editor-ace'] || '',
-                        'li-editor-monaco': doc['li-editor-monaco'] || ''
-                    })
-                    this.selectedArticle.notebook.cells.push(cell);
-                    cell.listen(e => fn(e, item));
+                    this.selectedArticle.notebook.cells.push(doc);
                 }
-            })
-            this.selectedArticle.notebook.cells.listen((e) => {
-                if (this.readOnly) return;
-                this.selectedArticle.doc.partsId = [];
-                this.selectedArticle.notebook.cells.map((i, idx) => {
-                    if (!i._id) {
-                        const name = i.cell_name || (i.cell_type === 'markdown' ? 'showdown'
-                            : i.cell_type === 'html' || i.cell_type === 'html-cde' || i.cell_type === 'code' ? 'html'
-                                : i.cell_type === 'html-executable' ? 'iframe' : 'showdown');
-                        const item = new ITEM({ name, h: i.cell_h, cell_type: i.cell_type, label: i.label }, { type: 'editors' });
-                        this.selectedArticle._items.push(item);
-                        i._id = item._id
-                        i = icaro({ ...{}, ...i });
-                        i.listen(e => fn(e, item));
-                        this.selectedArticle.notebook.cells[idx] = i;
-                        this.changedItemsID.add(item._id);
-                        this.changedItems[item._id] = item;
-                    }
-                    this.selectedArticle.doc.partsId.add(i._id);
-                })
-                this.changedItemsID.add(this.selectedArticle._id)
-                this.changedItems[this.selectedArticle._id] = this.selectedArticle
             })
             setTimeout(() => {
                 if (this.selectedArticle.notebook) {
@@ -325,7 +340,7 @@ customElements.define('li-wikis-db', class LiWikisDB extends LiElement {
                 if (i.doc) {
                     if (i.doc._id.startsWith('editors')) {
                         let lzs = LZString.compressToUTF16(JSON.stringify(this.changedItems[i.doc._id].doc));
-                        res.add({ _id: i.doc._id, _rev: i.doc._rev, lzs })
+                        res.add({ _id: i.doc._id, _rev: i.doc._rev, lzs });
                     } else {
                         res.add({ ...i.doc, ...this.changedItems[i.key].doc });
                     }
