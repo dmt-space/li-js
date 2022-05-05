@@ -63,9 +63,9 @@ customElements.define('li-jupyter', class LiJupyter extends LiElement {
     firstUpdated() {
         super.firstUpdated();
         LI.listen(document, 'setFocusedIndex', (e) => {
-            setTimeout(() => {         
+            setTimeout(() => {
                 this.focusedIndex = +e.detail.idx;
-                setTimeout(() => {         
+                setTimeout(() => {
                     this.editedIndex = +e.detail.editedIdx;
                     this.$update();
                 }, 100);
@@ -119,7 +119,7 @@ customElements.define('li-jupyter', class LiJupyter extends LiElement {
         reader.onload = async (e) => {
             this.notebook = JSON.parse(e.target.result);
             this.$update();
-            LI.fire(document, 'changesJupyter', { type: 'jupyter_notebook', change: add ? 'addNotebook' : 'uploadNotebook', notebook: this.notebook, jupyter: this.jupyter } );
+            LI.fire(document, 'changesJupyter', { type: 'jupyter_notebook', change: add ? 'addNotebook' : 'uploadNotebook', notebook: this.notebook, jupyter: this.jupyter });
         }
         reader.readAsText(file, 'UTF-8');
     }
@@ -250,7 +250,7 @@ class LiJupyterListViews extends LiElement {
     addCell(item) {
         this.jupyter._isChanged = true;
         this.jupyter.collapsed = true;
-        requestAnimationFrame(() => {       
+        setTimeout(() => {
             let idx = this.idx;
             let editedIdx = -1;
             if (this.view === 'add') {
@@ -260,17 +260,17 @@ class LiJupyterListViews extends LiElement {
                 this.notebook.cells ||= [];
                 this.notebook.cells.splice(idx, 0, cell);
                 editedIdx = this.notebook.cells.length === 1 ? 0 : -1;
-                LI.fire(document, 'changesJupyter', { type: 'jupyter_cell', change: 'addCell' , cell: cell, notebook: this.notebook, jupyter: this.jupyter } );
+                LI.fire(document, 'changesJupyter', { type: 'jupyter_cell', change: 'addCell', cell: cell, notebook: this.notebook, jupyter: this.jupyter });
             } else if (this.view === 'select type') {
                 const cell = { ...this.cell, ...{ cell_type: item.cell_type, cell_extType: item.cell_extType, label: item.label } };
-                LI.fire(document, 'changesJupyter', { type: 'jupyter_cell', change: 'setCellType' , cell: cell, notebook: this.notebook, jupyter: this.jupyter } );
+                LI.fire(document, 'changesJupyter', { type: 'jupyter_cell', change: 'setCellType', cell: cell, notebook: this.notebook, jupyter: this.jupyter });
                 this.notebook.cells.splice(idx, 1, cell);
             }
             LI.fire(document, 'ok', item);
             LI.fire(document, 'setFocusedIndex', { idx, editedIdx });
             this.jupyter.collapsed = false;
             setTimeout(() => this.jupyter._isChanged = false, 500);
-        });
+        }, 10);
     }
 }
 customElements.define('li-jupyter-list-views', LiJupyterListViews);
@@ -365,7 +365,7 @@ customElements.define('li-jupyter-cell', class LiJupyterCell extends LiElement {
         setTimeout(() => {
             this.listen('change', (e) => {
                 if (!this.jupyter._isChanged) {
-                    LI.fire(document, 'changesJupyter', { type: 'jupyter_cell', change: 'changeCellValue' , cell: this.cell, notebook: this.notebook, jupyter: this.jupyter } );
+                    LI.fire(document, 'changesJupyter', { type: 'jupyter_cell', change: 'changeCellValue', cell: this.cell, notebook: this.notebook, jupyter: this.jupyter });
                 }
             })
         }, 500);
@@ -436,7 +436,7 @@ customElements.define('li-jupyter-cell-toolbar', class LiJupyterCellToolbar exte
         this.jupyter._isChanged = true;
         this.jupyter.collapsed = true;
         this.editedIndex = -1;
-        requestAnimationFrame(() => {  
+        setTimeout(() => {
             const cells = this.notebook.cells.splice(this.idx, 1);
             let idx = this.idx + v;
             idx = idx < 0 ? 0 : idx > this.notebook.cells.length ? this.notebook.cells.length : idx;
@@ -444,19 +444,24 @@ customElements.define('li-jupyter-cell-toolbar', class LiJupyterCellToolbar exte
             this.focusedIndex = idx;
             this.jupyter.collapsed = false;
             this.$update();
-            LI.fire(document, 'changesJupyter', { type: 'jupyter_cell', change: 'moveCell' , cell: this.cell, notebook: this.notebook, jupyter: this.jupyter } );
+            LI.fire(document, 'changesJupyter', { type: 'jupyter_cell', change: 'moveCell', cell: this.cell, notebook: this.notebook, jupyter: this.jupyter });
             setTimeout(() => this.jupyter._isChanged = false, 500);
-        })
+        }, 10)
     }
     tapDelete() {
         if (window.confirm(`Do you really want delete current cell ?`)) {
             this.jupyter._isChanged = true;
-            this.cell._deleted = true;
-            this.notebook.cells.splice(this.idx, 1);
-            this.focusedIndex = (this.idx > this.notebook.cells.length - 1) ? this.notebook.cells.length - 1 : this.idx;
-            this.$update();
-            LI.fire(document, 'changesJupyter', { type: 'jupyter_cell', change: 'deleteCell' , cell: this.cell, notebook: this.notebook, jupyter: this.jupyter } );
-            setTimeout(() => this.jupyter._isChanged = false, 500);
+            this.jupyter.collapsed = true;
+            this.editedIndex = -1;
+            setTimeout(() => {
+                this.cell._deleted = true;
+                this.notebook.cells.splice(this.idx, 1);
+                this.focusedIndex = (this.idx > this.notebook.cells.length - 1) ? this.notebook.cells.length - 1 : this.idx;
+                this.jupyter.collapsed = false;
+                this.$update();
+                LI.fire(document, 'changesJupyter', { type: 'jupyter_cell', change: 'deleteCell', cell: this.cell, notebook: this.notebook, jupyter: this.jupyter });
+                setTimeout(() => this.jupyter._isChanged = false, 500);
+            }, 10)
         }
     }
     share() {
@@ -603,7 +608,7 @@ customElements.define('li-jupyter-cell-code', class LiJupyterCellCode extends Li
         this.$update();
         this.editors = [ace];
         this.categories = ['li-editor-ace'];
-        setTimeout(() => { 
+        setTimeout(() => {
             Object.keys(this.cell['li-editor-ace'] || []).map(key => {
                 if (key === 'options') {
                     Object.keys(this.cell['li-editor-ace'][key]).forEach(i => {
