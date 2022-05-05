@@ -232,6 +232,7 @@ class LiJupyterListViews extends LiElement {
             view: { type: String },
             idx: { type: Number },
             focusedIndex: { type: Number, local: true },
+            collapsed: { type: Boolean, local: true },
         }
     }
     get cellViews() {
@@ -248,26 +249,28 @@ class LiJupyterListViews extends LiElement {
 
     addCell(item) {
         this.jupyter._isChanged = true;
-        let idx = this.idx;
-        let editedIdx = -1;
-        if (this.view === 'add') {
-            idx = this.position === 'top' ? idx : idx + 1;
-            idx ||= 0;
-            const cell = { ulid: LI.ulid(), type: 'jupyter_cell', cell_type: item.cell_type, cell_extType: item.cell_extType, source: item.source, label: item.label };
-            this.notebook.cells ||= [];
-            this.notebook.cells.splice(idx, 0, cell);
-            editedIdx = this.notebook.cells.length === 1 ? 0 : -1;
-            LI.fire(document, 'changesJupyter', { type: 'jupyter_cell', change: 'addCell' , cell: cell, notebook: this.notebook, jupyter: this.jupyter } );
-        } else if (this.view === 'select type') {
-            const cell = { ...this.cell, ...{ cell_type: item.cell_type, cell_extType: item.cell_extType, label: item.label } };
-            LI.fire(document, 'changesJupyter', { type: 'jupyter_cell', change: 'setCellType' , cell: cell, notebook: this.notebook, jupyter: this.jupyter } );
-            this.notebook.cells.splice(idx, 1, cell);
-        }
-        LI.fire(document, 'ok', item);
-        LI.fire(document, 'setFocusedIndex', { idx, editedIdx });
-        setTimeout(() => {
-            this.jupyter._isChanged = false;
-        }, 500);
+        this.jupyter.collapsed = true;
+        requestAnimationFrame(() => {       
+            let idx = this.idx;
+            let editedIdx = -1;
+            if (this.view === 'add') {
+                idx = this.position === 'top' ? idx : idx + 1;
+                idx ||= 0;
+                const cell = { ulid: LI.ulid(), type: 'jupyter_cell', cell_type: item.cell_type, cell_extType: item.cell_extType, source: item.source, label: item.label };
+                this.notebook.cells ||= [];
+                this.notebook.cells.splice(idx, 0, cell);
+                editedIdx = this.notebook.cells.length === 1 ? 0 : -1;
+                LI.fire(document, 'changesJupyter', { type: 'jupyter_cell', change: 'addCell' , cell: cell, notebook: this.notebook, jupyter: this.jupyter } );
+            } else if (this.view === 'select type') {
+                const cell = { ...this.cell, ...{ cell_type: item.cell_type, cell_extType: item.cell_extType, label: item.label } };
+                LI.fire(document, 'changesJupyter', { type: 'jupyter_cell', change: 'setCellType' , cell: cell, notebook: this.notebook, jupyter: this.jupyter } );
+                this.notebook.cells.splice(idx, 1, cell);
+            }
+            LI.fire(document, 'ok', item);
+            LI.fire(document, 'setFocusedIndex', { idx, editedIdx });
+            this.jupyter.collapsed = false;
+            setTimeout(() => this.jupyter._isChanged = false, 500);
+        });
     }
 }
 customElements.define('li-jupyter-list-views', LiJupyterListViews);
@@ -288,6 +291,9 @@ customElements.define('li-jupyter-cell', class LiJupyterCell extends LiElement {
             .focused {
                 box-shadow: 0 0 0 1px dodgerblue;
             }
+            .edited {
+                box-shadow: 0 0 0 2px red;
+            }
             .row {
                 width: 100%;
                 height: 100%;
@@ -301,7 +307,7 @@ customElements.define('li-jupyter-cell', class LiJupyterCell extends LiElement {
 
     render() {
         return html`
-            <div id="${this.id}" class="cell ${this.focused}" style="box-shadow: ${this.showBorder && this.focusedIndex !== this.idx ? '0px 0px 0px 1px lightgray' : ''};">
+            <div id="${this.id}" class="cell ${this.focused} ${this.edited}" style="box-shadow: ${this.showBorder && this.focusedIndex !== this.idx ? '0px 0px 0px 1px lightgray' : ''};">
                 ${!this.readOnly && this.collapsed && this.editedIndex !== this.idx ? html`
                     <div class="row" @click=${this.click}>${this.cell?.label || this.cell?.cell_type || ''}</div>
                 ` : html`
@@ -331,7 +337,8 @@ customElements.define('li-jupyter-cell', class LiJupyterCell extends LiElement {
             _isChanged: { type: Boolean, local: true }
         }
     }
-    get focused() { return !this.readOnly && this.focusedIndex === this.idx ? 'focused' : '' }
+    get focused() { return !this.edited && !this.readOnly && this.focusedIndex === this.idx ? 'focused' : '' }
+    get edited() { return !this.readOnly && this.editedIndex === this.idx ? 'edited' : '' }
     get id() { return 'cell-' + (this.idx || 0) }
     get focusedControl() { return this.$qs('#control') }
     get cellType() {
@@ -427,14 +434,19 @@ customElements.define('li-jupyter-cell-toolbar', class LiJupyterCellToolbar exte
 
     tapOrder(e, v) {
         this.jupyter._isChanged = true;
-        const cells = this.notebook.cells.splice(this.idx, 1);
-        let idx = this.idx + v;
-        idx = idx < 0 ? 0 : idx > this.notebook.cells.length ? this.notebook.cells.length : idx;
-        this.notebook.cells.splice(idx, 0, cells[0])
-        this.focusedIndex = idx;
-        this.$update();
-        LI.fire(document, 'changesJupyter', { type: 'jupyter_cell', change: 'moveCell' , cell: this.cell, notebook: this.notebook, jupyter: this.jupyter } );
-        setTimeout(() => this.jupyter._isChanged = false, 500);
+        this.jupyter.collapsed = true;
+        this.editedIndex = -1;
+        requestAnimationFrame(() => {  
+            const cells = this.notebook.cells.splice(this.idx, 1);
+            let idx = this.idx + v;
+            idx = idx < 0 ? 0 : idx > this.notebook.cells.length ? this.notebook.cells.length : idx;
+            this.notebook.cells.splice(idx, 0, cells[0])
+            this.focusedIndex = idx;
+            this.jupyter.collapsed = false;
+            this.$update();
+            LI.fire(document, 'changesJupyter', { type: 'jupyter_cell', change: 'moveCell' , cell: this.cell, notebook: this.notebook, jupyter: this.jupyter } );
+            setTimeout(() => this.jupyter._isChanged = false, 500);
+        })
     }
     tapDelete() {
         if (window.confirm(`Do you really want delete current cell ?`)) {
