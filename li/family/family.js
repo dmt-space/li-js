@@ -161,7 +161,8 @@ customElements.define('li-family', class LiFamily extends LiElement {
         }
     }
 
-    get needSave() { return this.changedItemsID?.length || this.deletedItemsID?.length };
+    get needSave() { return this.changedItemsID?.length || this.deletedItemsID?.length }
+    get jupyter() { return this.$qs('li-jupyter') || {} }
 
     firstUpdated() {
         super.firstUpdated();

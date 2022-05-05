@@ -136,7 +136,9 @@ export const getSortItems = (self) => {
     }
 }
 export const updateSelectedItem = async (self) => {
-    if (self.selectedItem.notebook) {
+    self.jupyter.isReady = false;
+    self.jupyter.focusedIndex = self.jupyter.editedIndex = -1;
+    if (self.selectedItem.notebook && self.needSave) {
         self.selectedItem._notebook = {};
         setTimeout(() => {
             self.selectedItem._notebook = undefined;
