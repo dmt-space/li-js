@@ -29,11 +29,11 @@ customElements.define('li-family', class LiFamily extends LiElement {
         return html`
             <li-layout-app shift="0">
                 <div slot="app-top" class="header">
-                    <li-button id="reload" name="refresh" title="reload page"  @click="${this.btnClick}" style="padding: 0 8px"></li-button>
-                    <li-button id="readonly" name="edit" @click=${this.btnClick} title="enable edit" fill=${this.readOnly ? 'lightgray' : 'green'} color="${this.readOnly ? 'lightgray' : 'green'}" back="${this.readOnly ? 'transparent' : '#e9ffdb'}"></li-button>
+                    <li-button id="readonly" name="edit" @click=${this.btnClick} title="enable edit" fill=${this.readOnly ? 'lightgray' : 'green'} color="${this.readOnly ? 'lightgray' : 'green'}" back="${this.readOnly ? 'transparent' : '#e9ffdb'}" style="padding-left: 8px"></li-button>
                     ${this.readOnly ? html`` : html`
                         <li-button id="save" name="save" title="save" @click=${this.btnClick} .fill="${this.needSave ? 'red' : ''}" color="${this.needSave ? 'red' : 'gray'}"></li-button>
                     `}
+                    <li-button id="reload" name="refresh" title="reload page"  @click="${this.btnClick}" style="padding-left: 8px"></li-button>
                     <div style="flex:1"></div>${this.name || 'my-family'}<div style="flex:1"></div>
                 </div>
                 <div slot="app-left" slot="app-main" style="display: flex; height: 100%; padding: 0 !important">
@@ -177,14 +177,28 @@ customElements.define('li-family', class LiFamily extends LiElement {
         })
         setTimeout(() => {
             LI.listen(document, 'changesJupyter', (e) => {
+                this.changedItemsID ||= [];
+                this.changedItems ||= {};
+                this.deletedItemsID ||= [];
+                this.deletedItems ||= {};
                 if (this._isUpdateSelectedItem || this.$qs('li-jupyter').ulid !== e?.detail?.jupyter.ulid) return;
                 const d = e.detail;
                 console.log(d)
                 if (d.type === 'jupyter_cell') {
-                    const _id = 'jupyter_cell:' + d.cell.ulid;
+                    const _id = d.cell._id || 'jupyter_cell:' + d.cell.ulid;
                     if (d.change === 'deleteCell') {
-                        this.deletedItemsID ||= [];
                         this.deletedItemsID.add(_id);
+                        this.changedItemsID.add(this.selectedItem._id);
+                         this.changedItems[this.selectedItem._id] = this.selectedItem;
+                    } else if (d.change === 'moveCell') {
+                        let partsId = [];
+                        this.jupyter.notebook.cells.map (i => {
+                            partsId.push(i._id);
+                        })
+                        partsId = [...partsId, ...this.selectedItem.doc.partsId.filter(i => !i.startsWith('jupyter_cell'))]
+                        this.selectedItem.doc.partsId = partsId;
+                        this.changedItemsID.add(this.selectedItem._id);
+                        this.changedItems[this.selectedItem._id] = this.selectedItem;
                     } else {
                         this.setChangedPart(d.cell, 'jupyter_cell')
                     }
@@ -194,7 +208,6 @@ customElements.define('li-family', class LiFamily extends LiElement {
                         this.selectedItem.notebook ||= { cells: [] };
                         this.selectedItem._parts ||= [];
                     } else {
-                        this.deletedItemsID ||= [];
                         this.selectedItem.notebook?.cells?.map(cell => this.deletedItemsID.add(cell._id));
                         this.selectedItem.notebook = { cells: [] };
                         this.selectedItem._parts = [];
@@ -212,7 +225,19 @@ customElements.define('li-family', class LiFamily extends LiElement {
                 this.$update();
             })
             this.listen('changesPhases', (e) => {
-                this.setChangedPart(e.detail.doc, 'phases')
+                this.changedItemsID ||= [];
+                this.changedItems ||= {};
+                this.deletedItemsID ||= [];
+                this.deletedItems ||= {};
+                const d = e.detail;
+                console.log(d);
+                if (d.change === 'deletePhase') {
+                    this.deletedItemsID.add(d._id);
+                    this.changedItemsID.add(this.selectedItem._id);
+                    this.changedItems[this.selectedItem._id] = this.selectedItem;
+                } else {
+                    this.setChangedPart(d.doc, 'phases')
+                }
             })
         }, 1000);
     }
@@ -224,7 +249,6 @@ customElements.define('li-family', class LiFamily extends LiElement {
 
     setChangedPart(doc, type) {
         doc._id ||= type + ':' + LI.ulid();
-        this.changedItemsID ||= [];
         this.changedItemsID.add(doc._id);
         const item = new db.ITEM(doc, { type });
         this.changedItems[doc._id] = item;
@@ -291,12 +315,12 @@ customElements.define('li-family', class LiFamily extends LiElement {
             'share notebook to new tab': () => {
                 jup.share();
             },
-            'add phase date': () => {
+            'add phase date': (e) => {
                 this.selectedItem.phases ||= [];
                 let date = new Date().toISOString().split('T');
                 date = date[0] + 'T12:00';
                 const doc = { date1: date, isPeriod: false };
-                const item = this.setChangedPart(doc, 'phases')
+                this.fire('changesPhases', { type: 'changesPhases', change: 'addPhaseDate', doc, sourceEvent: e })
                 this.selectedItem.phases.push(doc);
             },
             'add phase period': () => {
@@ -304,17 +328,16 @@ customElements.define('li-family', class LiFamily extends LiElement {
                 let date = new Date().toISOString().split('T');
                 date = date[0] + 'T12:00';
                 const doc = { date1: date, date2: date, isPeriod: true };
-                const item = this.setChangedPart(doc, 'phases')
+                this.fire('changesPhases', { type: 'changesPhases', change: 'addPhasePeriod', doc, sourceEvent: e })
                 this.selectedItem.phases.push(doc);
             },
             'delete phase': () => {
                 const phases = this.$qs('li-family-phases');
                 let idx = phases.idx;
                 if (idx >= 0) {
-                    this.selectedItem.phases.splice(idx, 1);
+                    const phase = this.selectedItem.phases.splice(idx, 1)[0];
                     phases.idx = idx > this.selectedItem.phases.length - 1 ? this.selectedItem.phases.length - 1 : idx;
-                    console.log(phases.idx)
-                    this.$update();
+                    this.fire('changesPhases', { type: 'changesPhases', change: 'deletePhase', _id: phase._id, phase, sourceEvent: e })
                 }
             }
         }

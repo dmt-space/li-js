@@ -149,6 +149,7 @@ export const updateSelectedItem = async (self) => {
     self._isUpdateSelectedItem = true;
     self.selectedItem.notebook = { cells: [] };
     self.selectedItem._parts = [];
+    self.selectedItem.phases = [];
     const parts = await self.dbLocal.allDocs({ keys: self.selectedItem.partsId || [], include_docs: true });
     parts.rows.map((i, idx) => {
         if (i.doc) {
