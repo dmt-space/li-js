@@ -19,7 +19,7 @@ customElements.define('li-editor-template', class LiEditorTemplate extends LiEle
                     <div style="width: 50%; height: ${this._h}vh; overflow: hidden; position: relative;">
                         <iframe style="border: none; width: 100%; height: 100vh;"></iframe>
                     </div>
-                    <li-splitter size="3px" color="gray" style="opacity: .3"></li-splitter>
+                    <li-splitter size="3" color="gray" style="opacity: .3"></li-splitter>
                     <div style="flex: 1; height: 100vh; overflow: auto">
                         <div .innerHTML=${this.source} style="width: 100%"></div>
                     </div>

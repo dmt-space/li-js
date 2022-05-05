@@ -5,9 +5,9 @@ customElements.define('li-splitter', class extends LiElement {
         return html`
             <style>
                 :host {
-                    height: ${this.direction === 'vertical' ? '100%' : this.size || '2px'};
+                    height: ${this.direction === 'vertical' ? '100%' : (this.size ? this.size + 'px' : '2px')};
                     min-height: ${this.size};
-                    width: ${this.direction === 'vertical' ? this.size || '2px' : '100%'};
+                    width: ${this.direction === 'vertical' ? (this.size ? this.size + 'px' : '2px') : '100%'};
                     min-width: ${this.size};
                     cursor: ${this.direction === 'vertical' ? 'ew-resize' : 'ns-resize'};
                     background-color: ${this.color || 'lightgray'};
@@ -19,7 +19,7 @@ customElements.define('li-splitter', class extends LiElement {
     static get properties() {
         return {
             direction: { type: String, default: 'vertical' },
-            size: { type: String, default: '2px' },
+            size: { type: Number, default: 2 },
             color: { type: String, default: 'lightgray' },
             resize: { type: Boolean },
             use_px: { type: Boolean },

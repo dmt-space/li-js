@@ -512,7 +512,7 @@ customElements.define('li-jupyter-cell-markdown', class LiJupyterCellMarkdown ex
                         <li-editor-ace class="ace" style="width: 100%; height: 100%" theme="solarized_light" mode="markdown"></li-editor-ace>
                         <!-- <li-editor-simplemde class="editor" style="width: 100%; height: 100%"></li-editor-simplemde> -->
                     </div>
-                    <li-splitter size="3px" color="dodgerblue" style="opacity: .3"></li-splitter>
+                    <li-splitter size="3" color="dodgerblue" style="opacity: .3"></li-splitter>
                     <div style="max-height: 80vh; flex: 1; overflow: auto">
                         <li-viewer-md src=${this.cell?.source} style="width: 100%; padding: 0;"></li-viewer-md>
                     </div>
@@ -567,7 +567,7 @@ customElements.define('li-jupyter-cell-code', class LiJupyterCellCode extends Li
         return html`
             <div style="display: flex; flex-direction: column; width: 100%; height: ${!this.readOnly && this.editedIndex === this.idx ? '80vh' : this.cell?.cell_h || 'unset'}; min-height: 24px; overflow: auto; padding: 2px 2px 0 2px">
                 <li-editor-ace style="width: 100%; height: '100%'; min-height: 0px" theme=${!this.readOnly && this.editedIndex === this.idx ? 'solarized_light' : 'dawn'} mode="javascript"></li-editor-ace>    
-                <li-splitter direction="horizontal" size="${this.cell?.splitterH >= 0 ? this.cell?.splitterH : 2}px" color="transparent" style="opacity: .3" resize></li-splitter>
+                <li-splitter direction="horizontal" size=${this.cell?.splitterH >= 0 ? this.cell?.splitterH : 2} color="transparent" style="opacity: .3" resize></li-splitter>
                 <div style="display: flex; overflow: auto; width: 100%; max-height: 0px;"></div>
             </div>
         `
@@ -656,7 +656,7 @@ customElements.define('li-jupyter-cell-html', class LiJupyterCellHtml extends Li
                     <div style="width: 50%; height: 80vh; overflow: hidden;">
                         <li-editor-html style="width: 100%"></li-editor-html>
                     </div>
-                    <li-splitter size="3px" color="dodgerblue" style="opacity: .3"></li-splitter>
+                    <li-splitter size="3" color="dodgerblue" style="opacity: .3"></li-splitter>
                     <div style="flex: 1; height: 80vh; overflow: auto">
                         <div .innerHTML=${this.cell.source} style="width: 100%"></div>
                     </div>
@@ -722,12 +722,12 @@ customElements.define('li-jupyter-cell-html-executable', class LiJupyterCellHtml
                             <li-editor-ace class="ace" style="width: 100%" theme=${this.mode === 'html' ? 'cobalt' : this.mode === 'javascript' ? 'solarized_light' : this.mode === 'css' ? 'dawn' : 'chrome'} mode=${this.mode}></li-editor-ace>
                         </div>
                     </div>
-                    <li-splitter size="${this.cell?.splitterV >= 0 ? this.cell?.splitterV : 2}px" color="transparent" style="opacity: .3"></li-splitter>
+                    <li-splitter size=${this.cell?.splitterV >= 0 ? this.cell?.splitterV : 2} color="transparent" style="opacity: .3"></li-splitter>
                     <div style="flex: 1; overflow: auto; width: 100%;">
                         <iframe style="border: none; width: 100%; height: 100%"></iframe>
                     </div>
                 </div>
-                <li-splitter direction="horizontal" size="${this.cell?.splitterH >= 0 ? this.cell?.splitterH : 2}px" color="transparent" style="opacity: .3" resize></li-splitter>
+                <li-splitter direction="horizontal" size="${this.cell?.splitterH >= 0 ? this.cell?.splitterH : 2}" color="transparent" style="opacity: .3" resize></li-splitter>
                 <div style="display: flex; overflow: auto; flex: 1; width: 100%"></div>
             </div>
         `
@@ -853,7 +853,7 @@ class LiJupyterCellTemp extends LiElement {
                     <div style="width: 50%; height: ${this._h}vh; overflow: hidden; position: relative;">
                         <iframe style="border: none; width: 100%; height: 80vh;"></iframe>
                     </div>
-                    <li-splitter size="3px" color="dodgerblue" style="opacity: .3"></li-splitter>
+                    <li-splitter size="3" color="dodgerblue" style="opacity: .3"></li-splitter>
                     <div style="flex: 1; height: 80vh; overflow: auto">
                         <div .innerHTML=${this.cell?.source} style="width: 100%"></div>
                     </div>
