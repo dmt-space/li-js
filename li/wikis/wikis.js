@@ -42,7 +42,7 @@ customElements.define('li-wikis', class LiWikis extends LiElement {
                     <li-button size="26" id="share" name="launch" @click="${this.onclick}" style="margin-right:8px" border="none" title="share"></li-button>
                 </div>
                 <div slot="app-left" style="display: block; height: 100%;">
-                    <li-wikis-db></li-wikis-db>
+                    <li-wikis-db .jupyter=${this.jupyter}></li-wikis-db>
                 </div>
                 <div id="main" slot="app-main">
                     ${this.notebook ? html`
@@ -62,7 +62,7 @@ customElements.define('li-wikis', class LiWikis extends LiElement {
             flatArticles: { type: Array, local: true },
         }
     }
-
+    get jupyter() { return this.$qs('li-jupyter') || {} }
     // firstUpdated() {
     //     super.firstUpdated();
     //     setTimeout(async () => {

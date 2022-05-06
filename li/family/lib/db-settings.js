@@ -1,4 +1,5 @@
 import { LiElement, html, css } from '../../../li.js';
+import { LZString } from '../../../lib/lz-string/lz-string.js';
 
 const rowPanelCSS = css` .row-panel { display: flex; border-bottom: 1px solid lightgray; padding: 4px 2px; margin-bottom: 2px; }`;
 const scrollCSS = css`::-webkit-scrollbar { width: 4px; height: 4px; } ::-webkit-scrollbar-track { background: lightgray; } ::-webkit-scrollbar-thumb {  background-color: gray; }`;

@@ -1,3 +1,5 @@
+import { LZString } from '../../../lib/lz-string/lz-string.js';
+
 export class ITEM {
     constructor(doc = {}, props = {}) {
         this.doc = doc;
@@ -153,10 +155,9 @@ export const updateSelectedItem = async (self) => {
     const parts = await self.dbLocal.allDocs({ keys: self.selectedItem.partsId || [], include_docs: true });
     parts.rows.map((i, idx) => {
         if (i.doc) {
-            // let lzs = LZString.decompressFromUTF16((i.doc.lzs || ''));
-            // let doc = lzs ? lzs = JSON.parse(lzs) : i.doc;
-            let doc = i.doc;
-            const item = new ITEM(doc, { type: doc.type });
+            let lzs = LZString.decompressFromUTF16((i.doc.lzs || ''));
+            let doc = lzs ? lzs = JSON.parse(lzs) : i.doc;
+            const item = new ITEM(lzs, { type: doc.type });
             // if (doc.type === 'notebook') {
             //     self.selectedItem.notebook = { ...selectedItem.notebook, ...doc };
             // }
