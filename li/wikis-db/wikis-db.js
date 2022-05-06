@@ -155,14 +155,15 @@ customElements.define('li-wikis-db', class LiWikisDB extends LiElement {
                     const _id = d.cell._id || 'editors:' + d.cell.ulid;
                     if (d.change === 'deleteCell') {
                         this.deletedItemsID.add(_id);
-                        this.changedItemsID.add(_id);
+                        this.selectedArticle.doc.partsId.remove(_id);
+                        this.changedItemsID.add(this.selectedArticle._id);
                         this.changedItems[this.selectedArticle._id] = this.selectedArticle;
                     } else if (d.change === 'moveCell' || d.change === 'addCell') {
                         if (d.change === 'moveCell' || d.change === 'addCell')
-                            this.setChangedPart(d.cell, 'jupyter_cell')
+                            this.setChangedPart(d.cell, 'editors')
                         let partsId = [];
                         this.jupyter?.notebook?.cells?.map(i => partsId.push(i._id));
-                        partsId = [...partsId, ...(this.selectedArticle.doc.partsId || []).filter(i => !i.startsWith('jupyter_cell'))]
+                        partsId = [...partsId, ...(this.selectedArticle.doc.partsId || []).filter(i => !i.startsWith('editors'))]
                         this.selectedArticle.doc.partsId = partsId;
                         this.changedItemsID.add(this.selectedArticle._id);
                         this.changedItems[this.selectedArticle._id] = this.selectedArticle;
@@ -337,6 +338,15 @@ customElements.define('li-wikis-db', class LiWikisDB extends LiElement {
         action[id] && action[id]();
         this.$update();
     }
+    heckDoc(res) {
+        (res || []).map(doc => {
+            for (var key in doc) {
+                if (key.startsWith('_') && key !== '_id' && key !== '_rev' && key !== '_deleted') {
+                    delete doc[key];
+                }
+            }
+        })
+    }
     async save() {
         if (this.changedItemsID?.length) {
             const items = await this.dbLocal.allDocs({ keys: this.changedItemsID, include_docs: true });
@@ -364,6 +374,7 @@ customElements.define('li-wikis-db', class LiWikisDB extends LiElement {
                     res.add(doc);
                 }
             })
+            this.heckDoc(res);
             await this.dbLocal.bulkDocs(res);
             this.changedItemsID = [];
             this.changedItems = {};
@@ -387,6 +398,7 @@ customElements.define('li-wikis-db', class LiWikisDB extends LiElement {
                     }
                 }
             })
+            this.heckDoc(res);
             await this.dbLocal.bulkDocs(res);
             this.deletedItemsID = [];
             this.deletedItems = {};
@@ -697,7 +709,7 @@ customElements.define('li-wikis-db-settings', class LiWikisSettings extends LiEl
             },
             export: async (e) => {
                 let saveFile = async (json, name) => {
-                    let str = JSON.stringify(json);
+                    let str = JSON.stringify(json, null, 4);
                     if (!str || !name) return;
                     const blob = new Blob([str], { type: "text/plain" });
                     const a = document.createElement("a");

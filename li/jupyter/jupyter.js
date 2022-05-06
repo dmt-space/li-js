@@ -77,6 +77,8 @@ customElements.define('li-jupyter', class LiJupyter extends LiElement {
         if (changedProperties.has('notebook')) this.setIsReady();
         if (changedProperties.has('focusedIndex')) this.editedIndex = -1;
         if (changedProperties.has('readOnly')) this.focusedIndex = -1;
+        if (changedProperties.has('collapsed') && this.collapsed) this.notebook.cells.map((i, idx) => i._idx = idx + 1);
+
     }
 
     async loadURL() {
@@ -162,12 +164,9 @@ customElements.define('li-jupyter-cell-addbutton', class LiJupyterAddButton exte
                     style="top: ${this.position === 'top' ? '-16px' : 'unset'}; bottom: ${this.position !== 'top' ? '-16px' : 'unset'};"></li-button>
             ${this.position === 'top' ? html`
                 ${!this.readOnly && this.cell && this.focusedIndex === this.idx ? html`
-                    <li-button class="btn" name="close" size=16 radius="50%" title="unselect" borderColor="dodgerblue"
-                            @click=${() => { this.focusedIndex = -1; this.$update() }} style="top: -16px; left: 20px"></li-button>
-                    <li-button class="btn" name="crop-7-5" size=16 radius="50%" title="collapse" borderColor="dodgerblue"
-                            @click=${() => { this.collapsed = !this.collapsed; }} style="top: -16px; left: 40px" fill=${this.collapsed ? 'dodgerblue' : 'lightgray'}></li-button>
-                    <li-button class="btn" name="edit" size=16 scale=.8 radius="50%" title="edit mode" borderColor="dodgerblue" fill=${this.editedIndex === this.idx ? 'red' : 'gray'}
-                            @click=${() => { this.editedIndex = (this.editedIndex === this.idx ? -1 : this.idx); this.$update() }} style="top: -16px; left: 60px"></li-button>
+                    <li-button class="btn" name="close" size=16 radius="50%" title="unselect" borderColor="dodgerblue" @click=${() => { this.focusedIndex = -1; this.$update() }} style="top: -16px; left: 20px"></li-button>
+                    <li-button class="btn" name="crop-7-5" size=16 radius="50%" title="collapse" borderColor="dodgerblue" @click=${() => this.collapsed = !this.collapsed} style="top: -16px; left: 40px" fill=${this.collapsed ? 'dodgerblue' : 'lightgray'}></li-button>
+                    <li-button class="btn" name="edit" size=16 scale=.8 radius="50%" title="edit mode" borderColor="dodgerblue" fill=${this.editedIndex === this.idx ? 'red' : 'gray'} @click=${() => { this.editedIndex = (this.editedIndex === this.idx ? -1 : this.idx); this.$update() }} style="top: -16px; left: 60px"></li-button>
                 ` : html``}
                 <label class="lbl" @click=${() => this.showCellViews('select type')} title="select cell type">${this.cell?.label || this.cell?.cell_type || this.cell?.cell_name}</label>
             ` : html``}
@@ -249,8 +248,8 @@ class LiJupyterListViews extends LiElement {
 
     addCell(item) {
         this.jupyter._isChanged = true;
-        const collapsed = this.jupyter.collapsed;
-        if (this.cell) this.cell.collapsed = true;
+        if (this.cell)
+            this.jupyter.collapsed = true;
         setTimeout(() => {
             let idx = this.idx;
             let editedIdx = -1;
@@ -269,7 +268,6 @@ class LiJupyterListViews extends LiElement {
             }
             LI.fire(document, 'ok', item);
             LI.fire(document, 'setFocusedIndex', { idx, editedIdx });
-            if (this.cell) this.cell.collapsed = collapsed;
             setTimeout(() => this.jupyter._isChanged = false, 500);
         }, 10);
     }
@@ -300,7 +298,7 @@ customElements.define('li-jupyter-cell', class LiJupyterCell extends LiElement {
                 height: 100%;
                 cursor: pointer;
                 padding: 5px;
-                color: lightgray;
+                color: darkgray;
                 font-size: 12px;
             }
         `;
@@ -309,8 +307,8 @@ customElements.define('li-jupyter-cell', class LiJupyterCell extends LiElement {
     render() {
         return html`
             <div id="${this.id}" class="cell ${this.focused} ${this.edited}" style="box-shadow: ${this.showBorder && this.focusedIndex !== this.idx ? '0px 0px 0px 1px lightgray' : ''};">
-                ${(!this.readOnly && this.collapsed && this.editedIndex !== this.idx) || this.cell?.collapsed ? html`
-                    <div class="row" @click=${this.click}>${this.cell?.label || this.cell?.cell_type || ''}</div>
+                ${!this.readOnly && this.collapsed && this.editedIndex !== this.idx ? html`
+                    <div class="row" @click=${this.click}>${(this.cell._idx || '..') + '. ' + this.cell?.label || this.cell?.cell_type || ''}</div>
                 ` : html`
                     ${this.cellType}
                 `}
@@ -406,6 +404,7 @@ customElements.define('li-jupyter-cell-toolbar', class LiJupyterCellToolbar exte
     render() {
         return html`
             <li-button name="mode-edit" @click=${() => { this.editedIndex = this.editedIndex === this.idx ? -1 : this.idx; this.$update() }} fill=${this.editedIndex === this.idx ? 'red' : ''} title="edit mode" border=0 size=16></li-button>
+            <li-button class="btn" name="crop-7-5" size=16 title="collapse" @click=${() => this.collapsed = !this.collapsed} fill=${this.collapsed ? 'dodgerblue' : 'lightgray'} border="none"></li-button>
             <li-button name="arrow-back" @click=${(e) => this.tapOrder(e, -1)} ?disabled=${this.idx <= 0} title="move up" border=0 size=16 rotate=90></li-button>
             <li-button name="arrow-forward"  @click=${(e) => this.tapOrder(e, 1)} ?disabled=${this.idx >= this.notebook?.cells?.length - 1} title="move down" border=0 size=16 rotate=90></li-button>
             <li-button id="sets" name="settings" border=0 size=16 @click=${this.showSettings} style="display: ${this.focusedControl?.editors?.length ? '' : 'none'}"></li-button>
@@ -429,13 +428,13 @@ customElements.define('li-jupyter-cell-toolbar', class LiJupyterCellToolbar exte
             focusedControl: { type: Boolean },
             focusedIndex: { type: Number, local: true },
             editedIndex: { type: Number, local: true },
-            _isChanged: { type: Boolean, local: true }
+            _isChanged: { type: Boolean, local: true },
+            collapsed: { type: Boolean, local: true }
         }
     }
 
     tapOrder(e, v) {
         this.jupyter._isChanged = true;
-        const collapsed = this.jupyter.collapsed;
         this.jupyter.collapsed = true;
         this.editedIndex = -1;
         setTimeout(() => {
@@ -444,24 +443,21 @@ customElements.define('li-jupyter-cell-toolbar', class LiJupyterCellToolbar exte
             idx = idx < 0 ? 0 : idx > this.notebook.cells.length ? this.notebook.cells.length : idx;
             this.notebook.cells.splice(idx, 0, cells[0])
             this.focusedIndex = idx;
-            this.jupyter.collapsed = collapsed;
-            this.$update();
             LI.fire(document, 'changesJupyter', { type: 'jupyter_cell', change: 'moveCell', cell: this.cell, notebook: this.notebook, jupyter: this.jupyter });
             setTimeout(() => this.jupyter._isChanged = false, 500);
-        }, 100)
+        }, 10)
     }
     tapDelete() {
         if (window.confirm(`Do you really want delete current cell ?`)) {
             this.jupyter._isChanged = true;
             const collapsed = this.jupyter.collapsed;
-            this.cell.collapsed = true;
+            this.jupyter.collapsed = true;
             this.editedIndex = -1;
             setTimeout(() => {
                 this.cell._deleted = true;
                 this.notebook.cells.splice(this.idx, 1);
                 this.focusedIndex = (this.idx > this.notebook.cells.length - 1) ? this.notebook.cells.length - 1 : this.idx;
-                if (this.cell) this.jupyter.collapsed = collapsed;
-                this.$update();
+                this.jupyter.collapsed = collapsed;
                 LI.fire(document, 'changesJupyter', { type: 'jupyter_cell', change: 'deleteCell', cell: this.cell, notebook: this.notebook, jupyter: this.jupyter });
                 setTimeout(() => this.jupyter._isChanged = false, 500);
             }, 10)
