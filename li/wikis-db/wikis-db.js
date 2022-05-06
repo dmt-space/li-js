@@ -109,7 +109,9 @@ customElements.define('li-wikis-db', class LiWikisDB extends LiElement {
             changedItemsID: { type: Array, default: [], local: true },
             changedItems: { type: Object, default: {}, local: true },
             deletedItemsID: { type: Array, default: [], local: true },
-            deletedItems: { type: Object, default: {}, local: true }
+            deletedItems: { type: Object, default: {}, local: true },
+
+            jupyter: { type: Object, local: true },
         }
     }
     get needSave() { return this.changedItemsID.length || this.deletedItemsID.length };
@@ -140,6 +142,10 @@ customElements.define('li-wikis-db', class LiWikisDB extends LiElement {
         }, 100);
         setTimeout(() => {
             LI.listen(document, 'changesJupyter', (e) => {
+                this.changedItemsID ||= [];
+                this.changedItems ||= {};
+                this.deletedItemsID ||= [];
+                this.deletedItems ||= {};
                 if (this._isUpdateSelectedItem) return;
                 // if (this._isUpdateSelectedItem || this.$qs('li-jupyter').ulid !== e?.detail?.jupyter.ulid) return;
                 this._isUpdateSelectedItem = true;
@@ -148,27 +154,26 @@ customElements.define('li-wikis-db', class LiWikisDB extends LiElement {
                 if (d.type === 'jupyter_cell') {
                     const _id = d.cell._id || 'editors:' + d.cell.ulid;
                     if (d.change === 'deleteCell') {
-                        this.deletedItemsID ||= [];
                         this.deletedItemsID.add(_id);
-                    } else if (d.change === 'moveCell') {
-                        const partsId = [];
-                        this.notebook.cells.map (i => {
-                            partsId.push(i._id);
-                        })
+                        this.changedItemsID.add(_id);
+                        this.changedItems[this.selectedArticle._id] = this.selectedArticle;
+                    } else if (d.change === 'moveCell' || d.change === 'addCell') {
+                        if (d.change === 'moveCell' || d.change === 'addCell')
+                            this.setChangedPart(d.cell, 'jupyter_cell')
+                        let partsId = [];
+                        this.jupyter?.notebook?.cells?.map(i => partsId.push(i._id));
+                        partsId = [...partsId, ...(this.selectedArticle.doc.partsId || []).filter(i => !i.startsWith('jupyter_cell'))]
                         this.selectedArticle.doc.partsId = partsId;
-                        this.changedItemsID ||= [];
                         this.changedItemsID.add(this.selectedArticle._id);
                         this.changedItems[this.selectedArticle._id] = this.selectedArticle;
                     } else {
                         this.setChangedPart(d.cell, 'editors')
                     }
                 } else if (d.type === 'jupyter_notebook') {
-                    this._isUpdateSelectedItem = true;
                     if (d.change === 'addNotebook') {
                         this.selectedArticle.notebook ||= { cells: [] };
                         this.selectedArticle._parts ||= [];
                     } else {
-                        this.deletedItemsID ||= [];
                         this.selectedArticle.notebook?.cells?.map(cell => this.deletedItemsID.add(cell._id));
                         this.selectedArticle.notebook = { cells: [] };
                         this.selectedArticle._parts = [];

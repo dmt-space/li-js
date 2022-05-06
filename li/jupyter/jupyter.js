@@ -249,7 +249,8 @@ class LiJupyterListViews extends LiElement {
 
     addCell(item) {
         this.jupyter._isChanged = true;
-        this.jupyter.collapsed = true;
+        const collapsed = this.jupyter.collapsed;
+        if (this.cell) this.cell.collapsed = true;
         setTimeout(() => {
             let idx = this.idx;
             let editedIdx = -1;
@@ -268,7 +269,7 @@ class LiJupyterListViews extends LiElement {
             }
             LI.fire(document, 'ok', item);
             LI.fire(document, 'setFocusedIndex', { idx, editedIdx });
-            this.jupyter.collapsed = false;
+            if (this.cell) this.cell.collapsed = collapsed;
             setTimeout(() => this.jupyter._isChanged = false, 500);
         }, 10);
     }
@@ -308,7 +309,7 @@ customElements.define('li-jupyter-cell', class LiJupyterCell extends LiElement {
     render() {
         return html`
             <div id="${this.id}" class="cell ${this.focused} ${this.edited}" style="box-shadow: ${this.showBorder && this.focusedIndex !== this.idx ? '0px 0px 0px 1px lightgray' : ''};">
-                ${!this.readOnly && this.collapsed && this.editedIndex !== this.idx ? html`
+                ${(!this.readOnly && this.collapsed && this.editedIndex !== this.idx) || this.cell?.collapsed ? html`
                     <div class="row" @click=${this.click}>${this.cell?.label || this.cell?.cell_type || ''}</div>
                 ` : html`
                     ${this.cellType}
@@ -434,6 +435,7 @@ customElements.define('li-jupyter-cell-toolbar', class LiJupyterCellToolbar exte
 
     tapOrder(e, v) {
         this.jupyter._isChanged = true;
+        const collapsed = this.jupyter.collapsed;
         this.jupyter.collapsed = true;
         this.editedIndex = -1;
         setTimeout(() => {
@@ -442,22 +444,23 @@ customElements.define('li-jupyter-cell-toolbar', class LiJupyterCellToolbar exte
             idx = idx < 0 ? 0 : idx > this.notebook.cells.length ? this.notebook.cells.length : idx;
             this.notebook.cells.splice(idx, 0, cells[0])
             this.focusedIndex = idx;
-            this.jupyter.collapsed = false;
+            this.jupyter.collapsed = collapsed;
             this.$update();
             LI.fire(document, 'changesJupyter', { type: 'jupyter_cell', change: 'moveCell', cell: this.cell, notebook: this.notebook, jupyter: this.jupyter });
             setTimeout(() => this.jupyter._isChanged = false, 500);
-        }, 10)
+        }, 100)
     }
     tapDelete() {
         if (window.confirm(`Do you really want delete current cell ?`)) {
             this.jupyter._isChanged = true;
-            this.jupyter.collapsed = true;
+            const collapsed = this.jupyter.collapsed;
+            this.cell.collapsed = true;
             this.editedIndex = -1;
             setTimeout(() => {
                 this.cell._deleted = true;
                 this.notebook.cells.splice(this.idx, 1);
                 this.focusedIndex = (this.idx > this.notebook.cells.length - 1) ? this.notebook.cells.length - 1 : this.idx;
-                this.jupyter.collapsed = false;
+                if (this.cell) this.jupyter.collapsed = collapsed;
                 this.$update();
                 LI.fire(document, 'changesJupyter', { type: 'jupyter_cell', change: 'deleteCell', cell: this.cell, notebook: this.notebook, jupyter: this.jupyter });
                 setTimeout(() => this.jupyter._isChanged = false, 500);

@@ -189,13 +189,13 @@ customElements.define('li-family', class LiFamily extends LiElement {
                     if (d.change === 'deleteCell') {
                         this.deletedItemsID.add(_id);
                         this.changedItemsID.add(this.selectedItem._id);
-                         this.changedItems[this.selectedItem._id] = this.selectedItem;
-                    } else if (d.change === 'moveCell') {
+                        this.changedItems[this.selectedItem._id] = this.selectedItem;
+                    } else if (d.change === 'moveCell' || d.change === 'addCell') {
+                        if (d.change === 'moveCell' || d.change === 'addCell')
+                            this.setChangedPart(d.cell, 'jupyter_cell')
                         let partsId = [];
-                        this.jupyter.notebook.cells.map (i => {
-                            partsId.push(i._id);
-                        })
-                        partsId = [...partsId, ...this.selectedItem.doc.partsId.filter(i => !i.startsWith('jupyter_cell'))]
+                        this.jupyter.notebook.cells.map(i => partsId.push(i._id));
+                        partsId = [...partsId, ...(this.selectedItem.doc.partsId || []).filter(i => !i.startsWith('jupyter_cell'))]
                         this.selectedItem.doc.partsId = partsId;
                         this.changedItemsID.add(this.selectedItem._id);
                         this.changedItems[this.selectedItem._id] = this.selectedItem;
@@ -220,8 +220,8 @@ customElements.define('li-family', class LiFamily extends LiElement {
                         this.selectedItem.notebook.cells.push(doc);;
                         this.selectedItem._parts.push(part);
                     })
-                    setTimeout(() => this._isUpdateSelectedItem = false, 1000);
                 }
+                setTimeout(() => this._isUpdateSelectedItem = false, 1000);
                 this.$update();
             })
             this.listen('changesPhases', (e) => {
