@@ -2,7 +2,7 @@ import { LZString } from '../../../lib/lz-string/lz-string.js';
 
 export class ITEM {
     constructor(doc = {}, props = {}) {
-        this.doc = doc;
+        this.doc = doc || {};
         this.doc.type ||= props.type || 'items';
         if (doc.label || props.label) this.doc.label ||= props.label;
         else if (this.doc.type === 'items') this.doc.label = '...';
@@ -157,7 +157,7 @@ export const updateSelectedItem = async (self) => {
         if (i.doc) {
             let lzs = LZString.decompressFromUTF16((i.doc.lzs || ''));
             let doc = lzs ? lzs = JSON.parse(lzs) : i.doc;
-            const item = new ITEM(lzs, { type: doc.type });
+            const item = new ITEM(doc, { type: doc.type });
             // if (doc.type === 'notebook') {
             //     self.selectedItem.notebook = { ...selectedItem.notebook, ...doc };
             // }

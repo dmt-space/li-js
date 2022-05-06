@@ -188,6 +188,7 @@ customElements.define('li-family', class LiFamily extends LiElement {
                     const _id = d.cell._id || 'jupyter_cell:' + d.cell.ulid;
                     if (d.change === 'deleteCell') {
                         this.deletedItemsID.add(_id);
+                        this.selectedItem.doc.partsId.remove(_id);
                         this.changedItemsID.add(this.selectedItem._id);
                         this.changedItems[this.selectedItem._id] = this.selectedItem;
                     } else if (d.change === 'moveCell' || d.change === 'addCell') {
@@ -233,6 +234,7 @@ customElements.define('li-family', class LiFamily extends LiElement {
                 console.log(d);
                 if (d.change === 'deletePhase') {
                     this.deletedItemsID.add(d._id);
+                    this.selectedItem.doc.partsId.remove(d._id);
                     this.changedItemsID.add(this.selectedItem._id);
                     this.changedItems[this.selectedItem._id] = this.selectedItem;
                 } else {
