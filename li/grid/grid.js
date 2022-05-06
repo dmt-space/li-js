@@ -73,7 +73,7 @@ customElements.define('li-grid', class LiGrid extends LiElement {
             data: { type: Object, local: true },
             left: { type: Number, default: 300, save: true },
             right: { type: Number, default: 300, save: true },
-            headersLevel: { type: Number, default: 3.3, local: true }
+            grid: { type: Object, local: true },
         }
     }
     get colLeft() { return this.data?.columns?.filter(i => i.fix === 'left') }
@@ -86,6 +86,32 @@ customElements.define('li-grid', class LiGrid extends LiElement {
             if (e.detail.id === 'grid-splitter-right') this.right = e.detail.w;
             if (e.detail.id === 'grid-splitter-left') this.left = e.detail.w;
         })
+        this.grid = this;
+    }
+    firstUpdated() {
+        super.firstUpdated();
+        this.headerResize();
+    }
+
+    headerResize(e) {
+        setTimeout(() => {
+            const parts = this.$qsa('li-grid-table');
+            const headers = parts.map(part => {
+                return part.$qsa('header');
+            }).flat();
+            let height = 0;
+            for (let h of headers) {
+                h.style.minHeight = '';
+                h.style.maxHeight = '';
+                if (height < h.scrollHeight)
+                    height = h.scrollHeight;
+            }
+            for (let h of headers) {
+                h.style.minHeight = height + 'px';
+                h.style.maxHeight = height + 'px';
+            }
+            this.$update();
+        });
     }
 })
 
@@ -126,7 +152,7 @@ customElements.define('li-grid-table', class LiGridTable extends LiElement {
     render() {
         return html`
             <div class="wrapper">
-                <header style="min-height: ${this.headersLevel * 32}px; max-height: ${this.headersLevel * 32}px">
+                <header>
                     <li-grid-header .columns=${this.columns} type=${this.type}></li-grid-header>
                 </header>
                 <div class="table" style=""></div>
@@ -138,8 +164,7 @@ customElements.define('li-grid-table', class LiGridTable extends LiElement {
     static get properties() {
         return {
             columns: { type: Array },
-            type: { type: String },
-            headersLevel: { type: Number, local: true }
+            type: { type: String }
         }
     }
 })
@@ -147,7 +172,7 @@ customElements.define('li-grid-table', class LiGridTable extends LiElement {
 customElements.define('li-grid-header', class LiGridRow extends LiElement {
     static get styles() {
         return css`
-            :host::-webkit-scrollbar { width: 0px; height: 1px; } :host::-webkit-scrollbar-track { background: lightgray; } :host::-webkit-scrollbar-thumb {  background-color: black; }    
+            :host::-webkit-scrollbar { width: 0px; height: 0px; } :host::-webkit-scrollbar-track { background: lightgray; } :host::-webkit-scrollbar-thumb {  background-color: black; }    
             * {
                 box-sizing: border-box;
             }
@@ -156,6 +181,7 @@ customElements.define('li-grid-header', class LiGridRow extends LiElement {
                 height: 100%;
                 align-items: center;
                 overflow-x: auto;
+                cursor: pointer;
             }
             .cell {
                 width: 100%;
@@ -169,8 +195,8 @@ customElements.define('li-grid-header', class LiGridRow extends LiElement {
     render() {
         return html`
             ${this.columns?.map(i => html`
-                <li-grid-header-cell .item=${i} class="cell" style="width: ${i.width || 'unset'}; flex: ${i.hideSplitter ? '1' : 'unset'}; overflow: hidden" type=${this.type} level=${this.level}>${i.name || '...'}</li-grid-header-cell>
-                ${i.hideSplitter ? html `` : html`
+                <li-grid-header-cell .item=${i} class="cell" style="background: ${this.scroll? '#c0c0c0':''}; width: ${i.width || 'unset'}; flex: ${i.hideSplitter ? '1' : 'unset'}; overflow: hidden" type=${this.type}>${i.name || '...'}</li-grid-header-cell>
+                ${i.hideSplitter ? html`` : html`
                     <li-splitter use_px color="gray" size="1"></li-splitter>
                 `}
             `)}
@@ -181,8 +207,40 @@ customElements.define('li-grid-header', class LiGridRow extends LiElement {
         return {
             columns: { type: Array },
             type: { type: String },
-            level: { type: Number, default: 1 }
+            scroll: { type: Boolean }
         }
+    }
+    get scroll() {
+        return this.scrollWidth - this.offsetWidth > 0;
+    }
+
+    firstUpdated() {
+        super.firstUpdated();
+        let isDown = false;
+        let startX;
+        let scrollLeft;
+        this.addEventListener('pointerdown', (e) => {
+            e.stopPropagation();
+            isDown = true;
+            startX = e.pageX - this.offsetLeft;
+            scrollLeft = this.scrollLeft;
+        });
+        this.addEventListener('pointerleave', () => {
+            isDown = false;
+        });
+        this.addEventListener('pointerup', () => {
+            isDown = false;
+        });
+        this.addEventListener('pointermove', (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - this.offsetLeft;
+            const walk = (x - startX);
+            this.scrollLeft = scrollLeft - walk;
+        });
+        this.listen('endSplitterMove', (e) => {
+            this.$update();
+        })
     }
 })
 
@@ -221,7 +279,7 @@ customElements.define('li-grid-header-cell', class LiGridCell extends LiElement 
                 <div class="cell" >${this.item?.name || '...'}</div>
             </div>
             ${this.item?.items?.length && this.item?.expanded ? html`
-                <li-grid-header .columns=${this.item.items} type=${this.type} level=${this.level + 1}></li-grid-header>
+                <li-grid-header .columns=${this.item.items} type=${this.type}></li-grid-header>
             ` : html``}
         `;
     }
@@ -230,12 +288,12 @@ customElements.define('li-grid-header-cell', class LiGridCell extends LiElement 
         return {
             item: { type: Object },
             type: { type: String },
-            level: { type: Number }
+            grid: { type: Object, local: true }
         }
     }
 
     _expanded(e) {
         this.item.expanded = e.target.toggled;
-        this.$update();
+        this.grid.headerResize();
     }
 })
