@@ -211,7 +211,7 @@ customElements.define('li-jupyter-cell-addbutton', class LiJupyterAddButton exte
                 const cell = { ulid: LI.ulid(), type: 'jupyter_cell', cell_type: item.cell_type, cell_extType: item.cell_extType, source: item.source, label: item.label };
                 this.notebook ||= { id: this.jupyter.id, cells: [] };
                 this.notebook.cells.splice(idx, 0, cell);
-                editedIdx = this.notebook.cells.length === 1 ? 0 : -1;
+                // editedIdx = this.notebook.cells.length === 1 ? 0 : -1;
                 LI.fire(document, 'changesJupyter', { type: 'jupyter_cell', change: 'addCell', cell: cell, notebook: this.notebook, jupyter: this.jupyter });
             } else if (this.view === 'select type') {
                 const cell = { ...this.cell, ...{ cell_type: item.cell_type, cell_extType: item.cell_extType, label: item.label } };
@@ -304,11 +304,11 @@ customElements.define('li-jupyter-cell', class LiJupyterCell extends LiElement {
 
     render() {
         return html`
-            <div id="${this.id}" class="cell ${this.focused} ${this.edited}" style="box-shadow: ${this.showBorder && this.focusedIndex !== this.idx ? '0px 0px 0px 1px lightgray' : ''};">
+            <div id="${this.id}" class="cell ${this.focused} ${this.edited}" style="box-shadow: ${this.showBorder && this.focusedIndex !== this.idx ? '0px 0px 0px 1px lightgray' : ''}">
                 ${!this.readOnly && this.collapsed && this.editedIndex !== this.idx ? html`
                     <div class="row" @click=${this.click}>${(this.cell._idx || '..') + '. ' + this.cell?.label || this.cell?.cell_type || ''}</div>
                 ` : html`
-                    ${this.cellType}
+                    ${this.jupyter.hideCells ? html`` : html`${this.cellType}`}
                 `}
             </div>
             ${!this.readOnly && this.cell && this.focusedIndex === this.idx ? html`
