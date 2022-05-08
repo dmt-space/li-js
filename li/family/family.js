@@ -190,8 +190,7 @@ customElements.define('li-family', class LiFamily extends LiElement {
                     if (d.notebook.id === 'phases') {
                         const phase = this.$qs('li-family-phases').selectedPhases;
                         phase.notebook = d.notebook;
-                        this.changedItemsID.add(phase._id);
-                        this.changedItems[phase._id] = phase;
+                        this.setChangedPart(phase, 'phases');
                     } else if (d.change === 'deleteCell') {
                         this.deletedItemsID.add(_id);
                         this.selectedItem.doc.partsId.remove(_id);
@@ -201,7 +200,7 @@ customElements.define('li-family', class LiFamily extends LiElement {
                         if (d.change === 'moveCell' || d.change === 'addCell')
                             this.setChangedPart(d.cell, 'jupyter_cell')
                         let partsId = [];
-                        this.jupyter.notebook.cells.map(i => partsId.push(i._id));
+                        this.notebook.cells.map(i => partsId.push(i._id));
                         partsId = [...partsId, ...(this.selectedItem.doc.partsId || []).filter(i => !i.startsWith('jupyter_cell'))]
                         this.selectedItem.doc.partsId = partsId;
                         this.changedItemsID.add(this.selectedItem._id);
