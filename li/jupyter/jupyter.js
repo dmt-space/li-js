@@ -28,6 +28,7 @@ customElements.define('li-jupyter', class LiJupyter extends LiElement {
     }
     render() {
         return html`
+            <h3 style="margin: -14px 0 2px 32px; color: gray">${this.notebook?.label || ''}</h3>
             ${this.readOnly || this.notebook?.cells?.length || !this.isReady ? html`` : html`
                 <li-jupyter-cell-addbutton style="position: absolute; top: 18px; left: 6px; z-index: 31;"></li-jupyter-cell-addbutton>
             `}
@@ -39,13 +40,14 @@ customElements.define('li-jupyter', class LiJupyter extends LiElement {
 
     static get properties() {
         return {
+            id: { type: String, local: true },
             jupyter: { type: Object, default: {}, local: true },
             isReady: { type: Boolean, default: false },
             url: { type: String, default: '' },
             lzs: { type: String, default: '' },
             showBorder: { type: Boolean, default: true, local: true, save: true },
             readOnly: { type: Boolean, default: false, local: true },
-            notebook: { type: Object, default: {}, local: true },
+            notebook: { type: Object, local: true },
             focusedIndex: { type: Number, default: -1, local: true },
             editedIndex: { type: Number, default: -1, local: true },
             jupiterUrl: { type: String, local: true },
@@ -175,6 +177,7 @@ customElements.define('li-jupyter-cell-addbutton', class LiJupyterAddButton exte
 
     static get properties() {
         return {
+            id: { type: String, local: true },
             jupyter: { type: Object, local: true },
             notebook: { type: Object, local: true },
             cell: { type: Object },
@@ -188,10 +191,36 @@ customElements.define('li-jupyter-cell-addbutton', class LiJupyterAddButton exte
     }
 
     async showCellViews(view) {
+        this.view = view;
         this.editedIndex = -1;
-        const res = await LI.show('dropdown', new LiJupyterListViews, { jupyter: this.jupyter, notebook: this.notebook, cell: this.cell, position: this.position, view, idx: this.idx }, { parent: this.$qs('li-button'), showHeader: true, label: view + ' cell' });
+        const res = await LI.show('dropdown', new LiJupyterListViews, { id: this.id }, { id: this.id, parent: this.$qs('li-button'), showHeader: true, label: view + ' cell' });
         if (res && view === 'add') this.editedIndex = -1;
+        this.addCell(res.detail)
         this.$update();
+    }
+    addCell(item) {
+        this.jupyter._isChanged = true;
+        if (this.cell)
+            this.jupyter.collapsed = true;
+        setTimeout(() => {
+            let idx = this.idx;
+            let editedIdx = -1;
+            if (this.view === 'add') {
+                idx = this.position === 'top' ? idx : idx + 1;
+                idx ||= 0;
+                const cell = { ulid: LI.ulid(), type: 'jupyter_cell', cell_type: item.cell_type, cell_extType: item.cell_extType, source: item.source, label: item.label };
+                this.notebook ||= { id: this.jupyter.id, cells: [] };
+                this.notebook.cells.splice(idx, 0, cell);
+                editedIdx = this.notebook.cells.length === 1 ? 0 : -1;
+                LI.fire(document, 'changesJupyter', { type: 'jupyter_cell', change: 'addCell', cell: cell, notebook: this.notebook, jupyter: this.jupyter });
+            } else if (this.view === 'select type') {
+                const cell = { ...this.cell, ...{ cell_type: item.cell_type, cell_extType: item.cell_extType, label: item.label } };
+                LI.fire(document, 'changesJupyter', { type: 'jupyter_cell', change: 'setCellType', cell: cell, notebook: this.notebook, jupyter: this.jupyter });
+                this.notebook.cells.splice(idx, 1, cell);
+            }
+            LI.fire(document, 'setFocusedIndex', { idx, editedIdx });
+            setTimeout(() => this.jupyter._isChanged = false, 500);
+        }, 10);
     }
 })
 
@@ -213,7 +242,6 @@ class LiJupyterListViews extends LiElement {
 
     render() {
         return html`
-            <!-- <div style="text-align: center; padding: 4px; border-bottom: 1px solid gray;  background: lightgray">${this.view} cell</div> -->
             <div style="display: flex; flex-direction: column;">
                 ${this.cellViews.map((i, indx) => html`
                     <li-button width="auto" textAlign="left" border=0 @click=${() => this.addCell(i)} style="padding: 2px">${(indx + 1) + '. ' + i.label}</li-button>
@@ -221,17 +249,9 @@ class LiJupyterListViews extends LiElement {
             </div>
         `
     }
-
     static get properties() {
         return {
-            jupyter: { type: Object, local: true },
-            notebook: { type: Object },
-            cell: { type: Object },
-            position: { type: String, default: 'top' },
-            view: { type: String },
-            idx: { type: Number },
-            focusedIndex: { type: Number, local: true },
-            collapsed: { type: Boolean, local: true },
+            id: { type: String, local: true },
         }
     }
     get cellViews() {
@@ -247,29 +267,7 @@ class LiJupyterListViews extends LiElement {
     }
 
     addCell(item) {
-        this.jupyter._isChanged = true;
-        if (this.cell)
-            this.jupyter.collapsed = true;
-        setTimeout(() => {
-            let idx = this.idx;
-            let editedIdx = -1;
-            if (this.view === 'add') {
-                idx = this.position === 'top' ? idx : idx + 1;
-                idx ||= 0;
-                const cell = { ulid: LI.ulid(), type: 'jupyter_cell', cell_type: item.cell_type, cell_extType: item.cell_extType, source: item.source, label: item.label };
-                this.notebook.cells ||= [];
-                this.notebook.cells.splice(idx, 0, cell);
-                editedIdx = this.notebook.cells.length === 1 ? 0 : -1;
-                LI.fire(document, 'changesJupyter', { type: 'jupyter_cell', change: 'addCell', cell: cell, notebook: this.notebook, jupyter: this.jupyter });
-            } else if (this.view === 'select type') {
-                const cell = { ...this.cell, ...{ cell_type: item.cell_type, cell_extType: item.cell_extType, label: item.label } };
-                LI.fire(document, 'changesJupyter', { type: 'jupyter_cell', change: 'setCellType', cell: cell, notebook: this.notebook, jupyter: this.jupyter });
-                this.notebook.cells.splice(idx, 1, cell);
-            }
-            LI.fire(document, 'ok', item);
-            LI.fire(document, 'setFocusedIndex', { idx, editedIdx });
-            setTimeout(() => this.jupyter._isChanged = false, 500);
-        }, 10);
+        LI.fire(document, 'ok', item);
     }
 }
 customElements.define('li-jupyter-list-views', LiJupyterListViews);
