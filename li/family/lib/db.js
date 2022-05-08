@@ -140,16 +140,10 @@ export const getSortItems = (self) => {
 export const updateSelectedItem = async (self) => {
     self.jupyter.isReady = false;
     self.jupyter.focusedIndex = self.jupyter.editedIndex = -1;
-    if (self.selectedItem.notebook && self.needSave) {
-        self.selectedItem._notebook = {};
-        setTimeout(() => {
-            self.selectedItem._notebook = undefined;
-            self.$update();
-        });
-        return;
-    }
+    self.notebook = self.selectedItem.notebook;
+    if (self.selectedItem.notebook && self.needSave)return;
     self._isUpdateSelectedItem = true;
-    self.selectedItem.notebook = { cells: [] };
+    self.selectedItem.notebook = { id: 'items', label: self.selectedItem.label, cells: [] };
     self.selectedItem._parts = [];
     self.selectedItem.phases = [];
     const parts = await self.dbLocal.allDocs({ keys: self.selectedItem.partsId || [], include_docs: true });
@@ -173,6 +167,7 @@ export const updateSelectedItem = async (self) => {
             }
         }
     })
+    self.notebook = self.selectedItem.notebook;
     setTimeout(() => {
         self._isUpdateSelectedItem = false;
     }, 500);
@@ -193,8 +188,10 @@ export const save = async (self) => {
         const res = [];
         items.rows.map(i => {
             if (i.doc) {
-                if (i.doc._id === 'items') {
+                if (i.doc.type === 'items') {
                     res.add({ ...i.doc, ...self.changedItems[i.key].doc });
+                } else if (i.doc.type === 'phases') {
+                    res.add({ ...i.doc, ...self.changedItems[i.key] });
                 } else {
                     //let lzs = LZString.compressToUTF16(JSON.stringify(self.changedItems[i.doc._id].doc));
                     res.add({ _id: i.doc._id, _rev: i.doc._rev, ...self.changedItems[i.doc._id].doc })
@@ -207,8 +204,10 @@ export const save = async (self) => {
         })
         self.changedItemsID.forEach(i => {
             let doc = { ...self.changedItems[i].doc };
-            if (doc._id === 'items') {
+            if (i.doc.type === 'items') {
                 res.add(doc);
+            } else if (i.doc.type === 'phases') {
+                res.add(...self.changedItems[i]);
             } else {
                 //let lzs = LZString.compressToUTF16(JSON.stringify(doc));
                 res.add({ ...doc })
