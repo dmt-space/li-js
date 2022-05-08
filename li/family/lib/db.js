@@ -188,10 +188,8 @@ export const save = async (self) => {
         const res = [];
         items.rows.map(i => {
             if (i.doc) {
-                if (i.doc.type === 'items') {
+                if (i.doc.type === 'items' || i.doc.type === 'phases') {
                     res.add({ ...i.doc, ...self.changedItems[i.key].doc });
-                } else if (i.doc.type === 'phases') {
-                    res.add({ ...i.doc, ...self.changedItems[i.key] });
                 } else {
                     //let lzs = LZString.compressToUTF16(JSON.stringify(self.changedItems[i.doc._id].doc));
                     res.add({ _id: i.doc._id, _rev: i.doc._rev, ...self.changedItems[i.doc._id].doc })
@@ -204,10 +202,8 @@ export const save = async (self) => {
         })
         self.changedItemsID.forEach(i => {
             let doc = { ...self.changedItems[i].doc };
-            if (i.doc.type === 'items') {
+            if (doc.type === 'items' || doc.type === 'phases') {
                 res.add(doc);
-            } else if (i.doc.type === 'phases') {
-                res.add(...self.changedItems[i]);
             } else {
                 //let lzs = LZString.compressToUTF16(JSON.stringify(doc));
                 res.add({ ...doc })
