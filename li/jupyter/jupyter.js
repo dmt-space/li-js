@@ -28,7 +28,9 @@ customElements.define('li-jupyter', class LiJupyter extends LiElement {
     }
     render() {
         return html`
-            <h3 style="margin: -14px 0 2px 32px; color: gray">${this.notebook?.label || ''}</h3>
+            ${this.notebook?.label ? html`
+                <h3 style="margin: -14px 0 2px 32px; color: gray">${this.notebook?.label || ''}</h3>
+            ` : html``}
             ${this.readOnly || this.notebook?.cells?.length || !this.isReady ? html`` : html`
                 <li-jupyter-cell-addbutton style="position: absolute; top: 18px; left: 6px; z-index: 31;"></li-jupyter-cell-addbutton>
             `}
