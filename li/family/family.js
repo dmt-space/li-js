@@ -165,7 +165,7 @@ customElements.define('li-family', class LiFamily extends LiElement {
     get needSave() { return this.changedItemsID?.length || this.deletedItemsID?.length }
     get jupyter() { return this.$qs('li-jupyter') || {} }
     get simpleMain() { return this.$qs('#simple-main') || {} }
- 
+
     firstUpdated() {
         super.firstUpdated();
         db.firstInit(this);
@@ -325,7 +325,7 @@ customElements.define('li-family', class LiFamily extends LiElement {
                 jup.share();
             },
             'add phase date': (e) => {
-                const color = '#'+Math.random().toString(16).substr(2,6);
+                const color = '#' + Math.random().toString(16).substr(2, 6);
                 // console.log(color)
                 this.selectedItem.phases ||= [];
                 let date = new Date().toISOString().split('T');
@@ -335,7 +335,7 @@ customElements.define('li-family', class LiFamily extends LiElement {
                 this.selectedItem.phases.push(doc);
             },
             'add phase period': () => {
-                const color ='#'+Math.random().toString(16).substr(2,6);
+                const color = '#' + Math.random().toString(16).substr(2, 6);
                 // console.log(color)
                 this.selectedItem.phases ||= [];
                 let date = new Date().toISOString().split('T');
@@ -449,31 +449,94 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
 customElements.define('li-family-week', class LiFamilyWeek extends LiElement {
     static get styles() {
         return css`
-
+            :host {
+                font-size: 14px;
+                cursor: pointer;
+                position: relative;
+                width: 100%; 
+                height: 100%;
+            }
+            .tooltip {
+                display: none;
+                position: fixed;
+                padding: 10px 20px;
+                border: 1px solid #b3c9ce;
+                border-radius: 4px;
+                text-align: center;
+                color: gray;
+                background: #fff;
+                box-shadow: 3px 3px 3px rgba(0, 0, 0, .3);
+                z-index: 999;
+            }
         `;
     }
 
     render() {
         return html`
-            <div class="week" style="background: ${this.y >= 6 && this.y <= 13 ? 'lightgreen' : this.y >= 14 && this.y <= 17 ? 'lightblue' : ''}; width: 100%; height: 100%; opacity: .3"></div>
+            <div class="week" style="background: ${this.color || ''}; width: 100%; height: 100%; opacity: .3" @pointermove=${this.on_pointermove} @pointerout=${this.on_pointerout}></div>
+            <div class="tooltip" id="tooltip"></div>
         `
-    }
-
-    get timeStart() {
-        const MS_DAY = 1000 * 60 * 60 * 24;
-        return this.y * MS_DAY * 365 + this.w * MS_DAY;
-    }
-    get timeEnd() {
-        const MS_DAY = 1000 * 60 * 60 * 24;
-        return this.y * MS_DAY * 365 + this.w * MS_DAY + 7 * MS_DAY;
     }
 
     static get properties() {
         return {
             selectedItem: { type: Object, local: true },
+            phases: { type: Array },
             y: { type: Number },
-            w: { type: Number }
+            w: { type: Number },
+            color: { type: String }
         }
+    }
+    get timeStart() {
+        const stringDate = this.selectedItem?.phases?.[0]?.date1;
+        const startDate = stringDate ? new Date(stringDate) : new Date();
+        return startDate.getTime();
+    }
+    get MS_DAY() { return 1000 * 60 * 60 * 24 }
+    get timeWeekStart() { return new Date(this.timeStart + this.y * this.MS_DAY * 365 + this.w * this.MS_DAY * 7) }
+    get timeWeekEnd() { return new Date(this.timeStart + this.y * this.MS_DAY * 365 + this.w * this.MS_DAY * 7 + this.MS_DAY * 7) }
+    get period() {
+        return [
+            { d1: '1970-09-01T12:00', d2: '1978-06-01T12:00', color: 'lightgreen' }
+        ]
+    }
+
+    firstUpdated() {
+        super.firstUpdated();
+        setTimeout(() => {
+            this.selectedItem?.phases.map(i => {
+                let date2 = i.date2 ? new Date(i.date2) : new Date();
+                if (i.isPeriod && this.timeWeekStart >= new Date(i.date1) && this.timeWeekStart <= date2) {
+                    this.label = `
+${this.timeWeekStart.toLocaleDateString()}...${this.timeWeekEnd.toLocaleDateString()}
+<hr>
+<strong>${i.label}</strong>
+<br>
+<strong>${new Date(i.date1).toLocaleDateString()}...${date2.toLocaleDateString()}</strong>
+<hr>
+`
+                    this.color = i.color;
+                }
+            })
+        }, 1000);
+    }
+    on_pointermove(e) {
+        if (!this.label) return;
+        const tooltip = this.$qs('#tooltip');
+        tooltip.innerHTML = this.label;
+        let coords = this.getBoundingClientRect();
+        let left = coords.left + (this.offsetWidth - tooltip.offsetWidth) / 2;
+        if (left < 0) left = 0;
+        let top = coords.top - tooltip.offsetHeight - 5;
+        if (top < 0) {
+            top = coords.top + this.offsetHeight + 5;
+        }
+        tooltip.style.left = left + 'px';
+        tooltip.style.top = top + 'px';
+        tooltip.style.display = 'block';
+    }
+    on_pointerout(e) {
+        this.$qs('#tooltip').style.display = 'none';
     }
 })
 
@@ -533,7 +596,7 @@ customElements.define('li-family-phases', class LiFamilyPhase extends LiElement 
         return html`
             <div style="display: flex; align-items: center; padding: 2px; margin-bottom: 4px; position: sticky; top: 0px; background: white; z-index: 1; border-bottom: 1px solid darkgray;">
                 <label style="color: gray; flex: 1;">${this.$.selectedItem?.label}</label>
-                <li-button name="edit" size="16" scale=".8" @click=${() => {this.$.notebook = this.$.selectedItem.notebook; this.$.simpleMain.idx = 0}} style="margin-right: 4px;"></li-button>
+                <li-button name="edit" size="16" scale=".8" @click=${() => { this.$.notebook = this.$.selectedItem.notebook; this.$.simpleMain.idx = 0 }} style="margin-right: 4px;"></li-button>
             </div>
             <div style="display: flex; flex-direction: column">
                 ${(this.$.selectedItem?.phases || []).map((doc, idx) => html`
