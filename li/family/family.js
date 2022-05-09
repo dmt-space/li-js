@@ -165,7 +165,7 @@ customElements.define('li-family', class LiFamily extends LiElement {
     get needSave() { return this.changedItemsID?.length || this.deletedItemsID?.length }
     get jupyter() { return this.$qs('li-jupyter') || {} }
     get simpleMain() { return this.$qs('#simple-main') || {} }
-
+ 
     firstUpdated() {
         super.firstUpdated();
         db.firstInit(this);
@@ -383,21 +383,12 @@ customElements.define('li-family-items-tree', class LiFamilyItemsTree extends Li
     static get properties() {
         return {
             name: { type: String, local: true },
-            readOnly: { type: Boolean, local: true },
-            dbLocal: { type: Object, local: true },
-            dbLocalStore: { type: Object, local: true },
             items: { type: Array, local: true },
-            flatItems: { type: Object, local: true },
             selectedItem: { type: Object, local: true },
             starItem: { type: Object, local: true },
-            changedItemsID: { type: Array, local: true },
-            changedItems: { type: Object, local: true },
-            deletedItemsID: { type: Array, local: true },
-            deletedItems: { type: Object, local: true }
         }
     }
     get _items() { return this.starItem || this.items }
-    get needSave() { return this.deletedItemsID.length }
 
     onselected(e) {
         this.selectedItem = e.detail;
@@ -542,7 +533,7 @@ customElements.define('li-family-phases', class LiFamilyPhase extends LiElement 
         return html`
             <div style="display: flex; align-items: center; padding: 2px; margin-bottom: 4px; position: sticky; top: 0px; background: white; z-index: 1; border-bottom: 1px solid darkgray;">
                 <label style="color: gray; flex: 1;">${this.selectedItem?.label}</label>
-                <li-button name="edit" size="16" scale=".8" @click=${() => {this.notebook = this.selectedItem.notebook; this.fml.simpleMain.idx = 0;}} style="margin-right: 4px;"></li-button>
+                <li-button name="edit" size="16" scale=".8" @click=${() => {this.notebook = this.selectedItem.notebook; this.$.simpleMain.idx = 0;}} style="margin-right: 4px;"></li-button>
             </div>
             <div style="display: flex; flex-direction: column">
                 ${(this.selectedItem?.phases || []).map((doc, idx) => html`
@@ -569,8 +560,7 @@ customElements.define('li-family-phases', class LiFamilyPhase extends LiElement 
     static get properties() {
         return {
             idx: { type: Number, default: -1 },
-            selectedItem: { type: Object, local: true },
-            notebook: { type: Object, local: true },
+            selectedItem: { type: Object, local: true }
         }
     }
     get selectedPhases() {
@@ -593,8 +583,8 @@ customElements.define('li-family-phases', class LiFamilyPhase extends LiElement 
         this.fire('changesPhases', { type: 'changesPhases', change: 'setValue', value: e.target.value, idx, doc, sourceEvent: e })
     }
     setNotebook() {
-        this.notebook = this.selectedItem.phases[this.idx].notebook || { id: 'phases', label: this.selectedItem.phases[this.idx].label, cells: [] };
-        this.fml.simpleMain.idx = 0;
+        this.$.notebook = this.selectedItem.phases[this.idx].notebook || { id: 'phases', label: this.selectedItem.phases[this.idx].label, cells: [] };
+        this.$.simpleMain.idx = 0;
         this.$update();
     }
 })
