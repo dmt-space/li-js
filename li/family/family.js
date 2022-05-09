@@ -44,7 +44,7 @@ customElements.define('li-family', class LiFamily extends LiElement {
                     </li-panel-simple>
                 </div>
                 <div id="main" slot="app-main" style="display: flex; height: 100%;">
-                    <li-panel-simple .src=${this.mainTabs} iconSize=24>
+                    <li-panel-simple id="simple-main" .src=${this.mainTabs} iconSize=24>
                         <li-jupyter slot="notebook" .notebook=${this.notebook}></li-jupyter>
                         <li-family-weeks slot="weeks"></li-family-weeks>
                         <li-family-tree slot="family tree" style="height: 100%:"></li-family-tree>
@@ -52,7 +52,7 @@ customElements.define('li-family', class LiFamily extends LiElement {
                 </div>
                 <div slot="app-right" slot="app-main" style="display: flex; height: 100%;">
                     <li-panel-simple .src=${this.rightTabs} style="height: 100%:" iconSize=24>
-                        <li-family-phases slot="phases" style="display: flex; height: 100%;"></li-family-phases>
+                        <li-family-phases slot="phases" style="display: flex; height: 100%;" .fml=${this}></li-family-phases>
                     </li-panel-simple>
                 </div>
             </li-layout-app>
@@ -164,6 +164,7 @@ customElements.define('li-family', class LiFamily extends LiElement {
 
     get needSave() { return this.changedItemsID?.length || this.deletedItemsID?.length }
     get jupyter() { return this.$qs('li-jupyter') || {} }
+    get simpleMain() { return this.$qs('#simple-main') || {} }
 
     firstUpdated() {
         super.firstUpdated();
@@ -236,7 +237,7 @@ customElements.define('li-family', class LiFamily extends LiElement {
                 this.deletedItemsID ||= [];
                 this.deletedItems ||= {};
                 const d = e.detail;
-                console.log(d);
+                // console.log(d);
                 if (d.change === 'deletePhase') {
                     this.deletedItemsID.add(d._id);
                     this.selectedItem.doc.partsId.remove(d._id);
@@ -325,7 +326,7 @@ customElements.define('li-family', class LiFamily extends LiElement {
             },
             'add phase date': (e) => {
                 const color = '#'+Math.random().toString(16).substr(2,6);
-                console.log(color)
+                // console.log(color)
                 this.selectedItem.phases ||= [];
                 let date = new Date().toISOString().split('T');
                 date = date[0] + 'T12:00';
@@ -335,7 +336,7 @@ customElements.define('li-family', class LiFamily extends LiElement {
             },
             'add phase period': () => {
                 const color ='#'+Math.random().toString(16).substr(2,6);
-                console.log(color)
+                // console.log(color)
                 this.selectedItem.phases ||= [];
                 let date = new Date().toISOString().split('T');
                 date = date[0] + 'T12:00';
@@ -541,7 +542,7 @@ customElements.define('li-family-phases', class LiFamilyPhase extends LiElement 
         return html`
             <div style="display: flex; align-items: center; padding: 2px; margin-bottom: 4px; position: sticky; top: 0px; background: white; z-index: 1; border-bottom: 1px solid darkgray;">
                 <label style="color: gray; flex: 1;">${this.selectedItem?.label}</label>
-                <li-button name="edit" size="16" scale=".8" @click=${() => this.notebook = this.selectedItem.notebook} style="margin-right: 4px;"></li-button>
+                <li-button name="edit" size="16" scale=".8" @click=${() => {this.notebook = this.selectedItem.notebook; this.fml.simpleMain.idx = 0;}} style="margin-right: 4px;"></li-button>
             </div>
             <div style="display: flex; flex-direction: column">
                 ${(this.selectedItem?.phases || []).map((doc, idx) => html`
@@ -593,6 +594,7 @@ customElements.define('li-family-phases', class LiFamilyPhase extends LiElement 
     }
     setNotebook() {
         this.notebook = this.selectedItem.phases[this.idx].notebook || { id: 'phases', label: this.selectedItem.phases[this.idx].label, cells: [] };
+        this.fml.simpleMain.idx = 0;
         this.$update();
     }
 })
