@@ -247,7 +247,6 @@ export const save = async (self) => {
         init(self);
     }
 }
-
 export const btnClick = (self, detail) => {
     const id = detail.btn;
     const action = {
