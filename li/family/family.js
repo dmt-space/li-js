@@ -406,6 +406,7 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
                 color: darkgray;
                 font-size: 12px;
                 text-align: center;
+                cursor: pointer;
             }
             .year {
                 display: flex;
@@ -428,115 +429,114 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
                     <div style="height: 20px; flex: 1">${w + 1}</div>
                 `)}
             </div>
-            ${this.arr(99).map(y => html`
-                <div style="display: flex; flex: 1; align-items: center;">
-                    <div style="width: 14px">${y + 1}</div>
-                    <div class="year">
-                        ${this.arr(52).map(w => html`
-                            <li-family-week class="week" y=${y} w=${w}></li-family-week>
-                        `)}
+            <div @pointerdown=${this.on_click}>
+                ${this.arr(this.$._count || 100).map(y => {
+            const timeRowYearStart = this.timeRowYearStart(y);
+            return html`
+                    <div style="display: flex; flex: 1; align-items: center;">
+                        <div style="width: 14px">${y}</div>
+                        <div class="year">
+                            ${this.arr(this.$._count || 52).map(w => html`
+                                <li-family-week class="week" y=${y} w=${w} timeRowYearStart=${timeRowYearStart}></li-family-week>
+                            `)}
+                        </div>
                     </div>
-                </div>
-            `)}
-        `
-    }
-
-    arr(count) {
-        return [...Array(count).keys()];
-    }
-})
-
-customElements.define('li-family-week', class LiFamilyWeek extends LiElement {
-    static get styles() {
-        return css`
-            :host {
-                font-size: 14px;
-                cursor: pointer;
-                position: relative;
-                width: 100%; 
-                height: 100%;
-            }
-            .tooltip {
-                display: none;
-                position: fixed;
-                padding: 10px 20px;
-                border: 1px solid #b3c9ce;
-                border-radius: 4px;
-                text-align: center;
-                color: gray;
-                background: #fff;
-                box-shadow: 3px 3px 3px rgba(0, 0, 0, .3);
-                z-index: 999;
-            }
-        `;
-    }
-
-    render() {
-        return html`
-            <div class="week" style="background: ${this.color || ''}; width: 100%; height: 100%; opacity: .3" @pointermove=${this.on_pointermove} @pointerout=${this.on_pointerout}></div>
-            <div class="tooltip" id="tooltip"></div>
+                `})}
+            </div>
         `
     }
 
     static get properties() {
         return {
             selectedItem: { type: Object, local: true },
-            phases: { type: Array },
-            y: { type: Number },
-            w: { type: Number },
-            color: { type: String }
+            timeStart: { type: Number },
+            dataStart: { type: Object }
         }
     }
-    get timeStart() {
-        const stringDate = this.selectedItem?.phases?.[0]?.date1;
-        const startDate = stringDate ? new Date(stringDate) : new Date();
-        return startDate.getTime();
-    }
-    get MS_DAY() { return 1000 * 60 * 60 * 24 }
-    get timeWeekStart() { return new Date(this.timeStart + this.y * this.MS_DAY * 365 + this.w * this.MS_DAY * 7) }
-    get timeWeekEnd() { return new Date(this.timeStart + this.y * this.MS_DAY * 365 + this.w * this.MS_DAY * 7 + this.MS_DAY * 7) }
-    get period() {
-        return [
-            { d1: '1970-09-01T12:00', d2: '1978-06-01T12:00', color: 'lightgreen' }
-        ]
+    arr(count) {
+        return [...Array(count).keys()];
     }
 
-    firstUpdated() {
+    async firstUpdated() {
         super.firstUpdated();
-        setTimeout(() => {
-            this.selectedItem?.phases.map(i => {
-                let date2 = i.date2 ? new Date(i.date2) : new Date();
-                if (i.isPeriod && this.timeWeekStart >= new Date(i.date1) && this.timeWeekStart <= date2) {
-                    this.label = `
-${this.timeWeekStart.toLocaleDateString()}...${this.timeWeekEnd.toLocaleDateString()}
+        await new Promise((r) => setTimeout(r, 300));
+        const stringDate = this.selectedItem?.phases?.[0]?.date1;
+        this.dataStart = stringDate ? new Date(stringDate) : new Date();
+        this.timeStart = this.dataStart?.getTime() || 0;
+    }
+    timeRowYearStart(year) {
+        const stringDate = this.selectedItem?.phases?.[0]?.date1;
+        if (!stringDate) return 0;
+        const dataStart = new Date(stringDate);
+        dataStart?.setFullYear(dataStart.getFullYear() + year);
+        return dataStart?.getTime();
+    }
+    async on_click(e) {
+        let target = e.target;
+        let newDiv = document.createElement("div");
+        newDiv.innerHTML = target.label;
+        if (target.label) {
+            newDiv.style.fontSize = '16px';
+            newDiv.style.color = 'gray';
+            newDiv.style.padding = '8px';
+            newDiv.style.background = 'white';
+            newDiv.style.textAlign = 'center';
+            newDiv.style.border = '1px solid gray';
+            newDiv.style.boxShadow = '3px 3px 3px rgba(0, 0, 0, .7)';
+            newDiv.style.innerHTML = target.label;
+        }
+        await LI.show('dropdown', newDiv, {}, { parent: target, align: 'left', showHeader: true, label: target.weekStart.toLocaleDateString() + ' - ' + target.weekEnd.toLocaleDateString(), intersect: true });
+    }
+})
+
+customElements.define('li-family-week', class LiFamilyWeek extends LiElement {
+    render() {
+        return html`
+            <div class="week" style="background: ${this.color || ''}; width: 100%; height: 100%; opacity: .3"></div>
+        `
+    }
+
+    static get properties() {
+        return {
+            selectedItem: { type: Object, local: true },
+            y: { type: Number },
+            w: { type: Number },
+            color: { type: String },
+            label: { type: String },
+            timeRowYearStart: { type: Object }
+        }
+    }
+
+    async firstUpdated() {
+        super.firstUpdated();
+        await new Promise((r) => setTimeout(r, 500));
+        this.init();
+    }
+    init() {
+        this.weekStart = new Date(this.timeRowYearStart + this.w * LI.MS_DAY * 7);
+        let year = this.y - 1;
+        year = (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0));
+        this.weekEnd = new Date(this.timeRowYearStart + this.w * LI.MS_DAY * 7 + LI.MS_DAY * 7 + (this.w === 51 && year ? LI.MS_DAY : 0));
+        this.label = ''; // `${this.weekStart.toLocaleDateString()} ... ${this.weekEnd.toLocaleDateString()}`;
+        this.selectedItem?.phases.map(i => {
+            const d1 = new Date(i.date1);
+            const d2 = i.date2 ? new Date(i.date2) : new Date();
+            const diff = Math.abs(d2.getTime() - d1.getTime());
+            this.diff = (diff / 1000 / 60 / 60 / 24 / 365).toFixed(2);
+
+            if (i.isPeriod && (this.weekStart >= d1 || this.weekEnd >= d1) && (this.weekStart <= d2 || this.weekEnd <= d2)) {
+                this.label += `
+<div>${i.group || ''}</div>
 <hr>
-<strong>${i.label}</strong>
+<strong>${i.label || ''}</strong>
 <br>
-<strong>${new Date(i.date1).toLocaleDateString()}...${date2.toLocaleDateString()}</strong>
+<strong>${d1.toLocaleDateString()} - ${d2.toLocaleDateString()}</strong>
+<div>( ${this.diff} <span style="font-size: 10px"> year</span> )</div>
 <hr>
 `
-                    this.color = i.color;
-                }
-            })
-        }, 1000);
-    }
-    on_pointermove(e) {
-        if (!this.label) return;
-        const tooltip = this.$qs('#tooltip');
-        tooltip.innerHTML = this.label;
-        let coords = this.getBoundingClientRect();
-        let left = coords.left + (this.offsetWidth - tooltip.offsetWidth) / 2;
-        if (left < 0) left = 0;
-        let top = coords.top - tooltip.offsetHeight - 5;
-        if (top < 0) {
-            top = coords.top + this.offsetHeight + 5;
-        }
-        tooltip.style.left = left + 'px';
-        tooltip.style.top = top + 'px';
-        tooltip.style.display = 'block';
-    }
-    on_pointerout(e) {
-        this.$qs('#tooltip').style.display = 'none';
+                this.color = i.color;
+            }
+        })
     }
 })
 
