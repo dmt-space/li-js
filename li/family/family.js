@@ -46,7 +46,9 @@ customElements.define('li-family', class LiFamily extends LiElement {
                 <div id="main" slot="app-main" style="display: flex; height: 100%;">
                     <li-panel-simple id="simple-main" .src=${this.mainTabs} iconSize=24>
                         <li-jupyter slot="notebook" .notebook=${this.notebook}></li-jupyter>
-                        <li-family-weeks slot="weeks"></li-family-weeks>
+                        ${this.hideFamilyWeeks ? html`` : html`
+                            <li-family-weeks slot="weeks"></li-family-weeks>
+                        `}
                         <li-family-tree slot="family tree" style="height: 100%:"></li-family-tree>
                     </li-panel-simple>
                 </div>
@@ -125,7 +127,7 @@ customElements.define('li-family', class LiFamily extends LiElement {
                         {
                             icon: 'apps', label: 'weeks', labelOnSelected: true, title: 'weeks',
                             btns: [
-                                { icon: 'auto_stories' }
+                                { icon: 'refresh', title: 'refresh family weeks' }
                             ],
                         },
                         {
@@ -346,18 +348,28 @@ customElements.define('li-family', class LiFamily extends LiElement {
             },
             'delete phase': () => {
                 const phases = this.$qs('li-family-phases');
-                let idx = phases.idx;
+                let idx = phases.selectedPahsesIdx;
                 if (idx >= 0) {
                     const phase = this.selectedItem.phases.splice(idx, 1)[0];
-                    phases.idx = idx > this.selectedItem.phases.length - 1 ? this.selectedItem.phases.length - 1 : idx;
+                    phases.selectedPahsesIdx = idx > this.selectedItem.phases.length - 1 ? this.selectedItem.phases.length - 1 : idx;
                     this.fire('changesPhases', { type: 'changesPhases', change: 'deletePhase', _id: phase._id, phase, sourceEvent: e })
                 }
+                this.refreshFamilyWeeks();
+            },
+            'refresh family weeks': () => {
+                this.$.refreshFamilyWeeks();
             }
         }
         action[id] && action[id]();
         this.$update();
     }
-
+    refreshFamilyWeeks() {
+        this.hideFamilyWeeks = true;
+        setTimeout(() => {
+            this.hideFamilyWeeks = false;
+            this.$update();
+        });
+    }
 })
 
 customElements.define('li-family-items-tree', class LiFamilyItemsTree extends LiElement {
@@ -431,8 +443,8 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
             </div>
             <div @pointerdown=${this.on_click}>
                 ${this.arr(this.$._count || 100).map(y => {
-            const timeRowYearStart = this.timeRowYearStart(y);
-            return html`
+                    const timeRowYearStart = this.timeRowYearStart(y);
+                    return html`
                     <div style="display: flex; flex: 1; align-items: center;">
                         <div style="width: 14px">${y}</div>
                         <div class="year">
@@ -459,7 +471,7 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
 
     async firstUpdated() {
         super.firstUpdated();
-        await new Promise((r) => setTimeout(r, 300));
+        await new Promise((r) => setTimeout(r, 10));
         const stringDate = this.selectedItem?.phases?.[0]?.date1;
         this.dataStart = stringDate ? new Date(stringDate) : new Date();
         this.timeStart = this.dataStart?.getTime() || 0;
@@ -473,6 +485,7 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
     }
     async on_click(e) {
         let target = e.target;
+        if (e.target.localName !== 'li-family-week') return;
         let newDiv = document.createElement("div");
         newDiv.innerHTML = target.label;
         if (target.label) {
@@ -492,7 +505,7 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
 customElements.define('li-family-week', class LiFamilyWeek extends LiElement {
     render() {
         return html`
-            <div class="week" style="background: ${this.color || ''}; width: 100%; height: 100%; opacity: .3"></div>
+            <div class="week" style="background: ${this.gradient || ''}; width: 100%; height: 100%; opacity: .3"></div>
         `
     }
 
@@ -507,24 +520,47 @@ customElements.define('li-family-week', class LiFamilyWeek extends LiElement {
         }
     }
 
+    get gradient() {
+        let perc = 100 / 7;
+        if (this.diffLeft >= 0) {
+            perc = Math.round(this.diffLeft * perc + perc);
+            return `linear-gradient(to right, transparent ${100 - perc}%, ${this.color} ${100 - perc}%, ${this.color} ${perc}%);`;
+        }
+        if (this.diffRight >= 0) {
+            perc = Math.round(this.diffRight * perc + perc);
+            return `linear-gradient(to right, ${this.color} ${100 - perc}%, transparent ${100 - perc}%, transparent ${perc}%);`;
+        }
+        return this.color;
+    }
+
     async firstUpdated() {
         super.firstUpdated();
-        await new Promise((r) => setTimeout(r, 500));
+        await new Promise((r) => setTimeout(r, 10));
         this.init();
     }
     init() {
+        this.weeks = [];
         this.weekStart = new Date(this.timeRowYearStart + this.w * LI.MS_DAY * 7);
-        let year = this.y - 1;
-        year = (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0));
-        this.weekEnd = new Date(this.timeRowYearStart + this.w * LI.MS_DAY * 7 + LI.MS_DAY * 7 + (this.w === 51 && year ? LI.MS_DAY : 0));
-        this.label = ''; // `${this.weekStart.toLocaleDateString()} ... ${this.weekEnd.toLocaleDateString()}`;
+        this.weekEnd = new Date(this.timeRowYearStart + this.w * LI.MS_DAY * 7 + LI.MS_DAY * 6);
+        if (this.w === 51) {
+            const date = new Date(this.timeRowYearStart);
+            date.setFullYear(date.getFullYear() + 1);
+            date.setDate(date.getDate() - 1);
+            this.weekEnd = date;
+        }
+        this.label = '';
         this.selectedItem?.phases.map(i => {
             const d1 = new Date(i.date1);
             const d2 = i.date2 ? new Date(i.date2) : new Date();
             const diff = Math.abs(d2.getTime() - d1.getTime());
             this.diff = (diff / 1000 / 60 / 60 / 24 / 365).toFixed(2);
-
             if (i.isPeriod && (this.weekStart >= d1 || this.weekEnd >= d1) && (this.weekStart <= d2 || this.weekEnd <= d2)) {
+                if (d1 >= this.weekStart && d1 <= this.weekEnd) {
+                    this.diffLeft = Math.round((this.weekEnd - d1) / LI.MS_DAY);
+                }
+                if (d2 >= this.weekStart && d2 <= this.weekEnd) {
+                    this.diffRight = Math.round((this.weekEnd - d2) / LI.MS_DAY);
+                }
                 this.label += `
 <div>${i.group || ''}</div>
 <hr>
@@ -603,7 +639,6 @@ customElements.define('li-family-phases', class LiFamilyPhase extends LiElement 
                     <div @pointerdown=${() => { this.selectedPahsesIdx = idx; this.$update() }} style="padding: 4px; border: 1px solid ${idx === this.selectedPahsesIdx ? 'blue' : 'lightgray'}; border-radius: 4px; margin-bottom: 4px; background-color: hsla(${doc.isPeriod ? 180 : 90}, 70%, 70%, .2); overflow: hidden;">
                         <div style="display: flex">
                             <input class="inpt" value=${doc.label} @change=${e => this.onchange(e, doc, idx, 'label')} placeholder="event">
-                            <input type="color" value=${doc.color || '#ffffff'} @change=${e => this.onchange(e, doc, idx, 'color')} style="width: 22px; opacity: .5">
                         </div>
                         <input type="datetime-local" value=${doc.date1} @change=${e => this.onchange(e, doc, idx, 'date1')}>
                         ${doc.isPeriod ? html`
@@ -614,6 +649,7 @@ customElements.define('li-family-phases', class LiFamilyPhase extends LiElement 
                             <div style="color: darkgray; font-size: 14px">${this.years(doc)}</div>
                             <li-button name="edit" size="16" scale=".8" @click=${this.setNotebook} back=${doc.notebook?.cells.length ? 'yellow' : ''}></li-button>
                         </div>
+                        <input type="color" value=${doc.color || '#ffffff'} @change=${e => this.onchange(e, doc, idx, 'color')} style="opacity: .5; height: 18px;">
                     </div>
                 `)}
             </div>
@@ -642,7 +678,8 @@ customElements.define('li-family-phases', class LiFamilyPhase extends LiElement 
     }
     onchange(e, doc, idx, key) {
         this.$.selectedItem.phases[idx][key] = e.target.value;
-        this.fire('changesPhases', { type: 'changesPhases', change: 'setValue', value: e.target.value, idx, doc, sourceEvent: e })
+        this.fire('changesPhases', { type: 'changesPhases', change: 'setValue', value: e.target.value, idx, doc, sourceEvent: e });
+        // this.$.refreshFamilyWeeks();
     }
     setNotebook() {
         this.$.notebook = this.$.selectedItem.phases[this.selectedPahsesIdx].notebook || { id: 'phases', label: this.$.selectedItem.phases[this.selectedPahsesIdx].label, cells: [] };

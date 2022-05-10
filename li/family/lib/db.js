@@ -178,6 +178,7 @@ export const updateSelectedItem = async (self) => {
     setTimeout(() => {
         self._isUpdateSelectedItem = false;
     }, 500);
+    self.refreshFamilyWeeks();
     self.$update();
 }
 const checkDoc = (res) => {
@@ -244,7 +245,7 @@ export const save = async (self) => {
         await self.dbLocal.bulkDocs(res);
         self.deletedItemsID = [];
         self.deletedItems = {};
-        init(self);
+        //init(self);
     }
 }
 export const btnClick = (self, detail) => {
