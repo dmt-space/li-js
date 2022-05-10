@@ -299,6 +299,7 @@ class CLI {
     isPlainObject = (v) => !!v && typeof v === 'object' && (v.__proto__ === null || v.__proto__ === Object.prototype);
     isString = (v) => Object.prototype.toString.call(v) === '[object String]';
     sortBy = (arr, k) => arr.concat().sort((a, b) => (a[k] > b[k] ? 1 : a[k] < b[k] ? -1 : 0));
+    MS_DAY = 1000 * 60 * 60 * 24; // ms in day
 }
 globalThis.LI = new CLI();
 
