@@ -6,6 +6,7 @@ import '../icon/icon.js';
 customElements.define('li-panel-simple', class LiPanelSimple extends LiElement {
     static get styles() {
         return css`
+            ::-webkit-scrollbar { width: 4px; height: 4px; } ::-webkit-scrollbar-track { background: lightgray; } ::-webkit-scrollbar-thumb {  background-color: gray; }
             :host {
                 display: flex;
                 flex-direction: column;
