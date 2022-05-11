@@ -452,14 +452,14 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
                     <div style="height: 20px; flex: 1">${w + 1}</div>
                 `)}
             </div>
-            <div @pointerdown=${this.on_click}>
-                ${this.arr(this.$._count || 100).map(y => {
+            <div @click=${this.on_click}>
+                ${this.arr(this.rows).map(y => {
                     const timeRowYearStart = this.timeRowYearStart(y);
                     return html`
                     <div style="display: flex; flex: 1; align-items: center;">
                         <div style="width: 14px">${y}</div>
                         <div class="year">
-                            ${this.arr(this.$._count || 52).map(w => html`
+                            ${this.arr(52).map(w => html`
                                 <li-family-week class="week" y=${y} w=${w} timeRowYearStart=${timeRowYearStart}></li-family-week>
                             `)}
                         </div>
@@ -476,6 +476,7 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
             dataStart: { type: Object }
         }
     }
+    get rows() { return  100 } // Math.round(((new Date()).getTime() - this.timeRowYearStart(0)) / LI.MS_DAY / 365 + 5)  }
     arr(count) {
         return [...Array(count).keys()];
     }
