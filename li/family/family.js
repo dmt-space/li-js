@@ -434,38 +434,34 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
                 display: flex;
                 flex: 1;
             }
-            .week {
-                position: relative;
-                height: 20px;
-                flex: 1;
-                border: 1px solid lightgray;
-                margin: 1px;
-            }
         `;
     }
 
     render() {
         return html`
-            <div class="year" style="position: sticky; top: 0px; ; background: white; z-index: 9; border-bottom: 1px solid darkgray; align-items: center">
-                <div style="width: 14px"></div>
-                ${this.arr(52).map(w => html`
-                    <div style="height: 20px; flex: 1">${w + 1}</div>
-                `)}
-            </div>
-            <div @click=${this.on_click}>
-                ${this.arr(this.rows).map(y => {
-                    const timeRowYearStart = this.timeRowYearStart(y);
-                    return html`
-                    <div style="display: flex; flex: 1; align-items: center;">
-                        <div style="width: 14px">${y}</div>
-                        <div class="year">
-                            ${this.arr(52).map(w => html`
-                                <li-family-week class="week" y=${y} w=${w} timeRowYearStart=${timeRowYearStart}></li-family-week>
-                            `)}
+            ${this.selectedItem?.phases?.[0]?.date1 ? html`
+                <div class="year" style="position: sticky; top: 0px; ; background: white; z-index: 9; border-bottom: 1px solid darkgray; align-items: center">
+                    <div style="width: 14px"></div>
+                    ${this.arr(52).map(w => html`
+                        <div style="height: 20px; flex: 1">${w + 1}</div>
+                    `)}
+                </div>
+                <div @click=${this.on_click}>
+                    ${this.arr(this.rows).map(y => {
+            return html`
+                        <div style="display: flex; flex: 1; align-items: center;">
+                            <div style="width: 14px">${y}</div>
+                            <div class="year">
+                                ${this.arr(52).map(w => {
+                                    const week = this.getWeek(y, w);
+                                    return html`
+                                    <li-family-week class="week" .weeks=${week.weeks} .weekStart=${week.weekStart} .weekEnd=${week.weekEnd}></li-family-week>
+                                `})}
+                            </div>
                         </div>
-                    </div>
-                `})}
-            </div>
+                    `})}
+                </div>
+            ` : html``}
         `
     }
 
@@ -476,10 +472,7 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
             dataStart: { type: Object }
         }
     }
-    get rows() { return  100 } // Math.round(((new Date()).getTime() - this.timeRowYearStart(0)) / LI.MS_DAY / 365 + 5)  }
-    arr(count) {
-        return [...Array(count).keys()];
-    }
+    get rows() { return 60 } // Math.round(((new Date()).getTime() - this.timeRowYearStart(0)) / LI.MS_DAY / 365 + 5)  }
 
     async firstUpdated() {
         super.firstUpdated();
@@ -488,6 +481,8 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
         this.dataStart = stringDate ? new Date(stringDate) : new Date();
         this.timeStart = this.dataStart?.getTime() || 0;
     }
+
+    arr(count) { return [...Array(count).keys()] }
     timeRowYearStart(year) {
         const stringDate = this.selectedItem?.phases?.[0]?.date1;
         if (!stringDate) return 0;
@@ -511,6 +506,74 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
         }
         await LI.show('dropdown', newDiv, {}, { parent: target, align: 'left', showHeader: true, label: target.weekStart.toLocaleDateString() + ' - ' + target.weekEnd.toLocaleDateString(), intersect: true });
     }
+    getWeek(y, w) {
+        if (this.tmpWeek?.[y*100 + w]) return this.tmpWeek[y*100 + w];
+        this.tmpWeek ||= {};
+        console.log('getWeeks')
+        const week = { weeks: [] };
+        let timeRowYearStart = this.timeRowYearStart(y);
+        let weekStart = new Date(timeRowYearStart + w * LI.MS_DAY * 7);
+        let weekEnd = new Date(timeRowYearStart + w * LI.MS_DAY * 7 + LI.MS_DAY * 6);
+        if (w === 51) {
+            const date = new Date(timeRowYearStart);
+            date.setFullYear(date.getFullYear() + 1);
+            date.setDate(date.getDate() - 1);
+            weekEnd = date;
+        }
+        const length = this.selectedItem?.phases.length || 0;
+        if (length) {
+            for (let l = 0; l < length; l++) {
+                const i = this.selectedItem.phases[l];
+                let w = {};
+                const d1 = new Date(i.date1);
+                const d2 = i.date2 ? new Date(i.date2) : new Date();
+                let diff = Math.abs(d2.getTime() - d1.getTime());
+                diff = (diff / 1000 / 60 / 60 / 24 / 365).toFixed(2);
+                week.weekStart = weekStart;
+                week.weekEnd = weekEnd;
+                week.timeRowYearStart = timeRowYearStart;
+                if (i.isPeriod && (weekStart >= d1 || weekEnd >= d1) && (weekStart <= d2 || weekEnd <= d2)) {
+                    w.isPeriod = true;
+                    w.gradient = i.color;
+                    let perc = 100 / 7;
+                    if (d1 >= weekStart && d1 <= weekEnd && d2 >= weekStart && d2 <= weekEnd) {
+
+                    } else if (d1 >= weekStart && d1 <= weekEnd) {
+                        const diffLeft = Math.round((weekEnd - d1) / LI.MS_DAY);
+                        perc = Math.round(diffLeft * perc + perc);
+                        w.gradient = `linear-gradient(to right, transparent ${100 - perc}%, ${i.color} ${100 - perc}%, ${i.color} ${perc}%);`;
+                    } else if (d2 >= weekStart && d2 <= weekEnd) {
+                        const diffRight = Math.round((weekEnd - d2) / LI.MS_DAY);
+                        perc = Math.round(diffRight * perc + perc);
+                        w.gradient = `linear-gradient(to right, ${i.color} ${100 - perc}%, transparent ${100 - perc}%, transparent ${perc}%);`;
+                    }
+                    w.label = `
+<div style="border-bottom: 1px solid lightgray; padding: 6px">${i.group || ''}</div>
+<strong>${i.label || ''}</strong>
+<br>
+<strong>${d1.toLocaleDateString()} - ${d2.toLocaleDateString()}</strong>
+<div style="font-size: 14px">( ${diff} <span style="font-size: 10px"> year</span> )</div>
+<hr>
+`
+                    week.weeks.push(w);
+                } else if (d1 >= weekStart && d1 <= weekEnd) {
+                    w.gradient = i.color;
+                    w.isDate = true;
+                    w.label = `
+<div style="border-bottom: 1px solid lightgray; padding: 6px">${i.group || ''}</div>
+<strong>${i.label || ''}</strong>
+<br>
+<strong>${d1.toLocaleDateString()}</strong>
+<div style="font-size: 14px">( ${diff} <span style="font-size: 10px"> year</span> )</div>
+<hr>
+                `
+                    week.weeks.push(w);
+                }
+            }
+            this.tmpWeek[y*100 + w] = week;
+            return week;
+        }
+    }
 })
 
 customElements.define('li-family-week', class LiFamilyWeek extends LiElement {
@@ -519,9 +582,14 @@ customElements.define('li-family-week', class LiFamilyWeek extends LiElement {
             :host {
                 width: 100%; 
                 height: 100%;
+                position: relative;
+                height: 20px;
+                flex: 1;
+                border: 1px solid lightgray;
+                margin: 1px;
             }
             .week {
-                position: absolute;
+
             }
         `;
     }
@@ -545,77 +613,19 @@ customElements.define('li-family-week', class LiFamilyWeek extends LiElement {
 
     static get properties() {
         return {
-            selectedItem: { type: Object, local: true },
-            y: { type: Number },
-            w: { type: Number },
-            color: { type: String },
             label: { type: String },
-            timeRowYearStart: { type: Object }
+            weeks: { type: Array },
+            weekStart: { type: Object },
+            weekEnd: { type: Object },
         }
     }
 
-    get label() { return this.weeks.reduce((prev, curr) => prev += curr.label, '') }
+    get label() { return this.weeks?.reduce((prev, curr) => prev += curr.label, '') }
 
     async firstUpdated() {
         super.firstUpdated();
-        await new Promise((r) => setTimeout(r, 10));
-        this.init();
+        await new Promise((r) => setTimeout(r, 100));
         this.$update();
-    }
-    init() {
-        this.weeks = [];
-        this.weekStart = new Date(this.timeRowYearStart + this.w * LI.MS_DAY * 7);
-        this.weekEnd = new Date(this.timeRowYearStart + this.w * LI.MS_DAY * 7 + LI.MS_DAY * 6);
-        if (this.w === 51) {
-            const date = new Date(this.timeRowYearStart);
-            date.setFullYear(date.getFullYear() + 1);
-            date.setDate(date.getDate() - 1);
-            this.weekEnd = date;
-        }
-        this.selectedItem?.phases.map(i => {
-            let w = { };
-            const d1 = new Date(i.date1);
-            const d2 = i.date2 ? new Date(i.date2) : new Date();
-            const diff = Math.abs(d2.getTime() - d1.getTime());
-            this.diff = (diff / 1000 / 60 / 60 / 24 / 365).toFixed(2);
-            if (i.isPeriod && (this.weekStart >= d1 || this.weekEnd >= d1) && (this.weekStart <= d2 || this.weekEnd <= d2)) {
-                w.isPeriod = true;
-                w.gradient = i.color;
-                let perc = 100 / 7;
-                if (d1 >= this.weekStart && d1 <= this.weekEnd && d2 >= this.weekStart && d2 <= this.weekEnd) {
-     
-                } else if (d1 >= this.weekStart && d1 <= this.weekEnd) {
-                    const diffLeft = Math.round((this.weekEnd - d1) / LI.MS_DAY);
-                    perc = Math.round(diffLeft * perc + perc);
-                    w.gradient = `linear-gradient(to right, transparent ${100 - perc}%, ${i.color} ${100 - perc}%, ${i.color} ${perc}%);`;
-                } else if (d2 >= this.weekStart && d2 <= this.weekEnd) {
-                    const diffRight = Math.round((this.weekEnd - d2) / LI.MS_DAY);
-                    perc = Math.round(diffRight * perc + perc);
-                    w.gradient = `linear-gradient(to right, ${i.color} ${100 - perc}%, transparent ${100 - perc}%, transparent ${perc}%);`;
-                }
-                w.label = `
-<div style="border-bottom: 1px solid lightgray; padding: 6px">${i.group || ''}</div>
-<strong>${i.label || ''}</strong>
-<br>
-<strong>${d1.toLocaleDateString()} - ${d2.toLocaleDateString()}</strong>
-<div style="font-size: 14px">( ${this.diff} <span style="font-size: 10px"> year</span> )</div>
-<hr>
-`
-                this.weeks.push(w);
-            } else if (d1 >= this.weekStart && d1 <= this.weekEnd) {
-                w.gradient = i.color;
-                w.isDate =true;
-                w.label = `
-<div style="border-bottom: 1px solid lightgray; padding: 6px">${i.group || ''}</div>
-<strong>${i.label || ''}</strong>
-<br>
-<strong>${d1.toLocaleDateString()}</strong>
-<div style="font-size: 14px">( ${this.diff} <span style="font-size: 10px"> year</span> )</div>
-<hr>
-                `
-                this.weeks.push(w);
-            }
-        })
     }
 })
 
