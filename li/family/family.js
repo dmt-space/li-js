@@ -37,14 +37,14 @@ customElements.define('li-family', class LiFamily extends LiElement {
                     <div style="flex:1"></div>${this.name || 'my-family'}<div style="flex:1"></div>
                 </div>
                 <div slot="app-left" slot="app-main" style="display: flex; height: 100%; padding: 0 !important">
-                    <li-panel-simple .src=${this.leftTabs} iconSize=24>
+                    <li-panel-simple id="simple-left" .src=${this.leftTabs} iconSize=24 idx=${this.idxLeft} @pointerdown=${this._setIdxLeft}>
                         <li-family-items-tree slot="tree"></li-family-items-tree>
                         <li-table slot="list" .data=${this.sortItems} style="cursor: pointer; width: 100%"></li-table> 
                         <li-db-settings slot="settings"></li-db-settings>
                     </li-panel-simple>
                 </div>
                 <div id="main" slot="app-main" style="display: flex; height: 100%;">
-                    <li-panel-simple id="simple-main" .src=${this.mainTabs} iconSize=24>
+                    <li-panel-simple id="simple-main" .src=${this.mainTabs} iconSize=24 idx=${this.idxMain} @pointerdown=${this._setIdxMain}>
                         <li-jupyter slot="notebook" .notebook=${this.notebook}></li-jupyter>
                         ${this.hideFamilyWeeks ? html`` : html`
                             <li-family-weeks slot="weeks"></li-family-weeks>
@@ -81,11 +81,13 @@ customElements.define('li-family', class LiFamily extends LiElement {
             sortItems: { type: Object, local: true },
             selectedItem: { type: Object, local: true },
             starItem: { type: Object, local: true },
-            changedItemsID: { type: Array, defauLt: [], local: true },
+            changedItemsID: { type: Array, default: [], local: true },
             changedItems: { type: Object, default: {}, local: true },
-            deletedItemsID: { type: Array, defauLt: [], local: true },
-            deletedItems: { type: Object, defauLt: {}, local: true },
+            deletedItemsID: { type: Array, default: [], local: true },
+            deletedItems: { type: Object, default: {}, local: true },
             notebook: { type: Object, local: true },
+            idxLeft: { type: Number, default: 0, save: true },
+            idxMain: { type: Number, default: 0, save: true },
             leftTabs: {
                 type: Object, default: {
                     open: true,
@@ -166,6 +168,7 @@ customElements.define('li-family', class LiFamily extends LiElement {
 
     get needSave() { return this.changedItemsID?.length || this.deletedItemsID?.length }
     get jupyter() { return this.$qs('li-jupyter') || {} }
+    get simpleLeft() { return this.$qs('#simple-left') || {} }
     get simpleMain() { return this.$qs('#simple-main') || {} }
 
     firstUpdated() {
@@ -370,6 +373,12 @@ customElements.define('li-family', class LiFamily extends LiElement {
             this.$update();
         });
     }
+    _setIdxLeft(e) {
+        setTimeout(() => this.idxLeft = this.simpleLeft.idx, 300);
+    }
+    _setIdxMain(e) {
+        setTimeout(() => this.idxMain = this.simpleMain.idx, 300);
+    }
 })
 
 customElements.define('li-family-items-tree', class LiFamilyItemsTree extends LiElement {
@@ -519,7 +528,16 @@ customElements.define('li-family-week', class LiFamilyWeek extends LiElement {
     render() {
         return html`
             ${this.weeks?.map(i => html`
-                <div class="week" style="background: ${i.gradient || ''}; width: 100%; height: 100%; opacity: .3"></div>
+                ${i.isPeriod ? html`
+                    <div class="week" style="top: 0; position: absolute; background: ${i.gradient || ''}; width: 100%; height: 100%; opacity: .3;}"></div>
+                ` : html``}
+                ${i.isDate ? html`
+                    <div style="top: 0; position: absolute; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">
+                        <svg viewBox="0 0 100 100" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="50" cy="50" r="25" fill="${i.gradient}" style="top: 0; position: absolute; opacity: .5"/>
+                        </svg>
+                    </div>
+                ` : html``}
             `)}
         `
     }
@@ -560,6 +578,7 @@ customElements.define('li-family-week', class LiFamilyWeek extends LiElement {
             const diff = Math.abs(d2.getTime() - d1.getTime());
             this.diff = (diff / 1000 / 60 / 60 / 24 / 365).toFixed(2);
             if (i.isPeriod && (this.weekStart >= d1 || this.weekEnd >= d1) && (this.weekStart <= d2 || this.weekEnd <= d2)) {
+                w.isPeriod = true;
                 w.gradient = i.color;
                 let perc = 100 / 7;
                 if (d1 >= this.weekStart && d1 <= this.weekEnd && d2 >= this.weekStart && d2 <= this.weekEnd) {
@@ -574,14 +593,25 @@ customElements.define('li-family-week', class LiFamilyWeek extends LiElement {
                     w.gradient = `linear-gradient(to right, ${i.color} ${100 - perc}%, transparent ${100 - perc}%, transparent ${perc}%);`;
                 }
                 w.label = `
-<div>${i.group || ''}</div>
-<hr>
+<div style="border-bottom: 1px solid lightgray; padding: 6px">${i.group || ''}</div>
 <strong>${i.label || ''}</strong>
 <br>
 <strong>${d1.toLocaleDateString()} - ${d2.toLocaleDateString()}</strong>
-<div>( ${this.diff} <span style="font-size: 10px"> year</span> )</div>
+<div style="font-size: 14px">( ${this.diff} <span style="font-size: 10px"> year</span> )</div>
 <hr>
 `
+                this.weeks.push(w);
+            } else if (d1 >= this.weekStart && d1 <= this.weekEnd) {
+                w.gradient = i.color;
+                w.isDate =true;
+                w.label = `
+<div style="border-bottom: 1px solid lightgray; padding: 6px">${i.group || ''}</div>
+<strong>${i.label || ''}</strong>
+<br>
+<strong>${d1.toLocaleDateString()}</strong>
+<div style="font-size: 14px">( ${this.diff} <span style="font-size: 10px"> year</span> )</div>
+<hr>
+                `
                 this.weeks.push(w);
             }
         })
@@ -682,7 +712,6 @@ customElements.define('li-family-phases', class LiFamilyPhase extends LiElement 
     }
 
     years(doc) {
-        if (!doc.isPeriod) return '';
         const d1 = (new Date(doc.date1)).getTime();
         const d2 = (new Date(doc.date2 || new Date())).getTime();
         const diff = Math.abs(d2 - d1);
