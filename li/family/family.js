@@ -34,7 +34,7 @@ customElements.define('li-family', class LiFamily extends LiElement {
                         <li-button id="save" name="save" title="save" @click=${this.btnClick} .fill="${this.needSave ? 'red' : ''}" color="${this.needSave ? 'red' : 'gray'}"></li-button>
                     `}
                     <li-button id="reload" name="refresh" title="reload page"  @click="${this.btnClick}" style="padding-left: 8px"></li-button>
-                    <div style="flex:1"></div>${this.name || 'my-family'}<div style="flex:1"></div>
+                    <div style="flex:1"></div>${(this.name || 'my-family') + (this.diffSum ? ' - ' + this.diffSum : '')}<div style="flex:1"></div>
                 </div>
                 <div slot="app-left" slot="app-main" style="display: flex; height: 100%; padding: 0 !important">
                     <li-panel-simple id="simple-left" .src=${this.leftTabs} iconSize=24 idx=${this.idxLeft} @pointerdown=${this._setIdxLeft}>
@@ -88,6 +88,8 @@ customElements.define('li-family', class LiFamily extends LiElement {
             notebook: { type: Object, local: true },
             idxLeft: { type: Number, default: 0, save: true },
             idxMain: { type: Number, default: 0, save: true },
+            diff: { type: Array, default: [], local: true },
+            diffSum: { type: Number },
             leftTabs: {
                 type: Object, default: {
                     open: true,
@@ -367,6 +369,7 @@ customElements.define('li-family', class LiFamily extends LiElement {
         this.$update();
     }
     refreshFamilyWeeks() {
+        this.diff = [];
         this.hideFamilyWeeks = true;
         setTimeout(() => {
             this.hideFamilyWeeks = false;
@@ -446,21 +449,18 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
                         <div style="height: 20px; flex: 1">${w + 1}</div>
                     `)}
                 </div>
-                <div @click=${this.on_click}>
-                    ${this.arr(this.rows).map(y => {
-            return html`
-                        <div style="display: flex; flex: 1; align-items: center;">
-                            <div style="width: 14px">${y}</div>
-                            <div class="year">
-                                ${this.arr(52).map(w => {
-                                    const week = this.getWeek(y, w);
-                                    return html`
-                                    <li-family-week class="week" .weeks=${week.weeks} .weekStart=${week.weekStart} .weekEnd=${week.weekEnd}></li-family-week>
-                                `})}
-                            </div>
+                ${this.arr(this.rows).map(y => html`
+                    <div style="display: flex; flex: 1; align-items: center;">
+                        <div style="width: 14px">${y}</div>
+                        <div class="year">
+                            ${this.arr(52).map(w => {
+                            const week = this.getWeek(y, w);
+                            return html`
+                                <li-family-week class="week" .weeks=${week.weeks} .weekStart=${week.weekStart} .weekEnd=${week.weekEnd} @click=${e => this.on_click(e, week)}></li-family-week>
+                            `})}
                         </div>
-                    `})}
-                </div>
+                    </div>
+                `)}
             ` : html``}
         `
     }
@@ -469,10 +469,12 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
         return {
             selectedItem: { type: Object, local: true },
             timeStart: { type: Number },
-            dataStart: { type: Object }
+            dataStart: { type: Object },
+            diff: { type: Array, local: true }
         }
     }
-    get rows() { return 60 } // Math.round(((new Date()).getTime() - this.timeRowYearStart(0)) / LI.MS_DAY / 365 + 5)  }
+    get rows() { return 100 } // Math.round(((new Date()).getTime() - this.timeRowYearStart(0)) / LI.MS_DAY / 365 + 5)  }
+    get diffSum() { return this.diff.reduce((partialSum, a) => partialSum + a, 0) }
 
     async firstUpdated() {
         super.firstUpdated();
@@ -480,6 +482,10 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
         const stringDate = this.selectedItem?.phases?.[0]?.date1;
         this.dataStart = stringDate ? new Date(stringDate) : new Date();
         this.timeStart = this.dataStart?.getTime() || 0;
+        setTimeout(() => {
+            // console.log(this.diffSum);
+            this.$.diffSum = this.diffSum;
+        }, 300);
     }
 
     arr(count) { return [...Array(count).keys()] }
@@ -490,11 +496,10 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
         dataStart?.setFullYear(dataStart.getFullYear() + year);
         return dataStart?.getTime();
     }
-    async on_click(e) {
-        let target = e.target;
-        if (e.target.localName !== 'li-family-week') return;
+    async on_click(e, week) {
+        const label = week.weeks?.reduce((prev, curr) => prev += curr.label, '')
         let newDiv = document.createElement("div");
-        if (target.label) {
+        if (label) {
             newDiv.style.fontSize = '16px';
             newDiv.style.color = 'gray';
             newDiv.style.padding = '8px';
@@ -502,14 +507,14 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
             newDiv.style.textAlign = 'center';
             newDiv.style.border = '1px solid gray';
             newDiv.style.boxShadow = '3px 3px 3px rgba(0, 0, 0, .7)';
-            newDiv.innerHTML = target.label;
+            newDiv.innerHTML = label;
         }
-        await LI.show('dropdown', newDiv, {}, { parent: target, align: 'left', showHeader: true, label: target.weekStart.toLocaleDateString() + ' - ' + target.weekEnd.toLocaleDateString(), intersect: true });
+        await LI.show('dropdown', newDiv, {}, { parent: e.target, align: 'left', showHeader: true, label: week.weekStart.toLocaleDateString() + ' - ' + week.weekEnd.toLocaleDateString(), intersect: true });
     }
     getWeek(y, w) {
-        if (this.tmpWeek?.[y*100 + w]) return this.tmpWeek[y*100 + w];
+        if (this.tmpWeek?.[y * 100 + w]) return this.tmpWeek[y * 100 + w];
+        let start = performance.now();
         this.tmpWeek ||= {};
-        console.log('getWeeks')
         const week = { weeks: [] };
         let timeRowYearStart = this.timeRowYearStart(y);
         let weekStart = new Date(timeRowYearStart + w * LI.MS_DAY * 7);
@@ -520,6 +525,9 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
             date.setDate(date.getDate() - 1);
             weekEnd = date;
         }
+        week.weekStart = weekStart;
+        week.weekEnd = weekEnd;
+        week.timeRowYearStart = timeRowYearStart;
         const length = this.selectedItem?.phases.length || 0;
         if (length) {
             for (let l = 0; l < length; l++) {
@@ -529,9 +537,6 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
                 const d2 = i.date2 ? new Date(i.date2) : new Date();
                 let diff = Math.abs(d2.getTime() - d1.getTime());
                 diff = (diff / 1000 / 60 / 60 / 24 / 365).toFixed(2);
-                week.weekStart = weekStart;
-                week.weekEnd = weekEnd;
-                week.timeRowYearStart = timeRowYearStart;
                 if (i.isPeriod && (weekStart >= d1 || weekEnd >= d1) && (weekStart <= d2 || weekEnd <= d2)) {
                     w.isPeriod = true;
                     w.gradient = i.color;
@@ -570,9 +575,11 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
                     week.weeks.push(w);
                 }
             }
-            this.tmpWeek[y*100 + w] = week;
-            return week;
+            this.tmpWeek[y * 100 + w] = week;
         }
+        let end = performance.now();
+        this.diff.push(end - start);
+        return week;
     }
 })
 
@@ -588,9 +595,6 @@ customElements.define('li-family-week', class LiFamilyWeek extends LiElement {
                 border: 1px solid lightgray;
                 margin: 1px;
             }
-            .week {
-
-            }
         `;
     }
 
@@ -598,7 +602,7 @@ customElements.define('li-family-week', class LiFamilyWeek extends LiElement {
         return html`
             ${this.weeks?.map(i => html`
                 ${i.isPeriod ? html`
-                    <div class="week" style="top: 0; position: absolute; background: ${i.gradient || ''}; width: 100%; height: 100%; opacity: .3;}"></div>
+                    <div style="top: 0; position: absolute; background: ${i.gradient || ''}; width: 100%; height: 100%; opacity: .3;}"></div>
                 ` : html``}
                 ${i.isDate ? html`
                     <div style="top: 0; position: absolute; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">
@@ -618,14 +622,6 @@ customElements.define('li-family-week', class LiFamilyWeek extends LiElement {
             weekStart: { type: Object },
             weekEnd: { type: Object },
         }
-    }
-
-    get label() { return this.weeks?.reduce((prev, curr) => prev += curr.label, '') }
-
-    async firstUpdated() {
-        super.firstUpdated();
-        await new Promise((r) => setTimeout(r, 100));
-        this.$update();
     }
 })
 
