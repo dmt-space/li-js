@@ -473,8 +473,8 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
             diff: { type: Array, local: true }
         }
     }
-    //get rows() { return 100 }
-    get rows() { return Math.round(((new Date()).getTime() - this.timeRowYearStart(0)) / LI.MS_DAY / 365 + 10)  }
+    get rows() { return 100 }
+    // get rows() { return Math.round(((new Date()).getTime() - this.timeRowYearStart(0)) / LI.MS_DAY / 365 + 10)  }
     get diffSum() { return this.diff.reduce((partialSum, a) => partialSum + a, 0) }
 
     async firstUpdated() {
