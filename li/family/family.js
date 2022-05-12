@@ -46,7 +46,7 @@ customElements.define('li-family', class LiFamily extends LiElement {
                 <div id="main" slot="app-main" style="display: flex; height: 100%;">
                     <li-panel-simple id="simple-main" .src=${this.mainTabs} iconSize=24 idx=${this.idxMain} @pointerdown=${this._setIdxMain}>
                         <li-jupyter slot="notebook" .notebook=${this.notebook}></li-jupyter>
-                        ${this.hideFamilyWeeks ? html`` : html`
+                        ${this.hideFamilyWeeks || this.simpleMain.idx !== 1 ? html`` : html`
                             <li-family-weeks slot="weeks"></li-family-weeks>
                         `}
                         <li-family-tree slot="family tree" style="height: 100%:"></li-family-tree>
@@ -454,10 +454,10 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
                         <div style="width: 14px">${y}</div>
                         <div class="year">
                             ${this.arr(52).map(w => {
-                            const week = this.getWeek(y, w);
-                            return html`
-                                <li-family-week class="week" .weeks=${week.weeks} .weekStart=${week.weekStart} .weekEnd=${week.weekEnd} @click=${e => this.on_click(e, week)}></li-family-week>
-                            `})}
+                                const week = this.getWeek(y, w);
+                                return html`
+                                    <li-family-week class="week" .weeks=${week.weeks} .weekStart=${week.weekStart} .weekEnd=${week.weekEnd} @click=${e => this.on_click(e, week)}></li-family-week>
+                                `})}
                         </div>
                     </div>
                 `)}
@@ -473,7 +473,8 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
             diff: { type: Array, local: true }
         }
     }
-    get rows() { return 100 } // Math.round(((new Date()).getTime() - this.timeRowYearStart(0)) / LI.MS_DAY / 365 + 5)  }
+    //get rows() { return 100 }
+    get rows() { return Math.round(((new Date()).getTime() - this.timeRowYearStart(0)) / LI.MS_DAY / 365 + 10)  }
     get diffSum() { return this.diff.reduce((partialSum, a) => partialSum + a, 0) }
 
     async firstUpdated() {
@@ -485,7 +486,7 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
         setTimeout(() => {
             // console.log(this.diffSum);
             this.$.diffSum = this.diffSum;
-        }, 300);
+        }, 1000)
     }
 
     arr(count) { return [...Array(count).keys()] }
@@ -698,7 +699,7 @@ customElements.define('li-family-phases', class LiFamilyPhase extends LiElement 
                             <div style="color: darkgray; font-size: 14px">${this.years(doc)}</div>
                             <li-button name="edit" size="16" scale=".8" @click=${this.setNotebook} back=${doc.notebook?.cells.length ? 'yellow' : ''}></li-button>
                         </div>
-                        <input type="color" value=${doc.color || '#ffffff'} @change=${e => this.onchange(e, doc, idx, 'color')} style="opacity: .5; height: 18px;">
+                        <input type="color" value=${doc.color || '#ffffff'} @change=${e => this.onchange(e, doc, idx, 'color')} style="opacity: .5; height: 18px; border-radius: 0">
                     </div>
                 `)}
             </div>
