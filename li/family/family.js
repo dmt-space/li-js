@@ -522,13 +522,16 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
         const startYear = this.dataStart.getFullYear();
         for (var w = 0; w < 52; w++) {
             ctx_weeks.fillStyle = "gray";
+            ctx_weeks.font = "10px Arial";
             ctx_weeks.fillText(w + 1, w * _w + _w * 1.2, _h / 2);
         }
+        ctx_weeks.stroke;
         for (var y = 0; y < 100; y++) {
             for (var w = 0; w <= 53; w++) {
                 if (w === 53) {
                     ctx.fillStyle = "gray";
-                    ctx.fillText(startYear + y, _w * 53 + 2, y * _h + 4 + _h / 2);
+                    ctx.font = "10px Arial";
+                    ctx.fillText(startYear + y, _w * 53 - 2, y * _h + 4 + _h / 2);
                 } else if (w === 0) {
                     ctx.fillStyle = "gray";
                     ctx.fillText(y, _w / 4, y * _h + 4 + _h / 2);
