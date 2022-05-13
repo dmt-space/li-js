@@ -497,7 +497,7 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
         let canvas_weeks = this.$qs('#canvas-weeks');
         canvas.width = canvas_weeks.width = this.offsetWidth;
         const globalAlpha = .3;
-        const _w = canvas.width / 53;
+        const _w = canvas.width / 54;
         const _h = 20;
         canvas.height = canvas.canvas_weeks = _h * 100 + 8;
         // console.log(_w)
@@ -519,13 +519,17 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
         ctx.strokeStyle = "darkgray";
         ctx.lineWidth = 1;
         this.tmpWeek = {};
-        for (var w = 0; w <= 52; w++) {
+        const startYear = this.dataStart.getFullYear();
+        for (var w = 0; w < 52; w++) {
             ctx_weeks.fillStyle = "gray";
             ctx_weeks.fillText(w + 1, w * _w + _w * 1.2, _h / 2);
         }
         for (var y = 0; y < 100; y++) {
-            for (var w = 0; w <= 52; w++) {
-                if (w === 0) {
+            for (var w = 0; w <= 53; w++) {
+                if (w === 53) {
+                    ctx.fillStyle = "gray";
+                    ctx.fillText(startYear + y, _w * 53 + 2, y * _h + 4 + _h / 2);
+                } else if (w === 0) {
                     ctx.fillStyle = "gray";
                     ctx.fillText(y, _w / 4, y * _h + 4 + _h / 2);
                 } else {
@@ -559,12 +563,12 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
                                     const diffL = (7 - (weekEnd - d1) / LI.MS_DAY) / 7;
                                     const diffR = (7 - (weekEnd - d2) / LI.MS_DAY) / 7;
                                     let lingrad = ctx.createLinearGradient(w * _w, y * _h + 4, w * _w + _w - 4, y * _h + 4);
-                                    lingrad.addColorStop(0, 'white');
-                                    lingrad.addColorStop(diffL, 'white');
+                                    lingrad.addColorStop(0, 'transparent');
+                                    lingrad.addColorStop(diffL, 'transparent');
                                     lingrad.addColorStop(diffL, i.color);
                                     lingrad.addColorStop(diffR, i.color);
-                                    lingrad.addColorStop(diffR, 'white');
-                                    lingrad.addColorStop(1, 'white');
+                                    lingrad.addColorStop(diffR, 'transparent');
+                                    lingrad.addColorStop(1, 'transparent');
                                     ctx.fillStyle = lingrad;
                                     ctx.globalAlpha = globalAlpha;
                                     ctx.fillRect(w * _w, y * _h + 4, _w - 4, _h - 4);
@@ -572,8 +576,8 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
                                 } else if (d1 >= weekStart && d1 <= weekEnd) {
                                     const diffL = (7 - (weekEnd - d1) / LI.MS_DAY) / 7;
                                     let lingrad = ctx.createLinearGradient(w * _w, y * _h + 4, w * _w + _w - 4, y * _h + 4);
-                                    lingrad.addColorStop(0, 'white');
-                                    lingrad.addColorStop(diffL, 'white');
+                                    lingrad.addColorStop(0, 'transparent');
+                                    lingrad.addColorStop(diffL, 'transparent');
                                     lingrad.addColorStop(diffL, i.color);
                                     lingrad.addColorStop(1, i.color);
                                     ctx.fillStyle = lingrad;
@@ -585,8 +589,8 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
                                     let lingrad = ctx.createLinearGradient(w * _w, y * _h + 4, w * _w + _w - 4, y * _h + 4);
                                     lingrad.addColorStop(0, i.color);
                                     lingrad.addColorStop(diffR, i.color);
-                                    lingrad.addColorStop(diffR, 'white');
-                                    lingrad.addColorStop(1, 'white');
+                                    lingrad.addColorStop(diffR, 'transparent');
+                                    lingrad.addColorStop(1, 'transparent');
                                     ctx.fillStyle = lingrad;
                                     ctx.globalAlpha = globalAlpha;
                                     ctx.fillRect(w * _w, y * _h + 4, _w - 4, _h - 4);
