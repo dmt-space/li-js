@@ -88,6 +88,7 @@ customElements.define('li-family', class LiFamily extends LiElement {
             notebook: { type: Object, local: true },
             idxLeft: { type: Number, default: 0, save: true },
             idxMain: { type: Number, default: 0, save: true },
+            maxAge: { type: Number, default: 100 },
             leftTabs: {
                 type: Object, default: {
                     open: true,
@@ -426,11 +427,13 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
                 flex: 1;
             }
             .header {
+                display: flex;
                 position: sticky;
                 top: 0;
                 padding-top: 4px;
                 border-bottom: 1px solid gray;
                 background: #fff;
+                flex: 1;
             }
             #canvas-phases {
                 cursor: pointer;
@@ -442,9 +445,15 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
         return html`
             ${this.selectedItem?.phases?.[0]?.date1 ? html`
                 <div class="header">
-                    <canvas id="canvas-weeks" width="1700" height="20"></canvas>
+                    <div style="width: 64px;font-size: 11px; color: gray; text-align: center">year | age</div>
+                    <canvas id="canvas-weeks" width="1700" height="20" style="flex: 1; width: 100%"></canvas>
                 </div>
-                <canvas id="canvas-phases" width="1700" height="2222"></canvas>
+                <div style="display: flex; flex: 1">
+                    <canvas id="canvas-left" width="52" height="2222"></canvas>
+                    <div style="padding-left: 4px; display: flex; flex: 1">
+                        <canvas id="canvas-phases" width="1700" height="2222" style="flex: 1; width: 100%"></canvas>
+                    </div>
+                </div>
             ` : html``}
        `
     }
@@ -492,15 +501,16 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
         await LI.show('dropdown', newDiv, {}, { align: 'left', showHeader: true, label: week.weekStart.toLocaleDateString() + ' - ' + week.weekEnd.toLocaleDateString(), intersect: true });
     }
     initCanvas(y, w) {
+        const maxAge = this.$.maxAge;
         let canvas = this.$qs('#canvas-phases');
         if (!canvas) return;
         let canvas_weeks = this.$qs('#canvas-weeks');
-        canvas.width = canvas_weeks.width = this.offsetWidth;
+        let canvas_left = this.$qs('#canvas-left');
+        canvas.width = canvas_weeks.width = this.offsetWidth - 54;
         const globalAlpha = .3;
-        const _w = canvas.width / 54;
+        const _w = canvas.width / 52;
         const _h = 20;
-        canvas.height = canvas.canvas_weeks = _h * 100 + 8;
-        // console.log(_w)
+        canvas.height = canvas_left.height = _h * maxAge + 8;
         canvas.addEventListener('click', (e) => {
             // const rect = canvas.getBoundingClientRect()
             // let x = e.clientX - rect.left
@@ -516,95 +526,92 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
         })
         let ctx = canvas.getContext('2d');
         let ctx_weeks = canvas_weeks.getContext('2d');
+        let ctx_left = canvas_left.getContext('2d');
         ctx.strokeStyle = "darkgray";
         ctx.lineWidth = 1;
         this.tmpWeek = {};
         const startYear = this.dataStart.getFullYear();
+        ctx_weeks.fillStyle = ctx_left.fillStyle = "gray";
+        ctx_weeks.font = ctx_left.font = "10px Arial";
         for (var w = 0; w < 52; w++) {
-            ctx_weeks.fillStyle = "gray";
-            ctx_weeks.font = "10px Arial";
-            ctx_weeks.fillText(w + 1, w * _w + _w * 1.2, _h / 2);
+            ctx_weeks.fillText(w + 1, w * _w + _w / 5, _h / 2);
+        }
+        for (var y = 0; y < maxAge; y++) {
+            ctx_left.fillText(startYear + y + (maxAge <= 100 ? '' : maxAge <= 1000 ? ' ' : '  ') + (y >= 1000 ? '' : '  ') + (y >= 100 ? '' : '  ') + (y < 10 ? '  ' : '') + y, 2, y * _h + 4 + _h / 2);
         }
         ctx_weeks.stroke;
-        for (var y = 0; y < 100; y++) {
-            for (var w = 0; w <= 53; w++) {
-                if (w === 53) {
-                    ctx.fillStyle = "gray";
-                    ctx.font = "10px Arial";
-                    ctx.fillText(startYear + y, _w * 53 - 2, y * _h + 4 + _h / 2);
-                } else if (w === 0) {
-                    ctx.fillStyle = "gray";
-                    ctx.fillText(y, _w / 4, y * _h + 4 + _h / 2);
-                } else {
-                    const week = { weeks: [] };
-                    let timeRowYearStart = this.timeRowYearStart(y);
-                    let weekStart = new Date(timeRowYearStart + (w - 1) * LI.MS_DAY * 7);
-                    let weekEnd = new Date(timeRowYearStart + (w - 1) * LI.MS_DAY * 7 + LI.MS_DAY * 6);
-                    if (w === 52) {
-                        const date = new Date(timeRowYearStart);
-                        date.setFullYear(date.getFullYear() + 1);
-                        date.setDate(date.getDate() - 1);
-                        weekEnd = date;
-                    }
-                    week.weekStart = weekStart;
-                    week.weekEnd = weekEnd;
-                    week.timeRowYearStart = timeRowYearStart;
-                    const length = this.selectedItem?.phases.length || 0;
-                    if (length) {
-                        for (let l = 0; l < length; l++) {
-                            const i = this.selectedItem.phases[l];
-                            let val = {};
-                            const d1 = new Date(i.date1);
-                            const d2 = i.date2 ? new Date(i.date2) : new Date();
-                            let diff = Math.abs(d2.getTime() - d1.getTime());
-                            diff = (diff / 1000 / 60 / 60 / 24 / 365).toFixed(2);
-                            if (i.isPeriod && (weekStart >= d1 || weekEnd >= d1) && (weekStart <= d2 || weekEnd <= d2)) {
-                                val.isPeriod = true;
-                                val.gradient = i.color;
-                                let perc = 100 / 7;
-                                if (d1 >= weekStart && d1 <= weekEnd && d2 >= weekStart && d2 <= weekEnd) {
-                                    const diffL = (7 - (weekEnd - d1) / LI.MS_DAY) / 7;
-                                    const diffR = (7 - (weekEnd - d2) / LI.MS_DAY) / 7;
-                                    let lingrad = ctx.createLinearGradient(w * _w, y * _h + 4, w * _w + _w - 4, y * _h + 4);
-                                    lingrad.addColorStop(0, 'transparent');
-                                    lingrad.addColorStop(diffL, 'transparent');
-                                    lingrad.addColorStop(diffL, i.color);
-                                    lingrad.addColorStop(diffR, i.color);
-                                    lingrad.addColorStop(diffR, 'transparent');
-                                    lingrad.addColorStop(1, 'transparent');
-                                    ctx.fillStyle = lingrad;
-                                    ctx.globalAlpha = globalAlpha;
-                                    ctx.fillRect(w * _w, y * _h + 4, _w - 4, _h - 4);
-                                    ctx.globalAlpha = 1.0;
-                                } else if (d1 >= weekStart && d1 <= weekEnd) {
-                                    const diffL = (7 - (weekEnd - d1) / LI.MS_DAY) / 7;
-                                    let lingrad = ctx.createLinearGradient(w * _w, y * _h + 4, w * _w + _w - 4, y * _h + 4);
-                                    lingrad.addColorStop(0, 'transparent');
-                                    lingrad.addColorStop(diffL, 'transparent');
-                                    lingrad.addColorStop(diffL, i.color);
-                                    lingrad.addColorStop(1, i.color);
-                                    ctx.fillStyle = lingrad;
-                                    ctx.globalAlpha = globalAlpha;
-                                    ctx.fillRect(w * _w, y * _h + 4, _w - 4, _h - 4);
-                                    ctx.globalAlpha = 1.0;
-                                } else if (d2 >= weekStart && d2 <= weekEnd) {
-                                    const diffR = (7 - (weekEnd - d2) / LI.MS_DAY) / 7;
-                                    let lingrad = ctx.createLinearGradient(w * _w, y * _h + 4, w * _w + _w - 4, y * _h + 4);
-                                    lingrad.addColorStop(0, i.color);
-                                    lingrad.addColorStop(diffR, i.color);
-                                    lingrad.addColorStop(diffR, 'transparent');
-                                    lingrad.addColorStop(1, 'transparent');
-                                    ctx.fillStyle = lingrad;
-                                    ctx.globalAlpha = globalAlpha;
-                                    ctx.fillRect(w * _w, y * _h + 4, _w - 4, _h - 4);
-                                    ctx.globalAlpha = 1.0;
-                                } else {
-                                    ctx.globalAlpha = globalAlpha;
-                                    ctx.fillStyle = i.color;
-                                    ctx.fillRect(w * _w, y * _h + 4, _w - 4, _h - 4);
-                                    ctx.globalAlpha = 1.0;
-                                }
-                                val.label = `
+        ctx_left.stroke;
+        for (var y = 0; y < maxAge; y++) {
+            for (var w = 0; w < 52; w++) {
+                const week = { weeks: [] };
+                let timeRowYearStart = this.timeRowYearStart(y);
+                let weekStart = new Date(timeRowYearStart + w * LI.MS_DAY * 7);
+                let weekEnd = new Date(timeRowYearStart + w * LI.MS_DAY * 7 + LI.MS_DAY * 6);
+                if (w === 51) {
+                    const date = new Date(timeRowYearStart);
+                    date.setFullYear(date.getFullYear() + 1);
+                    date.setDate(date.getDate() - 1);
+                    weekEnd = date;
+                }
+                week.weekStart = weekStart;
+                week.weekEnd = weekEnd;
+                week.timeRowYearStart = timeRowYearStart;
+                const length = this.selectedItem?.phases.length || 0;
+                if (length) {
+                    for (let l = 0; l < length; l++) {
+                        const i = this.selectedItem.phases[l];
+                        let val = {};
+                        const d1 = new Date(i.date1);
+                        const d2 = i.date2 ? new Date(i.date2) : new Date();
+                        let diff = Math.abs(d2.getTime() - d1.getTime());
+                        diff = (diff / 1000 / 60 / 60 / 24 / 365).toFixed(2);
+                        if (i.isPeriod && (weekStart >= d1 || weekEnd >= d1) && (weekStart <= d2 || weekEnd <= d2)) {
+                            val.isPeriod = true;
+                            val.gradient = i.color;
+                            let perc = 100 / 7;
+                            if (d1 >= weekStart && d1 <= weekEnd && d2 >= weekStart && d2 <= weekEnd) {
+                                const diffL = (7 - (weekEnd - d1) / LI.MS_DAY) / 7;
+                                const diffR = (7 - (weekEnd - d2) / LI.MS_DAY) / 7;
+                                let lingrad = ctx.createLinearGradient(w * _w, y * _h + 4, w * _w + _w - 4, y * _h + 4);
+                                lingrad.addColorStop(0, 'transparent');
+                                lingrad.addColorStop(diffL, 'transparent');
+                                lingrad.addColorStop(diffL, i.color);
+                                lingrad.addColorStop(diffR, i.color);
+                                lingrad.addColorStop(diffR, 'transparent');
+                                lingrad.addColorStop(1, 'transparent');
+                                ctx.fillStyle = lingrad;
+                                ctx.globalAlpha = globalAlpha;
+                                ctx.fillRect(w * _w, y * _h + 4, _w - 4, _h - 4);
+                                ctx.globalAlpha = 1.0;
+                            } else if (d1 >= weekStart && d1 <= weekEnd) {
+                                const diffL = (7 - (weekEnd - d1) / LI.MS_DAY) / 7;
+                                let lingrad = ctx.createLinearGradient(w * _w, y * _h + 4, w * _w + _w - 4, y * _h + 4);
+                                lingrad.addColorStop(0, 'transparent');
+                                lingrad.addColorStop(diffL, 'transparent');
+                                lingrad.addColorStop(diffL, i.color);
+                                lingrad.addColorStop(1, i.color);
+                                ctx.fillStyle = lingrad;
+                                ctx.globalAlpha = globalAlpha;
+                                ctx.fillRect(w * _w, y * _h + 4, _w - 4, _h - 4);
+                                ctx.globalAlpha = 1.0;
+                            } else if (d2 >= weekStart && d2 <= weekEnd) {
+                                const diffR = (7 - (weekEnd - d2) / LI.MS_DAY) / 7;
+                                let lingrad = ctx.createLinearGradient(w * _w, y * _h + 4, w * _w + _w - 4, y * _h + 4);
+                                lingrad.addColorStop(0, i.color);
+                                lingrad.addColorStop(diffR, i.color);
+                                lingrad.addColorStop(diffR, 'transparent');
+                                lingrad.addColorStop(1, 'transparent');
+                                ctx.fillStyle = lingrad;
+                                ctx.globalAlpha = globalAlpha;
+                                ctx.fillRect(w * _w, y * _h + 4, _w - 4, _h - 4);
+                                ctx.globalAlpha = 1.0;
+                            } else {
+                                ctx.globalAlpha = globalAlpha;
+                                ctx.fillStyle = i.color;
+                                ctx.fillRect(w * _w, y * _h + 4, _w - 4, _h - 4);
+                                ctx.globalAlpha = 1.0;
+                            }
+                            val.label = `
                                     <div style="border-bottom: 1px solid lightgray; padding: 6px">${i.group || ''}</div>
                                     <strong>${i.label || ''}</strong>
                                     <br>
@@ -612,11 +619,11 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
                                     <div style="font-size: 14px">( ${diff} <span style="font-size: 10px"> year</span> )</div>
                                     <hr>
                                 `
-                                week.weeks.push(val);
-                            } else if (d1 >= weekStart && d1 <= weekEnd) {
-                                val.gradient = i.color;
-                                val.isDate = true;
-                                val.label = `
+                            week.weeks.push(val);
+                        } else if (d1 >= weekStart && d1 <= weekEnd) {
+                            val.gradient = i.color;
+                            val.isDate = true;
+                            val.label = `
                                     <div style="border-bottom: 1px solid lightgray; padding: 6px">${i.group || ''}</div>
                                     <strong>${i.label || ''}</strong>
                                     <br>
@@ -624,24 +631,21 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
                                     <div style="font-size: 14px">( ${diff} <span style="font-size: 10px"> year</span> )</div>
                                     <hr>
                                 `
-                                // const diffL = (6 - (weekEnd - d1) / LI.MS_DAY) / 7;
-                                ctx.globalAlpha = globalAlpha;
-                                ctx.beginPath();
-                                ctx.arc(w * _w + _w / 2 - 2, y * _h + 4 + _h / 2 - 2, _h / 2, 0, 2 * Math.PI);
-                                ctx.fillStyle = i.color;
-                                ctx.fill();
-                                ctx.stroke();
-                                ctx.globalAlpha = 1.0;
-                                week.weeks.push(val);
-                            }
+                            ctx.globalAlpha = globalAlpha;
+                            ctx.beginPath();
+                            ctx.arc(w * _w + _w / 2 - 2, y * _h + 4 + _h / 2 - 2, _h / 2, 0, 2 * Math.PI);
+                            ctx.fillStyle = i.color;
+                            ctx.fill();
+                            ctx.stroke();
+                            ctx.globalAlpha = 1.0;
+                            week.weeks.push(val);
                         }
                     }
-                    // ctx.fillRect(w * _w, y * _h + 4, _w - 4, _h - 4);
-                    ctx.globalAlpha = globalAlpha;
-                    ctx.strokeRect(w * _w, y * _h + 4, _w - 4, _h - 4);
-                    ctx.globalAlpha = 1.0;
-                    this.tmpWeek[y * 100 + w] = week;
                 }
+                ctx.globalAlpha = globalAlpha;
+                ctx.strokeRect(w * _w, y * _h + 4, _w - 4, _h - 4);
+                ctx.globalAlpha = 1.0;
+                this.tmpWeek[y * 100 + w] = week;
             }
         }
         ctx.stroke();
