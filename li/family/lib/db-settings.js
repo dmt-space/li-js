@@ -176,8 +176,8 @@ customElements.define('li-db-settings', class LiDbSettings extends LiElement {
                         if (error) console.error(error);
                         else {
                             doc.rows.map(({ doc }) => {
-                                if (doc.parentId === parent) doc.parentId = root;
-                                if (doc._id === parent) doc._id = root;
+                                if (doc?.parentId === parent) doc.parentId = root;
+                                if (doc?._id === parent) doc._id = root;
                             })
                             saveFile(doc.rows.map(({ doc }) => doc), this.selectedItem.label);
                         }
