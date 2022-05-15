@@ -141,8 +141,10 @@ export const updateSelectedItem = async (self) => {
     self.notebook = self.selectedItem.notebook;
     self.jupyter._isChanged = self.jupyter.hideCells = true;
     self.jupyter.focusedIndex = self.jupyter.editedIndex = -1;
+    self._selectedItem = {};
     setTimeout(() => {
         self.jupyter.hideCells  = false;
+        self._selectedItem = undefined;
         self.$update();
         setTimeout(() => {
             self.jupyter._isChanged  = false;
