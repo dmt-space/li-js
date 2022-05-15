@@ -829,10 +829,10 @@ customElements.define('li-family-photo', class LiFamilyTree extends LiElement {
                             <div style="color: darkgray; font-size: 14px">${this.years}</div>
                         </div>    
                         <label>date start</label>
-                        <input id="dateStart" type="text" onfocus="(this.type='datetime-local')" value=${this.selected?.doc?.dateStart} style="flex: 1" @input=${this.onchangeStartEnd}>
+                        <input id="dateStart" type="datetime-local" value=${this.selected?.doc?.dateStart} style="flex: 1" @input=${this.onchangeStartEnd}>
                         <input id="place" class="inpt" value=${this.selected?.doc?.place} placeholder="place" style="flex: 1" @change=${this.onchangeStartEnd}>
                         <label>date end</label>
-                        <input id="dateEnd" type="text" onfocus="(this.type='datetime-local')" value=${this.selected?.doc?.dateEnd} style="flex: 1" @input=${this.onchangeStartEnd}>
+                        <input id="dateEnd" type="datetime-local" value=${this.selected?.doc?.dateEnd} style="flex: 1" @input=${this.onchangeStartEnd}>
                     </div>
                 </div>
             ` : html``}
@@ -902,9 +902,9 @@ customElements.define('li-family-phases', class LiFamilyPhase extends LiElement 
                         <div style="display: flex">
                             <input class="inpt" value=${doc.label} @change=${e => this.onchange(e, doc, idx, 'label')} placeholder="event">
                         </div>
-                        <input  class="inpt" type="text" onfocus="(this.type='datetime-local')" value=${doc.date1} @change=${e => this.onchange(e, doc, idx, 'date1')} placeholder="date">
+                        <input  class="inpt" type="datetime-local" value=${doc.date1} @change=${e => this.onchange(e, doc, idx, 'date1')} placeholder="date">
                         ${doc.isPeriod ? html`
-                            <input  class="inpt" type="text" onfocus="(this.type='datetime-local')" value=${doc.date2} @change=${e => this.onchange(e, doc, idx, 'date2')} placeholder="date end">
+                            <input  class="inpt" type="datetime-local" value=${doc.date2} @change=${e => this.onchange(e, doc, idx, 'date2')} placeholder="date end">
                         ` : html``}
                         <div style="display: flex; align-items: center">
                             <input class="inpt" value=${doc.group} @change=${e => this.onchange(e, doc, idx, 'group')} placeholder="group">
