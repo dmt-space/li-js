@@ -830,9 +830,10 @@ customElements.define('li-family-photo', class LiFamilyTree extends LiElement {
                         </div>    
                         <label>date start</label>
                         <input id="dateStart" type="datetime-local" value=${this.selected?.doc?.dateStart} style="flex: 1" @input=${this.onchangeStartEnd}>
-                        <input id="place" class="inpt" value=${this.selected?.doc?.place} placeholder="place" style="flex: 1" @change=${this.onchangeStartEnd}>
+                        <input id="placeStart" class="inpt" value=${this.selected?.doc?.placeStart} placeholder="place start" style="flex: 1" @change=${this.onchangeStartEnd}>
                         <label>date end</label>
                         <input id="dateEnd" type="datetime-local" value=${this.selected?.doc?.dateEnd} style="flex: 1" @input=${this.onchangeStartEnd}>
+                        <input id="placeEnd" class="inpt" value=${this.selected?.doc?.placeEnd} placeholder="place end" style="flex: 1" @change=${this.onchangeStartEnd}>
                     </div>
                 </div>
             ` : html``}
