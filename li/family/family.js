@@ -339,9 +339,9 @@ customElements.define('li-family', class LiFamily extends LiElement {
                 const color = '#' + Math.random().toString(16).substr(2, 6);
                 // console.log(color)
                 this.selectedItem.phases ||= [];
-                let date = new Date().toISOString().split('T');
-                date = date[0] + 'T12:00';
-                const doc = { date1: date, isPeriod: false, color };
+                let date1 = new Date().toISOString().split('T');
+                date1 = date1[0] + 'T12:00';
+                const doc = { date1, isPeriod: false, color };
                 this.fire('changesPhases', { type: 'changesPhases', change: 'addPhaseDate', doc, sourceEvent: e })
                 this.selectedItem.phases.push(doc);
             },
@@ -354,9 +354,9 @@ customElements.define('li-family', class LiFamily extends LiElement {
                 const color = '#' + Math.random().toString(16).substr(2, 6);
                 // console.log(color)
                 this.selectedItem.phases ||= [];
-                let date = new Date().toISOString().split('T');
-                date = date[0] + 'T12:00';
-                const doc = { date1: date, date2: null, isPeriod: true, color };
+                let date1 = new Date().toISOString().split('T');
+                date1 = date1[0] + 'T12:00';
+                const doc = { date1, date2: null, isPeriod: true, color };
                 this.fire('changesPhases', { type: 'changesPhases', change: 'addPhasePeriod', doc, sourceEvent: e })
                 this.selectedItem.phases.push(doc);
             },
@@ -458,7 +458,7 @@ customElements.define('li-family-weeks', class LiFamilyWeeks extends LiElement {
 
     render() {
         return html`
-            ${this.selectedItem?.doc.dateStart? html`
+            ${this._selectedItem || this.selectedItem?.doc.dateStart? html`
                 <div class="header">
                     <div class="txt" style="width: 64px;font-size: 11px; color: gray; text-align: center; opacity: ${this.isReady ? 1 : 0}">year | age</div>
                     <canvas id="canvas-weeks" width="1700" height="20" style="flex: 1; width: 100%"></canvas>
@@ -807,17 +807,21 @@ customElements.define('li-family-photo', class LiFamilyTree extends LiElement {
             .inpt::-webkit-input-placeholder {
                 color: lightgray;
             }
+            label {
+                color: darkgray;
+                font-size: 12px;
+            }
         `;
     }
 
     render() {
         return html`
-            ${this.$.selectedItem?.doc?.usePhases ? html`
+            ${this.selected?.doc?.usePhases ? html`
                 <div style="align-items: center; justify-content: center; overflow: hidden; color: gray; display: flex; flex: 1;  border-bottom: 1px solid darkgray; padding-bottom: 4px; margin-bottom: 4px; flex-wrap: wrap"> 
-                    <img style="cursor: pointer; border: 1px solid gray; margin-right: 12px; padding: 4px; width: 78px;height:108px; opacity: .1" src=${this.$.selectedItem?.doc?.genderType === 'man' ? './man.jpg' : this.$.selectedItem?.doc?.genderType === 'woman' ? './woman.jpg' : './man.jpg'} alt="" onerror="this.style.opacity='0'">
+                    <img style="cursor: pointer; border: 1px solid gray; margin-right: 12px; padding: 4px; width: 78px;height:108px; opacity: .1" src=${this.selected?.doc?.genderType === 'man' ? './man.jpg' : this.selected?.doc?.genderType === 'woman' ? './woman.jpg' : './man.jpg'} alt="" onerror="this.style.opacity='0'">
                     <div style="overflow: hidden; display: flex; flex-direction: column; flex: 1; min-width: 160px">
                         <div style="display: flex">
-                            <input id="genderType" list="gender" name="browgenderser" class="inpt" value=${this.$.selectedItem?.doc?.genderType} placeholder="gender or event type" style="flex: 1" @change=${this.onchangeStartEnd}>
+                            <input id="genderType" list="gender" name="browgenderser" class="inpt" value=${this.selected?.doc?.genderType} placeholder="gender or event type" style="flex: 1" @change=${this.onchangeStartEnd}>
                             <datalist id="gender">
                                 <option value="man">
                                 <option value="woman">
@@ -825,9 +829,10 @@ customElements.define('li-family-photo', class LiFamilyTree extends LiElement {
                             <div style="color: darkgray; font-size: 14px">${this.years}</div>
                         </div>    
                         <label>date start</label>
-                        <input id="dateStart" type="datetime-local" value=${this.$.selectedItem?.doc?.dateStart} placeholder="start date" style="flex: 1" @input=${this.onchangeStartEnd}>
+                        <input id="dateStart" type="text" onfocus="(this.type='datetime-local')" value=${this.selected?.doc?.dateStart} style="flex: 1" @input=${this.onchangeStartEnd}>
+                        <input id="place" class="inpt" value=${this.selected?.doc?.place} placeholder="place" style="flex: 1" @change=${this.onchangeStartEnd}>
                         <label>date end</label>
-                        <input id="dateEnd" type="datetime-local" value=${this.$.selectedItem?.doc?.dateEnd} placeholder="end date" style="flex: 1" @input=${this.onchangeStartEnd}>
+                        <input id="dateEnd" type="text" onfocus="(this.type='datetime-local')" value=${this.selected?.doc?.dateEnd} style="flex: 1" @input=${this.onchangeStartEnd}>
                     </div>
                 </div>
             ` : html``}
@@ -839,15 +844,19 @@ customElements.define('li-family-photo', class LiFamilyTree extends LiElement {
 
         }
     }
+    get selected() { return this.$._selectedItem || this.$.selectedItem}
     get years() {
-        const d1 = (new Date(this.$.selectedItem?.doc?.dateStart)).getTime();
-        const d2 = (new Date(this.$.selectedItem?.doc?.dateEnd || new Date())).getTime();
+        const d1 = (new Date(this.selected?.doc?.dateStart)).getTime();
+        const d2 = (new Date(this.selected?.doc?.dateEnd || new Date())).getTime();
         const diff = Math.abs(d2 - d1);
-        return (diff / 1000 / 60 / 60 / 24 / 365).toFixed(2);
+        return diff ? (diff / 1000 / 60 / 60 / 24 / 365).toFixed(2) : '';
     }
     onchangeStartEnd(e) {
-        this.$.selectedItem.doc[e.target.id] = e.target.value;
-        // console.log(e.target, e.target.value, e.target.id);
+        this.selected.doc[e.target.id] = e.target.value;
+        this.$.changedItemsID ||= [];
+        this.$.changedItemsID.add(this.selected._id);
+        this.$.changedItems ||= {};
+        this.$.changedItems[this.selected._id] = this.selected;
         this.$update();
     }
 })
@@ -893,9 +902,9 @@ customElements.define('li-family-phases', class LiFamilyPhase extends LiElement 
                         <div style="display: flex">
                             <input class="inpt" value=${doc.label} @change=${e => this.onchange(e, doc, idx, 'label')} placeholder="event">
                         </div>
-                        <input type="datetime-local" value=${doc.date1} @change=${e => this.onchange(e, doc, idx, 'date1')}>
+                        <input  class="inpt" type="text" onfocus="(this.type='datetime-local')" value=${doc.date1} @change=${e => this.onchange(e, doc, idx, 'date1')} placeholder="date">
                         ${doc.isPeriod ? html`
-                            <input type="datetime-local" value=${doc.date2} @change=${e => this.onchange(e, doc, idx, 'date2')}>
+                            <input  class="inpt" type="text" onfocus="(this.type='datetime-local')" value=${doc.date2} @change=${e => this.onchange(e, doc, idx, 'date2')} placeholder="date end">
                         ` : html``}
                         <div style="display: flex; align-items: center">
                             <input class="inpt" value=${doc.group} @change=${e => this.onchange(e, doc, idx, 'group')} placeholder="group">
