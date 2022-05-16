@@ -46,7 +46,9 @@ customElements.define('li-editor-html', class LiEditorHTML extends LiElement {
             .pell-content {
                 box-sizing: border-box;
                 outline: 0;
-                overflow-y: auto;
+                height: 100%;
+                width: 100%;
+                overflow: auto;
                 padding: 10px;
             }
             .pell-actionbar {
