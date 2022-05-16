@@ -889,6 +889,7 @@ class LiJupyterCellTemp extends LiElement {
                         .addEventListener("change", (e) => {
                             if (e.detail !== undefined)
                                 this.cell.source = e.detail;
+                                this.fire('change', e.detail)
                             this.$update();
                         }), 1000);
                     this._h = 80;
