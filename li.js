@@ -18,6 +18,10 @@ export * from './lib/lit/lit-all.min.js';
 import { ulid, decodeTime, monotonicFactory } from './lib/ulid/ulid.js';
 import './lib/icaro/icaro.js';
 
+import './lib/styles/adoptedStyleSheets.js'; // https://github.com/calebdwilliams/construct-style-sheets
+import { style } from './lib/styles/styles.js';
+// import sheet from './lib/styles/styles.css' assert { type: 'css' };
+
 const urlLI = import.meta.url;
 
 document.addEventListener('mousedown', (e) => LI.mousePos = new DOMRect(e.pageX, e.pageY));
@@ -106,6 +110,12 @@ export class LiElement extends LitElement {
 
         }
         this._partid = this.$partid || this._partid || this.partid;
+
+        if ('adoptedStyleSheets' in Document.prototype) {
+            let sheet = new CSSStyleSheet();
+            sheet.replaceSync(style.textContent);
+            this.shadowRoot.adoptedStyleSheets = [...this.shadowRoot.adoptedStyleSheets, sheet];
+        }
     }
     disconnectedCallback() {
         if (this.$$?.update) this.$$.update.unlisten(this.fnUpdate);
